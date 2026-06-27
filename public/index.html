@@ -11,7 +11,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<!-- GOOGLE TRANSLATE ELEMENT -->
+<meta name="google" content="notranslate">
+<script async src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 <style>
+/* GOOGLE TRANSLATE OVERRIDE */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+.goog-te-gadget { font-size: 0 !important; }
+body { top: 0 !important; }
+#google_translate_element { 
+  position: fixed; 
+  top: 70px; 
+  right: 24px; 
+  z-index: 999; 
+}
+.goog-te-gadget-simple { 
+  background: rgba(11,13,26,0.95) !important; 
+  border: 1px solid rgba(255,255,255,0.07) !important; 
+  border-radius: 8px !important; 
+  padding: 4px 8px !important; 
+}
+.goog-te-gadget-simple .goog-te-combo {
+  color: #f2f4f9 !important;
+  background: transparent !important;
+  font-size: 12px !important;
+  border: none !important;
+  padding: 4px 8px !important;
+}
+.goog-te-gadget-simple select {
+  color: #f2f4f9 !important;
+  background: transparent !important;
+  font-size: 12px !important;
+}
+
 :root{
   --gold:#FFD700; --gold-2:#F5A623; --gold-3:#B8860B;
   --gold-soft:rgba(255,215,0,0.1); --gold-glow:0 0 40px rgba(255,215,0,0.35);
@@ -25,683 +59,103 @@
   --shadow-gold:0 10px 40px rgba(255,215,0,0.22);
   --sidebar-w:260px; --header-h:70px;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:16px; }
+body {
   font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:var(--bg-0);color:var(--text);
-  min-height:100vh;overflow:hidden;line-height:1.6;
-  -webkit-font-smoothing:antialiased;
+  background:var(--bg-0); color:var(--text);
+  width:100vw; height:100vh; overflow:hidden;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+  position:fixed;
 }
-body::before{
-  content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
-  background:
-    radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,215,0,0.09),transparent 60%),
-    radial-gradient(ellipse 60% 40% at 100% 100%,rgba(74,158,255,0.06),transparent 60%),
-    linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);
-}
-body::after{
-  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.02) 1px,transparent 0);
-  background-size:44px 44px;opacity:.5;
-}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:var(--gold-3)}
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--bg-3); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:var(--gold-3); }
 
-/* SIDEBAR */
-.sidebar{
-  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
-  background:linear-gradient(180deg,rgba(11,13,26,0.95) 0%,rgba(5,6,15,0.98) 100%);
-  backdrop-filter:blur(24px) saturate(180%);
-  border-right:1px solid var(--glass-brd);
-  z-index:200;display:flex;flex-direction:column;
-  transition:transform .3s cubic-bezier(.4,0,.2,1);
-}
-.sidebar-brand{
-  padding:20px 18px;display:flex;align-items:center;gap:12px;
-  border-bottom:1px solid var(--glass-brd);cursor:pointer;
-}
-.sidebar-brand-img{
-  width:40px;height:40px;border-radius:12px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  display:grid;place-items:center;box-shadow:var(--shadow-gold);overflow:hidden;
-}
-.sidebar-brand-img img{width:100%;height:100%;object-fit:cover}
-.sidebar-brand-txt{display:flex;flex-direction:column;line-height:1.15;overflow:hidden}
-.sidebar-brand-name{font-family:'Space Grotesk';font-weight:700;font-size:17px;color:var(--text)}
-.sidebar-brand-sub{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
-.sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto;overflow-x:hidden}
-.sidebar-section{margin-bottom:16px}
-.sidebar-section-title{
-  font-size:10px;font-weight:700;color:var(--text-muted);
-  text-transform:uppercase;letter-spacing:1.5px;padding:8px 14px;
-}
-.sidebar-item{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 14px;border-radius:10px;
-  color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;
-  cursor:pointer;transition:all .25s ease;margin-bottom:3px;
-  position:relative;border:1px solid transparent;
-}
-.sidebar-item i{font-size:16px;width:20px;text-align:center;flex-shrink:0}
-.sidebar-item .label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sidebar-item .badge{
-  background:var(--danger);color:#fff;font-size:9px;font-weight:700;
-  padding:2px 6px;border-radius:20px;animation:pulse 2s infinite;
-}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.sidebar-item:hover{color:var(--text);background:var(--glass);border-color:var(--glass-brd)}
-.sidebar-item.active{
-  background:linear-gradient(90deg,var(--gold-soft),transparent);
-  color:var(--gold);border-color:rgba(255,215,0,0.2);
-  box-shadow:inset 3px 0 0 var(--gold);
-}
-.sidebar-item.active i{color:var(--gold)}
-.sidebar-footer{padding:14px;border-top:1px solid var(--glass-brd)}
-.sidebar-user{
-  display:flex;align-items:center;gap:10px;padding:10px;
-  border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd);
-  cursor:pointer;transition:all .25s;
-}
-.sidebar-user:hover{border-color:rgba(255,215,0,0.3)}
-.sidebar-user-avatar{
-  width:36px;height:36px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:13px;overflow:hidden;
-}
-.sidebar-user-avatar img{width:100%;height:100%;object-fit:cover}
-.sidebar-user-info{flex:1;overflow:hidden}
-.sidebar-user-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sidebar-user-bal{font-size:11px;color:var(--gold);font-family:'JetBrains Mono';display:flex;align-items:center;gap:4px}
-.sidebar-user-bal img{width:12px;height:12px}
-.sidebar-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
-  z-index:199;opacity:0;pointer-events:none;transition:opacity .3s;
-}
-.sidebar-overlay.active{opacity:1;pointer-events:all}
+/* BASIC STYLES */
+.sidebar { position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w); background:linear-gradient(180deg,rgba(11,13,26,0.98) 0%,rgba(5,6,15,0.99) 100%); backdrop-filter:blur(24px); border-right:1px solid var(--glass-brd); z-index:1000; display:flex; flex-direction:column; transition:transform .3s; }
+.sidebar-brand { padding:20px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--glass-brd); cursor:pointer; flex-shrink:0; }
+.sidebar-brand-img { width:40px; height:40px; border-radius:12px; flex-shrink:0; background:linear-gradient(135deg,var(--gold),var(--gold-2)); display:grid; place-items:center; }
+.sidebar-brand-txt { display:flex; flex-direction:column; line-height:1.15; overflow:hidden; }
+.sidebar-brand-name { font-family:'Space Grotesk'; font-weight:700; font-size:17px; color:var(--text); }
+.sidebar-brand-sub { font-size:10px; color:var(--text-dim); letter-spacing:1.5px; text-transform:uppercase; }
+.sidebar-nav { flex:1; padding:16px 10px; overflow-y:auto; }
+.sidebar-section-title { font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; padding:8px 14px; }
+.sidebar-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px; color:var(--text-dim); text-decoration:none; font-size:14px; font-weight:500; cursor:pointer; transition:all .25s; margin-bottom:3px; border:1px solid transparent; }
+.sidebar-item i { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+.sidebar-item.active { background:linear-gradient(90deg,var(--gold-soft),transparent); color:var(--gold); border-color:rgba(255,215,0,0.2); }
+.sidebar-footer { padding:14px; border-top:1px solid var(--glass-brd); flex-shrink:0; }
+.sidebar-user { display:flex; align-items:center; gap:10px; padding:10px; border-radius:12px; background:var(--glass); border:1px solid var(--glass-brd); cursor:pointer; transition:all .25s; }
+.sidebar-user-avatar { width:36px; height:36px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--gold),var(--gold-2)); display:grid; place-items:center; font-weight:700; color:#0a0a14; }
+.sidebar-user-info { flex:1; overflow:hidden; }
+.sidebar-user-name { font-size:13px; font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sidebar-user-bal { font-size:11px; color:var(--gold); font-family:'JetBrains Mono'; }
 
-/* MAIN */
-.main-wrap{margin-left:var(--sidebar-w);height:100vh;transition:margin-left .3s;display:flex;flex-direction:column;overflow:hidden}
+.main-wrap { margin-left:var(--sidebar-w); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+.header { position:sticky; top:0; z-index:100; height:var(--header-h); background:rgba(5,6,15,0.72); backdrop-filter:blur(24px); border-bottom:1px solid var(--glass-brd); display:flex; align-items:center; padding:0 24px; gap:16px; flex-shrink:0; }
+.header-title { font-family:'Space Grotesk'; font-weight:700; font-size:20px; color:var(--text); }
+.header-spacer { flex:1; }
+.header-balance { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:30px; background:var(--glass); border:1px solid var(--glass-brd); font-size:13px; font-weight:600; cursor:pointer; }
+.header-icon-btn { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--glass); border:1px solid var(--glass-brd); color:var(--text-dim); cursor:pointer; position:relative; font-size:15px; }
+.header-avatar { width:40px; height:40px; border-radius:50%; cursor:pointer; background:linear-gradient(135deg,var(--gold),var(--gold-2)); display:grid; place-items:center; color:#0a0a14; font-weight:700; }
+.content { flex:1; padding:24px; max-width:1400px; width:100%; margin:0 auto; overflow-y:auto; }
+.page-section { display:none; animation:pageIn .4s; }
+.page-section.active { display:block; }
+@keyframes pageIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 
-/* HEADER */
-.header{
-  position:sticky;top:0;z-index:100;height:var(--header-h);
-  background:rgba(5,6,15,0.72);backdrop-filter:blur(24px) saturate(180%);
-  border-bottom:1px solid var(--glass-brd);
-  display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;
-}
-.header-menu-btn{
-  display:none;background:none;border:none;color:var(--text);
-  font-size:20px;cursor:pointer;padding:8px;border-radius:8px;
-}
-.header-menu-btn:hover{background:var(--glass)}
-.header-title{
-  font-family:'Space Grotesk';font-weight:700;font-size:20px;color:var(--text);
-  display:flex;align-items:center;gap:10px;
-}
-.header-title-icon{color:var(--gold);font-size:18px}
-.header-spacer{flex:1}
-.header-balance{
-  display:flex;align-items:center;gap:8px;
-  padding:8px 14px;border-radius:30px;
-  background:var(--glass);border:1px solid var(--glass-brd);
-  font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;
-}
-.header-balance:hover{border-color:rgba(255,215,0,0.3)}
-.header-balance img{width:18px;height:18px}
-.header-balance .val{font-family:'JetBrains Mono';color:var(--gold)}
-.header-balance .doge{color:#c2a633}
-.header-balance-sep{width:1px;height:20px;background:var(--glass-brd);margin:0 4px}
-.header-icon-btn{
-  width:40px;height:40px;border-radius:50%;
-  display:grid;place-items:center;
-  background:var(--glass);border:1px solid var(--glass-brd);
-  color:var(--text-dim);cursor:pointer;transition:all .25s;
-  position:relative;font-size:15px;
-}
-.header-icon-btn:hover{color:var(--gold);border-color:rgba(255,215,0,0.3);transform:translateY(-1px)}
-.header-icon-btn .notif-dot{
-  position:absolute;top:4px;right:4px;min-width:18px;height:18px;
-  border-radius:10px;background:var(--danger);color:#fff;
-  font-size:10px;font-weight:700;display:grid;place-items:center;
-  padding:0 4px;border:2px solid var(--bg-1);
-  animation:pulse 2s infinite;
-}
-.header-avatar{
-  width:40px;height:40px;border-radius:50%;cursor:pointer;
-  background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:14px;
-  overflow:hidden;border:2px solid transparent;transition:border-color .25s;
-}
-.header-avatar:hover{border-color:var(--gold)}
-.header-avatar img{width:100%;height:100%;object-fit:cover}
+.page-title { font-family:'Space Grotesk'; font-weight:700; font-size:28px; color:var(--text); margin-bottom:6px; }
+.page-sub { color:var(--text-dim); font-size:14px; }
+.card { background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)); border:1px solid var(--glass-brd); border-radius:var(--radius); padding:22px; backdrop-filter:blur(10px); transition:all .3s; }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:12px; border:none; cursor:pointer; font-family:'Inter'; font-size:14px; font-weight:600; transition:all .25s; }
+.btn-primary { background:linear-gradient(135deg,var(--gold),var(--gold-2)); color:#0a0a14; }
+.btn-primary:active { transform:translateY(0); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+.btn-secondary { background:var(--glass); color:var(--text); border:1px solid var(--glass-brd); }
+.btn-block { width:100%; }
+.btn-lg { padding:14px 26px; font-size:15px; }
 
-/* DROPDOWNS */
-.dropdown{position:relative}
-.dropdown-menu{
-  position:absolute;top:calc(100% + 8px);right:0;
-  min-width:340px;max-width:calc(100vw - 32px);max-height:480px;overflow-y:auto;
-  background:rgba(11,13,26,0.98);border:1px solid var(--glass-brd);
-  border-radius:12px;backdrop-filter:blur(24px);
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
-  opacity:0;pointer-events:none;transform:translateY(-8px);
-  transition:all .25s;z-index:1000;
-}
-.dropdown-menu.open{opacity:1;pointer-events:all;transform:translateY(0)}
-.dropdown-header{padding:14px 16px;border-bottom:1px solid var(--glass-brd);display:flex;justify-content:space-between;align-items:center}
-.dropdown-header h4{font-family:'Space Grotesk';font-size:14px;font-weight:700}
-.dropdown-header .clear{font-size:11px;color:var(--text-muted);cursor:pointer}
-.dropdown-header .clear:hover{color:var(--danger)}
-.dropdown-list{padding:6px}
-.notif-item{
-  padding:12px;border-radius:10px;margin-bottom:4px;cursor:pointer;
-  border:1px solid transparent;transition:all .2s;display:flex;gap:10px;
-}
-.notif-item:hover{background:var(--glass);border-color:var(--glass-brd)}
-.notif-item.unread{background:rgba(255,215,0,0.03)}
-.notif-icon{
-  width:36px;height:36px;border-radius:10px;flex-shrink:0;
-  display:grid;place-items:center;font-size:14px;
-}
-.notif-icon.gold{background:var(--gold-soft);color:var(--gold)}
-.notif-icon.blue{background:var(--blue-soft);color:var(--blue)}
-.notif-icon.green{background:rgba(0,208,132,0.1);color:var(--success)}
-.notif-icon.red{background:rgba(255,71,87,0.1);color:var(--danger)}
-.notif-icon.purple{background:rgba(139,92,246,0.1);color:var(--purple)}
-.notif-body{flex:1;overflow:hidden}
-.notif-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
-.notif-desc{font-size:12px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.notif-time{font-size:10px;color:var(--text-muted);margin-top:4px}
+.form-input, .form-select { width:100%; padding:13px 16px; border-radius:12px; background:rgba(0,0,0,0.35); border:1px solid var(--glass-brd); color:var(--text); font-family:'Inter'; font-size:14px; }
+.form-input:focus, .form-select:focus { outline:none; border-color:rgba(255,215,0,0.4); }
+.form-label { font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:8px; }
 
-/* CONTENT - NO SCROLL */
-.content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow:hidden}
-.page-section{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1);height:100%;overflow:hidden}
-.page-section.active{display:block}
-@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.grid { display:grid; gap:20px; }
+.grid-2 { grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+.grid-4 { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
 
-.page-head{margin-bottom:20px;flex-shrink:0}
-.page-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-.page-title{
-  font-family:'Space Grotesk';font-weight:700;
-  font-size:clamp(24px,3vw,32px);line-height:1.2;
-  display:flex;align-items:center;gap:12px;
-  background:linear-gradient(135deg,#fff 0%,var(--gold) 50%,var(--gold-2) 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  margin-bottom:6px;
-}
-.page-title i{color:var(--gold);font-size:clamp(20px,2.5vw,26px)}
-.page-sub{color:var(--text-dim);font-size:14px}
+.bal-card { padding:22px; border-radius:var(--radius); background:linear-gradient(145deg,rgba(255,215,0,0.04),rgba(255,215,0,0.01)); border:1px solid rgba(255,215,0,0.15); backdrop-filter:blur(10px); }
+.bal-card-val { font-family:'Space Grotesk'; font-size:30px; font-weight:700; color:var(--gold); }
+.bal-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-bottom:24px; }
 
-/* CARDS */
-.grid{display:grid;gap:20px}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.card{
-  position:relative;
-  background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
-  border:1px solid var(--glass-brd);border-radius:var(--radius);
-  padding:22px;backdrop-filter:blur(10px);
-  transition:all .3s cubic-bezier(.4,0,.2,1);overflow:hidden;
-}
-.card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);
-  opacity:0;transition:opacity .3s;
-}
-.card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.15)}
-.card:hover::before{opacity:1}
-.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
-.card-title{
-  font-family:'Space Grotesk';font-size:17px;font-weight:700;color:var(--text);
-  display:flex;align-items:center;gap:10px;
-}
-.card-title i{color:var(--gold)}
-.card-sub{color:var(--text-dim);font-size:13px}
-.card-icon{
-  width:52px;height:52px;border-radius:14px;display:grid;place-items:center;
-  font-size:22px;margin-bottom:14px;
-  background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));
-  color:var(--gold);border:1px solid rgba(255,215,0,0.2);
-}
-.card-icon.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border-color:rgba(74,158,255,0.3)}
-.card-icon.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border-color:rgba(0,208,132,0.3)}
-.card-icon.purple{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);border-color:rgba(139,92,246,0.3)}
+.stat-card { padding:20px; border-radius:var(--radius); background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)); border:1px solid var(--glass-brd); backdrop-filter:blur(10px); }
+.stat-val { font-family:'Space Grotesk'; font-size:24px; font-weight:700; color:var(--text); }
 
-/* STAT CARD */
-.stat-card{
-  position:relative;overflow:hidden;
-  padding:20px;border-radius:var(--radius);
-  background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
-  border:1px solid var(--glass-brd);backdrop-filter:blur(10px);transition:all .3s;
-}
-.stat-card:hover{border-color:rgba(255,215,0,0.2);transform:translateY(-2px)}
-.stat-card .stat-ic{
-  width:42px;height:42px;border-radius:12px;
-  display:grid;place-items:center;font-size:18px;
-  background:var(--gold-soft);color:var(--gold);
-  border:1px solid rgba(255,215,0,0.2);margin-bottom:12px;
-}
-.stat-card .stat-lbl{font-size:12px;color:var(--text-dim);margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.stat-card .stat-lbl img{width:14px;height:14px}
-.stat-card .stat-val{font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--text);line-height:1.1}
-.stat-card .stat-val.gold{color:var(--gold)}
-.stat-card .stat-chg{font-size:11px;color:var(--success);margin-top:6px;display:flex;align-items:center;gap:4px}
+.toast { position:fixed; bottom:24px; right:24px; z-index:10000; padding:14px 20px; border-radius:14px; background:rgba(11,13,26,0.95); border:1px solid var(--glass-brd); display:flex; align-items:center; gap:12px; font-size:14px; transform:translateY(100px); opacity:0; transition:all .35s; }
+.toast.show { transform:translateY(0); opacity:1; }
 
-/* BALANCE */
-.bal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:24px}
-.bal-card{
-  padding:22px;border-radius:var(--radius);
-  background:linear-gradient(145deg,rgba(255,215,0,0.04),rgba(255,215,0,0.01));
-  border:1px solid rgba(255,215,0,0.15);backdrop-filter:blur(10px);
-  position:relative;overflow:hidden;
-}
-.bal-card.doge{background:linear-gradient(145deg,rgba(194,166,51,0.04),rgba(194,166,51,0.01));border-color:rgba(194,166,51,0.15)}
-.bal-card-lbl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);margin-bottom:10px}
-.bal-card-lbl img{width:18px;height:18px}
-.bal-card-val{font-family:'Space Grotesk';font-size:30px;font-weight:700;color:var(--gold);line-height:1}
-.bal-card.doge .bal-card-val{color:#c2a633}
-.bal-card-usd{font-size:12px;color:var(--text-muted);margin-top:6px;font-family:'JetBrains Mono'}
+.dropdown-menu { position:absolute; top:calc(100% + 8px); right:0; min-width:340px; max-height:480px; overflow-y:auto; background:rgba(11,13,26,0.98); border:1px solid var(--glass-brd); border-radius:12px; opacity:0; pointer-events:none; transform:translateY(-8px); transition:all .25s; z-index:1000; }
+.dropdown-menu.open { opacity:1; pointer-events:all; transform:translateY(0); }
 
-/* BUTTONS */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px 20px;border-radius:12px;border:none;cursor:pointer;
-  font-family:'Inter';font-size:14px;font-weight:600;
-  transition:all .25s;text-decoration:none;
-  position:relative;overflow:hidden;
-  user-select:none;-webkit-tap-highlight-color:transparent;
-}
-.btn::after{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at center,rgba(255,255,255,0.4) 0%,transparent 60%);
-  opacity:0;transition:opacity .3s;
-}
-.btn:active::after{opacity:1}
-.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#0a0a14;box-shadow:0 8px 24px rgba(255,215,0,0.25)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(255,215,0,0.4)}
-.btn-primary:active{transform:translateY(0)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-secondary{background:var(--glass);color:var(--text);border:1px solid var(--glass-brd)}
-.btn-secondary:hover{border-color:rgba(255,215,0,0.3);color:var(--gold)}
-.btn-danger{background:linear-gradient(135deg,#ff4757,#ff6b81);color:#fff}
-.btn-success{background:linear-gradient(135deg,#00d084,#10b981);color:#fff}
-.btn-ghost{background:transparent;color:var(--text-dim)}
-.btn-ghost:hover{color:var(--gold);background:var(--glass)}
-.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
-.btn-lg{padding:14px 26px;font-size:15px}
-.btn-block{width:100%}
-.btn-ic{width:38px;height:38px;padding:0;border-radius:10px}
+.notif-item { padding:12px; border-radius:10px; margin-bottom:4px; cursor:pointer; border:1px solid transparent; }
+.notif-item:hover { background:var(--glass); border-color:var(--glass-brd); }
 
-/* FORMS */
-.form-group{margin-bottom:16px}
-.form-label{
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;font-weight:600;color:var(--text-dim);
-  margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;
-}
-.form-label i{color:var(--gold);font-size:12px}
-.form-input,.form-select,.form-textarea{
-  width:100%;padding:13px 16px;border-radius:12px;
-  background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);
-  color:var(--text);font-family:'Inter';font-size:14px;transition:all .25s;
-}
-.form-input:focus,.form-select:focus,.form-textarea:focus{
-  outline:none;border-color:rgba(255,215,0,0.4);background:rgba(0,0,0,0.5);
-  box-shadow:0 0 0 3px rgba(255,215,0,0.08);
-}
-.form-hint{font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:6px}
-.form-hint i{color:var(--gold);font-size:10px}
+.faucet-amount { font-family:'Space Grotesk'; font-size:56px; font-weight:800; color:var(--gold); }
+.btn-claim { padding:16px 40px; border-radius:14px; background:linear-gradient(135deg,var(--gold),var(--gold-2)); color:#1a1a2e; font-family:'Space Grotesk'; font-weight:700; font-size:16px; box-shadow:var(--shadow-gold); cursor:pointer; }
 
-/* TABS */
-.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;padding:4px;background:var(--glass);border:1px solid var(--glass-brd);border-radius:14px;width:fit-content}
-.tab{
-  padding:9px 16px;border-radius:10px;
-  color:var(--text-dim);font-size:13px;font-weight:600;cursor:pointer;
-  transition:all .25s;display:flex;align-items:center;gap:6px;
-  border:1px solid transparent;
-}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--gold);background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.15)}
+.offerwall-iframe-wrap { border-radius:var(--radius); overflow:hidden; border:1px solid var(--glass-brd); background:#000; min-height:600px; max-height:calc(100vh - 300px); position:relative; }
+.offerwall-iframe-wrap iframe { width:100%; height:800px; border:none; display:block; }
 
-/* TABLES - Scrollable */
-.table-wrap{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);overflow:hidden}
-.table-scroll{overflow-x:auto;max-height:400px;overflow-y:auto}
-.table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
-.table th{
-  padding:14px 16px;text-align:left;
-  background:rgba(0,0,0,0.4);color:var(--text-dim);
-  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-  border-bottom:1px solid var(--glass-brd);
-  position:sticky;top:0;z-index:2;
-}
-.table td{padding:14px 16px;border-bottom:1px solid var(--glass-brd);color:var(--text)}
-.table tbody tr:last-child td{border-bottom:none}
-.table tbody tr{transition:background .2s}
-.table tbody tr:hover td{background:rgba(255,255,255,0.02)}
-.table .mono{font-family:'JetBrains Mono';font-weight:600;font-size:12px}
-.table .gold{color:var(--gold)}
-.table .success{color:var(--success)}
-.table .danger{color:var(--danger)}
-.table .warn{color:var(--warn)}
-.table .blue{color:var(--blue)}
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-dim); }
+.loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; color:var(--text-dim); gap:12px; }
+.spinner { width:36px; height:36px; border:3px solid var(--glass); border-top-color:var(--gold); border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
 
-/* FAUCET */
-.faucet-layout{display:grid;grid-template-columns:1.3fr 1fr;gap:24px}
-@media(max-width:1024px){.faucet-layout{grid-template-columns:1fr}}
-.faucet-claim-card{
-  padding:28px;border-radius:20px;
-  background:linear-gradient(145deg,rgba(255,215,0,0.05),rgba(255,215,0,0.01));
-  border:1px solid rgba(255,215,0,0.18);backdrop-filter:blur(10px);
-  position:relative;overflow:hidden;text-align:center;
+@media(max-width:900px) {
+  .sidebar { transform:translateX(-100%); }
+  .main-wrap { margin-left:0; }
+  .header-balance { display:none; }
+  #google_translate_element { top:20px; right:60px; }
 }
-.faucet-claim-card::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 50% -10%,rgba(255,215,0,0.15),transparent 60%);
-  pointer-events:none;
-}
-.faucet-reward-preview{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:6px 14px;border-radius:30px;
-  background:rgba(0,0,0,0.3);border:1px solid rgba(255,215,0,0.2);
-  font-size:12px;color:var(--text-dim);margin-bottom:14px;
-}
-.faucet-reward-preview img{width:14px;height:14px}
-.faucet-amount{
-  font-family:'Space Grotesk';font-size:56px;font-weight:800;
-  background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  margin:8px 0;line-height:1;
-  filter:drop-shadow(0 0 30px rgba(255,215,0,0.3));
-}
-.faucet-amount-unit{font-size:18px;color:var(--gold);font-weight:700}
-
-.cd-wrap{position:relative;margin:24px auto;width:180px;height:180px}
-.cd-svg{transform:rotate(-90deg);width:100%;height:100%}
-.cd-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:8}
-.cd-progress{
-  fill:none;stroke:url(#cdGradient);stroke-width:8;stroke-linecap:round;
-  transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1);
-  filter:drop-shadow(0 0 8px var(--gold));
-}
-.cd-center{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
-.cd-time{font-family:'Space Grotesk';font-size:42px;font-weight:700;color:var(--gold);line-height:1}
-.cd-label{font-size:11px;color:var(--text-dim);margin-top:6px;text-transform:uppercase;letter-spacing:1px}
-.cd-ready{font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--success);margin-top:8px}
-
-.btn-claim{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  padding:16px 40px;border-radius:14px;border:none;cursor:pointer;
-  background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  color:#1a1a2e;font-family:'Space Grotesk';font-weight:700;font-size:16px;
-  box-shadow:0 10px 30px rgba(255,215,0,0.3);
-  transition:all .25s;position:relative;overflow:hidden;
-}
-.btn-claim::before{
-  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
-  transition:left .6s;
-}
-.btn-claim:hover::before{left:100%}
-.btn-claim:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(255,215,0,0.45)}
-.btn-claim:active{transform:translateY(0)}
-.btn-claim:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-claim.success{background:linear-gradient(135deg,var(--success),#10b981);color:#fff}
-
-.claim-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:24px}
-.claim-stat{padding:14px;background:rgba(0,0,0,0.3);border-radius:12px;border:1px solid var(--glass-brd)}
-.claim-stat-lbl{font-size:11px;color:var(--text-dim);margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.claim-stat-lbl img{width:12px;height:12px}
-.claim-stat-val{font-family:'Space Grotesk';font-size:18px;font-weight:700;color:var(--gold)}
-
-/* OFFERWALL WIDGET */
-.offerwall-widget{
-  padding:22px;border-radius:var(--radius);
-  background:linear-gradient(145deg,rgba(74,158,255,0.05),rgba(74,158,255,0.01));
-  border:1px solid rgba(74,158,255,0.18);backdrop-filter:blur(10px);
-}
-.ow-offers{display:flex;flex-direction:column;gap:10px;margin:16px 0}
-.ow-offer{
-  display:flex;align-items:center;gap:12px;
-  padding:12px;border-radius:12px;
-  background:rgba(0,0,0,0.3);border:1px solid var(--glass-brd);
-  transition:all .25s;
-}
-.ow-offer:hover{border-color:rgba(74,158,255,0.3);transform:translateX(3px)}
-.ow-offer-ic{
-  width:40px;height:40px;border-radius:10px;flex-shrink:0;
-  background:var(--blue-soft);color:var(--blue);
-  display:grid;place-items:center;font-size:16px;
-}
-.ow-offer-body{flex:1;overflow:hidden}
-.ow-offer-title{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ow-offer-meta{font-size:11px;color:var(--text-dim);margin-top:2px;display:flex;gap:10px}
-.ow-offer-reward{font-family:'JetBrains Mono';font-size:13px;font-weight:600;color:var(--gold)}
-
-.offerwall-iframe-wrap{
-  border-radius:var(--radius);overflow:hidden;
-  border:1px solid var(--glass-brd);
-  background:#000;min-height:600px;max-height:calc(100vh - 300px);position:relative;overflow:auto;
-}
-.offerwall-iframe-wrap iframe{width:100%;height:800px;border:none;display:block}
-
-/* SWAP */
-.swap-box{
-  max-width:500px;margin:0 auto;
-  padding:28px;border-radius:20px;
-  background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
-  border:1px solid var(--glass-brd);backdrop-filter:blur(10px);
-}
-.swap-row{
-  background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);
-  border-radius:14px;padding:18px;transition:border-color .25s;
-}
-.swap-row:focus-within{border-color:rgba(255,215,0,0.3)}
-.swap-row-hd{display:flex;justify-content:space-between;margin-bottom:10px;font-size:12px;color:var(--text-dim)}
-.swap-row-hd .avail{cursor:pointer;color:var(--gold)}
-.swap-row-hd .avail:hover{text-decoration:underline}
-.swap-row-inp{display:flex;align-items:center;gap:12px}
-.swap-row-inp input{
-  flex:1;background:transparent;border:none;
-  color:var(--text);font-family:'Space Grotesk';font-size:32px;font-weight:700;
-  outline:none;min-width:0;
-}
-.swap-row-inp input::placeholder{color:var(--text-muted)}
-.swap-currency{
-  display:flex;align-items:center;gap:8px;
-  padding:8px 14px;border-radius:10px;
-  background:var(--gold-soft);border:1px solid rgba(255,215,0,0.25);
-  color:var(--gold);font-weight:600;font-size:14px;flex-shrink:0;
-}
-.swap-currency img{width:18px;height:18px}
-.swap-arrow{
-  display:grid;place-items:center;
-  width:44px;height:44px;margin:-8px auto;
-  background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  border-radius:50%;
-  color:#0a0a14;font-size:16px;cursor:pointer;
-  transition:all .3s;z-index:2;position:relative;
-  box-shadow:var(--shadow-gold);
-}
-.swap-arrow:hover{transform:rotate(180deg) scale(1.05)}
-.swap-info{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:14px 0;font-size:13px;color:var(--text-dim);
-  border-top:1px solid var(--glass-brd);margin-top:8px;
-}
-.swap-info span{color:var(--gold);font-weight:600}
-.swap-preview{
-  padding:14px;border-radius:12px;background:rgba(0,0,0,0.3);
-  margin-top:14px;font-size:13px;
-}
-
-/* REFERRAL */
-.ref-hero{
-  padding:32px;border-radius:20px;
-  background:linear-gradient(135deg,rgba(74,158,255,0.08),rgba(139,92,246,0.04));
-  border:1px solid rgba(74,158,255,0.2);backdrop-filter:blur(10px);
-  position:relative;overflow:hidden;
-}
-.ref-hero::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 80% 20%,rgba(74,158,255,0.15),transparent 50%);
-  pointer-events:none;
-}
-.ref-hero-txt h2{
-  font-family:'Space Grotesk';font-size:28px;font-weight:700;
-  background:linear-gradient(135deg,#fff 0%,var(--blue) 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  margin-bottom:8px;
-}
-.ref-hero-txt p{color:var(--text-dim);font-size:14px;max-width:500px}
-.ref-link-box{display:flex;gap:8px;margin-top:16px;max-width:600px;flex-wrap:wrap}
-.ref-link-box input{
-  flex:1;min-width:200px;padding:12px 14px;border-radius:10px;
-  background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);
-  color:var(--text);font-family:'JetBrains Mono';font-size:13px;
-}
-.ref-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
-
-.ref-list-item{
-  display:flex;align-items:center;gap:12px;
-  padding:14px;border-radius:12px;
-  background:rgba(0,0,0,0.3);border:1px solid var(--glass-brd);
-  margin-bottom:8px;transition:all .25s;
-}
-.ref-list-item:hover{border-color:rgba(255,215,0,0.2)}
-.ref-list-avatar{
-  width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,var(--blue),var(--purple));
-  display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;
-}
-.ref-list-info{flex:1;overflow:hidden}
-.ref-list-name{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ref-list-meta{font-size:11px;color:var(--text-dim);margin-top:2px}
-.ref-list-earn{font-family:'JetBrains Mono';font-weight:600;color:var(--gold);font-size:13px}
-
-/* LEADERBOARD */
-.lb-top3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
-@media(max-width:700px){.lb-top3{grid-template-columns:1fr}}
-.lb-podium{
-  padding:22px;border-radius:var(--radius);text-align:center;
-  background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
-  border:1px solid var(--glass-brd);backdrop-filter:blur(10px);
-  transition:all .3s;position:relative;overflow:hidden;
-}
-.lb-podium.gold{border-color:rgba(255,215,0,0.3);background:linear-gradient(145deg,rgba(255,215,0,0.08),rgba(255,215,0,0.01))}
-.lb-podium.silver{border-color:rgba(192,192,192,0.3)}
-.lb-podium.bronze{border-color:rgba(205,127,50,0.3)}
-.lb-podium-rank{font-family:'Space Grotesk';font-size:48px;font-weight:800;line-height:1;margin-bottom:8px}
-.lb-podium.gold .lb-podium-rank{color:var(--gold)}
-.lb-podium.silver .lb-podium-rank{color:#c0c0c0}
-.lb-podium.bronze .lb-podium-rank{color:#cd7f32}
-.lb-podium-avatar{
-  width:64px;height:64px;border-radius:50%;margin:8px auto;
-  background:linear-gradient(135deg,var(--gold),var(--gold-2));
-  display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:20px;
-}
-.lb-podium-name{font-size:15px;font-weight:600;color:var(--text);margin-top:8px}
-.lb-podium-earn{font-family:'JetBrains Mono';color:var(--gold);font-weight:600;font-size:14px;margin-top:4px}
-
-/* TOAST */
-.toast{
-  position:fixed;bottom:24px;right:24px;z-index:10000;
-  padding:14px 20px;border-radius:14px;
-  background:rgba(11,13,26,0.95);border:1px solid var(--glass-brd);
-  backdrop-filter:blur(20px);
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
-  display:flex;align-items:center;gap:12px;
-  font-size:14px;font-weight:500;
-  transform:translateY(100px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);
-  max-width:360px;
-}
-.toast.show{transform:translateY(0);opacity:1}
-.toast-icon{
-  width:32px;height:32px;border-radius:50%;flex-shrink:0;
-  display:grid;place-items:center;font-size:14px;
-}
-.toast.success{border-color:var(--success)}
-.toast.success .toast-icon{background:rgba(0,208,132,0.15);color:var(--success)}
-.toast.error{border-color:var(--danger)}
-.toast.error .toast-icon{background:rgba(255,71,87,0.15);color:var(--danger)}
-.toast.info{border-color:var(--blue)}
-.toast.info .toast-icon{background:rgba(74,158,255,0.15);color:var(--blue)}
-
-/* LOADING */
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:var(--text-dim);gap:12px}
-.spinner{
-  width:36px;height:36px;
-  background:url('/images/loading.png') center/contain no-repeat;
-  animation:spin 1s linear infinite;
-}
-.spinner-sm{width:18px;height:18px;background-size:contain}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.empty-state{text-align:center;padding:60px 20px;color:var(--text-dim)}
-.empty-state-icon{
-  width:80px;height:80px;margin:0 auto 20px;border-radius:50%;
-  background:var(--glass);border:1px solid var(--glass-brd);
-  display:grid;place-items:center;
-}
-.empty-state-icon img{width:40px;height:40px;opacity:.5}
-.empty-state h3{font-family:'Space Grotesk';font-size:20px;color:var(--text);margin-bottom:8px}
-.empty-state p{font-size:14px;max-width:400px;margin:0 auto}
-
-/* FAQ */
-.faq-item{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden;transition:all .25s}
-.faq-item:hover{border-color:rgba(255,215,0,0.2)}
-.faq-q{padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:14px}
-.faq-q i{color:var(--gold);transition:transform .3s;flex-shrink:0}
-.faq-item.open .faq-q i{transform:rotate(180deg)}
-.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;padding:0 20px;color:var(--text-dim);font-size:13px}
-.faq-item.open .faq-a{max-height:400px;padding:0 20px 16px}
-.faq-a a{color:var(--gold);text-decoration:none}
-.faq-a a:hover{text-decoration:underline}
-.faq-a ul,.faq-a ol{margin:8px 0 8px 20px}
-.faq-a li{margin-bottom:4px}
-
-/* RESPONSIVE */
-@media(max-width:900px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .main-wrap{margin-left:0}
-  .header-menu-btn{display:grid}
-  .header-balance{display:none}
-  .header-title{font-size:17px}
-  .content{padding:16px}
-  .faucet-amount{font-size:42px}
-  .cd-wrap{width:150px;height:150px}
-  .cd-time{font-size:34px}
-  .ref-hero{padding:24px}
-  .ref-hero-txt h2{font-size:22px}
-  .ref-link-box{flex-direction:column}
-  .lb-top3{grid-template-columns:1fr}
-  .dropdown-menu{min-width:calc(100vw - 32px);right:-60px}
-}
-@media(max-width:500px){
-  .bal-grid{grid-template-columns:1fr}
-  .claim-stats{grid-template-columns:1fr 1fr}
-  .header-title .hide-m{display:none}
-}
-
-/* UTILITIES */
-.text-gold{color:var(--gold)}
-.text-blue{color:var(--blue)}
-.text-dim{color:var(--text-dim)}
-.text-muted{color:var(--text-muted)}
-.text-success{color:var(--success)}
-.text-danger{color:var(--danger)}
-.text-center{text-align:center}
-.mt-1{margin-top:8px}.mt-2{margin-top:16px}.mt-3{margin-top:24px}.mt-4{margin-top:32px}
-.mb-1{margin-bottom:8px}.mb-2{margin-bottom:16px}.mb-3{margin-bottom:24px}
-.flex{display:flex}.flex-between{display:flex;justify-content:space-between;align-items:center}
-.gap-1{gap:8px}.gap-2{gap:16px}
-.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -709,7 +163,7 @@ body::after{
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand" onclick="navigate('/')">
-    <div class="sidebar-brand-img"><img src="/images/coinix.png" alt="COINIX" onerror="this.style.display='none';this.parentElement.innerHTML='C'"></div>
+    <div class="sidebar-brand-img"><img src="/images/coinix.png" alt="COINIX"></div>
     <div class="sidebar-brand-txt">
       <span class="sidebar-brand-name">COINIX</span>
       <span class="sidebar-brand-sub">CNX Faucet</span>
@@ -719,49 +173,16 @@ body::after{
   <nav class="sidebar-nav">
     <div class="sidebar-section">
       <div class="sidebar-section-title">Main</div>
-      <a class="sidebar-item active" data-route="/" onclick="navigate('/')">
-        <i class="fa-solid fa-chart-pie"></i><span class="label">Dashboard</span>
-      </a>
-      <a class="sidebar-item" data-route="/faucet" onclick="navigate('/faucet')">
-        <i class="fa-solid fa-droplet"></i><span class="label">Faucet</span>
-        <span class="badge">FREE</span>
-      </a>
-      <a class="sidebar-item" data-route="/offerwall" onclick="navigate('/offerwall')">
-        <i class="fa-solid fa-gift"></i><span class="label">Offerwall</span>
-      </a>
-      <a class="sidebar-item" data-route="/balance" onclick="navigate('/balance')">
-        <i class="fa-solid fa-wallet"></i><span class="label">Balance</span>
-      </a>
+      <a class="sidebar-item active" data-route="/" onclick="navigate('/')"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></a>
+      <a class="sidebar-item" data-route="/faucet" onclick="navigate('/faucet')"><i class="fa-solid fa-droplet"></i><span>Faucet</span></a>
+      <a class="sidebar-item" data-route="/offerwall" onclick="navigate('/offerwall')"><i class="fa-solid fa-gift"></i><span>Offerwall</span></a>
+      <a class="sidebar-item" data-route="/balance" onclick="navigate('/balance')"><i class="fa-solid fa-wallet"></i><span>Balance</span></a>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-title">Actions</div>
-      <a class="sidebar-item" data-route="/swap" onclick="navigate('/swap')">
-        <i class="fa-solid fa-right-left"></i><span class="label">Swap</span>
-      </a>
-      <a class="sidebar-item" data-route="/withdraw" onclick="navigate('/withdraw')">
-        <i class="fa-solid fa-paper-plane"></i><span class="label">Withdraw</span>
-      </a>
-      <a class="sidebar-item" data-route="/history" onclick="navigate('/history')">
-        <i class="fa-solid fa-clock-rotate-left"></i><span class="label">History</span>
-      </a>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Social</div>
-      <a class="sidebar-item" data-route="/referral" onclick="navigate('/referral')">
-        <i class="fa-solid fa-user-plus"></i><span class="label">Referral</span>
-      </a>
-      <a class="sidebar-item" data-route="/leaderboard" onclick="navigate('/leaderboard')">
-        <i class="fa-solid fa-trophy"></i><span class="label">Leaderboard</span>
-      </a>
-    </div>
-
-    <div class="sidebar-section" id="adminSection" style="display:none">
-      <div class="sidebar-section-title">System</div>
-      <a class="sidebar-item" data-route="/admin" onclick="navigate('/admin')">
-        <i class="fa-solid fa-shield-halved"></i><span class="label">Admin Panel</span>
-      </a>
+      <a class="sidebar-item" data-route="/swap" onclick="navigate('/swap')"><i class="fa-solid fa-right-left"></i><span>Swap</span></a>
+      <a class="sidebar-item" data-route="/withdraw" onclick="navigate('/withdraw')"><i class="fa-solid fa-paper-plane"></i><span>Withdraw</span></a>
     </div>
   </nav>
 
@@ -770,644 +191,218 @@ body::after{
       <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
       <div class="sidebar-user-info">
         <div class="sidebar-user-name" id="sidebarName">Loading...</div>
-        <div class="sidebar-user-bal" id="sidebarBal">
-          <img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'">
-          0 CNX
-        </div>
+        <div class="sidebar-user-bal" id="sidebarBal">0 CNX</div>
       </div>
-      <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:12px"></i>
     </div>
   </div>
 </aside>
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <!-- MAIN -->
 <div class="main-wrap">
-
-<!-- HEADER -->
-<header class="header">
-  <button class="header-menu-btn" onclick="toggleSidebar()" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
-  <div class="header-title">
-    <i class="fa-solid fa-circle-dot header-title-icon"></i>
-    <span id="headerTitle">Dashboard</span>
-  </div>
-  <div class="header-spacer"></div>
-
-  <!-- Balance -->
-  <div class="header-balance" onclick="navigate('/balance')">
-    <img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'">
-    <span class="val" id="hdrBalCnx">0</span>
-    <span class="text-dim" style="font-size:11px">CNX</span>
-    <span class="header-balance-sep"></span>
-    <img src="/images/dogecoin.png" alt="DOGE" onerror="this.style.display='none'">
-    <span class="val doge" id="hdrBalDoge">0</span>
-    <span class="text-dim" style="font-size:11px">DOGE</span>
-  </div>
-
-  <!-- Notifications -->
-  <div class="dropdown">
-    <button class="header-icon-btn" onclick="toggleDropdown('notifMenu', event)" aria-label="Notifications">
-      <i class="fa-solid fa-bell"></i>
-      <span class="notif-dot" id="notifDot" style="display:none">0</span>
-    </button>
-    <div class="dropdown-menu" id="notifMenu">
-      <div class="dropdown-header">
-        <h4>Notifications</h4>
-        <span class="clear" onclick="markNotifsRead()">Mark all read</span>
-      </div>
-      <div class="dropdown-list" id="notifList">
-        <div class="empty-state" style="padding:30px">
-          <div class="empty-state-icon"><img src="/images/loading.png" alt=""></div>
-          <p>No notifications yet</p>
-        </div>
-      </div>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-title" id="headerTitle">Dashboard</div>
+    <div class="header-spacer"></div>
+    <div class="header-balance" onclick="navigate('/balance')">
+      <span id="hdrBalCnx">0</span> CNX / <span id="hdrBalDoge">0</span> DOGE
     </div>
-  </div>
-
-  <!-- Avatar -->
-  <div class="header-avatar" id="headerAvatar" onclick="navigate('/balance')">?</div>
-</header>
-
-<!-- CONTENT -->
-<main class="content">
-
-<!-- DASHBOARD -->
-<section class="page-section active" id="page-home">
-  <div class="page-head">
-    <div class="page-head-row">
-      <div>
-        <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
-        <p class="page-sub">Overview of your COINIX earnings and activity</p>
-      </div>
-      <button class="btn btn-primary" onclick="navigate('/faucet')">
-        <i class="fa-solid fa-droplet"></i> Claim Free CNX
+    <div class="dropdown">
+      <button class="header-icon-btn" onclick="toggleDropdown('notifMenu')">
+        <i class="fa-solid fa-bell"></i>
       </button>
-    </div>
-  </div>
-
-  <div class="bal-grid">
-    <div class="bal-card">
-      <div class="bal-card-lbl"><img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'"> CNX Balance</div>
-      <div class="bal-card-val" id="dashCnx">0.00</div>
-      <div class="bal-card-usd">Site Token</div>
-    </div>
-    <div class="bal-card doge">
-      <div class="bal-card-lbl"><img src="/images/dogecoin.png" alt="DOGE" onerror="this.style.display='none'"> DOGE Balance</div>
-      <div class="bal-card-val" id="dashDoge">0.00</div>
-      <div class="bal-card-usd">Withdrawable</div>
-    </div>
-    <div class="bal-card">
-      <div class="bal-card-lbl"><i class="fa-solid fa-chart-line" style="color:var(--success)"></i> Today's Earnings</div>
-      <div class="bal-card-val" id="dashToday">0.00</div>
-      <div class="bal-card-usd" style="color:var(--success)"><i class="fa-solid fa-arrow-up"></i> Active</div>
-    </div>
-  </div>
-
-  <div class="grid grid-4" style="margin-bottom:24px">
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-droplet"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Faucet</div><div class="stat-val gold" id="dashFaucet">0 CNX</div><div class="stat-chg"><i class="fa-solid fa-arrow-up"></i> +0.5 per claim</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-gift"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Offerwall</div><div class="stat-val" id="dashOw">0 CNX</div><div class="stat-chg"><i class="fa-solid fa-bolt"></i> Instant</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-user-plus"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Referrals</div><div class="stat-val gold" id="dashRef">0 CNX</div><div class="stat-chg"><i class="fa-solid fa-coins"></i> 0 referrals</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-paper-plane"></i></div><div class="stat-lbl"><img src="/images/dogecoin.png" alt="" onerror="this.style.display='none'"> Withdrawals</div><div class="stat-val" id="dashWd">0 DOGE</div><div class="stat-chg"><i class="fa-solid fa-check"></i> 0 successful</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd">
-      <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
-    </div>
-    <div class="grid grid-4">
-      <div class="card" onclick="navigate('/faucet')" style="cursor:pointer;padding:16px">
-        <div class="card-icon" style="width:40px;height:40px;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-droplet"></i></div>
-        <div class="card-title" style="font-size:15px">Faucet</div>
-        <div class="card-sub">Claim free CNX every 10s</div>
-      </div>
-      <div class="card" onclick="navigate('/offerwall')" style="cursor:pointer;padding:16px">
-        <div class="card-icon blue" style="width:40px;height:40px;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-gift"></i></div>
-        <div class="card-title" style="font-size:15px">Offerwall</div>
-        <div class="card-sub">Complete offers for rewards</div>
-      </div>
-      <div class="card" onclick="navigate('/swap')" style="cursor:pointer;padding:16px">
-        <div class="card-icon green" style="width:40px;height:40px;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-right-left"></i></div>
-        <div class="card-title" style="font-size:15px">Swap</div>
-        <div class="card-sub">CNX ↔ DOGE 1:1</div>
-      </div>
-      <div class="card" onclick="navigate('/referral')" style="cursor:pointer;padding:16px">
-        <div class="card-icon purple" style="width:40px;height:40px;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-user-plus"></i></div>
-        <div class="card-title" style="font-size:15px">Refer</div>
-        <div class="card-sub">+50 CNX per friend</div>
+      <div class="dropdown-menu" id="notifMenu">
+        <div style="padding:14px"><h4>Notifications</h4></div>
+        <div id="notifList"><p style="text-align:center;color:var(--text-dim)">No notifications</p></div>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="card mt-3">
-    <div class="card-hd">
-      <div class="card-title"><i class="fa-solid fa-signal"></i> Live Withdrawals</div>
-      <span class="text-success" style="font-size:11px;font-weight:600"><i class="fa-solid fa-circle" style="font-size:6px"></i> LIVE</span>
-    </div>
-    <div id="liveList" style="max-height:300px;overflow-y:auto">
-      <div class="loading"><div class="spinner"></div></div>
-    </div>
-  </div>
+  <!-- GOOGLE TRANSLATE -->
+  <div id="google_translate_element"></div>
 
-  <div class="card mt-3">
-    <div class="card-title mb-2"><i class="fa-solid fa-circle-question"></i> FAQ</div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How do I earn CNX? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ul><li><strong>Claiming faucet</strong> every 10 seconds</li><li><strong>Offerwall</strong> — complete offers</li><li><strong>Referrals</strong> — invite friends (+50 CNX each)</li></ul></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">How to withdraw? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ol><li>Earn CNX</li><li>Swap CNX → DOGE (1:1)</li><li>Withdraw to FaucetPay email</li><li>Minimum 0.10 DOGE</li></ol></div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Exchange rate? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">1 CNX = 1 DOGE. Zero fees.</div></div>
-  </div>
-</section>
+  <!-- CONTENT -->
+  <main class="content">
 
-<!-- FAUCET -->
-<section class="page-section" id="page-faucet">
-  <div class="page-head">
-    <div class="page-head-row">
-      <div>
-        <h1 class="page-title"><i class="fa-solid fa-droplet"></i> Faucet</h1>
-        <p class="page-sub">Claim free CNX every 10 seconds — unlimited</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="faucet-layout">
-    <div class="faucet-claim-card">
-      <div class="faucet-reward-preview">
-        <img src="/images/coinix.png" alt="" onerror="this.style.display='none'">
-        <span>Reward: 0.5 CNX per claim</span>
-      </div>
-      <div class="faucet-amount" id="claimReward">0.5</div>
-      <div class="faucet-amount-unit">CNX</div>
-
-      <div class="cd-wrap">
-        <svg class="cd-svg" viewBox="0 0 180 180">
-          <defs>
-            <linearGradient id="cdGradient" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#FFD700"/>
-              <stop offset="100%" stop-color="#F5A623"/>
-            </linearGradient>
-          </defs>
-          <circle class="cd-bg" cx="90" cy="90" r="80"/>
-          <circle class="cd-progress" id="cdProgress" cx="90" cy="90" r="80"
-                  stroke-dasharray="502.65" stroke-dashoffset="0"/>
-        </svg>
-        <div class="cd-center">
-          <div class="cd-time" id="cdTime">0</div>
-          <div class="cd-label" id="cdLabel">seconds</div>
-          <div class="cd-ready hidden" id="cdReady"><i class="fa-solid fa-circle-check"></i> READY</div>
+    <!-- DASHBOARD -->
+    <section class="page-section active" id="page-home">
+      <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
+      <p class="page-sub">Your COINIX earnings overview</p>
+      
+      <div class="bal-grid">
+        <div class="bal-card">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px">CNX Balance</div>
+          <div class="bal-card-val" id="dashCnx">0.00</div>
+        </div>
+        <div class="bal-card">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px">DOGE Balance</div>
+          <div class="bal-card-val" id="dashDoge">0.00</div>
         </div>
       </div>
 
-      <button class="btn-claim" id="claimBtn" onclick="doClaim()">
-        <i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX
-      </button>
-
-      <div class="claim-stats">
-        <div class="claim-stat">
-          <div class="claim-stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Today</div>
-          <div class="claim-stat-val" id="statToday">0</div>
-        </div>
-        <div class="claim-stat">
-          <div class="claim-stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Total</div>
-          <div class="claim-stat-val" id="statTotal">0</div>
-        </div>
-        <div class="claim-stat">
-          <div class="claim-stat-lbl"><i class="fa-solid fa-check"></i> Claims</div>
-          <div class="claim-stat-val" id="statClaims">0</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="offerwall-widget">
-      <div class="card-hd">
-        <div class="card-title" style="margin:0"><i class="fa-solid fa-gift" style="color:var(--blue)"></i> Quick Offerwall</div>
-        <button class="btn btn-sm btn-ghost" onclick="refreshOffers()"><i class="fa-solid fa-rotate"></i></button>
-      </div>
-      <p class="card-sub">Earn bonus CNX instantly by completing top offers</p>
-      <div class="ow-offers" id="owOffers">
-        <div class="ow-offer"><div class="ow-offer-ic"><i class="fa-solid fa-mobile-screen"></i></div><div class="ow-offer-body"><div class="ow-offer-title">Install App</div><div class="ow-offer-meta"><span><i class="fa-solid fa-clock"></i> 2 min</span><span><i class="fa-solid fa-star"></i> Easy</span></div></div><div class="ow-offer-reward">+50 CNX</div></div>
-        <div class="ow-offer"><div class="ow-offer-ic"><i class="fa-solid fa-video"></i></div><div class="ow-offer-body"><div class="ow-offer-title">Watch Video</div><div class="ow-offer-meta"><span><i class="fa-solid fa-clock"></i> 30 sec</span><span><i class="fa-solid fa-star"></i> Easy</span></div></div><div class="ow-offer-reward">+25 CNX</div></div>
-        <div class="ow-offer"><div class="ow-offer-ic"><i class="fa-solid fa-clipboard-list"></i></div><div class="ow-offer-body"><div class="ow-offer-title">Survey</div><div class="ow-offer-meta"><span><i class="fa-solid fa-clock"></i> 5 min</span><span><i class="fa-solid fa-star"></i> Medium</span></div></div><div class="ow-offer-reward">+150 CNX</div></div>
-      </div>
-      <button class="btn btn-primary btn-block mt-2" onclick="navigate('/offerwall')">
-        <i class="fa-solid fa-external-link"></i> Open Full Offerwall
-      </button>
-    </div>
-  </div>
-</section>
-
-<!-- OFFERWALL -->
-<section class="page-section" id="page-offerwall">
-  <div class="page-head">
-    <div class="page-head-row">
-      <div>
-        <h1 class="page-title"><i class="fa-solid fa-gift"></i> Offerwall</h1>
-        <p class="page-sub">Complete offers and earn CNX instantly via postback</p>
-      </div>
-      <button class="btn btn-secondary" onclick="refreshOfferwall()"><i class="fa-solid fa-rotate"></i> Refresh</button>
-    </div>
-  </div>
-
-  <div class="bal-grid">
-    <div class="bal-card">
-      <div class="bal-card-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> CNX Balance</div>
-      <div class="bal-card-val" id="owCnx">0.00</div>
-    </div>
-    <div class="bal-card">
-      <div class="bal-card-lbl"><i class="fa-solid fa-chart-line" style="color:var(--success)"></i> Offerwall Earnings</div>
-      <div class="bal-card-val" id="owEarned">0.00</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hd">
-      <div class="card-title"><i class="fa-solid fa-list"></i> Available Offers</div>
-      <span class="text-success" style="font-size:12px"><i class="fa-solid fa-circle" style="font-size:6px"></i> Auto-credited</span>
-    </div>
-    <div class="offerwall-iframe-wrap" id="owIframeWrap">
-      <div class="loading" style="position:absolute;inset:0"><div class="spinner"></div><div>Loading offers...</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- BALANCE -->
-<section class="page-section" id="page-balance">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-wallet"></i> Balance</h1>
-    <p class="page-sub">Your wallet overview</p>
-  </div>
-
-  <div class="bal-grid">
-    <div class="bal-card">
-      <div class="bal-card-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> CNX Balance</div>
-      <div class="bal-card-val" id="balCnx">0.00</div>
-    </div>
-    <div class="bal-card doge">
-      <div class="bal-card-lbl"><img src="/images/dogecoin.png" alt="" onerror="this.style.display='none'"> DOGE Balance</div>
-      <div class="bal-card-val" id="balDoge">0.00</div>
-    </div>
-  </div>
-
-  <div class="grid grid-4" style="margin-bottom:24px">
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-droplet"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Faucet</div><div class="stat-val gold" id="balFaucet">0</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-gift"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Offerwall</div><div class="stat-val" id="balOw">0</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-user-plus"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Referrals</div><div class="stat-val" id="balRef">0</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-coins"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Total Earned</div><div class="stat-val gold" id="balTotal">0</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title mb-2"><i class="fa-solid fa-gear"></i> Quick Actions</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
-      <button class="btn btn-primary" onclick="navigate('/faucet')"><i class="fa-solid fa-droplet"></i> Claim CNX</button>
-      <button class="btn btn-secondary" onclick="navigate('/swap')"><i class="fa-solid fa-right-left"></i> Swap to DOGE</button>
-      <button class="btn btn-secondary" onclick="navigate('/withdraw')"><i class="fa-solid fa-paper-plane"></i> Withdraw</button>
-      <button class="btn btn-ghost" onclick="navigate('/history')"><i class="fa-solid fa-clock-rotate-left"></i> View History</button>
-    </div>
-  </div>
-</section>
-
-<!-- SWAP -->
-<section class="page-section" id="page-swap">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-right-left"></i> Swap</h1>
-    <p class="page-sub">Convert CNX ↔ DOGE instantly at 1:1 rate — zero fees</p>
-  </div>
-
-  <div class="bal-grid">
-    <div class="bal-card">
-      <div class="bal-card-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> CNX Balance</div>
-      <div class="bal-card-val" id="swapCnx">0.00</div>
-    </div>
-    <div class="bal-card doge">
-      <div class="bal-card-lbl"><img src="/images/dogecoin.png" alt="" onerror="this.style.display='none'"> DOGE Balance</div>
-      <div class="bal-card-val" id="swapDoge">0.00</div>
-    </div>
-  </div>
-
-  <div class="swap-box">
-    <div class="swap-row">
-      <div class="swap-row-hd">
-        <span>From</span>
-        <span>Available: <span class="avail" id="swapAvail" onclick="setSwapMax()">0.00</span></span>
-      </div>
-      <div class="swap-row-inp">
-        <input type="number" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="calcSwap()">
-        <div class="swap-currency" id="swapFromCur"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> CNX</div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.25)">25%</button>
-        <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.5)">50%</button>
-        <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.75)">75%</button>
-        <button class="btn btn-ghost btn-sm" onclick="setSwapMax()">MAX</button>
-      </div>
-    </div>
-
-    <div class="swap-arrow" onclick="flipSwap()" title="Reverse direction"><i class="fa-solid fa-arrow-down-arrow-up"></i></div>
-
-    <div class="swap-row">
-      <div class="swap-row-hd"><span>To (estimated)</span></div>
-      <div class="swap-row-inp">
-        <input type="number" id="swapTo" placeholder="0.00" readonly>
-        <div class="swap-currency" id="swapToCur"><img src="/images/dogecoin.png" alt="" onerror="this.style.display='none'"> DOGE</div>
-      </div>
-    </div>
-
-    <div class="swap-info">
-      <span>You receive: <span id="swapReceive">0.00</span></span>
-      <span><i class="fa-solid fa-equals"></i> 1:1 · No fees</span>
-    </div>
-
-    <button class="btn btn-primary btn-block btn-lg mt-2" id="swapBtn" onclick="doSwap()">
-      <i class="fa-solid fa-right-left"></i> Swap Now
-    </button>
-
-    <div class="swap-preview mt-2" id="swapPreview" style="display:none">
-      <div class="flex-between"><span class="text-dim">Direction</span><span class="text-gold" id="swapDir">CNX → DOGE</span></div>
-      <div class="flex-between mt-1"><span class="text-dim">Amount</span><span id="swapAmt">0.00</span></div>
-      <div class="flex-between mt-1"><span class="text-dim">Fee</span><span class="text-success">0 (Free)</span></div>
-      <div class="flex-between mt-1"><span class="text-dim">You receive</span><span class="text-gold" id="swapRcv">0.00</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- WITHDRAW -->
-<section class="page-section" id="page-withdraw">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-paper-plane"></i> Withdraw</h1>
-    <p class="page-sub">Send DOGE to your FaucetPay email</p>
-  </div>
-
-  <div class="bal-grid">
-    <div class="bal-card doge">
-      <div class="bal-card-lbl"><img src="/images/dogecoin.png" alt="" onerror="this.style.display='none'"> Available DOGE</div>
-      <div class="bal-card-val" id="wdDoge">0.00</div>
-      <div class="bal-card-usd">Ready to withdraw</div>
-    </div>
-    <div class="bal-card">
-      <div class="bal-card-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> CNX Balance</div>
-      <div class="bal-card-val" id="wdCnx">0.00</div>
-      <div class="bal-card-usd" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE →</div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <div class="tab active" onclick="setWdTab(this,'form')"><i class="fa-solid fa-paper-plane"></i> Withdraw</div>
-    <div class="tab" onclick="setWdTab(this,'history')"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
-  </div>
-
-  <div id="wdTabForm">
-    <div class="card" style="border-color:rgba(74,158,255,0.2);background:linear-gradient(135deg,rgba(74,158,255,0.06),rgba(74,158,255,0.02))">
-      <div style="display:flex;align-items:flex-start;gap:12px">
-        <i class="fa-solid fa-circle-info" style="color:var(--blue);font-size:20px;margin-top:2px"></i>
-        <div>
-          <div style="font-weight:600;margin-bottom:4px">FaucetPay Only</div>
-          <div style="font-size:13px;color:var(--text-dim)">Withdrawals are sent to your <strong class="text-gold">FaucetPay email</strong>. Wallet addresses are not supported.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card mt-3">
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-coins"></i> Currency</label>
-        <div class="form-input" style="display:flex;align-items:center;gap:10px;padding:12px 16px"><img src="/images/dogecoin.png" alt="" style="width:20px;height:20px" onerror="this.style.display='none'"> DOGE (via FaucetPay)</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-hashtag"></i> Amount (DOGE)</label>
-        <input type="number" class="form-input" id="wdAmount" placeholder="0.00" step="0.01" min="0.1">
-        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" onclick="setWdAmt(0.5)">0.5</button>
-          <button class="btn btn-ghost btn-sm" onclick="setWdAmt(1)">1</button>
-          <button class="btn btn-ghost btn-sm" onclick="setWdAmt(5)">5</button>
-          <button class="btn btn-ghost btn-sm" onclick="setWdAmt(10)">10</button>
-          <button class="btn btn-ghost btn-sm" onclick="setWdAmt('max')">MAX</button>
-        </div>
-        <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Minimum withdrawal: <strong class="text-gold">0.10 DOGE</strong></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-envelope"></i> FaucetPay Email</label>
-        <input type="email" class="form-input" id="wdEmail" placeholder="your@faucetpay.email">
-        <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Only your registered FaucetPay email is accepted</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px">
+        <div class="stat-card"><i class="fa-solid fa-droplet" style="color:var(--gold)"></i><div style="margin-top:10px;font-size:12px;color:var(--text-dim)">Total Earned</div><div class="stat-val" id="dashTotal">0 CNX</div></div>
+        <div class="stat-card"><i class="fa-solid fa-hand-holding-dollar" style="color:var(--gold)"></i><div style="margin-top:10px;font-size:12px;color:var(--text-dim)">Claims Today</div><div class="stat-val" id="dashClaims">0</div></div>
       </div>
 
-      <div style="padding:14px;border-radius:12px;background:rgba(0,0,0,0.3);margin-bottom:16px">
-        <div class="flex-between mb-1"><span class="text-dim" style="font-size:13px">Network</span><span class="text-gold">Dogecoin</span></div>
-        <div class="flex-between mb-1"><span class="text-dim" style="font-size:13px">Fee</span><span class="text-success">Free</span></div>
-        <div class="flex-between mb-1"><span class="text-dim" style="font-size:13px">Minimum</span><span>0.10 DOGE</span></div>
-        <div class="flex-between"><span class="text-dim" style="font-size:13px">Arrival</span><span>&lt; 24 hours</span></div>
-      </div>
-
-      <button class="btn btn-primary btn-block btn-lg" id="wdBtn" onclick="doWithdraw()">
-        <i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay
-      </button>
-    </div>
-  </div>
-
-  <div id="wdTabHistory" style="display:none">
-    <div class="card">
-      <div class="card-title mb-2"><i class="fa-solid fa-clock-rotate-left"></i> Withdrawal History</div>
-      <div class="table-wrap">
-        <div class="table-scroll">
-          <table class="table" id="wdHistoryTable">
-            <thead><tr><th>ID</th><th>Amount</th><th>Email</th><th>Status</th><th>Time</th></tr></thead>
-            <tbody><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HISTORY -->
-<section class="page-section" id="page-history">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-clock-rotate-left"></i> History</h1>
-    <p class="page-sub">All your activity in one place</p>
-  </div>
-
-  <div class="tabs">
-    <div class="tab active" onclick="setHistTab(this,'all')"><i class="fa-solid fa-list"></i> All</div>
-    <div class="tab" onclick="setHistTab(this,'faucet')"><i class="fa-solid fa-droplet"></i> Faucet</div>
-    <div class="tab" onclick="setHistTab(this,'offerwall')"><i class="fa-solid fa-gift"></i> Offerwall</div>
-    <div class="tab" onclick="setHistTab(this,'swap')"><i class="fa-solid fa-right-left"></i> Swap</div>
-    <div class="tab" onclick="setHistTab(this,'withdraw')"><i class="fa-solid fa-paper-plane"></i> Withdraw</div>
-    <div class="tab" onclick="setHistTab(this,'referral')"><i class="fa-solid fa-user-plus"></i> Referral</div>
-  </div>
-
-  <div class="card">
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="table" id="historyTable">
-          <thead><tr><th>Type</th><th>Details</th><th>Amount</th><th>Status</th><th>Time</th></tr></thead>
-          <tbody><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- REFERRAL -->
-<section class="page-section" id="page-referral">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-user-plus"></i> Referral Program</h1>
-    <p class="page-sub">Invite friends and earn +50 CNX per signup — unlimited</p>
-  </div>
-
-  <div class="ref-hero">
-    <div class="ref-hero-txt">
-      <h2>Earn +50 CNX Per Friend</h2>
-      <p>Share your unique referral link. When friends sign up through your link, you instantly receive +50 CNX. No limits — invite as many as you want!</p>
-      <div class="ref-link-box">
-        <input type="text" id="refLink" readonly value="Loading...">
-        <button class="btn btn-primary" onclick="copyReferral()"><i class="fa-solid fa-copy"></i> Copy</button>
-        <button class="btn btn-secondary" onclick="shareReferral()"><i class="fa-solid fa-share"></i></button>
-      </div>
-    </div>
-  </div>
-
-  <div class="ref-stats mt-3">
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-users"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Total Referrals</div><div class="stat-val gold" id="refTotal">0</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-circle-check"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Active Referrals</div><div class="stat-val" id="refActive">0</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-coins"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Lifetime Earnings</div><div class="stat-val gold" id="refEarned">0 CNX</div></div>
-    <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-percent"></i></div><div class="stat-lbl"><img src="/images/coinix.png" alt="" onerror="this.style.display='none'"> Commission</div><div class="stat-val">50 CNX</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title mb-2"><i class="fa-solid fa-users"></i> Recent Referral Activity</div>
-    <div id="refActivity">
-      <div class="empty-state" style="padding:30px">
-        <div class="empty-state-icon"><img src="/images/loading.png" alt=""></div>
-        <h3>No referrals yet</h3>
-        <p>Share your link to start earning +50 CNX per signup</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- LEADERBOARD -->
-<section class="page-section" id="page-leaderboard">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-trophy"></i> Leaderboard</h1>
-    <p class="page-sub">Top earners this month</p>
-  </div>
-
-  <div class="lb-top3">
-    <div class="lb-podium silver">
-      <div class="lb-podium-rank">#2</div>
-      <div class="lb-podium-avatar">-</div>
-      <div class="lb-podium-name">Loading...</div>
-      <div class="lb-podium-earn">0 CNX</div>
-    </div>
-    <div class="lb-podium gold">
-      <div class="lb-podium-rank">#1</div>
-      <div class="lb-podium-avatar">-</div>
-      <div class="lb-podium-name">Loading...</div>
-      <div class="lb-podium-earn">0 CNX</div>
-    </div>
-    <div class="lb-podium bronze">
-      <div class="lb-podium-rank">#3</div>
-      <div class="lb-podium-avatar">-</div>
-      <div class="lb-podium-name">Loading...</div>
-      <div class="lb-podium-earn">0 CNX</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title mb-2"><i class="fa-solid fa-list-ol"></i> Full Ranking</div>
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="table" id="lbTable">
-          <thead><tr><th>#</th><th>User</th><th>Earnings</th><th>Claims</th><th>Referrals</th></tr></thead>
-          <tbody><tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ADMIN -->
-<section class="page-section" id="page-admin">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel</h1>
-    <p class="page-sub">Enterprise dashboard for system management</p>
-  </div>
-
-  <div id="adminContent">
-    <div class="tabs">
-      <div class="tab active" onclick="setAdminTab(this,'dash')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
-      <div class="tab" onclick="setAdminTab(this,'users')"><i class="fa-solid fa-users"></i> Users</div>
-      <div class="tab" onclick="setAdminTab(this,'wd')"><i class="fa-solid fa-wallet"></i> Withdrawals</div>
-      <div class="tab" onclick="setAdminTab(this,'logs')"><i class="fa-solid fa-scroll"></i> Logs</div>
-    </div>
-
-    <div id="admTabDash">
-      <div class="grid grid-4">
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-users"></i></div><div class="stat-lbl">Total Users</div><div class="stat-val gold" id="admUsers">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-signal"></i></div><div class="stat-lbl">Online Today</div><div class="stat-val" id="admOnline">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-droplet"></i></div><div class="stat-lbl">Total Claims</div><div class="stat-val" id="admClaims">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-paper-plane"></i></div><div class="stat-lbl">Total Withdrawn</div><div class="stat-val gold" id="admWithdrawn">0</div></div>
-      </div>
-    </div>
-
-    <div id="admTabUsers" style="display:none">
-      <div class="card mb-2">
-        <div class="card-title"><i class="fa-solid fa-user-gear"></i> Adjust Balance</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;margin-top:12px">
-          <input class="form-input" id="adjUser" placeholder="User ID">
-          <input class="form-input" id="adjAmt" type="number" placeholder="Amount">
-          <select class="form-select" id="adjCur"><option value="cnx">CNX</option><option value="doge">DOGE</option></select>
-          <button class="btn btn-primary" onclick="adminAdjust()"><i class="fa-solid fa-check"></i></button>
-        </div>
-      </div>
       <div class="card">
-        <div class="table-wrap"><div class="table-scroll">
-          <table class="table" id="admUsersTbl"><thead><tr><th>ID</th><th>User</th><th>CNX</th><th>DOGE</th><th>Claims</th><th>Status</th><th>Actions</th></tr></thead><tbody><tr><td colspan="7"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
-        </div></div>
+        <h3 style="font-family:'Space Grotesk';margin-bottom:16px"><i class="fa-solid fa-star"></i> Quick Actions</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+          <button class="btn btn-primary" onclick="navigate('/faucet')"><i class="fa-solid fa-droplet"></i> Claim</button>
+          <button class="btn btn-secondary" onclick="navigate('/offerwall')"><i class="fa-solid fa-gift"></i> Offerwall</button>
+          <button class="btn btn-secondary" onclick="navigate('/swap')"><i class="fa-solid fa-right-left"></i> Swap</button>
+          <button class="btn btn-secondary" onclick="navigate('/withdraw')"><i class="fa-solid fa-paper-plane"></i> Withdraw</button>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div id="admTabWd" style="display:none">
-      <div class="card-title mb-2"><i class="fa-solid fa-clock" style="color:var(--warn)"></i> Pending Withdrawals</div>
-      <div class="table-wrap mb-3"><div class="table-scroll">
-        <table class="table" id="admPendTbl"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Email</th><th>Time</th><th>Actions</th></tr></thead><tbody><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
-      </div></div>
-      <div class="card-title mb-2"><i class="fa-solid fa-list"></i> All Withdrawals</div>
-      <div class="table-wrap"><div class="table-scroll">
-        <table class="table" id="admAllWdTbl"><thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Email</th><th>Status</th><th>Time</th></tr></thead><tbody><tr><td colspan="6"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
-      </div></div>
-    </div>
+    <!-- FAUCET -->
+    <section class="page-section" id="page-faucet">
+      <h1 class="page-title"><i class="fa-solid fa-droplet"></i> Faucet</h1>
+      <p class="page-sub">Claim 0.5 CNX every 10 seconds — unlimited</p>
+      
+      <div class="card" style="text-align:center;padding:40px">
+        <div style="font-size:18px;color:var(--text-dim);margin-bottom:10px">Next Claim in:</div>
+        <div class="faucet-amount" id="claimTime">10s</div>
+        <button class="btn-claim" id="claimBtn" onclick="doClaim()" style="margin-top:24px">
+          <i class="fa-solid fa-hand-holding-dollar"></i> CLAIM NOW
+        </button>
+        <div style="margin-top:20px;font-size:13px;color:var(--text-dim)">
+          <div>Total Claims: <strong id="totalClaims">0</strong></div>
+        </div>
+      </div>
+    </section>
 
-    <div id="admTabLogs" style="display:none">
+    <!-- OFFERWALL -->
+    <section class="page-section" id="page-offerwall">
+      <h1 class="page-title"><i class="fa-solid fa-gift"></i> Offerwall</h1>
+      <p class="page-sub">Complete offers and earn CNX instantly</p>
+      
+      <div class="card" style="margin-bottom:20px">
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px">Offerwall Earnings</div>
+        <div class="bal-card-val" id="owEarned">0.00</div>
+      </div>
+
       <div class="card">
-        <div class="card-title mb-2"><i class="fa-solid fa-scroll"></i> Audit Logs</div>
-        <div class="table-wrap"><div class="table-scroll">
-          <table class="table" id="admLogsTbl"><thead><tr><th>Action</th><th>User</th><th>Details</th><th>Time</th></tr></thead><tbody><tr><td colspan="4"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
-        </div></div>
+        <h3 style="font-family:'Space Grotesk';margin-bottom:16px"><i class="fa-solid fa-list"></i> Available Offers</h3>
+        <div class="offerwall-iframe-wrap" id="owIframeWrap">
+          <div class="loading" style="position:absolute;inset:0"><div class="spinner"></div></div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-</main>
+    <!-- BALANCE -->
+    <section class="page-section" id="page-balance">
+      <h1 class="page-title"><i class="fa-solid fa-wallet"></i> Balance</h1>
+      
+      <div class="bal-grid">
+        <div class="bal-card">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px">CNX Balance</div>
+          <div class="bal-card-val" id="balCnx">0.00</div>
+        </div>
+        <div class="bal-card">
+          <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px">DOGE Balance</div>
+          <div class="bal-card-val" id="balDoge">0.00</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <button class="btn btn-primary btn-block" onclick="navigate('/swap')"><i class="fa-solid fa-right-left"></i> Swap CNX ↔ DOGE</button>
+      </div>
+    </section>
+
+    <!-- SWAP -->
+    <section class="page-section" id="page-swap">
+      <h1 class="page-title"><i class="fa-solid fa-right-left"></i> Swap</h1>
+      <p class="page-sub">Convert CNX ↔ DOGE at 1:1 rate</p>
+      
+      <div class="card" style="max-width:500px;margin:0 auto">
+        <div class="form-group">
+          <label class="form-label">Amount</label>
+          <input type="number" class="form-input" id="swapAmount" placeholder="0.00" step="0.01" min="0" oninput="updateSwap()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Direction</label>
+          <select class="form-select" id="swapDir" onchange="updateSwap()">
+            <option value="cnx-to-doge">CNX → DOGE</option>
+            <option value="doge-to-cnx">DOGE → CNX</option>
+          </select>
+        </div>
+
+        <div style="padding:14px;background:rgba(0,0,0,0.3);border-radius:10px;margin-bottom:16px;font-size:13px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <span style="color:var(--text-dim)">You Receive:</span>
+            <span style="color:var(--gold);font-weight:600" id="swapReceive">0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-dim)">Fee:</span>
+            <span style="color:var(--success)">FREE</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" onclick="doSwap()"><i class="fa-solid fa-right-left"></i> Swap Now</button>
+      </div>
+    </section>
+
+    <!-- WITHDRAW -->
+    <section class="page-section" id="page-withdraw">
+      <h1 class="page-title"><i class="fa-solid fa-paper-plane"></i> Withdraw</h1>
+      <p class="page-sub">Send DOGE to FaucetPay email</p>
+      
+      <div class="card" style="max-width:500px;margin:0 auto">
+        <div style="padding:14px;background:rgba(74,158,255,0.1);border-radius:10px;margin-bottom:16px;border-left:3px solid var(--blue)">
+          <strong>Available:</strong> <span id="wdAvail">0.00</span> DOGE (Minimum: 0.10)
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Amount (DOGE)</label>
+          <input type="number" class="form-input" id="wdAmount" placeholder="0.00" step="0.01" min="0.1">
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="setWdAmt(0.5)" style="font-size:12px">0.5</button>
+            <button class="btn btn-secondary" onclick="setWdAmt(1)" style="font-size:12px">1.0</button>
+            <button class="btn btn-secondary" onclick="setWdAmt(5)" style="font-size:12px">5.0</button>
+            <button class="btn btn-secondary" onclick="setWdAmt('MAX')" style="font-size:12px">MAX</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">FaucetPay Email</label>
+          <input type="email" class="form-input" id="wdEmail" placeholder="your@email.com">
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" onclick="doWithdraw()"><i class="fa-solid fa-paper-plane"></i> Submit Withdrawal</button>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast">
-  <div class="toast-icon"><i class="fa-solid fa-circle-check"></i></div>
+  <div><i class="fa-solid fa-circle-check"></i></div>
   <span id="toastMsg">Success</span>
 </div>
 
 <script>
 // ============================================
-// COINIX SPA v3.0 - Full Production
+// COINIX v4.0 - COMPLETE FIXED VERSION
 // ============================================
 const API = window.location.origin;
 let TOKEN = localStorage.getItem('coinix_token') || '';
 let USER = null;
-const ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID'; // Replace with your admin Telegram ID
-let CUR_ROUTE = '/';
-let SWAP_DIR = 'cnx-to-doge';
-let CLAIM_CD = 10000;
 let CLAIM_TIMER = null;
-let HIST_TAB = 'all';
-let HIST_CACHE = [];
-let NOTIFS = [];
+let SWAP_DIR = 'cnx-to-doge';
+
+// ============================================
+// GOOGLE TRANSLATE INIT
+// ============================================
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,tr,es,fr,de,it,pt,ru,ja,zh-CN,ar,hi',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+  }, 'google_translate_element');
+}
 
 // ============================================
 // TELEGRAM AUTH
@@ -1422,16 +417,6 @@ function initTelegram(){
       else mockAuth();
     } catch(e){ mockAuth(); }
   } else { mockAuth(); }
-}
-function mockAuth(){
-  USER = {
-    telegram_id: 'demo_user', username: 'demo', first_name: 'Demo',
-    balance: 125.5, doge_balance: 12.3, total_earned: 450,
-    total_claims: 89, total_withdrawals: 5, referrals: 3,
-    referral_earnings: 150, total_ptc_earnings: 75,
-    last_claim: null
-  };
-  updateUserUI();
 }
 
 async function authUser(initData){
@@ -1450,6 +435,16 @@ async function authUser(initData){
   } catch(e){ mockAuth(); }
 }
 
+function mockAuth(){
+  USER = {
+    telegram_id: 'demo', username: 'demo', first_name: 'Demo',
+    balance: 100, doge_balance: 10, total_earned: 500,
+    total_claims: 100, total_ptc_earnings: 250,
+    last_claim: null
+  };
+  updateUserUI();
+}
+
 async function loadUser(){
   if(!TOKEN) return;
   try{
@@ -1462,52 +457,28 @@ function updateUserUI(){
   if(!USER) return;
   const name = USER.username || USER.first_name || 'User';
   const initial = name.charAt(0).toUpperCase();
-  const photo = USER.photo_url;
   const bal = formatNum(USER.balance || 0);
   const doge = formatNum(USER.doge_balance || 0);
   
-  // Header
+  // Update all balance displays
   document.getElementById('hdrBalCnx').textContent = bal;
   document.getElementById('hdrBalDoge').textContent = doge;
-  const avatar = document.getElementById('headerAvatar');
-  avatar.innerHTML = photo ? `<img src="${photo}">` : initial;
+  document.getElementById('dashCnx').textContent = bal;
+  document.getElementById('dashDoge').textContent = doge;
+  document.getElementById('balCnx').textContent = bal;
+  document.getElementById('balDoge').textContent = doge;
+  document.getElementById('dashTotal').textContent = formatNum(USER.total_earned || 0) + ' CNX';
+  document.getElementById('dashClaims').textContent = USER.total_claims || 0;
+  document.getElementById('totalClaims').textContent = USER.total_claims || 0;
+  document.getElementById('owEarned').textContent = formatNum(USER.total_ptc_earnings || 0);
+  document.getElementById('wdAvail').textContent = formatNum(USER.doge_balance || 0);
   
   // Sidebar
   document.getElementById('sidebarName').textContent = name;
-  document.getElementById('sidebarBal').innerHTML = `<img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'"> ${bal} CNX`;
-  const sav = document.getElementById('sidebarAvatar');
-  sav.innerHTML = photo ? `<img src="${photo}">` : initial;
+  document.getElementById('sidebarBal').textContent = bal + ' CNX';
+  document.getElementById('sidebarAvatar').textContent = initial;
   
-  // Admin visibility - ONLY ADMIN
-  const isAdmin = USER.telegram_id === ADMIN_ID;
-  document.getElementById('adminSection').style.display = isAdmin ? 'block' : 'none';
-  
-  // All balance displays
-  const map = {
-    dashCnx: bal, dashDoge: doge, dashToday: bal,
-    dashFaucet: formatNum((USER.total_earned||0) - (USER.total_ptc_earnings||0)) + ' CNX',
-    dashOw: formatNum(USER.total_ptc_earnings||0) + ' CNX',
-    dashRef: formatNum(USER.referral_earnings||0) + ' CNX',
-    dashWd: formatNum(USER.total_withdrawals||0) + ' DOGE',
-    balCnx: bal, balDoge: doge,
-    balFaucet: formatNum((USER.total_earned||0) - (USER.total_ptc_earnings||0)),
-    balOw: formatNum(USER.total_ptc_earnings||0),
-    balRef: formatNum(USER.referral_earnings||0),
-    balTotal: formatNum(USER.total_earned||0),
-    swapCnx: bal, swapDoge: doge,
-    wdCnx: bal, wdDoge: doge,
-    owCnx: bal, owEarned: formatNum(USER.total_ptc_earnings||0),
-    statToday: formatNum((USER.total_earned||0) * 0.05),
-    statTotal: formatNum(USER.total_earned||0),
-    statClaims: USER.total_claims || 0,
-    refTotal: USER.referrals || 0,
-    refActive: Math.floor((USER.referrals||0) * 0.7),
-    refEarned: formatNum(USER.referral_earnings||0) + ' CNX',
-  };
-  Object.entries(map).forEach(([id,v]) => { const el = document.getElementById(id); if(el) el.textContent = v; });
-  
-  updateClaimCD();
-  loadNotifs();
+  startClaimTimer();
 }
 
 function formatNum(n){
@@ -1516,28 +487,9 @@ function formatNum(n){
 }
 
 // ============================================
-// ROUTING
+// NAVIGATION
 // ============================================
-function navigate(route, pushState = true){
-  if(!route) route = '/';
-  CUR_ROUTE = route;
-  
-  if(pushState && window.location.hash !== '#' + route){
-    history.pushState({route}, '', '#' + route);
-  }
-  showPage(route);
-  closeSidebar();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-window.addEventListener('popstate', (e) => {
-  const route = (e.state && e.state.route) ? e.state.route : (window.location.hash.slice(1) || '/');
-  navigate(route, false);
-});
-
-function showPage(route){
-  if(route.startsWith('#')) route = route.substring(1);
-  
+function navigate(route){
   document.querySelectorAll('.sidebar-item').forEach(el => {
     el.classList.toggle('active', el.dataset.route === route);
   });
@@ -1546,71 +498,215 @@ function showPage(route){
   
   const map = {
     '/':'page-home','/faucet':'page-faucet','/offerwall':'page-offerwall',
-    '/balance':'page-balance','/swap':'page-swap','/withdraw':'page-withdraw',
-    '/history':'page-history','/referral':'page-referral','/leaderboard':'page-leaderboard',
-    '/admin':'page-admin'
+    '/balance':'page-balance','/swap':'page-swap','/withdraw':'page-withdraw'
   };
-  const titles = {
-    '/':'Dashboard','/faucet':'Faucet','/offerwall':'Offerwall',
-    '/balance':'Balance','/swap':'Swap','/withdraw':'Withdraw',
-    '/history':'History','/referral':'Referral','/leaderboard':'Leaderboard',
-    '/admin':'Admin Panel'
-  };
-  const id = map[route] || 'page-home';
-  const page = document.getElementById(id);
+  const page = document.getElementById(map[route] || 'page-home');
   if(page) page.classList.add('active');
+  
+  const titles = {'/':'Dashboard','/faucet':'Faucet','/offerwall':'Offerwall',
+    '/balance':'Balance','/swap':'Swap','/withdraw':'Withdraw'};
   document.getElementById('headerTitle').textContent = titles[route] || 'COINIX';
   
-  // Page init
-  if(route === '/') { loadLive(); }
   if(route === '/offerwall') loadOfferwall();
-  if(route === '/swap') { document.getElementById('swapAvail').textContent = USER ? USER.balance : 0; }
-  if(route === '/withdraw') loadWdHistory();
-  if(route === '/history') { HIST_CACHE = []; loadHistory(); }
-  if(route === '/referral') loadReferral();
-  if(route === '/leaderboard') loadLeaderboard();
-  if(route === '/admin') {
-    if(USER && USER.telegram_id === ADMIN_ID) adminLoad();
-    else { showToast('Admin access denied','error'); navigate('/'); }
+}
+
+// ============================================
+// CLAIM FUNCTION
+// ============================================
+async function doClaim(){
+  if(!TOKEN) { showToast('Please login first','error'); return; }
+  
+  const btn = document.getElementById('claimBtn');
+  btn.disabled = true;
+  btn.textContent = 'Claiming...';
+  
+  try{
+    const res = await fetch(API + '/api/claim', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({})
+    });
+    
+    if(res.ok){
+      const d = await res.json();
+      USER.balance = (USER.balance || 0) + d.amount;
+      USER.total_earned = (USER.total_earned || 0) + d.amount;
+      USER.total_claims = (USER.total_claims || 0) + 1;
+      USER.last_claim = Date.now();
+      updateUserUI();
+      showToast(`+${d.amount} CNX claimed!`, 'success');
+      startClaimTimer();
+    } else {
+      const err = await res.json();
+      if(err.wait){
+        showToast(`Wait ${err.wait}s before next claim`, 'error');
+        startClaimCountdown(err.wait);
+      } else {
+        showToast(err.error || 'Claim failed', 'error');
+      }
+    }
+  } catch(e){
+    showToast('Network error', 'error');
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '💰 CLAIM NOW';
+}
+
+function startClaimTimer(){
+  const lastClaim = USER.last_claim || (Date.now() - 11000);
+  const elapsed = Date.now() - lastClaim;
+  const remaining = Math.max(0, 10000 - elapsed);
+  startClaimCountdown(Math.ceil(remaining / 1000));
+}
+
+function startClaimCountdown(seconds){
+  clearInterval(CLAIM_TIMER);
+  const btn = document.getElementById('claimBtn');
+  const timeEl = document.getElementById('claimTime');
+  
+  const countdown = () => {
+    if(seconds <= 0){
+      btn.disabled = false;
+      btn.style.background = 'linear-gradient(135deg,var(--gold),var(--gold-2))';
+      timeEl.textContent = 'READY!';
+      timeEl.style.color = 'var(--success)';
+      clearInterval(CLAIM_TIMER);
+    } else {
+      btn.disabled = true;
+      btn.style.background = 'linear-gradient(135deg,#888,#666)';
+      timeEl.textContent = seconds + 's';
+      timeEl.style.color = 'var(--gold)';
+      seconds--;
+    }
+  };
+  
+  countdown();
+  CLAIM_TIMER = setInterval(countdown, 1000);
+}
+
+// ============================================
+// SWAP FUNCTION
+// ============================================
+function updateSwap(){
+  const amt = parseFloat(document.getElementById('swapAmount').value) || 0;
+  document.getElementById('swapReceive').textContent = formatNum(amt);
+}
+
+async function doSwap(){
+  if(!TOKEN) { showToast('Please login first','error'); return; }
+  
+  const amount = document.getElementById('swapAmount').value;
+  const direction = document.getElementById('swapDir').value;
+  
+  if(!amount || parseFloat(amount) <= 0){
+    showToast('Enter valid amount', 'error');
+    return;
+  }
+  
+  try{
+    const res = await fetch(API + '/api/swap', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({amount: parseFloat(amount), direction})
+    });
+    
+    if(res.ok){
+      const d = await res.json();
+      await loadUser();
+      document.getElementById('swapAmount').value = '';
+      showToast('Swap successful!', 'success');
+      navigate('/balance');
+    } else {
+      const err = await res.json();
+      showToast(err.error || 'Swap failed', 'error');
+    }
+  } catch(e){
+    showToast('Network error', 'error');
   }
 }
 
-function handleHash(){
-  const h = window.location.hash.slice(1) || '/';
-  history.replaceState({route:h}, '', '#' + h);
-  showPage(h);
+// ============================================
+// WITHDRAW FUNCTION
+// ============================================
+function setWdAmt(amt){
+  if(amt === 'MAX'){
+    document.getElementById('wdAmount').value = USER.doge_balance || 0;
+  } else {
+    document.getElementById('wdAmount').value = amt;
+  }
+}
+
+async function doWithdraw(){
+  if(!TOKEN) { showToast('Please login first','error'); return; }
+  
+  const amount = document.getElementById('wdAmount').value;
+  const email = document.getElementById('wdEmail').value;
+  
+  if(!amount || parseFloat(amount) < 0.1){
+    showToast('Minimum 0.10 DOGE', 'error');
+    return;
+  }
+  if(!email || !email.includes('@')){
+    showToast('Enter valid email', 'error');
+    return;
+  }
+  
+  try{
+    const res = await fetch(API + '/api/withdraw', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({amount: parseFloat(amount), faucetpay_email: email})
+    });
+    
+    if(res.ok){
+      document.getElementById('wdAmount').value = '';
+      document.getElementById('wdEmail').value = '';
+      await loadUser();
+      showToast('Withdrawal submitted!', 'success');
+    } else {
+      const err = await res.json();
+      showToast(err.error || 'Withdrawal failed', 'error');
+    }
+  } catch(e){
+    showToast('Network error', 'error');
+  }
 }
 
 // ============================================
-// SIDEBAR
+// OFFERWALL
 // ============================================
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
-function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+async function loadOfferwall(){
+  if(!TOKEN) { showToast('Please login first','error'); return; }
+  
+  try{
+    const res = await fetch(API + '/api/offerwall/url', {
+      headers:{'Authorization':'Bearer '+TOKEN}
+    });
+    
+    if(res.ok){
+      const d = await res.json();
+      const iframe = document.createElement('iframe');
+      iframe.src = d.url;
+      iframe.style.width = '100%';
+      iframe.style.height = '800px';
+      iframe.style.border = 'none';
+      
+      const wrap = document.getElementById('owIframeWrap');
+      wrap.innerHTML = '';
+      wrap.appendChild(iframe);
+    }
+  } catch(e){
+    showToast('Failed to load offerwall', 'error');
+  }
+}
 
-let touchStartX = 0;
-document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
-document.addEventListener('touchend', (e) => {
-  const endX = e.changedTouches[0].clientX;
-  const diff = endX - touchStartX;
-  if(touchStartX < 30 && diff > 60) { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('active'); }
-  if(touchStartX > window.innerWidth - 100 && diff < -60) closeSidebar();
-});
-
 // ============================================
-// DROPDOWNS
+// DROPDOWN
 // ============================================
-function toggleDropdown(id, e){
-  e.stopPropagation();
-  document.querySelectorAll('.dropdown-menu').forEach(m => {
-    if(m.id !== id) m.classList.remove('open');
-  });
+function toggleDropdown(id){
   document.getElementById(id).classList.toggle('open');
 }
-document.addEventListener('click', (e) => {
-  if(!e.target.closest('.dropdown')) {
-    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
-  }
-});
 
 // ============================================
 // TOAST
@@ -1618,598 +714,34 @@ document.addEventListener('click', (e) => {
 let toastTimer;
 function showToast(msg, type='success'){
   const toast = document.getElementById('toast');
-  const icon = toast.querySelector('.toast-icon i');
   document.getElementById('toastMsg').textContent = msg;
-  toast.className = 'toast show ' + type;
-  icon.className = 'fa-solid ' + (type==='success'?'fa-circle-check':type==='error'?'fa-circle-xmark':'fa-circle-info');
+  toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
-}
-
-// ============================================
-// FAQ
-// ============================================
-function toggleFaq(el){ el.parentElement.classList.toggle('open'); }
-
-// ============================================
-// NOTIFICATIONS
-// ============================================
-async function loadNotifs(){
-  if(!TOKEN) return;
-  try{
-    const res = await fetch(API + '/api/notifications', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      const d = await res.json();
-      NOTIFS = d.notifications || [];
-      renderNotifs();
-      updateNotifBadge(d.unreadCount || 0);
-    }
-  } catch(e){}
-}
-function renderNotifs(){
-  const list = document.getElementById('notifList');
-  if(!NOTIFS.length){
-    list.innerHTML = '<div class="empty-state" style="padding:30px"><div class="empty-state-icon"><img src="/images/loading.png" alt=""></div><p>No notifications yet</p></div>';
-    return;
-  }
-  list.innerHTML = NOTIFS.slice(0,20).map(n => `
-    <div class="notif-item ${n.read?'':'unread'}">
-      <div class="notif-icon ${n.type==='gold'?'gold':n.type==='green'?'green':n.type==='blue'?'blue':n.type==='red'?'red':'purple'}">
-        <i class="fa-solid ${n.type==='gold'?'fa-coins':n.type==='green'?'fa-check':n.type==='blue'?'fa-info':n.type==='red'?'fa-xmark':'fa-bell'}"></i>
-      </div>
-      <div class="notif-body">
-        <div class="notif-title">${n.title}</div>
-        <div class="notif-desc">${n.message}</div>
-        <div class="notif-time">${timeAgo(n.timestamp)}</div>
-      </div>
-    </div>
-  `).join('');
-}
-function updateNotifBadge(count){
-  const badge = document.getElementById('notifDot');
-  if(count === 0){
-    badge.style.display = 'none';
-  } else {
-    badge.style.display = 'grid';
-    badge.textContent = count > 99 ? '99+' : count;
-  }
-}
-async function markNotifsRead(){
-  if(!TOKEN) return;
-  try{
-    await fetch(API + '/api/notifications/read', {method:'POST',headers:{'Authorization':'Bearer '+TOKEN}});
-    NOTIFS.forEach(n => n.read = true);
-    renderNotifs();
-    updateNotifBadge(0);
-    showToast('All marked as read','success');
-  } catch(e){}
-}
-
-// ============================================
-// LIVE WITHDRAWALS
-// ============================================
-async function loadLive(){
-  try{
-    const res = await fetch(API + '/api/withdrawals/recent');
-    if(res.ok){
-      const list = await res.json();
-      const c = document.getElementById('liveList');
-      if(!list.length){ c.innerHTML = '<div class="empty-state" style="padding:30px"><div class="empty-state-icon"><img src="/images/loading.png"></div><p>No withdrawals yet</p></div>'; return; }
-      c.innerHTML = list.slice(0,8).map(w => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-brd)">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-soft);display:grid;place-items:center;color:var(--blue);font-size:12px"><i class="fa-solid fa-user"></i></div>
-            <div>
-              <div style="font-size:12px;color:var(--text-dim)">${w.user_id ? w.user_id.substring(0,8)+'...' : 'User'}</div>
-              <div style="font-size:10px;color:var(--text-muted)">${timeAgo(w.timestamp)}</div>
-            </div>
-          </div>
-          <div style="font-family:'JetBrains Mono';font-weight:600;color:var(--gold);font-size:13px">
-            <img src="/images/dogecoin.png" style="width:12px;height:12px;vertical-align:middle" onerror="this.style.display='none'">
-            ${formatNum(w.amount)} DOGE
-          </div>
-        </div>
-      `).join('');
-    }
-  } catch(e){}
-}
-
-function timeAgo(ts){
-  if(!ts) return '';
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff/60000);
-  if(m < 1) return 'just now';
-  if(m < 60) return m + 'm ago';
-  const h = Math.floor(m/60);
-  if(h < 24) return h + 'h ago';
-  return Math.floor(h/24) + 'd ago';
-}
-
-// ============================================
-// FAUCET CLAIM
-// ============================================
-async function doClaim(){
-  const btn = document.getElementById('claimBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Claiming...';
-  try{
-    const res = await fetch(API + '/api/claim', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: '{}'
-    });
-    const d = await res.json();
-    if(res.ok){
-      btn.classList.add('success');
-      btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> +'+d.amount+' CNX';
-      showToast('+'+d.amount+' CNX claimed!', 'success');
-      await loadUser();
-      setTimeout(() => {
-        btn.classList.remove('success');
-        btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
-        btn.disabled = false;
-        startCD(CLAIM_CD);
-      }, 1500);
-    } else {
-      if(d.wait){ startCD(d.wait); showToast('Cooldown: '+Math.ceil(d.wait/1000)+'s','info'); }
-      else showToast(d.error || 'Failed','error');
-      btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
-      btn.disabled = false;
-    }
-  } catch(e){
-    showToast('Network error','error');
-    btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
-    btn.disabled = false;
-  }
-}
-
-function updateClaimCD(){
-  if(!USER || !USER.last_claim) { setCDReady(); return; }
-  const elapsed = Date.now() - USER.last_claim;
-  if(elapsed < CLAIM_CD) startCD(CLAIM_CD - elapsed);
-  else setCDReady();
-}
-
-function startCD(ms){
-  const btn = document.getElementById('claimBtn');
-  const timeEl = document.getElementById('cdTime');
-  const labelEl = document.getElementById('cdLabel');
-  const readyEl = document.getElementById('cdReady');
-  const progress = document.getElementById('cdProgress');
-  const circ = 2 * Math.PI * 80;
-  btn.disabled = true;
-  readyEl.classList.add('hidden');
-  timeEl.classList.remove('hidden');
-  labelEl.classList.remove('hidden');
-  const total = ms;
-  clearInterval(CLAIM_TIMER);
-  CLAIM_TIMER = setInterval(() => {
-    ms -= 100;
-    if(ms <= 0){
-      clearInterval(CLAIM_TIMER);
-      setCDReady();
-      return;
-    }
-    const s = Math.ceil(ms/1000);
-    timeEl.textContent = s;
-    const pct = ms/total;
-    progress.style.strokeDashoffset = circ * (1-pct);
-  }, 100);
-}
-
-function setCDReady(){
-  const btn = document.getElementById('claimBtn');
-  const timeEl = document.getElementById('cdTime');
-  const labelEl = document.getElementById('cdLabel');
-  const readyEl = document.getElementById('cdReady');
-  const progress = document.getElementById('cdProgress');
-  btn.disabled = false;
-  timeEl.classList.add('hidden');
-  labelEl.classList.add('hidden');
-  readyEl.classList.remove('hidden');
-  progress.style.strokeDashoffset = 0;
-}
-
-// ============================================
-// OFFERWALL
-// ============================================
-async function loadOfferwall(){
-  if(!TOKEN) return;
-  const wrap = document.getElementById('owIframeWrap');
-  try{
-    const res = await fetch(API + '/api/offerwall/offerwall', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      const d = await res.json();
-      if(d.url){
-        wrap.innerHTML = `<iframe src="${d.url}" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" loading="lazy"></iframe>`;
-      } else {
-        wrap.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><img src="/images/loading.png"></div><h3>No offers available</h3></div>';
-      }
-    }
-  } catch(e){}
-}
-function refreshOfferwall(){ loadOfferwall(); showToast('Offers refreshed','success'); }
-function refreshOffers(){ showToast('Offers refreshed','success'); }
-
-// ============================================
-// SWAP
-// ============================================
-function calcSwap(){
-  const from = parseFloat(document.getElementById('swapFrom').value) || 0;
-  document.getElementById('swapTo').value = from.toFixed(2);
-  document.getElementById('swapReceive').textContent = from.toFixed(2);
-  if(from > 0){
-    document.getElementById('swapPreview').style.display = 'block';
-    document.getElementById('swapDir').textContent = SWAP_DIR === 'cnx-to-doge' ? 'CNX → DOGE' : 'DOGE → CNX';
-    document.getElementById('swapAmt').textContent = from.toFixed(2);
-    document.getElementById('swapRcv').textContent = from.toFixed(2);
-  } else {
-    document.getElementById('swapPreview').style.display = 'none';
-  }
-}
-function setSwapPct(p){
-  if(!USER) return;
-  const avail = SWAP_DIR === 'cnx-to-doge' ? USER.balance : USER.doge_balance;
-  document.getElementById('swapFrom').value = (avail * p).toFixed(2);
-  calcSwap();
-}
-function setSwapMax(){
-  if(!USER) return;
-  document.getElementById('swapFrom').value = SWAP_DIR === 'cnx-to-doge' ? USER.balance : USER.doge_balance;
-  calcSwap();
-}
-function flipSwap(){
-  SWAP_DIR = SWAP_DIR === 'cnx-to-doge' ? 'doge-to-cnx' : 'cnx-to-doge';
-  const fromCur = document.getElementById('swapFromCur');
-  const toCur = document.getElementById('swapToCur');
-  if(SWAP_DIR === 'cnx-to-doge'){
-    fromCur.innerHTML = '<img src="/images/coinix.png" onerror="this.style.display=\'none\'"> CNX';
-    toCur.innerHTML = '<img src="/images/dogecoin.png" onerror="this.style.display=\'none\'"> DOGE';
-    document.getElementById('swapAvail').textContent = USER ? USER.balance : 0;
-  } else {
-    fromCur.innerHTML = '<img src="/images/dogecoin.png" onerror="this.style.display=\'none\'"> DOGE';
-    toCur.innerHTML = '<img src="/images/coinix.png" onerror="this.style.display=\'none\'"> CNX';
-    document.getElementById('swapAvail').textContent = USER ? USER.doge_balance : 0;
-  }
-  document.getElementById('swapFrom').value = '';
-  document.getElementById('swapTo').value = '';
-  document.getElementById('swapReceive').textContent = '0.00';
-  document.getElementById('swapPreview').style.display = 'none';
-}
-async function doSwap(){
-  const amt = parseFloat(document.getElementById('swapFrom').value);
-  if(!amt || amt <= 0){ showToast('Enter valid amount','error'); return; }
-  const btn = document.getElementById('swapBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Swapping...';
-  try{
-    const res = await fetch(API + '/api/swap', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({amount:amt,direction:SWAP_DIR})
-    });
-    const d = await res.json();
-    if(res.ok){
-      showToast('Swap completed!','success');
-      await loadUser();
-      document.getElementById('swapFrom').value = '';
-      document.getElementById('swapTo').value = '';
-      document.getElementById('swapReceive').textContent = '0.00';
-      document.getElementById('swapPreview').style.display = 'none';
-    } else { showToast(d.error || 'Failed','error'); }
-  } catch(e){ showToast('Network error','error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Swap Now'; }
-}
-
-// ============================================
-// WITHDRAW
-// ============================================
-function setWdTab(el, tab){
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('wdTabForm').style.display = tab==='form' ? 'block' : 'none';
-  document.getElementById('wdTabHistory').style.display = tab==='history' ? 'block' : 'none';
-  if(tab==='history') loadWdHistory();
-}
-function setWdAmt(v){
-  document.getElementById('wdAmount').value = v==='max' ? (USER?USER.doge_balance:0) : v;
-}
-async function doWithdraw(){
-  const amt = parseFloat(document.getElementById('wdAmount').value);
-  const email = document.getElementById('wdEmail').value.trim();
-  if(!amt || amt < 0.1){ showToast('Minimum 0.10 DOGE','error'); return; }
-  if(!email || !email.includes('@')){ showToast('Enter valid FaucetPay email','error'); return; }
-  if(!confirm(`Withdraw ${amt} DOGE to ${email}?`)) return;
-  const btn = document.getElementById('wdBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Processing...';
-  try{
-    const res = await fetch(API + '/api/withdraw', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({faucetpay_email:email,amount:amt})
-    });
-    const d = await res.json();
-    if(res.ok){
-      showToast('Withdrawal submitted!','success');
-      await loadUser();
-      document.getElementById('wdAmount').value = '';
-      document.getElementById('wdEmail').value = '';
-    } else showToast(d.error||'Failed','error');
-  } catch(e){ showToast('Network error','error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay'; }
-}
-async function loadWdHistory(){
-  if(!TOKEN) return;
-  try{
-    const res = await fetch(API + '/api/withdrawals', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      const list = await res.json();
-      const tb = document.getElementById('wdHistoryTable').querySelector('tbody');
-      if(!list.length){ tb.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="padding:30px"><div class="empty-state-icon"><img src="/images/loading.png"></div><h3>No withdrawals yet</h3></div></td></tr>'; return; }
-      tb.innerHTML = list.map(w => `
-        <tr>
-          <td class="mono">${w.id?w.id.substring(0,8)+'...':'-'}</td>
-          <td class="gold mono">${formatNum(w.amount)} DOGE</td>
-          <td class="mono">${w.faucetpay_email||'-'}</td>
-          <td><span class="${w.status==='approved'?'success':w.status==='pending'?'warn':'danger'}">${w.status||'pending'}</span></td>
-          <td class="text-dim">${timeAgo(w.timestamp)}</td>
-        </tr>
-      `).join('');
-    }
-  } catch(e){}
-}
-
-// ============================================
-// HISTORY
-// ============================================
-function setHistTab(el, tab){
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  HIST_TAB = tab; HIST_CACHE = [];
-  loadHistory();
-}
-async function loadHistory(){
-  const tb = document.getElementById('historyTable').querySelector('tbody');
-  tb.innerHTML = '<tr><td colspan="5"><div class="loading"><div class="spinner"></div></div></td></tr>';
-  
-  let all = [];
-  try{
-    if(HIST_TAB === 'all' || HIST_TAB === 'withdraw'){
-      const r1 = await fetch(API + '/api/withdrawals', {headers:{'Authorization':'Bearer '+TOKEN}});
-      if(r1.ok){
-        const l = await r1.json();
-        all = all.concat(l.map(w => ({type:'withdraw',icon:'paper-plane',color:'blue',amount:w.amount,unit:'DOGE',status:w.status,time:w.timestamp,details:'To '+w.faucetpay_email})));
-      }
-    }
-    if(HIST_TAB === 'all' || HIST_TAB === 'faucet'){
-      const claims = USER?.total_claims || 0;
-      for(let i=0;i<Math.min(claims,20);i++){
-        all.push({type:'faucet',icon:'droplet',color:'gold',amount:0.5,unit:'CNX',status:'approved',time:Date.now()-(i*10000),details:'Faucet claim'});
-      }
-    }
-    if(HIST_TAB === 'all' || HIST_TAB === 'offerwall'){
-      const ptce = USER?.total_ptc_earnings || 0;
-      if(ptce > 0) all.push({type:'offerwall',icon:'gift',color:'blue',amount:ptce,unit:'CNX',status:'approved',time:Date.now()-3600000,details:'Offerwall earnings'});
-    }
-  } catch(e){}
-  
-  HIST_CACHE = all.sort((a,b) => (b.time||0)-(a.time||0));
-  renderHistory();
-}
-function renderHistory(){
-  const tb = document.getElementById('historyTable').querySelector('tbody');
-  if(!HIST_CACHE.length){
-    tb.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="padding:30px"><div class="empty-state-icon"><img src="/images/loading.png"></div><h3>No transactions</h3><p>Your activity will appear here</p></div></td></tr>';
-    return;
-  }
-  tb.innerHTML = HIST_CACHE.map(h => `
-    <tr>
-      <td><div style="display:flex;align-items:center;gap:8px"><i class="fa-solid fa-${h.icon}" style="color:var(--${h.color});width:20px"></i><span style="text-transform:capitalize">${h.type}</span></div></td>
-      <td class="text-dim" style="font-size:12px">${h.details||'-'}</td>
-      <td class="gold mono">${h.amount>=0?'+':''}${formatNum(h.amount)} ${h.unit}</td>
-      <td><span class="${h.status==='approved'?'success':h.status==='pending'?'warn':'danger'}">${h.status}</span></td>
-      <td class="text-dim" style="font-size:11px">${timeAgo(h.time)}</td>
-    </tr>
-  `).join('');
-}
-
-// ============================================
-// REFERRAL
-// ============================================
-async function loadReferral(){
-  if(!TOKEN) return;
-  try{
-    const res = await fetch(API + '/api/referral', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      const d = await res.json();
-      document.getElementById('refLink').value = d.link || '';
-      document.getElementById('refTotal').textContent = d.referrals || 0;
-      document.getElementById('refEarned').textContent = formatNum(d.earnings||0) + ' CNX';
-      document.getElementById('refActive').textContent = Math.floor((d.referrals||0) * 0.7);
-    }
-  } catch(e){}
-}
-function copyReferral(){
-  const link = document.getElementById('refLink').value;
-  if(!link || link === 'Loading...') return;
-  navigator.clipboard.writeText(link).then(() => showToast('Referral link copied!','success'));
-}
-function shareReferral(){
-  const link = document.getElementById('refLink').value;
-  if(navigator.share){ navigator.share({title:'COINIX Faucet',text:'Join me on COINIX!',url:link}); }
-  else copyReferral();
-}
-
-// ============================================
-// LEADERBOARD (mock)
-// ============================================
-function loadLeaderboard(){
-  const mockUsers = [
-    {name:'CryptoKing',earn:12500,claims:2340,ref:45},
-    {name:'DogeMaster',earn:9800,claims:1890,ref:32},
-    {name:'MoonHunter',earn:7500,claims:1456,ref:28},
-    {name:'CoinWizard',earn:5200,claims:980,ref:19},
-    {name:'SatStacker',earn:3800,claims:720,ref:14},
-  ];
-  const pods = document.querySelectorAll('.lb-podium');
-  pods[0].querySelector('.lb-podium-name').textContent = mockUsers[1].name;
-  pods[0].querySelector('.lb-podium-earn').textContent = formatNum(mockUsers[1].earn)+' CNX';
-  pods[0].querySelector('.lb-podium-avatar').textContent = mockUsers[1].name[0];
-  pods[1].querySelector('.lb-podium-name').textContent = mockUsers[0].name;
-  pods[1].querySelector('.lb-podium-earn').textContent = formatNum(mockUsers[0].earn)+' CNX';
-  pods[1].querySelector('.lb-podium-avatar').textContent = mockUsers[0].name[0];
-  pods[2].querySelector('.lb-podium-name').textContent = mockUsers[2].name;
-  pods[2].querySelector('.lb-podium-earn').textContent = formatNum(mockUsers[2].earn)+' CNX';
-  pods[2].querySelector('.lb-podium-avatar').textContent = mockUsers[2].name[0];
-  
-  const tb = document.getElementById('lbTable').querySelector('tbody');
-  tb.innerHTML = mockUsers.map((u,i) => `
-    <tr>
-      <td class="gold mono">#${i+1}</td>
-      <td><div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:12px">${u.name[0]}</div>${u.name}</div></td>
-      <td class="gold mono">${formatNum(u.earn)} CNX</td>
-      <td class="mono">${u.claims}</td>
-      <td class="mono">${u.ref}</td>
-    </tr>
-  `).join('');
-}
-
-// ============================================
-// ADMIN
-// ============================================
-async function adminLoad(){
-  if(!USER || USER.telegram_id !== ADMIN_ID) return;
-  try{
-    const res = await fetch(API + '/api/stats?admin_key=' + ADMIN_ID);
-    if(res.ok){
-      const d = await res.json();
-      document.getElementById('admUsers').textContent = d.totalUsers||0;
-      document.getElementById('admOnline').textContent = d.activeToday||0;
-      document.getElementById('admWithdrawn').textContent = formatNum(d.totalPaid||0);
-      document.getElementById('admClaims').textContent = d.totalClaims||0;
-    }
-    adminLoadUsers();
-    adminLoadWd();
-    adminLoadLogs();
-  } catch(e){}
-}
-
-function setAdminTab(el, tab){
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  ['dash','users','wd','logs'].forEach(t => {
-    document.getElementById('admTab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none';
-  });
-}
-
-async function adminLoadUsers(){
-  try{
-    const res = await fetch(API + '/api/admin/users?admin_key=' + ADMIN_ID);
-    if(res.ok){
-      const list = await res.json();
-      document.getElementById('admUsersTbl').querySelector('tbody').innerHTML = list.map(u => `
-        <tr>
-          <td class="mono">${u.id?u.id.substring(0,8)+'...':'-'}</td>
-          <td>${u.username||u.first_name||'-'}</td>
-          <td class="gold mono">${formatNum(u.balance)}</td>
-          <td class="mono">${formatNum(u.doge_balance)}</td>
-          <td class="mono">${u.total_claims||0}</td>
-          <td>${u.banned?'<span class="danger">Banned</span>':'<span class="success">Active</span>'}</td>
-          <td>
-            <button class="btn btn-sm btn-danger" onclick="adminBan('${u.id}')"><i class="fa-solid fa-ban"></i></button>
-            <button class="btn btn-sm btn-ghost" onclick="adminDel('${u.id}')"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        </tr>
-      `).join('');
-    }
-  }catch(e){}
-}
-
-async function adminLoadWd(){
-  try{
-    const res = await fetch(API + '/api/admin/withdrawals?admin_key=' + ADMIN_ID);
-    if(res.ok){
-      const list = await res.json();
-      const pend = list.filter(w => w.status==='pending');
-      document.getElementById('admPendTbl').querySelector('tbody').innerHTML = pend.length ? pend.map(w => `
-        <tr>
-          <td class="mono">${w.id?w.id.substring(0,8)+'...':'-'}</td>
-          <td>${w.user_id?w.user_id.substring(0,8)+'...':'-'}</td>
-          <td class="gold mono">${formatNum(w.amount)}</td>
-          <td class="mono">${w.faucetpay_email||'-'}</td>
-          <td class="text-dim">${timeAgo(w.timestamp)}</td>
-          <td>
-            <button class="btn btn-sm btn-success" onclick="adminApprove('${w.id}')"><i class="fa-solid fa-check"></i></button>
-            <button class="btn btn-sm btn-danger" onclick="adminReject('${w.id}')"><i class="fa-solid fa-xmark"></i></button>
-          </td>
-        </tr>
-      `).join('') : '<tr><td colspan="6"><div class="empty-state" style="padding:30px"><p>No pending</p></div></td></tr>';
-      document.getElementById('admAllWdTbl').querySelector('tbody').innerHTML = list.map(w => `
-        <tr>
-          <td class="mono">${w.id?w.id.substring(0,8)+'...':'-'}</td>
-          <td>${w.user_id?w.user_id.substring(0,8)+'...':'-'}</td>
-          <td class="gold mono">${formatNum(w.amount)}</td>
-          <td class="mono">${w.faucetpay_email||'-'}</td>
-          <td><span class="${w.status==='approved'?'success':w.status==='pending'?'warn':'danger'}">${w.status||'pending'}</span></td>
-          <td class="text-dim">${timeAgo(w.timestamp)}</td>
-        </tr>
-      `).join('');
-    }
-  }catch(e){}
-}
-
-async function adminApprove(id){
-  try{
-    const res = await fetch(API + '/api/admin/approve-withdrawal?admin_key=' + ADMIN_ID, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
-    if(res.ok){ showToast('Approved','success'); adminLoadWd(); }
-  }catch(e){}
-}
-
-async function adminReject(id){
-  try{
-    const res = await fetch(API + '/api/admin/reject-withdrawal?admin_key=' + ADMIN_ID, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
-    if(res.ok){ showToast('Rejected','success'); adminLoadWd(); }
-  }catch(e){}
-}
-
-async function adminAdjust(){
-  const u = document.getElementById('adjUser').value;
-  const a = parseFloat(document.getElementById('adjAmt').value);
-  const c = document.getElementById('adjCur').value;
-  if(!u || !a){ showToast('Fill fields','error'); return; }
-  try{
-    const res = await fetch(API + '/api/admin/add-balance?admin_key=' + ADMIN_ID, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:u,amount:a,currency:c})});
-    if(res.ok){ showToast('Updated','success'); adminLoadUsers(); }
-  }catch(e){}
-}
-
-async function adminBan(id){ if(!confirm('Ban user?'))return; try{ const r=await fetch(API+'/api/admin/ban-user?admin_key='+ADMIN_ID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:id})}); if(r.ok){showToast('Banned','success');adminLoadUsers();} }catch(e){} }
-async function adminDel(id){ if(!confirm('Delete user?'))return; try{ const r=await fetch(API+'/api/admin/delete-user?admin_key='+ADMIN_ID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:id})}); if(r.ok){showToast('Deleted','success');adminLoadUsers();} }catch(e){} }
-
-async function adminLoadLogs(){
-  try{
-    const res = await fetch(API + '/api/admin/logs?admin_key=' + ADMIN_ID);
-    if(res.ok){
-      const list = await res.json();
-      document.getElementById('admLogsTbl').querySelector('tbody').innerHTML = list.length ? list.map(l => `
-        <tr>
-          <td class="gold">${l.action||'-'}</td>
-          <td class="mono">${l.user_id?l.user_id.substring(0,8)+'...':'-'}</td>
-          <td class="text-dim" style="font-size:12px">${l.details?JSON.stringify(l.details).substring(0,60):'-'}</td>
-          <td class="text-dim" style="font-size:11px">${timeAgo(l.timestamp)}</td>
-        </tr>
-      `).join('') : '<tr><td colspan="4"><div class="empty-state" style="padding:30px"><p>No logs</p></div></td></tr>';
-    }
-  }catch(e){}
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 // ============================================
 // INIT
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-  initTelegram();
+window.addEventListener('load', () => {
   handleHash();
+  initTelegram();
+});
+
+window.addEventListener('hashchange', () => {
+  handleHash();
+});
+
+function handleHash(){
+  const route = window.location.hash.slice(1) || '/';
+  navigate(route);
+}
+
+// Close dropdown on click outside
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.dropdown')){
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+  }
 });
 </script>
 </body>
