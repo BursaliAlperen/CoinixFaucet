@@ -3,11 +3,20 @@ const cors = require('cors');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ==================== KEEP ALIVE ====================
+const PORT = process.env.PORT || 3000;
+const API_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+setInterval(() => {
+  http.get(`${API_URL}/api/ping`, () => {});
+}, 5 * 60 * 1000);
 
 // ==================== FIREBASE ====================
 let admin, db, firebaseOk = false;
@@ -17,9 +26,9 @@ try {
   admin.initializeApp({ credential: admin.credential.cert(sa) });
   db = admin.firestore();
   firebaseOk = true;
-  console.log('Firebase OK');
+  console.log('[Firebase] Connected');
 } catch(e) {
-  console.log('Firebase not configured, using JSON DB fallback');
+  console.log('[Firebase] Not configured, using JSON DB fallback');
 }
 
 // ==================== JSON DB ====================
@@ -37,6 +46,7 @@ function writeDB(data) { fs.writeFileSync(DBF, JSON.stringify(data, null, 2)); }
 // ==================== CONFIG ====================
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
 const OFFERWALL_SECRET = process.env.OFFERWALL_SECRET || 'YOUR_OFFERWALL_SECRET_HERE';
+const ADMIN_ID = process.env.ADMIN_ID || '';
 const COOLDOWN = 10;
 const MIN_WD = 500;
 const REF_PCT = 10;
@@ -74,6 +84,10 @@ function getIP(req) {
 function ok(res, data) { res.json({ success: true, ...data }); }
 function err(res, msg, code) { res.status(code || 400).json({ success: false, error: msg }); }
 
+function isAdmin(uid) {
+  return ADMIN_ID && String(uid) === String(ADMIN_ID);
+}
+
 // ==================== DB HELPERS ====================
 const DB = {
   async getUser(id) {
@@ -91,6 +105,21 @@ const DB = {
   async getWDs(uid) {
     if (firebaseOk) { const s = await db.collection('withdrawals').where('telegram_id', '==', uid).orderBy('created_at', 'desc').get(); return s.docs.map(d => d.data()); }
     return readDB().withdrawals.filter(w => w.telegram_id === uid).sort((a, b) => b.created_at - a.created_at);
+  },
+  async getAllWDs() {
+    if (firebaseOk) { const s = await db.collection('withdrawals').orderBy('created_at', 'desc').get(); return s.docs.map(d => d.data()); }
+    return readDB().withdrawals.sort((a, b) => b.created_at - a.created_at);
+  },
+  async updateWD(wid, status) {
+    if (firebaseOk) {
+      const s = await db.collection('withdrawals').where('id', '==', wid).get();
+      if (!s.empty) { await s.docs[0].ref.update({ status, processed_at: Math.floor(Date.now() / 1000) }); return true; }
+      return false;
+    }
+    const d = readDB();
+    const w = d.withdrawals.find(x => x.id === wid);
+    if (w) { w.status = status; w.processed_at = Math.floor(Date.now() / 1000); writeDB(d); return true; }
+    return false;
   },
   async addTask(data) {
     if (firebaseOk) { await db.collection('tasks').add(data); }
@@ -124,8 +153,15 @@ const DB = {
   async logOfferwall(data) {
     if (firebaseOk) { await db.collection('offerwall_logs').add(data); }
     else { const d = readDB(); d.offerwall_logs.push(data); writeDB(d); }
+  },
+  async getAllUsers() {
+    if (firebaseOk) { const s = await db.collection('users').get(); return s.docs.map(d => ({ id: d.id, ...d.data() })); }
+    return Object.values(readDB().users);
   }
 };
+
+// ==================== PING ====================
+app.get('/api/ping', (req, res) => res.send('pong'));
 
 // ==================== AUTH ====================
 app.post('/api/auth', async (req, res) => {
@@ -161,7 +197,7 @@ app.post('/api/auth', async (req, res) => {
   }
 
   const { ip, ...safe } = user;
-  ok(res, { user: safe, referral_link: `https://t.me/YOUR_BOT_USERNAME?start=${safe.referral_code}` });
+  ok(res, { user: safe, referral_link: `https://t.me/YOUR_BOT_USERNAME?start=${safe.referral_code}`, is_admin: isAdmin(uid) });
 });
 
 app.get('/api/user', async (req, res) => {
@@ -175,7 +211,7 @@ app.get('/api/user', async (req, res) => {
   const refs = await DB.getRefs(uid);
   const re = refs.reduce((s, r) => s + (r.bonus_earned || 0), 0);
   const { ip, ...safe } = user;
-  ok(res, { user: safe, referrals_count: refs.length, referral_earnings: re, referral_link: `https://t.me/YOUR_BOT_USERNAME?start=${safe.referral_code}` });
+  ok(res, { user: safe, referrals_count: refs.length, referral_earnings: re, referral_link: `https://t.me/YOUR_BOT_USERNAME?start=${safe.referral_code}`, is_admin: isAdmin(uid) });
 });
 
 // ==================== FAUCET CLAIM ====================
@@ -245,14 +281,14 @@ app.get('/api/withdrawals', async (req, res) => {
 // ==================== TASKS ====================
 app.get('/api/tasks', (req, res) => {
   ok(res, { tasks: [
-    { id: 'ptc_1', type: 'ptc', title: 'Visit Crypto News', reward: 5, url: '#', icon: '🔗' },
-    { id: 'ptc_2', type: 'ptc', title: 'Visit Trading Site', reward: 8, url: '#', icon: '🔗' },
-    { id: 'ptc_3', type: 'ptc', title: 'Visit Exchange', reward: 10, url: '#', icon: '🔗' },
-    { id: 'short_1', type: 'shortlink', title: 'Shortlink #1', reward: 15, url: '#', icon: '⚡' },
-    { id: 'short_2', type: 'shortlink', title: 'Shortlink #2', reward: 20, url: '#', icon: '⚡' },
-    { id: 'offer_1', type: 'offerwall', title: 'Complete Survey', reward: 100, url: '#', icon: '📝' },
-    { id: 'offer_2', type: 'offerwall', title: 'Install App', reward: 500, url: '#', icon: '📱' },
-    { id: 'offer_3', type: 'offerwall', title: 'Watch Video', reward: 50, url: '#', icon: '▶️' },
+    { id: 'ptc_1', type: 'ptc', title: 'Visit Crypto News', reward: 5, url: '#', icon: 'LINK' },
+    { id: 'ptc_2', type: 'ptc', title: 'Visit Trading Site', reward: 8, url: '#', icon: 'LINK' },
+    { id: 'ptc_3', type: 'ptc', title: 'Visit Exchange', reward: 10, url: '#', icon: 'LINK' },
+    { id: 'short_1', type: 'shortlink', title: 'Shortlink #1', reward: 15, url: '#', icon: 'BOLT' },
+    { id: 'short_2', type: 'shortlink', title: 'Shortlink #2', reward: 20, url: '#', icon: 'BOLT' },
+    { id: 'offer_1', type: 'offerwall', title: 'Complete Survey', reward: 100, url: '#', icon: 'DOC' },
+    { id: 'offer_2', type: 'offerwall', title: 'Install App', reward: 500, url: '#', icon: 'MOB' },
+    { id: 'offer_3', type: 'offerwall', title: 'Watch Video', reward: 50, url: '#', icon: 'PLAY' },
   ]});
 });
 
@@ -314,57 +350,104 @@ app.post('/api/swap', async (req, res) => {
   }
 });
 
-// ==================== POSTBACK (OFFERWALL) ====================
-// AoyCo / generic offerwall postback handler
-// URL: https://yourdomain.com/api/postback?user_id={user_id}&reward={reward}&payout={payout}&status={status}&signature={signature}&transaction_id={transaction_id}
+// ==================== POSTBACK (AOYCO COMPATIBLE) ====================
+// AoyCo sends: ?sub_id={sub_id}&amount={amount}&payout={payout}&status={status}&signature={signature}&transaction_id={transaction_id}
+// Also supports: user_id, reward, value, token
 app.all('/api/postback', async (req, res) => {
-  const { user_id, reward, payout, status, signature, transaction_id, offer_id, sub_id } = req.query;
-  const body = req.body;
+  // Support both GET query and POST body
+  const data = { ...req.query, ...req.body };
 
-  // Support both query and body
-  const uid = user_id || body.user_id || sub_id || body.sub_id;
-  const rwd = parseFloat(reward || body.reward || payout || body.payout || 0);
-  const stat = status || body.status || 'completed';
-  const sig = signature || body.signature || '';
-  const txid = transaction_id || body.transaction_id || body.transactionId || 'tx_' + Date.now();
-  const oid = offer_id || body.offer_id || body.offerId || 'unknown';
+  // AoyCo parameter mapping
+  const uid = data.sub_id || data.user_id || data.external_identifier || data.player_id || '';
+  const amount = parseFloat(data.amount || data.reward || data.payout || data.value || data.currency_amount || 0);
+  const payout_usd = parseFloat(data.payout_usd || data.payout || 0);
+  const status = data.status || data.callback_type || 'completed';
+  const signature = data.signature || data.sig || '';
+  const transaction_id = data.transaction_id || data.transId || data.token || data.tid || 'tx_' + Date.now();
+  const offer_id = data.offer_id || data.adslot_id || 'unknown';
+  const is_chargeback = data.is_chargeback === '1' || data.is_chargeback === 1 || status === 'chargeback' || status === 'reversed';
 
-  if (!uid || !rwd || rwd <= 0) {
+  console.log('[POSTBACK] Received:', { uid, amount, payout_usd, status, transaction_id, signature: signature ? '***' : 'none' });
+
+  if (!uid || !amount || amount <= 0) {
+    console.log('[POSTBACK] REJECTED: Missing uid or amount');
     return res.status(400).send('INVALID_PARAMS');
   }
 
-  // Optional: verify signature
-  // AoyCo signature = md5(user_id + reward + secret_key)
+  // Verify signature if secret is configured
   if (OFFERWALL_SECRET !== 'YOUR_OFFERWALL_SECRET_HERE') {
-    const checkSig = crypto.createHash('md5').update(uid + String(rwd) + OFFERWALL_SECRET).digest('hex');
-    if (checkSig !== sig) {
-      return res.status(403).send('INVALID_SIGNATURE');
+    let checkSig = '';
+
+    // Try AoyCo format: md5(sub_id + amount + secret)
+    checkSig = crypto.createHash('md5').update(String(uid) + String(amount) + OFFERWALL_SECRET).digest('hex');
+
+    if (checkSig !== signature) {
+      // Try alternate format: md5(secret + sub_id + amount)
+      checkSig = crypto.createHash('md5').update(OFFERWALL_SECRET + String(uid) + String(amount)).digest('hex');
+
+      if (checkSig !== signature) {
+        // Try PubScale format: md5(secret.user_id.int(value).token)
+        const token = data.token || '';
+        const intAmount = Math.floor(amount);
+        checkSig = crypto.createHash('md5').update(`${OFFERWALL_SECRET}.${uid}.${intAmount}.${token}`).digest('hex');
+
+        if (checkSig !== signature) {
+          console.log('[POSTBACK] REJECTED: Invalid signature');
+          return res.status(403).send('INVALID_SIGNATURE');
+        }
+      }
     }
   }
 
-  if (stat !== 'completed' && stat !== '1' && stat !== 'approved') {
+  // Check for duplicate transaction
+  const existingLogs = firebaseOk 
+    ? (await db.collection('offerwall_logs').where('transaction_id', '==', transaction_id).get()).docs.map(d => d.data())
+    : readDB().offerwall_logs.filter(l => l.transaction_id === transaction_id);
+
+  if (existingLogs.length > 0) {
+    console.log('[POSTBACK] DUPLICATE transaction_id:', transaction_id);
+    return res.send('OK_DUPLICATE');
+  }
+
+  // Handle chargebacks
+  if (is_chargeback) {
+    console.log('[POSTBACK] CHARGEBACK for:', uid, 'amount:', amount);
+    const user = await DB.getUser(uid);
+    if (!user) return res.status(404).send('USER_NOT_FOUND');
+
+    const deduction = Math.min(amount, user.balance || 0);
+    const nb = (user.balance || 0) - deduction;
+    await DB.setUser(uid, { balance: nb });
+    await DB.logOfferwall({ uid, amount: -deduction, payout_usd, status: 'chargeback', transaction_id, offer_id, source: 'offerwall', created_at: Math.floor(Date.now() / 1000), ip: getIP(req) });
+    return res.send('OK_CHARGEBACK');
+  }
+
+  // Only process completed conversions
+  if (status !== 'completed' && status !== '1' && status !== 'approved' && status !== 'conversion') {
+    console.log('[POSTBACK] SKIPPED: status not completed:', status);
     return res.send('OK_NOT_COMPLETED');
   }
 
   // Log the postback
   await DB.logOfferwall({
-    uid, reward: rwd, status: stat, signature: sig, transaction_id: txid,
-    offer_id: oid, source: 'offerwall', created_at: Math.floor(Date.now() / 1000), ip: getIP(req)
+    uid, amount, payout_usd, status, transaction_id, offer_id,
+    source: 'offerwall', created_at: Math.floor(Date.now() / 1000), ip: getIP(req)
   });
 
   // Add reward to user
   const user = await DB.getUser(uid);
   if (!user) {
+    console.log('[POSTBACK] USER_NOT_FOUND:', uid);
     return res.status(404).send('USER_NOT_FOUND');
   }
 
-  const cnxReward = Math.round(rwd); // Convert to CNX (1:1 or adjust as needed)
+  const cnxReward = Math.round(amount); // Convert to CNX
   const nb = (user.balance || 0) + cnxReward;
   const ne = (user.total_earned || 0) + cnxReward;
   await DB.setUser(uid, { balance: nb, total_earned: ne });
   await DB.incStat('total_offerwall', cnxReward);
 
-  // Referral bonus for offerwall too
+  // Referral bonus
   if (user.referred_by) {
     const ref = await DB.getUser(user.referred_by);
     if (ref) {
@@ -373,6 +456,7 @@ app.all('/api/postback', async (req, res) => {
     }
   }
 
+  console.log('[POSTBACK] SUCCESS:', uid, '+', cnxReward, 'CNX');
   res.send('OK');
 });
 
@@ -387,11 +471,62 @@ app.get('/api/stats', async (req, res) => {
   ok(res, { ...s, claim_cooldown: COOLDOWN, min_withdraw: MIN_WD });
 });
 
+// ==================== ADMIN PANEL ====================
+app.get('/api/admin/withdrawals', async (req, res) => {
+  const initData = req.headers['x-telegram-initdata'] || req.query.initData;
+  if (!initData) return err(res, 'Missing initData', 401);
+  const tg = getUser(initData);
+  if (!tg) return err(res, 'Invalid user', 400);
+  if (!isAdmin(tg.id)) return err(res, 'Forbidden', 403);
+
+  const wds = await DB.getAllWDs();
+  ok(res, { withdrawals: wds.map(w => { const { ip, ...s } = w; return s; }) });
+});
+
+app.post('/api/admin/withdrawal/:id', async (req, res) => {
+  const initData = req.headers['x-telegram-initdata'] || req.body.initData;
+  if (!initData) return err(res, 'Missing initData', 401);
+  const tg = getUser(initData);
+  if (!tg) return err(res, 'Invalid user', 400);
+  if (!isAdmin(tg.id)) return err(res, 'Forbidden', 403);
+
+  const { status } = req.body;
+  if (!status || !['approved', 'rejected'].includes(status)) return err(res, 'Invalid status', 400);
+
+  const ok2 = await DB.updateWD(req.params.id, status);
+  if (!ok2) return err(res, 'Withdrawal not found', 404);
+  ok(res, { message: `Withdrawal ${status}` });
+});
+
+app.get('/api/admin/users', async (req, res) => {
+  const initData = req.headers['x-telegram-initdata'] || req.query.initData;
+  if (!initData) return err(res, 'Missing initData', 401);
+  const tg = getUser(initData);
+  if (!tg) return err(res, 'Invalid user', 400);
+  if (!isAdmin(tg.id)) return err(res, 'Forbidden', 403);
+
+  const users = await DB.getAllUsers();
+  ok(res, { users: users.map(u => { const { ip, ...s } = u; return s; }) });
+});
+
+app.get('/api/admin/stats', async (req, res) => {
+  const initData = req.headers['x-telegram-initdata'] || req.query.initData;
+  if (!initData) return err(res, 'Missing initData', 401);
+  const tg = getUser(initData);
+  if (!tg) return err(res, 'Invalid user', 400);
+  if (!isAdmin(tg.id)) return err(res, 'Forbidden', 403);
+
+  const stats = await DB.getStats();
+  const wds = await DB.getAllWDs();
+  const pending = wds.filter(w => w.status === 'pending').length;
+  ok(res, { ...stats, total_withdrawals: wds.length, pending_withdrawals: pending });
+});
+
 // ==================== START ====================
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`\n🚀 CoinixFaucet on port ${PORT}`);
   console.log(`🔥 Firebase: ${firebaseOk ? 'ON' : 'OFF (JSON fallback)'}`);
-  console.log(`📡 Postback: http://localhost:${PORT}/api/postback`);
-  console.log(`⚠️  Set BOT_TOKEN and OFFERWALL_SECRET env vars\n`);
+  console.log(`📡 Postback: ${API_URL}/api/postback`);
+  console.log(`👑 Admin: ${ADMIN_ID ? 'SET (' + ADMIN_ID + ')' : 'NOT SET'}`);
+  console.log(`⚠️  Set BOT_TOKEN, OFFERWALL_SECRET, ADMIN_ID env vars\n`);
 });
