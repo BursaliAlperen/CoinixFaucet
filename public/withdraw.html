@@ -4,208 +4,286 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
-  <title>Withdraw - COINIX</title>
+  <title>Withdraw DOGE - COINIX</title>
   <style>
     :root {
       --bg: #0f172a;
       --card: #1e293b;
+      --card-2: #0b1224;
       --text: #f8fafc;
       --muted: #94a3b8;
       --accent: #fbbf24;
       --accent-dark: #d97706;
       --success: #22c55e;
       --danger: #ef4444;
+      --info: #3b82f6;
       --border: #334155;
       --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --grad-doge: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+      --grad-faucetpay: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     }
     @media (prefers-color-scheme: light) {
       :root {
         --bg: #f8fafc;
         --card: #ffffff;
+        --card-2: #f1f5f9;
         --text: #1e293b;
         --muted: #64748b;
         --border: #e2e8f0;
-        --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        --shadow: 0 4px 20px rgba(0,0,0,0.06);
       }
       .topbar { background: #ffffff !important; border-color: #e2e8f0 !important; }
+      .balance-item { background: #f1f5f9 !important; }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: var(--bg); color: var(--text); min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 20% 0%, rgba(99,102,241,0.10) 0%, transparent 40%),
+        radial-gradient(circle at 80% 100%, rgba(251,191,36,0.08) 0%, transparent 40%);
+      background-attachment: fixed;
     }
     .topbar {
       display: flex; align-items: center; padding: 12px 16px;
       background: var(--card); border-bottom: 1px solid var(--border);
       gap: 12px; position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
     }
     .back-btn {
       width: 38px; height: 38px; display: flex;
       align-items: center; justify-content: center;
-      border-radius: 8px; border: none; background: none; cursor: pointer;
-      color: var(--text); transition: background 0.2s;
+      border-radius: 10px; border: none; background: none; cursor: pointer;
+      color: var(--text); transition: background 0.2s, transform 0.2s;
     }
-    .back-btn:hover { background: var(--border); }
+    .back-btn:hover { background: var(--border); transform: translateX(-2px); }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
+
     .card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px; margin-bottom: 16px;
+      border-radius: 16px; padding: 20px; margin-bottom: 16px;
+      box-shadow: var(--shadow);
     }
-    .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
-    .card p { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-    
+
     .balance-display {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px;
     }
     .balance-item {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px; text-align: center;
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 12px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .balance-item.primary {
+      background: var(--grad-faucetpay);
+      border: none; color: #fff;
+    }
+    .balance-item.primary::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='50' cy='50' r='30'/%3E%3C/svg%3E") no-repeat right -20px top -20px;
+      background-size: 120px;
     }
     .balance-item .value {
-      font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 4px;
+      font-size: 22px; font-weight: 800; color: var(--accent); margin-bottom: 4px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
+    .balance-item.primary .value { color: #fff; }
+    .balance-item .value svg { width: 22px; height: 22px; }
     .balance-item .label {
-      font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;
     }
-    
-    .form-group {
-      margin-bottom: 16px;
-    }
-    .form-group label {
-      display: block; font-size: 13px; font-weight: 600;
-      margin-bottom: 6px; color: var(--text);
-    }
-    .form-group input, .form-group select {
-      width: 100%; padding: 10px 12px;
-      border: 1px solid var(--border); border-radius: 8px;
-      background: var(--bg); color: var(--text);
-      font-size: 14px; transition: border-color 0.2s;
-    }
-    .form-group input:focus, .form-group select:focus {
-      outline: none; border-color: var(--accent);
-    }
-    
-    .btn {
-      width: 100%; padding: 12px 16px;
-      border: none; border-radius: 8px; font-size: 14px;
-      font-weight: 600; cursor: pointer;
-      transition: all 0.2s; text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .btn-primary {
-      background: var(--accent); color: #000;
-    }
-    .btn-primary:hover {
-      background: var(--accent-dark); transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(251, 191, 36, 0.3);
-    }
-    .btn-primary:disabled {
-      opacity: 0.5; cursor: not-allowed; transform: none;
-    }
-    
+    .balance-item.primary .label { color: rgba(255, 255, 255, 0.85); }
+
     .tabs {
-      display: flex; gap: 8px; margin-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      display: flex; gap: 6px; margin-bottom: 20px;
+      background: var(--card-2); padding: 4px; border-radius: 12px; border: 1px solid var(--border);
     }
     .tab-btn {
-      flex: 1; padding: 12px; background: none; border: none;
-      color: var(--muted); font-weight: 600; font-size: 13px;
-      cursor: pointer; border-bottom: 3px solid transparent;
+      flex: 1; padding: 11px; background: none; border: none;
+      color: var(--muted); font-weight: 700; font-size: 12px;
+      cursor: pointer; border-radius: 8px;
       transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
     }
+    .tab-btn svg { width: 14px; height: 14px; }
     .tab-btn.active {
-      color: var(--accent); border-bottom-color: var(--accent);
+      background: var(--card); color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
-    
-    .tab-content { display: none; }
+
+    .tab-content { display: none; animation: fadeIn 0.25s ease; }
     .tab-content.active { display: block; }
-    
-    .alert {
-      padding: 12px 14px; border-radius: 8px; font-size: 13px;
-      margin-bottom: 16px; border: 1px solid;
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700;
+      margin-bottom: 8px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
     }
+    .form-group label svg { width: 14px; height: 14px; color: var(--accent); }
+    .form-group input {
+      width: 100%; padding: 13px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--card-2); color: var(--text);
+      font-size: 14px; font-weight: 600;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
+    }
+    .form-hint {
+      font-size: 11px; color: var(--muted); margin-top: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-hint svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .form-hint.err { color: var(--danger); }
+    .form-hint.ok { color: var(--success); }
+
+    .fp-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--grad-faucetpay); color: #fff;
+      padding: 8px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 800;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+    }
+    .fp-chip svg { width: 16px; height: 16px; }
+
+    .btn {
+      width: 100%; padding: 14px 16px;
+      border: none; border-radius: 12px; font-size: 14px;
+      font-weight: 700; cursor: pointer;
+      transition: all 0.2s; text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary {
+      background: var(--grad-faucetpay); color: #fff;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5);
+    }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .quick-amounts { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .quick-btn {
+      flex: 1; min-width: 60px; padding: 9px 10px;
+      background: var(--card-2); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .quick-btn.max { background: rgba(99, 102, 241, 0.15); border-color: #6366f1; color: #818cf8; }
+
+    .alert {
+      padding: 12px 14px; border-radius: 10px; font-size: 13px;
+      margin-bottom: 16px; border: 1px solid;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
     .alert-info {
-      background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1); color: var(--info); border-color: rgba(59, 130, 246, 0.4);
     }
     .alert-error {
-      background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.4);
     }
     .alert-success {
-      background: rgba(34, 197, 94, 0.1); color: #22c55e; border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.1); color: var(--success); border-color: rgba(34, 197, 94, 0.4);
     }
-    
+    .alert-warn {
+      background: rgba(251, 191, 36, 0.1); color: var(--accent); border-color: rgba(251, 191, 36, 0.4);
+    }
+
     .history-list {
       display: flex; flex-direction: column; gap: 8px;
-      max-height: 400px; overflow-y: auto;
+      max-height: 480px; overflow-y: auto;
+      padding-right: 4px;
     }
+    .history-list::-webkit-scrollbar { width: 4px; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
     .history-item {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px; display: flex;
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 14px; display: flex;
       justify-content: space-between; align-items: center;
+      transition: border-color 0.15s;
     }
-    .history-left {
-      flex: 1;
-    }
+    .history-item:hover { border-color: var(--accent); }
+    .history-left { flex: 1; min-width: 0; }
     .history-amount {
-      font-weight: 600; font-size: 14px; margin-bottom: 4px;
+      font-weight: 800; font-size: 15px; margin-bottom: 4px;
+      display: flex; align-items: center; gap: 6px;
+      color: var(--accent);
     }
+    .history-amount svg { width: 16px; height: 16px; }
     .history-date {
-      font-size: 12px; color: var(--muted);
+      font-size: 11px; color: var(--muted);
+      display: flex; align-items: center; gap: 4px;
     }
+    .history-date svg { width: 11px; height: 11px; }
     .history-status {
-      font-size: 11px; font-weight: 600;
-      padding: 4px 8px; border-radius: 4px;
-      text-transform: uppercase;
+      font-size: 10px; font-weight: 700;
+      padding: 5px 10px; border-radius: 14px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 4px;
     }
-    .status-pending {
-      background: rgba(251, 191, 36, 0.2); color: var(--accent);
+    .history-status::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor;
     }
-    .status-approved {
-      background: rgba(34, 197, 94, 0.2); color: var(--success);
+    .status-pending { background: rgba(251, 191, 36, 0.15); color: var(--accent); }
+    .status-approved { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-paid { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-rejected { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .status-canceled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+    .empty {
+      text-align: center; padding: 32px 16px; color: var(--muted);
     }
-    .status-paid {
-      background: rgba(34, 197, 94, 0.2); color: var(--success);
-    }
-    .status-rejected {
-      background: rgba(239, 68, 68, 0.2); color: var(--danger);
-    }
-    .status-canceled {
-      background: rgba(239, 68, 68, 0.2); color: var(--danger);
-    }
-    
+    .empty svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+
     .loading {
-      text-align: center; padding: 20px;
-      color: var(--muted); font-size: 14px;
+      text-align: center; padding: 24px;
+      color: var(--muted); font-size: 13px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
     .spinner {
       display: inline-block; width: 16px; height: 16px;
       border: 2px solid var(--border); border-top-color: var(--accent);
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="topbar">
     <button class="back-btn" onclick="history.back()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
-    <h1 style="font-size: 16px; font-weight: 700;">Withdraw</h1>
+    <h1 style="font-size: 16px; font-weight: 800;">Withdraw to FaucetPay</h1>
   </div>
 
   <div class="container">
     <!-- Balance Display -->
     <div class="card">
       <div class="balance-display">
-        <div class="balance-item">
-          <div class="value" id="dogeBalance">0.00</div>
-          <div class="label">DOGE</div>
+        <div class="balance-item primary">
+          <div class="value">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="2" r="3"/><circle cx="12" cy="22" r="3"/><path d="M12 6v12"/></svg>
+            <span id="dogeBalance">0.00</span>
+          </div>
+          <div class="label">DOGE Balance</div>
         </div>
         <div class="balance-item">
-          <div class="value" id="cnxBalance">0.00</div>
-          <div class="label">CNX</div>
+          <div class="value">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/></svg>
+            <span id="cnxBalance">0.00</span>
+          </div>
+          <div class="label">CNX Balance</div>
         </div>
       </div>
     </div>
@@ -213,46 +291,86 @@
     <!-- Tabs -->
     <div class="card">
       <div class="tabs">
-        <button class="tab-btn active" data-tab="withdraw">Withdraw</button>
-        <button class="tab-btn" data-tab="history">History</button>
+        <button class="tab-btn active" data-tab="withdraw">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Withdraw
+        </button>
+        <button class="tab-btn" data-tab="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          History
+        </button>
       </div>
 
       <!-- Withdraw Tab -->
       <div id="withdraw" class="tab-content active">
         <div id="withdrawAlert"></div>
-        
+
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            Withdrawals are sent to your <strong>FaucetPay email</strong>.<br>
+            Minimum: <strong>0.10 DOGE</strong> · Rate: 1:1 (no fees)
+          </div>
+        </div>
+
         <form id="withdrawForm" onsubmit="handleWithdraw(event)">
+          <!-- Currency is fixed to DOGE only -->
           <div class="form-group">
-            <label>Currency</label>
-            <select id="currency" required>
-              <option value="doge">Dogecoin (DOGE)</option>
-              <option value="faucetpay">FaucetPay</option>
-            </select>
+            <label>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              Currency
+            </label>
+            <span class="fp-chip">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="2" r="3"/><circle cx="12" cy="22" r="3"/><path d="M12 6v12"/></svg>
+              DOGE (via FaucetPay)
+            </span>
+            <input type="hidden" id="currency" value="doge">
           </div>
 
           <div class="form-group">
-            <label>Amount (Minimum: 0.10)</label>
+            <label>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Amount (DOGE)
+            </label>
+            <div class="quick-amounts">
+              <button type="button" class="quick-btn" onclick="setAmount(0.5)">0.5</button>
+              <button type="button" class="quick-btn" onclick="setAmount(1)">1</button>
+              <button type="button" class="quick-btn" onclick="setAmount(5)">5</button>
+              <button type="button" class="quick-btn" onclick="setAmount(10)">10</button>
+              <button type="button" class="quick-btn max" onclick="setMax()">MAX</button>
+            </div>
             <input type="number" id="amount" step="0.01" min="0.10" placeholder="0.00" required>
+            <div class="form-hint" id="amountHint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Minimum withdrawal: 0.10 DOGE
+            </div>
           </div>
 
           <div class="form-group">
-            <label>FaucetPay / Wallet Address</label>
-            <input type="text" id="address" placeholder="Enter your FaucetPay username or wallet address" required>
+            <label>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              FaucetPay Email
+            </label>
+            <input type="email" id="address" placeholder="your@faucetpay.email" required autocomplete="email" spellcheck="false">
+            <div class="form-hint" id="addressHint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Only your <strong>FaucetPay email</strong> is accepted. Wallet addresses and usernames are not supported.
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary" id="withdrawBtn">
-            <span id="withdrawBtnText">Withdraw</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <span id="withdrawBtnText">Withdraw to FaucetPay</span>
           </button>
         </form>
 
-        <div style="margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
-          <p style="font-size: 12px; color: var(--muted);">
-            <strong>Withdrawal Info</strong><br>
-            - Earn CNX from faucet and ads<br>
-            - Swap CNX to DOGE when ready<br>
-            - Withdraw DOGE via FaucetPay<br>
-            - Minimum: 0.10 DOGE<br>
-            - Status: Pending then Paid
+        <div style="margin-top: 16px; padding: 14px; background: var(--card-2); border-radius: 12px; border: 1px solid var(--border);">
+          <p style="font-size: 12px; color: var(--muted); line-height: 1.6;">
+            <strong style="color:var(--text)">How it works</strong><br>
+            1. Earn CNX from faucet &amp; ads<br>
+            2. Swap CNX → DOGE on Swap page<br>
+            3. Enter your FaucetPay email here<br>
+            4. Withdrawal is processed by admin
           </p>
         </div>
       </div>
@@ -261,7 +379,7 @@
       <div id="history" class="tab-content">
         <div id="historyAlert"></div>
         <div class="history-list" id="historyList">
-          <div class="loading"><div class="spinner"></div></div>
+          <div class="loading"><div class="spinner"></div> Loading...</div>
         </div>
       </div>
     </div>
@@ -271,7 +389,6 @@
     let userId = null;
     let userBalance = { doge_balance: 0, balance: 0 };
 
-    // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tab = btn.getAttribute('data-tab');
@@ -283,7 +400,65 @@
       });
     });
 
-    // Initialize
+    // Strict FaucetPay email validation
+    function isValidFaucetPayEmail(email) {
+      if (!email || typeof email !== 'string') return false;
+      const v = email.trim().toLowerCase();
+      // Basic email regex (sufficient for faucetpay emails)
+      const re = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+      if (!re.test(v)) return false;
+      // Block obvious wallet-like strings (no spaces, must have @ and TLD)
+      if (v.includes(' ')) return false;
+      // Disallow DOGE address-like input (starts with D/n/m, length > 20, alphanumeric)
+      if (/^[dnm][a-z0-9]{25,}$/i.test(v.split('@')[0])) return false;
+      return true;
+    }
+
+    function setAmount(v) {
+      document.getElementById('amount').value = v;
+      validateAmount();
+    }
+    function setMax() {
+      document.getElementById('amount').value = userBalance.doge_balance.toFixed(2);
+      validateAmount();
+    }
+
+    function validateAmount() {
+      const amount = parseFloat(document.getElementById('amount').value) || 0;
+      const hint = document.getElementById('amountHint');
+      if (amount <= 0) {
+        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Enter an amount';
+        hint.className = 'form-hint';
+      } else if (amount < 0.10) {
+        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Minimum is 0.10 DOGE';
+        hint.className = 'form-hint err';
+      } else if (amount > userBalance.doge_balance) {
+        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Insufficient balance (' + userBalance.doge_balance.toFixed(2) + ' DOGE available)';
+        hint.className = 'form-hint err';
+      } else {
+        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Looks good!';
+        hint.className = 'form-hint ok';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('amount').addEventListener('input', validateAmount);
+      document.getElementById('address').addEventListener('input', () => {
+        const addr = document.getElementById('address').value.trim();
+        const hint = document.getElementById('addressHint');
+        if (!addr) {
+          hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Only your <strong>FaucetPay email</strong> is accepted. Wallet addresses and usernames are not supported.';
+          hint.className = 'form-hint';
+        } else if (!isValidFaucetPayEmail(addr)) {
+          hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Invalid email — please enter your FaucetPay email address';
+          hint.className = 'form-hint err';
+        } else {
+          hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Valid FaucetPay email';
+          hint.className = 'form-hint ok';
+        }
+      });
+    });
+
     async function init() {
       const initData = window.Telegram?.WebApp?.initData;
       if (!initData) { document.body.classList.add('demo-mode'); return; }
@@ -312,6 +487,7 @@
         userBalance = data;
         document.getElementById('dogeBalance').textContent = data.doge_balance.toFixed(2);
         document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
+        validateAmount();
       } catch (err) {
         console.error(err);
       }
@@ -321,89 +497,99 @@
       e.preventDefault();
       if (!userId) return;
 
-      const currency = document.getElementById('currency').value;
       const amount = parseFloat(document.getElementById('amount').value);
       const address = document.getElementById('address').value.trim();
-
       const alertDiv = document.getElementById('withdrawAlert');
 
       if (!amount || amount < 0.10) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Minimum withdrawal is 0.10</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Minimum withdrawal is 0.10 DOGE</div></div>';
         return;
       }
 
-      const balance = currency === 'doge' ? userBalance.doge_balance : userBalance.balance;
-      if (balance < amount) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Insufficient balance</div>';
+      if (amount > userBalance.doge_balance) {
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Insufficient DOGE balance. Swap CNX to DOGE first.</div></div>';
         return;
       }
 
       if (!address) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Address required</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Please enter your FaucetPay email.</div></div>';
+        return;
+      }
+
+      if (!isValidFaucetPayEmail(address)) {
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Invalid email. Only <strong>FaucetPay email addresses</strong> are accepted (e.g. you@faucetpay.email). Wallet addresses and usernames are not supported.</div></div>';
         return;
       }
 
       const btn = document.getElementById('withdrawBtn');
       btn.disabled = true;
-      document.getElementById('withdrawBtnText').innerHTML = '<span class="spinner"></span>';
+      document.getElementById('withdrawBtnText').innerHTML = '<div class="spinner"></div> Processing...';
 
       try {
         const res = await fetch('/api/withdraw', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, amount, address, currency })
+          body: JSON.stringify({ user_id: userId, amount, address, currency: 'doge' })
         });
         const result = await res.json();
 
         if (result.success) {
-          alertDiv.innerHTML = '<div class="alert alert-success">Withdrawal request submitted<br>Status will update soon</div>';
+          alertDiv.innerHTML = '<div class="alert alert-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>Withdrawal request submitted! DOGE will be sent to your FaucetPay email after admin approval.</div></div>';
           document.getElementById('withdrawForm').reset();
+          document.getElementById('addressHint').className = 'form-hint';
+          document.getElementById('amountHint').className = 'form-hint';
           setTimeout(loadBalance, 1000);
         } else {
-          alertDiv.innerHTML = `<div class="alert alert-error">${result.error || 'Withdrawal failed'}</div>`;
+          alertDiv.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>${result.error || 'Withdrawal failed'}</div></div>`;
         }
       } catch (err) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Network error</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Network error</div></div>';
         console.error(err);
       } finally {
         btn.disabled = false;
-        document.getElementById('withdrawBtnText').textContent = 'Withdraw';
+        document.getElementById('withdrawBtnText').textContent = 'Withdraw to FaucetPay';
       }
     }
 
     async function loadHistory() {
       if (!userId) return;
       const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
 
       try {
         const res = await fetch(`/api/withdrawals/${userId}`);
         const withdrawals = await res.json();
 
         if (!withdrawals.length) {
-          historyList.innerHTML = '<p style="text-align: center; color: var(--muted); padding: 20px;">No withdrawals yet</p>';
+          historyList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No withdrawals yet</p></div>';
           return;
         }
 
         historyList.innerHTML = withdrawals.map(w => {
-          const date = new Date(w.timestamp).toLocaleDateString();
+          const date = new Date(w.timestamp).toLocaleString();
           const statusClass = `status-${w.status}`;
           return `
             <div class="history-item">
               <div class="history-left">
-                <div class="history-amount">${w.amount.toFixed(2)} ${w.currency.toUpperCase()}</div>
-                <div class="history-date">${date}</div>
+                <div class="history-amount">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="2" r="3"/><circle cx="12" cy="22" r="3"/><path d="M12 6v12"/></svg>
+                  ${w.amount.toFixed(2)} ${(w.currency || 'doge').toUpperCase()}
+                </div>
+                <div class="history-date">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ${date}
+                </div>
               </div>
               <div class="history-status ${statusClass}">${w.status}</div>
             </div>
           `;
         }).join('');
       } catch (err) {
-        historyList.innerHTML = '<p style="color: var(--danger);">Failed to load history</p>';
+        historyList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><p style="color:var(--danger)">Failed to load history</p></div>';
         console.error(err);
       }
     }
 
-    // Start
     window.addEventListener('load', init);
   </script>
 </body>

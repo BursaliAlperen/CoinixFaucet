@@ -4,34 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>History - COINIX</title>
+  <meta http-equiv="refresh" content="2; url=/withdraw">
   <style>
-    :root { --bg: #f0f2f5; --card: #fff; --text: #222; --muted: #6b7280; --accent: #fbbf24; --border: #e5e7eb; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --border: #334155; } .topbar { background: #1e293b !important; border-color: #334155 !important; } }
+    :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --accent: #fbbf24; --border: #334155; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .topbar { display: flex; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); gap: 12px; }
-    .back-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: none; cursor: pointer; }
-    .back-btn:hover { background: #f3f4f6; }
-    .container { max-width: 540px; margin: 0 auto; padding: 16px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 16px; text-align: center; }
-    .card h2 { font-size: 18px; margin-bottom: 8px; }
-    .card p { color: var(--muted); font-size: 14px; }
-    .btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--accent); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    p { margin-top: 16px; color: var(--muted); font-size: 14px; }
+    a { color: var(--accent); text-decoration: none; font-weight: 700; }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <button class="back-btn" onclick="location.href='/'">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-    </button>
-    <h1 style="font-size:16px;font-weight:700;">History</h1>
-  </div>
-  <div class="container">
-    <div class="card">
-      <h2>History</h2>
-      <p>This section is under development. Use the Home page for full functionality.</p>
-      <a href="/" class="btn">Go to Home</a>
-    </div>
-  </div>
+  <div class="spinner"></div>
+  <p>Redirecting to withdrawal history...</p>
+  <p style="margin-top:8px; font-size:12px;"><a href="/withdraw">Click here if not redirected</a></p>
+  <script>setTimeout(() => { location.href = '/withdraw'; }, 500);</script>
 </body>
 </html>

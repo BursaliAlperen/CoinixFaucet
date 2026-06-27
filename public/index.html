@@ -4,191 +4,475 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
-  <title>COINIXFAUCET - CNX</title>
+  <title>COINIX Faucet - CNX</title>
   <style>
     :root {
       --bg: #0f172a;
+      --bg-2: #0b1224;
       --card: #1e293b;
+      --card-2: #0f172a;
       --text: #f8fafc;
       --muted: #94a3b8;
+      --muted-2: #64748b;
       --accent: #fbbf24;
       --accent-dark: #d97706;
+      --cnx: #fbbf24;
+      --doge: #c2a633;
       --success: #22c55e;
       --danger: #ef4444;
+      --info: #3b82f6;
+      --purple: #a855f7;
       --border: #334155;
+      --border-2: rgba(148,163,184,0.15);
       --shadow: 0 4px 20px rgba(0,0,0,0.4);
-      --shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
+      --shadow-hover: 0 12px 36px rgba(0,0,0,0.5);
+      --grad-cnx: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+      --grad-doge: linear-gradient(135deg, #fcd34d 0%, #b8860b 100%);
+      --grad-fp: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      --grad-live: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
     }
     @media (prefers-color-scheme: light) {
       :root {
         --bg: #f8fafc;
+        --bg-2: #eef2f7;
         --card: #ffffff;
-        --text: #1e293b;
-        --muted: #64748b;
+        --card-2: #f1f5f9;
+        --text: #0f172a;
+        --muted: #475569;
+        --muted-2: #64748b;
         --border: #e2e8f0;
-        --shadow: 0 4px 20px rgba(0,0,0,0.08);
-        --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+        --border-2: rgba(15,23,42,0.06);
+        --shadow: 0 4px 20px rgba(0,0,0,0.06);
+        --shadow-hover: 0 12px 36px rgba(0,0,0,0.10);
       }
-      .topbar { background: #ffffff !important; border-color: #e2e8f0 !important; }
+      .topbar { background: #ffffff !important; border-color: var(--border) !important; }
       .sidebar { background: #ffffff !important; }
-      .sidebar-header { background: #0f172a !important; }
+      .sidebar-header { background: linear-gradient(135deg, #1e293b, #0f172a) !important; }
       .nav-item:hover, .nav-item.active { background: #f1f5f9 !important; color: #0f172a !important; }
-      .nav-item:hover svg, .nav-item.active svg { color: #0f172a !important; }
-      input { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
+      .nav-item:hover svg, .nav-item.active svg { color: var(--accent) !important; }
+      input { background: var(--card-2) !important; border-color: #cbd5e1 !important; color: var(--text) !important; }
       input:focus { background: #ffffff !important; }
       .referral-box { background: #f0fdf4 !important; border-color: #86efac !important; }
       .referral-box h3 { color: #166534 !important; }
       .referral-link { background: #ffffff !important; border-color: #86efac !important; color: #166534 !important; }
-      .profile-name { color: #1e293b !important; }
+      .profile-name { color: var(--text) !important; }
+      .live-row { background: var(--card-2) !important; }
+      .live-row:hover { background: #ffffff !important; border-color: var(--accent) !important; }
+      .faq-item summary { background: var(--card-2) !important; }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: var(--bg); color: var(--text); line-height: 1.5;
       min-height: 100vh; overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 10% -10%, rgba(251,191,36,0.10) 0%, transparent 40%),
+        radial-gradient(circle at 90% 110%, rgba(99,102,241,0.08) 0%, transparent 40%);
+      background-attachment: fixed;
     }
+    a { color: inherit; text-decoration: none; }
+
+    /* Sidebar overlay */
     .sidebar-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 98;
+      backdrop-filter: blur(2px);
     }
     .sidebar-overlay.open { opacity: 1; visibility: visible; }
+
+    /* Sidebar */
     .sidebar {
-      position: fixed; top: 0; left: 0; width: 260px; height: 100%;
+      position: fixed; top: 0; left: 0; width: 268px; height: 100%;
       background: var(--card); transform: translateX(-100%);
       transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
       z-index: 99; display: flex; flex-direction: column;
-      box-shadow: 2px 0 24px rgba(0,0,0,0.3);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.4);
     }
     .sidebar.open { transform: translateX(0); }
     .sidebar-header {
-      padding: 20px; background: #0f172a; color: #fff;
+      padding: 20px; background: linear-gradient(135deg, #1e293b, #0f172a); color: #fff;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex; align-items: center; gap: 12px;
     }
-    .sidebar-header .logo-img { width: 40px; height: 40px; object-fit: contain; }
+    .sidebar-header .logo-img {
+      width: 44px; height: 44px; object-fit: contain;
+      background: var(--grad-cnx); border-radius: 50%;
+      padding: 4px; box-shadow: 0 0 16px rgba(251,191,36,0.4);
+    }
     .sidebar-header .logo-text { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--accent); }
-    .sidebar-header .logo-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; letter-spacing: 0.5px; }
-    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+    .sidebar-header .logo-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; letter-spacing: 0.5px; }
+    .sidebar-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
     .nav-item {
       display: flex; align-items: center; gap: 14px;
-      padding: 14px 20px; font-size: 14px; font-weight: 500;
+      padding: 13px 20px; font-size: 14px; font-weight: 500;
       color: #94a3b8; cursor: pointer; transition: all 0.15s ease;
       border-left: 3px solid transparent; text-decoration: none;
     }
     .nav-item:hover, .nav-item.active {
       background: #334155; color: #f8fafc; border-left-color: var(--accent);
     }
-    .nav-item svg { width: 20px; height: 20px; color: #64748b; flex-shrink: 0; }
+    .nav-item svg { width: 20px; height: 20px; color: #64748b; flex-shrink: 0; transition: color 0.15s; }
     .nav-item:hover svg, .nav-item.active svg { color: var(--accent); }
-    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: #64748b; text-align: center; }
+    .nav-item .badge {
+      margin-left: auto;
+      background: rgba(239, 68, 68, 0.2); color: #fca5a5;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 10px;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
+    .nav-item .badge::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%; background: #ef4444;
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .sidebar-footer {
+      padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px;
+      color: #64748b; text-align: center;
+    }
+
+    /* Topbar */
     .topbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 12px 16px; background: var(--card);
       border-bottom: 1px solid var(--border);
       position: sticky; top: 0; z-index: 10; gap: 12px;
+      backdrop-filter: blur(10px);
     }
     .topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .hamburger {
       width: 38px; height: 38px; display: flex; flex-direction: column;
       justify-content: center; align-items: center; gap: 5px;
-      cursor: pointer; border-radius: 8px; transition: background 0.2s;
+      cursor: pointer; border-radius: 10px; transition: background 0.2s;
       flex-shrink: 0; background: none; border: none;
     }
-    .hamburger:hover { background: #334155; }
+    .hamburger:hover { background: var(--border); }
     .hamburger span { display: block; width: 20px; height: 2.5px; background: var(--text); border-radius: 2px; transition: all 0.2s ease; }
     .hamburger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
     .hamburger.open span:nth-child(2) { opacity: 0; }
     .hamburger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
     .profile-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .profile-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); background: #1e293b; flex-shrink: 0; }
+    .profile-img {
+      width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--accent); background: var(--card-2); flex-shrink: 0;
+    }
     .profile-info { min-width: 0; overflow: hidden; }
     .profile-name { font-size: 13px; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .profile-id { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
     .balance-wrap {
       display: flex; align-items: center; gap: 8px;
       background: rgba(251, 191, 36, 0.1); border: 1.5px solid rgba(251, 191, 36, 0.3);
       padding: 7px 14px; border-radius: 24px; flex-shrink: 0;
     }
-    .balance-wrap img { width: 28px; height: 28px; object-fit: contain; }
-    .balance-text { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .balance-wrap .coin-icon {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--grad-cnx); display: flex; align-items: center; justify-content: center;
+      color: #0f172a; font-size: 11px; font-weight: 900;
+    }
+    .balance-text { font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+
+    /* Container */
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
+
+    /* Card */
     .card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px; margin-bottom: 16px;
+      border-radius: 16px; padding: 22px; margin-bottom: 16px;
       box-shadow: var(--shadow);
       transition: box-shadow 0.25s ease, transform 0.25s ease;
+      position: relative; overflow: hidden;
     }
-    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card.clickable { cursor: pointer; }
+    .card.clickable:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+
     .section-title {
       display: flex; align-items: center; gap: 10px;
-      font-size: 13px; font-weight: 700; color: var(--muted);
+      font-size: 13px; font-weight: 800; color: var(--muted);
       text-transform: uppercase; letter-spacing: 0.6px;
       margin-bottom: 16px; padding-bottom: 12px;
       border-bottom: 1px solid var(--border);
     }
-    .section-title img { width: 24px; height: 24px; object-fit: contain; }
-    .section-title svg { width: 20px; height: 20px; color: var(--accent); }
+    .section-title .icon-wrap {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(251, 191, 36, 0.15);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title .icon-wrap svg { width: 16px; height: 16px; color: var(--accent); }
+    .section-title .title-text { flex: 1; }
+
+    /* Hero stats */
+    .hero-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    .hero-stat {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 10px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero-stat.primary {
+      background: var(--grad-cnx); border: none; color: #0f172a;
+    }
+    .hero-stat .label {
+      font-size: 10px; text-transform: uppercase; font-weight: 700;
+      color: var(--muted); letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .hero-stat.primary .label { color: rgba(15, 23, 42, 0.7); }
+    .hero-stat .value {
+      font-size: 18px; font-weight: 900; color: var(--accent);
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    .hero-stat.primary .value { color: #0f172a; }
+    .hero-stat .value svg { width: 16px; height: 16px; }
+
+    /* Claim button */
     .claim-btn {
-      width: 100%; padding: 20px; font-size: 18px; font-weight: 800;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-      color: #0f172a; border: none; border-radius: 14px;
+      width: 100%; padding: 18px; font-size: 18px; font-weight: 900;
+      background: var(--grad-cnx); color: #0f172a; border: none; border-radius: 14px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       gap: 12px; transition: all 0.2s ease;
       box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
-    .claim-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4); }
+    .claim-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(251, 191, 36, 0.5); }
     .claim-btn:active:not(:disabled) { transform: translateY(0); }
-    .claim-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; transform: none; color: #94a3b8; }
-    .claim-btn img { width: 32px; height: 32px; object-fit: contain; }
-    .cooldown { text-align: center; margin-top: 16px; color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
+    .claim-btn:disabled {
+      background: linear-gradient(135deg, #475569, #334155);
+      cursor: not-allowed; box-shadow: none; transform: none; color: #94a3b8;
+    }
+    .claim-btn .coin-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(15, 23, 42, 0.2);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .claim-btn .coin-icon svg { width: 20px; height: 20px; }
+
+    .cooldown { text-align: center; margin-top: 14px; color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
     .cooldown svg { width: 16px; height: 16px; }
-    .label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
-    input[type="text"], input[type="number"] {
-      width: 100%; padding: 12px 14px; margin-bottom: 14px;
-      border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px;
-      background: #0f172a; color: var(--text); transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    }
-    input[type="text"]:focus, input[type="number"]:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15); background: #1e293b;
-    }
-    button.action {
-      width: 100%; padding: 12px; background: #334155; color: #f8fafc;
-      border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
-      font-size: 14px; font-weight: 600; transition: all 0.2s ease;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    button.action:hover { background: #475569; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    button.action svg { width: 16px; height: 16px; }
-    .msg { margin-top: 10px; font-size: 13px; color: var(--success); min-height: 20px; text-align: center; font-weight: 500; }
-    .msg.err { color: var(--danger); }
-    .tasks-frame-wrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
-    iframe { width: 100%; border: none; height: 440px; display: block; background: var(--card); }
-    .doge-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2);
-      padding: 6px 14px; border-radius: 20px;
-      font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 8px;
-    }
-    .doge-badge img { width: 22px; height: 22px; object-fit: contain; }
+
+    /* Referral */
     .referral-box {
-      background: rgba(34, 197, 94, 0.1); border: 1.5px solid rgba(34, 197, 94, 0.2);
+      background: rgba(34, 197, 94, 0.08); border: 1.5px solid rgba(34, 197, 94, 0.25);
       border-radius: 14px; padding: 18px; margin-bottom: 16px;
     }
-    .referral-box h3 { font-size: 14px; color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .referral-box h3 { font-size: 14px; color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-weight: 800; }
+    .referral-box h3 svg { width: 18px; height: 18px; }
     .referral-link {
-      background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(34, 197, 94, 0.3);
+      background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(34, 197, 94, 0.3);
       border-radius: 10px; padding: 12px 14px;
-      font-size: 13px; font-family: monospace;
+      font-size: 12px; font-family: monospace;
       color: var(--success); word-break: break-all;
       margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; gap: 10px;
     }
-    .referral-link:hover { border-color: var(--success); background: rgba(15, 23, 42, 0.8); }
+    .referral-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .referral-link:hover { border-color: var(--success); background: rgba(15, 23, 42, 0.7); }
     .referral-stats { display: flex; gap: 20px; margin-top: 12px; }
     .referral-stat { text-align: center; flex: 1; }
-    .referral-stat .num { font-size: 22px; font-weight: 800; color: var(--success); }
-    .referral-stat .lbl { font-size: 11px; color: var(--muted); }
+    .referral-stat .num { font-size: 22px; font-weight: 900; color: var(--success); }
+    .referral-stat .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Doge badge */
+    .doge-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.25);
+      padding: 8px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; color: var(--accent);
+    }
+    .doge-badge .coin-icon {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--grad-doge); display: flex; align-items: center; justify-content: center;
+    }
+    .doge-badge .coin-icon svg { width: 14px; height: 14px; }
+
+    /* Live Withdraws */
+    .live-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .live-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(239, 68, 68, 0.15); color: #fca5a5;
+      padding: 4px 10px; border-radius: 12px;
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .live-tag::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ef4444;
+      animation: pulse-dot 1.2s ease-in-out infinite;
+    }
+    .live-counter {
+      font-size: 11px; color: var(--muted); font-weight: 600;
+    }
+    .live-counter strong { color: var(--success); }
+
+    .live-feed {
+      max-height: 340px; overflow-y: auto;
+      padding-right: 4px;
+      mask-image: linear-gradient(to bottom, #000 0%, #000 calc(100% - 40px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 calc(100% - 40px), transparent 100%);
+    }
+    .live-feed::-webkit-scrollbar { width: 4px; }
+    .live-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .live-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s ease;
+      animation: slideIn 0.4s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .live-row:hover { border-color: var(--accent); transform: translateX(2px); }
+
+    .live-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--grad-cnx);
+      display: flex; align-items: center; justify-content: center;
+      color: #0f172a; font-weight: 900; font-size: 14px;
+      flex-shrink: 0;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+    .live-info { flex: 1; min-width: 0; }
+    .live-name {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .live-name .verified {
+      display: inline-block; width: 12px; height: 12px;
+      color: var(--success); margin-left: 3px; vertical-align: middle;
+    }
+    .live-meta {
+      font-size: 11px; color: var(--muted); margin-top: 2px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .live-meta svg { width: 11px; height: 11px; }
+    .live-amount {
+      text-align: right; flex-shrink: 0;
+    }
+    .live-amount-value {
+      font-size: 15px; font-weight: 900; color: var(--success);
+      display: flex; align-items: center; gap: 4px;
+      justify-content: flex-end;
+    }
+    .live-amount-value svg { width: 14px; height: 14px; }
+    .live-amount-coin { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .live-empty {
+      text-align: center; padding: 32px 16px;
+      color: var(--muted); font-size: 13px;
+    }
+    .live-empty svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+
+    .live-footer {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 11px; color: var(--muted);
+    }
+    .live-footer a {
+      color: var(--accent); font-weight: 700;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .live-footer a:hover { text-decoration: underline; }
+    .live-footer a svg { width: 12px; height: 12px; }
+
+    /* Tasks iframe */
+    .tasks-frame-wrap {
+      border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+      position: relative; min-height: 440px; background: var(--card-2);
+    }
+    .tasks-frame-wrap iframe { width: 100%; border: none; height: 440px; display: block; background: var(--card-2); }
+    .tasks-fallback {
+      padding: 60px 20px; text-align: center; color: var(--muted);
+    }
+    .tasks-fallback svg { width: 64px; height: 64px; opacity: 0.3; margin-bottom: 12px; }
+
+    /* PTC quick links */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+      margin-bottom: 16px;
+    }
+    .quick-card {
+      background: var(--card-2); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      transition: all 0.2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .quick-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+    .quick-card .icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .quick-card .icon svg { width: 22px; height: 22px; }
+    .quick-card .icon.cnx { background: var(--grad-cnx); color: #0f172a; }
+    .quick-card .icon.doge { background: var(--grad-doge); color: #0f172a; }
+    .quick-card .icon.fp { background: var(--grad-fp); color: #fff; }
+    .quick-card .icon.purple { background: linear-gradient(135deg, #a855f7, #6d28d9); color: #fff; }
+    .quick-card .icon.success { background: linear-gradient(135deg, #22c55e, #15803d); color: #fff; }
+    .quick-card .icon.danger { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; }
+    .quick-card .label { font-size: 12px; font-weight: 700; }
+    .quick-card .sub { font-size: 10px; color: var(--muted); }
+
+    /* FAQ */
+    .faq-item {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item[open] { border-color: var(--accent); }
+    .faq-item summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 14px; font-weight: 700;
+      transition: background 0.2s;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary:hover { background: var(--card); }
+    .faq-item summary svg.chevron {
+      width: 18px; height: 18px;
+      margin-left: auto;
+      color: var(--muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .faq-item[open] summary svg.chevron { transform: rotate(180deg); color: var(--accent); }
+    .faq-item summary svg.q-icon {
+      width: 20px; height: 20px;
+      color: var(--accent);
+      flex-shrink: 0;
+      background: rgba(251, 191, 36, 0.15);
+      padding: 4px; border-radius: 6px;
+      box-sizing: content-box;
+    }
+    .faq-item .answer {
+      padding: 0 16px 14px;
+      font-size: 13px; color: var(--muted);
+      line-height: 1.65;
+    }
+    .faq-item .answer strong { color: var(--text); }
+    .faq-item .answer a { color: var(--accent); font-weight: 600; }
+
+    /* Loading overlay */
     .loading-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: var(--bg); display: flex; flex-direction: column;
@@ -197,13 +481,34 @@
     }
     .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .loading-logo { width: 100px; height: 100px; object-fit: contain; animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
-    .loading-text { margin-top: 16px; font-size: 14px; color: var(--muted); font-weight: 500; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: 0.85; } }
+    .loading-text { margin-top: 16px; font-size: 13px; color: var(--muted); font-weight: 500; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--card); border: 1px solid var(--border);
+      padding: 12px 18px; border-radius: 12px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 999;
+      display: flex; align-items: center; gap: 8px;
+      opacity: 0; transition: opacity 0.2s, transform 0.2s;
+      max-width: 90%;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    .toast svg { width: 18px; height: 18px; }
+    .toast.success { color: var(--success); border-color: var(--success); }
+    .toast.error { color: var(--danger); border-color: var(--danger); }
+    .toast.info { color: var(--accent); border-color: var(--accent); }
+
     @media (max-width: 400px) {
       .container { padding: 12px; }
-      .card { padding: 18px; }
+      .card { padding: 16px; }
       .balance-wrap { padding: 6px 10px; }
       .balance-text { font-size: 13px; }
+      .hero-stats { gap: 6px; }
+      .hero-stat .value { font-size: 16px; }
     }
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -216,22 +521,18 @@
   </div>
 
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-  <div class="sidebar" id="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img class="logo-img" src="/images/coinix-logo.png" alt="COINIX">
+      <img class="logo-img" src="/images/coinix-logo.png" alt="COINIX" onerror="this.style.display='none'">
       <div>
         <div class="logo-text">COINIX</div>
-        <div class="logo-sub">CNX FAUCET PLATFORM</div>
+        <div class="logo-sub">CNX FAUCET · v2.1</div>
       </div>
     </div>
     <nav class="sidebar-nav">
       <a class="nav-item active" href="/">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         Home
-      </a>
-      <a class="nav-item" href="/dashboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        Dashboard
       </a>
       <a class="nav-item" href="/faucet">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
@@ -241,27 +542,28 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
         PTC / Tasks
       </a>
-      <a class="nav-item" href="/withdraw">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-        Withdraw
-      </a>
       <a class="nav-item" href="/swap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-        Swap
+        Swap CNX ↔ DOGE
       </a>
-      <a class="nav-item" href="/history">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        History
+      <a class="nav-item" href="/withdraw">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></svg>
+        Withdraw
+        <span class="badge" id="sidebarLiveBadge">LIVE</span>
+      </a>
+      <a class="nav-item" href="#faq">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        FAQ
       </a>
     </nav>
-    <div class="sidebar-footer">COINIX v2.0</div>
-  </div>
+    <div class="sidebar-footer">COINIX Faucet · Powered by Dogecoin</div>
+  </aside>
 
   <div class="topbar">
     <div class="topbar-left">
       <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
       <div class="profile-wrap">
-        <img class="profile-img" id="profileImg" src="/images/bot-avatar.png" alt="Profile">
+        <img class="profile-img" id="profileImg" src="/images/bot-avatar.png" alt="Profile" onerror="this.src='/images/coinix-logo.png'">
         <div class="profile-info">
           <div class="profile-name" id="profileName">User</div>
           <div class="profile-id" id="profileId">Loading...</div>
@@ -269,16 +571,23 @@
       </div>
     </div>
     <div class="balance-wrap">
-      <img src="/images/cnx-coin.png" alt="CNX">
+      <div class="coin-icon">$</div>
       <div class="balance-text"><span id="bal">0</span> CNX</div>
     </div>
   </div>
 
   <div class="container">
 
+    <!-- Referral Box -->
     <div class="referral-box" id="referralBox" style="display:none;">
-      <h3>Referral Program</h3>
-      <div class="referral-link" id="refLink" onclick="copyRef()">Loading...</div>
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Referral Program · +50 CNX per friend
+      </h3>
+      <div class="referral-link" id="refLink" onclick="copyRef()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <span id="refLinkText" style="flex:1;">Loading...</span>
+      </div>
       <div class="referral-stats">
         <div class="referral-stat">
           <div class="num" id="refCount">0</div>
@@ -291,59 +600,225 @@
       </div>
     </div>
 
+    <!-- Faucet Claim -->
     <div class="card">
       <div class="section-title">
-        <img src="/images/faucet-icon.png" alt="Faucet">
-        Faucet Claim
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        </span>
+        <span class="title-text">Faucet Claim</span>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="label">DOGE</div>
+          <div class="value" id="heroDoge">0.00</div>
+        </div>
+        <div class="hero-stat primary">
+          <div class="label">CNX</div>
+          <div class="value" id="heroCnx">0</div>
+        </div>
+        <div class="hero-stat">
+          <div class="label">Claims</div>
+          <div class="value" id="heroClaims">0</div>
+        </div>
       </div>
       <button class="claim-btn" id="claimBtn" onclick="doClaim()">
-        <img src="/images/cnx-coin.png" alt="CNX">
+        <span class="coin-icon">
+          <svg viewBox="0 0 24 24" fill="#0f172a"><circle cx="12" cy="12" r="10"/><path d="M9 8h4a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9V8zm0 6h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9v-4z" fill="#fbbf24"/></svg>
+        </span>
         CLAIM CNX
       </button>
       <div class="cooldown" id="cooldownText">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        Ready to claim
+        Ready to claim!
       </div>
     </div>
 
     <div style="text-align:center; margin-bottom:16px;">
       <div class="doge-badge">
-        <img src="/images/doge-coin.png" alt="DOGE">
+        <span class="coin-icon">
+          <svg viewBox="0 0 24 24" fill="#0f172a"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+        </span>
         Powered by Dogecoin
       </div>
     </div>
 
-    <div class="card">
-      <div class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-        PTC / Tasks (AoyCo)
+    <!-- Quick actions -->
+    <div class="quick-grid">
+      <a class="quick-card" href="/faucet">
+        <div class="icon cnx">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        </div>
+        <div class="label">Free Faucet</div>
+        <div class="sub">Claim CNX every 10s</div>
+      </a>
+      <a class="quick-card" href="/ptc">
+        <div class="icon success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <div class="label">PTC Ads</div>
+        <div class="sub">Earn watching ads</div>
+      </a>
+      <a class="quick-card" href="/swap">
+        <div class="icon doge">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+        </div>
+        <div class="label">Swap</div>
+        <div class="sub">CNX → DOGE</div>
+      </a>
+      <a class="quick-card" href="/withdraw">
+        <div class="icon fp">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </div>
+        <div class="label">Withdraw</div>
+        <div class="sub">DOGE → FaucetPay</div>
+      </a>
+    </div>
+
+    <!-- Live Withdrawals -->
+    <div class="card" id="liveCard">
+      <div class="live-header">
+        <div class="section-title" style="margin:0; padding:0; border:none;">
+          <span class="icon-wrap" style="background:rgba(239,68,68,0.15);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/></svg>
+          </span>
+          <span class="title-text">Live Withdrawals</span>
+          <span class="live-tag">Live</span>
+        </div>
       </div>
-      <div class="tasks-frame-wrap">
-        <iframe src="https://aoyco.in/offerwall" frameborder="0" scrolling="yes"></iframe>
+      <div class="live-counter">
+        <strong id="liveTodayCount">0</strong> paid today · <strong id="liveTotalCount">0</strong> all-time
+      </div>
+      <div class="live-feed" id="liveFeed">
+        <div class="live-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <p>Loading live withdrawals...</p>
+        </div>
+      </div>
+      <div class="live-footer">
+        <a href="/withdraw" onclick="event.stopPropagation();">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          Withdraw your DOGE →
+        </a>
       </div>
     </div>
 
+    <!-- PTC Tasks (AoyCo offerwall) -->
     <div class="card">
       <div class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-        Withdraw
+        <span class="icon-wrap" style="background:rgba(34,197,94,0.15);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        </span>
+        <span class="title-text">PTC Tasks (AoyCo)</span>
       </div>
-      <label class="label">FaucetPay Email or CNX Address</label>
-      <input type="text" id="wdAddress" placeholder="Enter your address">
-      <label class="label">Amount (CNX)</label>
-      <input type="number" id="wdAmount" placeholder="Min 1 CNX">
-      <button class="action" onclick="doWithdraw()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        Request Withdrawal
-      </button>
-      <div class="msg" id="wdMsg"></div>
+      <div class="tasks-frame-wrap" id="tasksFrameWrap">
+        <div class="tasks-fallback">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <p style="font-size:13px;">Loading offers...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="card" id="faq">
+      <div class="section-title">
+        <span class="icon-wrap" style="background:rgba(168,85,247,0.15);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </span>
+        <span class="title-text">FAQ · Frequently Asked</span>
+      </div>
+
+      <details class="faq-item" open>
+        <summary>
+          <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          How do I earn CNX?
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="answer">
+          You can earn CNX by:<br>
+          • <strong>Claiming the faucet</strong> every 10 seconds<br>
+          • <strong>Watching PTC ads</strong> and completing offers on the PTC / Tasks page<br>
+          • <strong>Referral program</strong> — invite friends and earn <strong>+50 CNX</strong> per signup
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          How do I withdraw?
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="answer">
+          1. Earn <strong>CNX</strong> from the faucet and ads.<br>
+          2. Go to <strong>Swap</strong> and convert CNX → DOGE (1:1, no fees).<br>
+          3. Go to <strong>Withdraw</strong> page.<br>
+          4. Enter your <strong>FaucetPay email</strong> and the DOGE amount.<br>
+          5. Minimum withdrawal is <strong>0.10 DOGE</strong>.<br>
+          6. The admin processes your payout and DOGE arrives on your FaucetPay account.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          Do you only accept FaucetPay email for withdrawals?
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="answer">
+          Yes. To keep things simple, withdrawals are sent via <strong>FaucetPay</strong> only.
+          Please enter the email address you registered with on FaucetPay.
+          DOGE wallet addresses and usernames are <strong>not</strong> supported.
+          <br><br>
+          Don't have a FaucetPay account? <a href="https://faucetpay.io" target="_blank" rel="noopener">Create one here</a> — it's free.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          How does the referral program work?
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="answer">
+          Share your unique referral link with friends.
+          When they sign up via your link, you receive <strong>+50 CNX</strong> automatically.
+          There's no limit on referrals — invite as many friends as you like.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          How long does withdrawal take?
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="answer">
+          Most withdrawals are processed within <strong>24 hours</strong>.
+          You can check the status of every withdrawal under the <strong>History</strong> tab on the Withdraw page.
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary>
+          <svg class="q-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+          What is the exchange rate CNX → DOGE?
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="answer">
+          The swap rate is <strong>1 CNX = 1 DOGE</strong> with no fees.
+          You can swap back and forth anytime on the <a href="/swap">Swap page</a>.
+        </div>
+      </details>
     </div>
 
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
     const API = window.location.origin;
-    let userId = null, lastClaim = 0, cooldownTimer = null, tgUser = null, initData = null;
+    const AOYCO_API_KEY = 'XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM';
+    let userId = null, lastClaim = 0, cooldownTimer = null, tgUser = null, initData = null, livePollTimer = null;
 
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
@@ -355,11 +830,8 @@
     }
 
     function getRefFromUrl() {
-      // Telegram Mini App start_param: ?tgWebAppStartParam=ref_123
-      // veya query string ?ref=123 ya da ?startapp=ref_123
       const params = new URLSearchParams(window.location.search);
       const start = params.get('tgWebAppStartParam') || params.get('startapp') || params.get('ref') || '';
-      // "ref_123" veya "123" formatlarini destekle
       const m = start.match(/^ref_?(\d+)/i);
       return m ? m[1] : (start.match(/^\d+$/) ? start : '');
     }
@@ -368,9 +840,24 @@
       document.getElementById('loadingOverlay').classList.add('hidden');
     }
 
-    function showLoading(text) {
-      document.querySelector('.loading-text').textContent = text || 'Loading...';
-      document.getElementById('loadingOverlay').classList.remove('hidden');
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      const icons = {
+        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+        error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+      };
+      t.className = 'toast show ' + type;
+      t.innerHTML = (icons[type] || icons.info) + ' ' + msg;
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+    }
+
+    function copyRef() {
+      const link = document.getElementById('refLinkText').textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(() => showToast('Referral link copied!', 'success'));
+      }
     }
 
     async function authUser() {
@@ -385,9 +872,10 @@
         }
       }
       if (!tgUser) {
-        // Telegram WebApp disinda acildi — demo moduna gec, sessizce
         hideLoading();
         document.body.classList.add('demo-mode');
+        loadLiveFeed();
+        loadTasksFrame();
         return;
       }
       if (tgUser.photo_url) document.getElementById('profileImg').src = tgUser.photo_url;
@@ -403,8 +891,9 @@
         });
         const data = await res.json();
         if (data.success) {
-          await Promise.all([loadReferralData(), loadBalance()]);
+          await Promise.all([loadReferralData(), loadBalance(), loadTasksFrame(), loadLiveFeed()]);
           hideLoading();
+          startLivePolling();
         } else throw new Error(data.error || 'Auth failed');
       } catch (e) {
         console.error('Auth error:', e);
@@ -417,19 +906,11 @@
       try {
         const res = await fetch(API + '/api/referral/' + userId);
         const data = await res.json();
-        document.getElementById('refLink').textContent = data.link;
+        document.getElementById('refLinkText').textContent = data.link;
         document.getElementById('refCount').textContent = data.referrals;
         document.getElementById('refEarnings').textContent = data.earnings;
         document.getElementById('referralBox').style.display = 'block';
       } catch (e) { console.error('Ref error:', e); }
-    }
-
-    function copyRef() {
-      const link = document.getElementById('refLink').textContent;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(link);
-        if (Telegram.WebApp && Telegram.WebApp.showPopup) Telegram.WebApp.showPopup({ title: 'Copied!', message: 'Referral link copied to clipboard.' });
-      }
     }
 
     async function loadBalance() {
@@ -438,6 +919,9 @@
         const res = await fetch(API + '/api/balance/' + userId);
         const data = await res.json();
         document.getElementById('bal').textContent = data.balance;
+        document.getElementById('heroCnx').textContent = data.balance;
+        document.getElementById('heroDoge').textContent = (data.doge_balance || 0).toFixed(2);
+        document.getElementById('heroClaims').textContent = data.total_claims || 0;
         lastClaim = data.last_claim || 0;
         updateCooldown();
       } catch (e) { console.error(e); }
@@ -450,11 +934,11 @@
       if (diff < 10000) {
         const wait = Math.ceil((10000 - diff) / 1000);
         btn.disabled = true;
-        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Wait ' + wait + 's...';
+        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Wait ' + wait + 's...';
         if (!cooldownTimer) cooldownTimer = setInterval(updateCooldown, 1000);
       } else {
         btn.disabled = false;
-        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Ready to claim!';
+        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ready to claim!';
         if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
       }
     }
@@ -470,41 +954,162 @@
         });
         const data = await res.json();
         if (data.success) {
-          if (typeof data.balance === 'number') document.getElementById('bal').textContent = data.balance;
+          if (typeof data.balance === 'number') {
+            document.getElementById('bal').textContent = data.balance;
+            document.getElementById('heroCnx').textContent = data.balance;
+            document.getElementById('heroClaims').textContent = (parseInt(document.getElementById('heroClaims').textContent) || 0) + 1;
+          }
           lastClaim = Date.now(); updateCooldown();
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> You won ' + data.reward + ' CNX!';
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> You won ' + data.reward.toFixed(2) + ' CNX!';
+          showToast('+' + data.reward.toFixed(2) + ' CNX claimed!', 'success');
         } else {
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ' + (data.error || 'Error');
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ' + (data.error || 'Error');
         }
       } catch (e) {
-        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Network error';
+        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Network error';
       }
     }
 
-    async function doWithdraw() {
-      if (!userId) return;
-      const amount = document.getElementById('wdAmount').value;
-      const address = document.getElementById('wdAddress').value;
-      const msg = document.getElementById('wdMsg');
-      if (!amount || !address) {
-        msg.innerHTML = '<span style="color:#ef4444">Fill all fields</span>'; return;
+    function loadTasksFrame() {
+      const wrap = document.getElementById('tasksFrameWrap');
+      // AoyCo requires USER_ID to be alphanumeric only — sanitize if needed
+      let safeId = userId ? String(userId).replace(/[^a-zA-Z0-9]/g, '') : 'guest' + Date.now();
+      // If sanitization removed everything (rare), fall back to a numeric ID
+      if (!safeId) safeId = '0';
+
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = '480px';
+      iframe.style.border = 'none';
+      iframe.style.display = 'block';
+      iframe.allow = 'popups; fullscreen';
+      iframe.referrerPolicy = 'no-referrer';
+      iframe.src = `https://aoyco.in/offerwall/${AOYCO_API_KEY}/${safeId}`;
+
+      iframe.onload = () => {
+        // hide the fallback if iframe loaded
+        const fb = wrap.querySelector('.tasks-fallback');
+        if (fb) fb.style.display = 'none';
+      };
+      iframe.onerror = () => {
+        wrap.innerHTML = '<div class="tasks-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p style="font-size:13px;">Failed to load offers.<br>Open <a href="/ptc" style="color:var(--accent);text-decoration:underline;">PTC page</a> directly.</p></div>';
+      };
+
+      wrap.innerHTML = '';
+      wrap.appendChild(iframe);
+    }
+
+    /* ============ LIVE WITHDRAWALS FEED ============ */
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+    function timeAgo(ms) {
+      const diff = Math.max(0, Date.now() - ms);
+      const sec = Math.floor(diff / 1000);
+      if (sec < 60) return sec + 's ago';
+      const min = Math.floor(sec / 60);
+      if (min < 60) return min + 'm ago';
+      const hr = Math.floor(min / 60);
+      if (hr < 24) return hr + 'h ago';
+      const day = Math.floor(hr / 24);
+      return day + 'd ago';
+    }
+    function displayName(u) {
+      if (u.username) return '@' + u.username;
+      if (u.first_name) {
+        const last = u.last_name ? ' ' + u.last_name : '';
+        return u.first_name + last;
       }
+      return 'User ' + String(u.user_id || '').slice(-4);
+    }
+    function initials(name) {
+      const parts = String(name || '?').trim().split(/\s+/);
+      const a = (parts[0] || '?').charAt(0);
+      const b = parts[1] ? parts[1].charAt(0) : '';
+      return (a + b).toUpperCase();
+    }
+    function colorFromId(id) {
+      const palette = ['#fbbf24', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#06b6d4', '#f97316', '#ec4899'];
+      const n = parseInt(String(id || '0').replace(/\D/g, '')) || 0;
+      return palette[n % palette.length];
+    }
+    function renderLiveFeed(items) {
+      const feed = document.getElementById('liveFeed');
+      if (!items || !items.length) {
+        feed.innerHTML = '<div class="live-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>No withdrawals yet — be the first to cash out!</p></div>';
+        return;
+      }
+      feed.innerHTML = items.map(w => {
+        const name = escapeHtml(displayName(w));
+        const photo = w.photo_url;
+        const avatarStyle = photo ? '' : 'background: linear-gradient(135deg, ' + colorFromId(w.user_id) + ', ' + colorFromId((w.user_id || '0') + '1') + ');';
+        const avatarContent = photo
+          ? '<img class="live-avatar" src="' + escapeHtml(photo) + '" onerror="this.outerHTML=\'<div class=&quot;live-avatar&quot; style=&quot;' + avatarStyle + '&quot;>' + escapeHtml(initials(name)) + '</div>\'" alt="">'
+          : '<div class="live-avatar" style="' + avatarStyle + '">' + escapeHtml(initials(name)) + '</div>';
+        const verifiedSvg = '<svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17l-3.88-3.88L3.71 13.71 9 19l11-11-1.41-1.41z"/></svg>';
+        return `
+          <div class="live-row">
+            ${avatarContent}
+            <div class="live-info">
+              <div class="live-name">${name}${verifiedSvg}</div>
+              <div class="live-meta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ${timeAgo(w.timestamp)} · ${escapeHtml(w.masked_address || '')}
+              </div>
+            </div>
+            <div class="live-amount">
+              <div class="live-amount-value">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+                ${Number(w.amount).toFixed(2)}
+              </div>
+              <div class="live-amount-coin">${escapeHtml((w.currency || 'doge').toUpperCase())}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadLiveFeed() {
       try {
-        const res = await fetch(API + '/api/withdraw', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, amount: Number(amount), address })
-        });
-        const data = await res.json();
-        if (data.success) {
-          msg.innerHTML = '<span style="color:#22c55e">Withdrawal requested! Awaiting admin approval.</span>';
-          loadBalance();
-        } else {
-          msg.innerHTML = '<span style="color:#ef4444">' + (data.error || 'Failed') + '</span>';
+        const [feedRes, statsRes] = await Promise.all([
+          fetch(API + '/api/withdrawals/recent?limit=25'),
+          fetch(API + '/api/withdrawals/stats')
+        ]);
+        const items = await feedRes.json();
+        const stats = await statsRes.json();
+        renderLiveFeed(items);
+        if (stats && typeof stats.today_count === 'number') {
+          document.getElementById('liveTodayCount').textContent = stats.today_count;
+          document.getElementById('liveTotalCount').textContent = stats.total_count;
         }
       } catch (e) {
-        msg.innerHTML = '<span style="color:#ef4444">Network error</span>';
+        console.error('Live feed error:', e);
+        document.getElementById('liveFeed').innerHTML = '<div class="live-empty"><p>Live feed temporarily unavailable.</p></div>';
       }
     }
+
+    function startLivePolling() {
+      if (livePollTimer) clearInterval(livePollTimer);
+      livePollTimer = setInterval(loadLiveFeed, 30000); // every 30s
+    }
+
+    /* ============ END LIVE FEED ============ */
+
+    // Smooth scroll to FAQ when clicked in sidebar
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('a[href="#faq"]').forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          const el = document.getElementById('faq');
+          if (el) {
+            // close sidebar first
+            const sb = document.getElementById('sidebar');
+            if (sb.classList.contains('open')) toggleSidebar();
+            setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+          }
+        });
+      });
+    });
 
     window.onload = authUser;
   </script>

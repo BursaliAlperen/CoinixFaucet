@@ -9,10 +9,13 @@
     :root {
       --bg: #0f172a;
       --card: #1e293b;
+      --card-2: #0b1224;
       --text: #f8fafc;
       --muted: #94a3b8;
       --accent: #fbbf24;
       --accent-dark: #d97706;
+      --cnx: #fbbf24;
+      --doge: #c2a633;
       --success: #22c55e;
       --danger: #ef4444;
       --border: #334155;
@@ -22,9 +25,11 @@
       :root {
         --bg: #f8fafc;
         --card: #ffffff;
+        --card-2: #f1f5f9;
         --text: #1e293b;
         --muted: #64748b;
         --border: #e2e8f0;
+        --shadow: 0 4px 20px rgba(0,0,0,0.06);
       }
       .topbar { background: #ffffff !important; border-color: #e2e8f0 !important; }
     }
@@ -32,150 +37,241 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       background: var(--bg); color: var(--text); min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 30% 0%, rgba(251,191,36,0.08) 0%, transparent 40%),
+        radial-gradient(circle at 70% 100%, rgba(194,166,51,0.06) 0%, transparent 40%);
+      background-attachment: fixed;
     }
     .topbar {
       display: flex; align-items: center; padding: 12px 16px;
       background: var(--card); border-bottom: 1px solid var(--border);
       gap: 12px; position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
     }
     .back-btn {
       width: 38px; height: 38px; display: flex;
       align-items: center; justify-content: center;
-      border-radius: 8px; border: none; background: none; cursor: pointer;
-      color: var(--text); transition: background 0.2s;
+      border-radius: 10px; border: none; background: none; cursor: pointer;
+      color: var(--text); transition: background 0.2s, transform 0.2s;
     }
-    .back-btn:hover { background: var(--border); }
+    .back-btn:hover { background: var(--border); transform: translateX(-2px); }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
+
     .card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px; margin-bottom: 16px;
+      border-radius: 16px; padding: 20px; margin-bottom: 16px;
+      box-shadow: var(--shadow);
     }
-    
+
+    /* Balance display */
     .balance-display {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
     }
     .balance-item {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px; text-align: center;
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 12px; text-align: center;
+      position: relative; overflow: hidden;
     }
+    .balance-item .coin {
+      width: 36px; height: 36px; border-radius: 50%;
+      margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(251,191,36,0.2), rgba(251,191,36,0.05));
+      border: 1.5px solid rgba(251,191,36,0.3);
+    }
+    .balance-item.doge .coin {
+      background: linear-gradient(135deg, rgba(194,166,51,0.25), rgba(194,166,51,0.05));
+      border-color: rgba(194,166,51,0.4);
+    }
+    .balance-item .coin svg { width: 22px; height: 22px; }
     .balance-item .value {
-      font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 4px;
+      font-size: 20px; font-weight: 800; margin-bottom: 4px;
     }
+    .balance-item.cnx .value { color: var(--cnx); }
+    .balance-item.doge .value { color: var(--doge); }
     .balance-item .label {
-      font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;
     }
-    
-    .swap-container {
-      display: flex; flex-direction: column; gap: 16px;
-    }
+
+    /* Swap form */
+    .swap-container { display: flex; flex-direction: column; gap: 4px; }
+
     .swap-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px;
+      background: var(--card-2); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      transition: border-color 0.2s;
     }
-    .swap-box label {
-      display: block; font-size: 12px; font-weight: 600;
-      color: var(--muted); margin-bottom: 8px;
+    .swap-box:focus-within { border-color: var(--accent); }
+    .swap-box-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .swap-box-header label {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .swap-box-header label svg { width: 14px; height: 14px; }
+
+    .currency-select {
+      position: relative;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 8px 12px;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+    }
+    .currency-select .coin-icon {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--cnx), var(--accent-dark));
+      color: #0f172a;
+    }
+    .currency-select .coin-icon.doge {
+      background: linear-gradient(135deg, var(--doge), #8b7531);
+    }
+    .currency-select .coin-icon svg { width: 14px; height: 14px; }
+    .currency-select svg.chevron { width: 14px; height: 14px; color: var(--muted); }
+    .currency-select select {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    .amount-input-row {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 6px 6px 6px 14px;
+    }
+    .amount-input-row input {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text); font-size: 24px; font-weight: 800;
+      font-family: inherit; padding: 8px 0;
+    }
+    .amount-input-row input::placeholder { color: var(--muted); }
+    .max-btn {
+      padding: 6px 12px; background: rgba(251,191,36,0.15);
+      color: var(--accent); border: none; border-radius: 8px;
+      font-size: 11px; font-weight: 800; cursor: pointer;
       text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .swap-box input {
-      width: 100%; padding: 12px;
-      border: 1px solid var(--border); border-radius: 8px;
-      background: var(--card); color: var(--text);
-      font-size: 14px; font-weight: 600;
+    .max-btn:hover { background: rgba(251,191,36,0.25); }
+
+    .swap-box-footer {
+      margin-top: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 11px; color: var(--muted);
     }
-    .swap-box input:focus {
-      outline: none; border-color: var(--accent);
-    }
-    
-    .swap-icon {
+    .swap-box-footer .available { display: flex; align-items: center; gap: 4px; }
+    .swap-box-footer .available svg { width: 12px; height: 12px; }
+
+    /* Swap arrow */
+    .swap-arrow-wrap {
       display: flex; justify-content: center; align-items: center;
-      margin: 4px 0;
+      margin: -8px 0; position: relative; z-index: 1;
     }
-    .swap-icon button {
+    .swap-arrow-btn {
       width: 44px; height: 44px;
-      border-radius: 50%; border: 2px solid var(--border);
-      background: var(--card); color: var(--accent);
-      cursor: pointer; transition: all 0.2s;
+      border-radius: 50%; border: 3px solid var(--card);
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #0f172a;
+      cursor: pointer; transition: all 0.3s;
       display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(251,191,36,0.3);
     }
-    .swap-icon button:hover {
-      border-color: var(--accent); transform: rotate(180deg);
-    }
-    
+    .swap-arrow-btn:hover { transform: rotate(180deg) scale(1.1); box-shadow: 0 6px 16px rgba(251,191,36,0.4); }
+    .swap-arrow-btn svg { width: 22px; height: 22px; }
+
+    /* Exchange rate */
     .exchange-rate {
-      text-align: center; padding: 12px;
-      background: var(--bg); border-radius: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 14px;
+      background: var(--card-2); border-radius: 10px;
       font-size: 12px; color: var(--muted);
-      margin-top: 12px;
+      margin-top: 16px;
+      border: 1px solid var(--border);
     }
-    
+    .exchange-rate strong { color: var(--accent); font-weight: 700; }
+    .exchange-rate svg { width: 14px; height: 14px; color: var(--accent); vertical-align: middle; margin-right: 4px; }
+
+    /* Buttons */
     .btn {
-      width: 100%; padding: 12px 16px;
-      border: none; border-radius: 8px; font-size: 14px;
-      font-weight: 600; cursor: pointer;
+      width: 100%; padding: 14px 16px;
+      border: none; border-radius: 12px; font-size: 14px;
+      font-weight: 700; cursor: pointer;
       transition: all 0.2s; text-transform: uppercase;
-      letter-spacing: 0.5px; margin-top: 12px;
+      letter-spacing: 0.6px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
+    .btn svg { width: 18px; height: 18px; }
     .btn-primary {
-      background: var(--accent); color: #000;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: #0f172a;
+      box-shadow: 0 4px 16px rgba(251, 191, 36, 0.3);
     }
-    .btn-primary:hover {
-      background: var(--accent-dark); transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(251, 191, 36, 0.3);
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
     }
-    .btn-primary:disabled {
-      opacity: 0.5; cursor: not-allowed; transform: none;
-    }
-    
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
     .alert {
-      padding: 12px 14px; border-radius: 8px; font-size: 13px;
+      padding: 12px 14px; border-radius: 10px; font-size: 13px;
       margin-bottom: 16px; border: 1px solid;
+      display: flex; align-items: flex-start; gap: 10px;
     }
+    .alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
     .alert-info {
-      background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: rgba(59, 130, 246, 0.4);
     }
     .alert-error {
-      background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.4);
     }
     .alert-success {
-      background: rgba(34, 197, 94, 0.1); color: #22c55e; border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.1); color: var(--success); border-color: rgba(34, 197, 94, 0.4);
     }
-    
+
+    .info-box {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+      font-size: 12px; color: var(--muted); margin-top: 16px;
+      line-height: 1.6;
+    }
+    .info-box strong { color: var(--text); }
+    .info-box ol { padding-left: 20px; margin: 6px 0; }
+    .info-box li { margin-bottom: 3px; }
+
     .loading {
       display: inline-block; width: 16px; height: 16px;
       border: 2px solid var(--border); border-top-color: var(--accent);
       border-radius: 50%; animation: spin 0.8s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .info-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 12px;
-      font-size: 12px; color: var(--muted); margin-top: 16px;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <div class="topbar">
     <button class="back-btn" onclick="history.back()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
-    <h1 style="font-size: 16px; font-weight: 700;">Swap</h1>
+    <h1 style="font-size: 16px; font-weight: 800;">Swap CNX ↔ DOGE</h1>
   </div>
 
   <div class="container">
     <!-- Balances -->
     <div class="card">
       <div class="balance-display">
-        <div class="balance-item">
-          <div class="value" id="dogeBalance">0.00</div>
-          <div class="label">DOGE</div>
-        </div>
-        <div class="balance-item">
+        <div class="balance-item cnx">
+          <div class="coin">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M9 8h4a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9V8zm0 6h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9v-4z" fill="#0f172a"/></svg>
+          </div>
           <div class="value" id="cnxBalance">0.00</div>
           <div class="label">CNX</div>
+        </div>
+        <div class="balance-item doge">
+          <div class="coin">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+          </div>
+          <div class="value" id="dogeBalance">0.00</div>
+          <div class="label">DOGE</div>
         </div>
       </div>
     </div>
@@ -187,62 +283,89 @@
       <form id="swapForm" onsubmit="handleSwap(event)">
         <div class="swap-container">
           <!-- From -->
-          <div>
-            <div class="swap-box">
-              <label>From</label>
-              <select id="fromCurrency" onchange="updateAvailableBalance()">
+          <div class="swap-box">
+            <div class="swap-box-header">
+              <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                From
+              </label>
+            </div>
+            <div class="currency-select" id="fromCurrencyBox">
+              <span class="coin-icon" id="fromCoinIcon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              </span>
+              <span id="fromCurrencyLabel">CNX</span>
+              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              <select id="fromCurrency">
                 <option value="cnx">CNX Coins</option>
                 <option value="doge">Dogecoin</option>
               </select>
-              <input type="number" id="fromAmount" placeholder="0.00" step="0.01" min="0" required onchange="updateToAmount()">
-              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
-                Available: <span id="fromAvailable">0.00</span>
-              </div>
+            </div>
+            <div class="amount-input-row" style="margin-top: 10px;">
+              <input type="number" id="fromAmount" placeholder="0.00" step="0.01" min="0" required>
+              <button type="button" class="max-btn" onclick="setMax()">MAX</button>
+            </div>
+            <div class="swap-box-footer">
+              <span class="available">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                Available: <strong id="fromAvailable" style="color:var(--text);margin-left:4px;">0.00</strong>
+              </span>
             </div>
           </div>
 
-          <!-- Swap Icon -->
-          <div class="swap-icon">
-            <button type="button" onclick="swapCurrencies()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <polyline points="19 12 12 19 5 12"></polyline>
-              </svg>
+          <!-- Swap arrow -->
+          <div class="swap-arrow-wrap">
+            <button type="button" class="swap-arrow-btn" onclick="swapCurrencies()" title="Swap direction">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
             </button>
           </div>
 
           <!-- To -->
-          <div>
-            <div class="swap-box">
-              <label>To</label>
-              <select id="toCurrency" disabled>
-                <option id="toOption" value="doge">Dogecoin</option>
-              </select>
+          <div class="swap-box">
+            <div class="swap-box-header">
+              <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                To (estimated)
+              </label>
+            </div>
+            <div class="currency-select" id="toCurrencyBox">
+              <span class="coin-icon doge" id="toCoinIcon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+              </span>
+              <span id="toCurrencyLabel">DOGE</span>
+            </div>
+            <div class="amount-input-row" style="margin-top: 10px;">
               <input type="text" id="toAmount" placeholder="0.00" disabled>
-              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
-                You will receive: <span id="toReceive">0.00</span>
-              </div>
+            </div>
+            <div class="swap-box-footer">
+              <span class="available">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                You will receive: <strong id="toReceive" style="color:var(--success);margin-left:4px;">0.00</strong>
+              </span>
             </div>
           </div>
         </div>
 
         <div class="exchange-rate">
-          Exchange Rate: 1:1 (1 CNX = 1 DOGE)
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path></svg><strong>1 CNX = 1 DOGE</strong> · No fees</span>
+          <span id="rateLabel">Rate: 1:1</span>
         </div>
 
-        <button type="submit" class="btn btn-primary" id="swapBtn">
+        <button type="submit" class="btn btn-primary" id="swapBtn" style="margin-top: 16px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></polyline><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
           <span id="swapBtnText">Swap Now</span>
         </button>
       </form>
 
       <div class="info-box">
-        <strong>How to Withdraw</strong><br>
-        1. Earn CNX from faucet/ads<br>
-        2. Swap CNX to DOGE here<br>
-        3. Go to Withdraw<br>
-        4. Enter DOGE amount<br>
-        5. Withdraw via FaucetPay<br>
-        Exchange rate: 1:1 - No fees
+        <strong>How to withdraw</strong>
+        <ol>
+          <li>Earn CNX from faucet/ads</li>
+          <li>Swap CNX → DOGE here (1:1)</li>
+          <li>Go to <strong>Withdraw</strong> page</li>
+          <li>Enter your DOGE wallet address</li>
+          <li>Receive DOGE after admin approval</li>
+        </ol>
       </div>
     </div>
   </div>
@@ -250,10 +373,32 @@
   <script>
     let userId = null;
     let userBalance = { cnx: 0, doge_balance: 0 };
+    // Allowed currencies are FIXED to only CNX and DOGE
+    const ALLOWED = ['cnx', 'doge'];
+
+    function coinSvgFor(cur) {
+      if (cur === 'doge') {
+        return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>';
+      }
+      return '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M9 8h4a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9V8zm0 6h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9v-4z" fill="#0f172a"/></svg>';
+    }
+
+    function refreshCurrencyIcons() {
+      const from = document.getElementById('fromCurrency').value;
+      const to = from === 'cnx' ? 'doge' : 'cnx';
+      const fromIcon = document.getElementById('fromCoinIcon');
+      const toIcon = document.getElementById('toCoinIcon');
+      fromIcon.className = 'coin-icon' + (from === 'doge' ? ' doge' : '');
+      fromIcon.innerHTML = coinSvgFor(from);
+      toIcon.className = 'coin-icon' + (to === 'doge' ? ' doge' : '');
+      toIcon.innerHTML = coinSvgFor(to);
+      document.getElementById('fromCurrencyLabel').textContent = from === 'cnx' ? 'CNX' : 'DOGE';
+      document.getElementById('toCurrencyLabel').textContent = to === 'cnx' ? 'CNX' : 'DOGE';
+      document.getElementById('rateLabel').textContent = 'Rate: 1:1';
+    }
 
     async function init() {
       const initData = window.Telegram?.WebApp?.initData;
-      // Telegram WebApp dışında açılırsa sessizce demo moduna geç
       if (!initData) { document.body.classList.add('demo-mode'); return; }
 
       try {
@@ -281,6 +426,7 @@
         document.getElementById('dogeBalance').textContent = data.doge_balance.toFixed(2);
         document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
         updateAvailableBalance();
+        updateToAmount();
       } catch (err) {
         console.error(err);
       }
@@ -288,12 +434,21 @@
 
     function swapCurrencies() {
       const from = document.getElementById('fromCurrency').value;
-      const to = document.getElementById('toCurrency').value;
+      const to = from === 'cnx' ? 'doge' : 'cnx';
       document.getElementById('fromCurrency').value = to;
-      document.getElementById('toCurrency').value = from;
-      document.getElementById('toOption').textContent = from === 'cnx' ? 'Dogecoin' : 'CNX Coins';
-      document.getElementById('toOption').value = from;
+      // Also flip the visual To label by re-rendering icons
+      refreshCurrencyIcons();
+      // Clear input
+      document.getElementById('fromAmount').value = '';
+      document.getElementById('toAmount').value = '';
+      document.getElementById('toReceive').textContent = '0.00';
       updateAvailableBalance();
+    }
+
+    function setMax() {
+      const from = document.getElementById('fromCurrency').value;
+      const available = from === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
+      document.getElementById('fromAmount').value = available.toFixed(2);
       updateToAmount();
     }
 
@@ -305,27 +460,47 @@
 
     function updateToAmount() {
       const fromAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+      // 1:1 fixed rate
       document.getElementById('toAmount').value = fromAmount.toFixed(2);
       document.getElementById('toReceive').textContent = fromAmount.toFixed(2);
     }
+
+    // Wire fromCurrency change
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('fromCurrency').addEventListener('change', () => {
+        refreshCurrencyIcons();
+        document.getElementById('fromAmount').value = '';
+        document.getElementById('toAmount').value = '';
+        document.getElementById('toReceive').textContent = '0.00';
+        updateAvailableBalance();
+      });
+      document.getElementById('fromAmount').addEventListener('input', updateToAmount);
+      refreshCurrencyIcons();
+    });
 
     async function handleSwap(e) {
       e.preventDefault();
       if (!userId) return;
 
       const fromCurrency = document.getElementById('fromCurrency').value;
-      const toCurrency = document.getElementById('toCurrency').value;
+      const toCurrency = fromCurrency === 'cnx' ? 'doge' : 'cnx';
       const amount = parseFloat(document.getElementById('fromAmount').value);
       const alertDiv = document.getElementById('alertDiv');
 
+      // Hard guard — only CNX/DOGE allowed
+      if (!ALLOWED.includes(fromCurrency) || !ALLOWED.includes(toCurrency)) {
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Only CNX ↔ DOGE swaps are allowed.</div></div>';
+        return;
+      }
+
       if (!amount || amount <= 0) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Invalid amount</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Enter a valid amount</div></div>';
         return;
       }
 
       const available = fromCurrency === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
       if (available < amount) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Insufficient balance</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Insufficient balance</div></div>';
         return;
       }
 
@@ -347,17 +522,18 @@
         const result = await res.json();
 
         if (result.success) {
-          alertDiv.innerHTML = `<div class="alert alert-success">Swapped ${amount.toFixed(2)} ${fromCurrency.toUpperCase()} for ${result.swapped_amount.toFixed(2)} ${toCurrency.toUpperCase()}</div>`;
+          alertDiv.innerHTML = `<div class="alert alert-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>Swapped <strong>${amount.toFixed(2)} ${fromCurrency.toUpperCase()}</strong> for <strong>${result.swapped_amount.toFixed(2)} ${toCurrency.toUpperCase()}</strong></div></div>`;
           document.getElementById('swapForm').reset();
+          refreshCurrencyIcons();
           setTimeout(() => {
             loadBalance();
             alertDiv.innerHTML = '';
           }, 1500);
         } else {
-          alertDiv.innerHTML = `<div class="alert alert-error">${result.error || 'Swap failed'}</div>`;
+          alertDiv.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>${result.error || 'Swap failed'}</div></div>`;
         }
       } catch (err) {
-        alertDiv.innerHTML = '<div class="alert alert-error">Network error</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Network error</div></div>';
         console.error(err);
       } finally {
         btn.disabled = false;

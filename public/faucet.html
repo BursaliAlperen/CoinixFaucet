@@ -3,35 +3,437 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
   <title>Faucet - COINIX</title>
   <style>
-    :root { --bg: #f0f2f5; --card: #fff; --text: #222; --muted: #6b7280; --accent: #fbbf24; --border: #e5e7eb; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --border: #334155; } .topbar { background: #1e293b !important; border-color: #334155 !important; } }
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-2: #0b1224;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #fbbf24;
+      --accent-dark: #d97706;
+      --cnx: #fbbf24;
+      --doge: #c2a633;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --border: #334155;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --grad-cnx: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+      --grad-doge: linear-gradient(135deg, #fcd34d 0%, #b8860b 100%);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --card-2: #f1f5f9;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e2e8f0;
+        --shadow: 0 4px 20px rgba(0,0,0,0.06);
+      }
+      .topbar { background: #ffffff !important; border-color: var(--border) !important; }
+      .balance-item { background: var(--card-2) !important; }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .topbar { display: flex; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); gap: 12px; }
-    .back-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: none; cursor: pointer; }
-    .back-btn:hover { background: #f3f4f6; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      background-image:
+        radial-gradient(circle at 20% 0%, rgba(251,191,36,0.10) 0%, transparent 40%),
+        radial-gradient(circle at 80% 100%, rgba(194,166,51,0.06) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+    .topbar {
+      display: flex; align-items: center; padding: 12px 16px;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      gap: 12px; position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+    .back-btn {
+      width: 38px; height: 38px; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 10px; border: none; background: none; cursor: pointer;
+      color: var(--text); transition: background 0.2s, transform 0.2s;
+    }
+    .back-btn:hover { background: var(--border); transform: translateX(-2px); }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 16px; text-align: center; }
-    .card h2 { font-size: 18px; margin-bottom: 8px; }
-    .card p { color: var(--muted); font-size: 14px; }
-    .btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--accent); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px; margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .balance-display {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px;
+    }
+    .balance-item {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 12px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .balance-item.primary {
+      background: var(--grad-cnx); border: none; color: #0f172a;
+    }
+    .balance-item .value {
+      font-size: 22px; font-weight: 800; color: var(--accent); margin-bottom: 4px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .balance-item.primary .value { color: #0f172a; }
+    .balance-item .value svg { width: 22px; height: 22px; }
+    .balance-item .label {
+      font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;
+    }
+    .balance-item.primary .label { color: rgba(15, 23, 42, 0.7); }
+
+    .section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 800; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 16px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-title .icon-wrap {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(251, 191, 36, 0.15);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title .icon-wrap svg { width: 16px; height: 16px; color: var(--accent); }
+    .section-title .title-text { flex: 1; }
+
+    .claim-btn {
+      width: 100%; padding: 20px; font-size: 18px; font-weight: 900;
+      background: var(--grad-cnx); color: #0f172a; border: none; border-radius: 14px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 12px; transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .claim-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(251, 191, 36, 0.5); }
+    .claim-btn:active:not(:disabled) { transform: translateY(0); }
+    .claim-btn:disabled {
+      background: linear-gradient(135deg, #475569, #334155);
+      cursor: not-allowed; box-shadow: none; transform: none; color: #94a3b8;
+    }
+    .claim-btn .coin-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(15, 23, 42, 0.2);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .claim-btn .coin-icon svg { width: 20px; height: 20px; }
+    .cooldown { text-align: center; margin-top: 14px; color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
+    .cooldown svg { width: 16px; height: 16px; }
+
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    .stat-item {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 8px; text-align: center;
+    }
+    .stat-item .stat-label {
+      font-size: 10px; text-transform: uppercase; font-weight: 700;
+      color: var(--muted); letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    .stat-item .stat-value {
+      font-size: 16px; font-weight: 900; color: var(--accent);
+    }
+
+    /* Tasks iframe */
+    .tasks-frame-wrap {
+      border-radius: 12px; overflow: hidden; border: 1px solid var(--border);
+      position: relative; min-height: 460px; background: var(--card-2);
+    }
+    .tasks-frame-wrap iframe { width: 100%; border: none; height: 460px; display: block; background: var(--card-2); }
+    .tasks-fallback {
+      padding: 60px 20px; text-align: center; color: var(--muted);
+    }
+    .tasks-fallback svg { width: 64px; height: 64px; opacity: 0.3; margin-bottom: 12px; }
+
+    .alert {
+      padding: 12px 14px; border-radius: 10px; font-size: 13px;
+      margin-bottom: 16px; border: 1px solid;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+    .alert-info {
+      background: rgba(59, 130, 246, 0.1); color: var(--info); border-color: rgba(59, 130, 246, 0.4);
+    }
+    .alert-success {
+      background: rgba(34, 197, 94, 0.1); color: var(--success); border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .info-box {
+      background: var(--card-2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px;
+      font-size: 12px; color: var(--muted); margin-top: 16px;
+      line-height: 1.6;
+    }
+    .info-box strong { color: var(--text); }
+    .info-box ol { padding-left: 20px; margin: 6px 0; }
+    .info-box li { margin-bottom: 3px; }
+
+    .btn {
+      width: 100%; padding: 12px 16px;
+      border: none; border-radius: 10px; font-size: 13px;
+      font-weight: 700; cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn svg { width: 16px; height: 16px; }
+    .btn-secondary {
+      background: var(--card-2); color: var(--text); border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--card); border: 1px solid var(--border);
+      padding: 12px 18px; border-radius: 12px;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 999;
+      display: flex; align-items: center; gap: 8px;
+      opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    .toast svg { width: 18px; height: 18px; }
+    .toast.success { color: var(--success); border-color: var(--success); }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <button class="back-btn" onclick="location.href='/'">
+    <button class="back-btn" onclick="history.back()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
-    <h1 style="font-size:16px;font-weight:700;">Faucet</h1>
+    <h1 style="font-size: 16px; font-weight: 800;">Free Faucet</h1>
   </div>
+
   <div class="container">
+    <!-- Balance -->
     <div class="card">
-      <h2>Faucet</h2>
-      <p>This section is under development. Use the Home page for full functionality.</p>
-      <a href="/" class="btn">Go to Home</a>
+      <div class="balance-display">
+        <div class="balance-item primary">
+          <div class="value">
+            <svg viewBox="0 0 24 24" fill="#0f172a"><circle cx="12" cy="12" r="10"/><path d="M9 8h4a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9V8zm0 6h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9v-4z" fill="#fbbf24"/></svg>
+            <span id="cnxBalance">0</span>
+          </div>
+          <div class="label">CNX Balance</div>
+        </div>
+        <div class="balance-item">
+          <div class="value">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
+            <span id="dogeBalance">0.00</span>
+          </div>
+          <div class="label">DOGE Balance</div>
+        </div>
+      </div>
     </div>
+
+    <!-- Faucet claim -->
+    <div class="card">
+      <div class="section-title">
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        </span>
+        <span class="title-text">Claim CNX</span>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-item">
+          <div class="stat-label">Total Claims</div>
+          <div class="stat-value" id="statClaims">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Earned</div>
+          <div class="stat-value" id="statEarned">0</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">DOGE</div>
+          <div class="stat-value" id="statDoge">0</div>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div>You can claim once every <strong>10 seconds</strong>. Reward: <strong>1–10 CNX</strong> per claim.</div>
+      </div>
+
+      <button class="claim-btn" id="claimBtn" onclick="doClaim()">
+        <span class="coin-icon">
+          <svg viewBox="0 0 24 24" fill="#0f172a"><circle cx="12" cy="12" r="10"/></svg>
+        </span>
+        CLAIM CNX
+      </button>
+      <div class="cooldown" id="cooldownText">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Ready to claim!
+      </div>
+
+      <div class="info-box">
+        <strong>How to maximize earnings</strong>
+        <ol>
+          <li>Claim every 10 seconds from this page</li>
+          <li>Complete PTC ads below for bonus CNX</li>
+          <li>Swap CNX → DOGE on the Swap page</li>
+          <li>Withdraw DOGE to your FaucetPay email</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- AoyCo Faucet (offerwall) -->
+    <div class="card">
+      <div class="section-title">
+        <span class="icon-wrap" style="background:rgba(34,197,94,0.15);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        </span>
+        <span class="title-text">AoyCo Faucet / Offers</span>
+      </div>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+        Complete surveys, watch videos and sign-ups to earn extra CNX.
+      </p>
+      <div class="tasks-frame-wrap" id="tasksFrameWrap">
+        <div class="tasks-fallback">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <p style="font-size:13px;">Loading faucet offers...</p>
+        </div>
+      </div>
+    </div>
+
+    <a class="btn btn-secondary" href="/" style="text-decoration:none; margin-top:8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      Back to Home
+    </a>
   </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = window.location.origin;
+    const AOYCO_API_KEY = 'XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM';
+    let userId = null, lastClaim = 0, cooldownTimer = null;
+
+    function showToast(msg, type = 'info') {
+      const t = document.getElementById('toast');
+      const icons = {
+        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+      };
+      t.className = 'toast show ' + type;
+      t.innerHTML = (icons[type] || '') + ' ' + msg;
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+    }
+
+    async function init() {
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) { document.body.classList.add('demo-mode'); loadTasksFrame(); return; }
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData })
+        });
+        const data = await res.json();
+        if (!data.success) { document.body.classList.add('demo-mode'); loadTasksFrame(); return; }
+        userId = data.user_id;
+        loadBalance();
+        loadTasksFrame();
+      } catch (err) {
+        console.error(err);
+        document.body.classList.add('demo-mode');
+        loadTasksFrame();
+      }
+    }
+
+    async function loadBalance() {
+      if (!userId) return;
+      try {
+        const res = await fetch(API + '/api/balance/' + userId);
+        const data = await res.json();
+        document.getElementById('cnxBalance').textContent = data.balance;
+        document.getElementById('dogeBalance').textContent = (data.doge_balance || 0).toFixed(2);
+        document.getElementById('statClaims').textContent = data.total_claims || 0;
+        document.getElementById('statEarned').textContent = (data.total_earned || 0).toFixed(2);
+        document.getElementById('statDoge').textContent = (data.total_doge_earned || 0).toFixed(2);
+        lastClaim = data.last_claim || 0;
+        updateCooldown();
+      } catch (e) { console.error(e); }
+    }
+
+    function updateCooldown() {
+      const diff = Date.now() - lastClaim;
+      const btn = document.getElementById('claimBtn');
+      const txt = document.getElementById('cooldownText');
+      if (diff < 10000) {
+        const wait = Math.ceil((10000 - diff) / 1000);
+        btn.disabled = true;
+        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Wait ' + wait + 's...';
+        if (!cooldownTimer) cooldownTimer = setInterval(updateCooldown, 1000);
+      } else {
+        btn.disabled = false;
+        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ready to claim!';
+        if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
+      }
+    }
+
+    async function doClaim() {
+      if (!userId) return;
+      const btn = document.getElementById('claimBtn');
+      btn.disabled = true;
+      try {
+        const res = await fetch(API + '/api/claim', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('cnxBalance').textContent = data.balance;
+          document.getElementById('statEarned').textContent = (parseFloat(document.getElementById('statEarned').textContent) + data.reward).toFixed(2);
+          document.getElementById('statClaims').textContent = (parseInt(document.getElementById('statClaims').textContent) || 0) + 1;
+          lastClaim = Date.now(); updateCooldown();
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> You won ' + data.reward.toFixed(2) + ' CNX!';
+          showToast('+' + data.reward.toFixed(2) + ' CNX', 'success');
+        } else {
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ' + (data.error || 'Error');
+        }
+      } catch (e) {
+        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Network error';
+      }
+    }
+
+    function loadTasksFrame() {
+      const wrap = document.getElementById('tasksFrameWrap');
+      // Sanitize USER_ID for AoyCo (alphanumeric only)
+      let safeId = userId ? String(userId).replace(/[^a-zA-Z0-9]/g, '') : 'guest' + Date.now();
+      if (!safeId) safeId = '0';
+
+      const iframe = document.createElement('iframe');
+      iframe.style.width = '100%';
+      iframe.style.height = '460px';
+      iframe.style.border = 'none';
+      iframe.style.display = 'block';
+      iframe.allow = 'popups; fullscreen';
+      iframe.referrerPolicy = 'no-referrer';
+      iframe.src = `https://aoyco.in/offerwall/${AOYCO_API_KEY}/${safeId}`;
+
+      iframe.onload = () => {
+        const fb = wrap.querySelector('.tasks-fallback');
+        if (fb) fb.style.display = 'none';
+      };
+      iframe.onerror = () => {
+        wrap.innerHTML = '<div class="tasks-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p style="font-size:13px;">Could not load offers.<br>Try the <a href="/ptc" style="color:var(--accent);text-decoration:underline;">PTC page</a>.</p></div>';
+      };
+
+      wrap.innerHTML = '';
+      wrap.appendChild(iframe);
+    }
+
+    window.addEventListener('load', init);
+  </script>
 </body>
 </html>
