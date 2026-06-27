@@ -340,6 +340,115 @@ app.post('/api/withdraw', async (req, res) => {
 });
 
 // ========================
+// 6a. Public recent withdrawals (live feed) — MUST be before /api/withdrawals/:userId
+// ========================
+app.get('/api/withdrawals/recent', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 25, 100);
+    const snapshot = await db.collection('withdrawals')
+      .where('status', 'in', ['approved', 'paid'])
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+
+    const userIds = new Set();
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.user_id) userIds.add(d.user_id);
+    });
+
+    const userMap = {};
+    if (userIds.size > 0) {
+      const idArr = Array.from(userIds).slice(0, 30);
+      const userSnaps = await db.getAll(idArr.map(id => db.collection('users').doc(id)));
+      userSnaps.forEach(snap => {
+        if (snap.exists) {
+          const u = snap.data();
+          userMap[snap.id] = {
+            username: u.username || null,
+            first_name: u.first_name || null,
+            last_name: u.last_name || null,
+            photo_url: u.photo_url || null
+          };
+        }
+      });
+    }
+
+    const items = [];
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const u = userMap[d.user_id] || {};
+      let maskedAddr = '';
+      if (d.address && typeof d.address === 'string') {
+        const atIdx = d.address.indexOf('@');
+        if (atIdx > 0) {
+          maskedAddr = d.address[0] + '***' + d.address.substring(atIdx);
+        } else {
+          maskedAddr = d.address.substring(0, 4) + '***' + d.address.substring(d.address.length - 3);
+        }
+      }
+      items.push({
+        id: doc.id,
+        user_id: d.user_id,
+        username: u.username || d.username || null,
+        first_name: u.first_name || null,
+        last_name: u.last_name || null,
+        photo_url: u.photo_url || null,
+        amount: d.amount,
+        currency: d.currency,
+        masked_address: maskedAddr,
+        status: d.status,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null
+      });
+    });
+    res.json(items);
+  } catch (err) {
+    console.error('Recent withdrawals error:', err);
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ========================
+// 6b. Public aggregate stats (today + all-time payouts)
+// ========================
+app.get('/api/withdrawals/stats', async (req, res) => {
+  try {
+    const snap = await db.collection('withdrawals')
+      .where('status', 'in', ['approved', 'paid'])
+      .get();
+
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
+    let todayTotal = 0, todayCount = 0, totalPaid = 0, totalCount = 0;
+    const byDay = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      const ts = d.timestamp ? d.timestamp.toMillis() : 0;
+      totalPaid += d.amount || 0;
+      totalCount++;
+      if (ts >= todayMs) {
+        todayTotal += d.amount || 0;
+        todayCount++;
+      }
+      const dayKey = new Date(ts).toISOString().slice(0, 10);
+      byDay[dayKey] = (byDay[dayKey] || 0) + (d.amount || 0);
+    });
+
+    const series = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      series.push({ date: key, total: byDay[key] || 0 });
+    }
+
+    res.json({ today_total: todayTotal, today_count: todayCount, total_paid: totalPaid, total_count: totalCount, series });
+  } catch (err) {
+    console.error('Withdraw stats error:', err);
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ========================
 // 6. Withdrawal History
 // ========================
 app.get('/api/withdrawals/:userId', async (req, res) => {
