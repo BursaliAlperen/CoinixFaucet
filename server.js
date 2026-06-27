@@ -4,12 +4,35 @@ const cors = require('cors');
 const path = require('path');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const https = require('https');
+
+// Handle unhandled promise rejections (prevents Render crash)
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_ID;
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'your_bot';
+const FAUCET_API_KEY = process.env.FAUCET_API_KEY;
+const AOYCO_API_KEY = process.env.AOYCO_API_KEY || 'XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM';
+const AOYCO_SECRET_KEY = process.env.AOYCO_SECRET_KEY || '8rqHlIJ0pkYdrlQgQc0t07Mh9fjRjM2XW5CmhUtG';
+
+// ========================
+// Keep-Alive Mechanism
+// ========================
+setInterval(() => {
+  https.get('https://coinixfaucet.onrender.com/ping', (res) => {
+    console.log(`Keep-alive ping: ${res.statusCode}`);
+  }).on('error', (err) => {
+    console.log('Keep-alive ping error:', err.message);
+  });
+}, 600000); // Every 10 minutes
 
 // ========================
 // Firebase Admin Setup
@@ -83,9 +106,12 @@ function adminAuth(req, res, next) {
 }
 
 // ========================
-// 1. Health Check
+// 1. Health Check & Keep-Alive
 // ========================
-app.get('/ping', (req, res) => res.status(200).send('OK'));
+app.get('/ping', (req, res) => {
+  console.log('Keep-alive ping received at', new Date().toISOString());
+  res.status(200).send('OK');
+});
 
 // ========================
 // 2. Auth
@@ -140,16 +166,17 @@ app.post('/api/auth', async (req, res) => {
         if (refDoc.exists && !refDoc.data().banned) {
           await refRef.update({
             referrals: increment(1),
-            balance: increment(50),
+            balance: increment(50), // 30% bonus in CNX
             referral_earnings: increment(50)
           });
           await db.collection('referrals').add({
             referrer_id: String(ref),
             referred_id: userId,
             bonus: 50,
+            currency: 'CNX',
             timestamp: serverTimestamp()
           });
-          await logAction('referral_bonus', String(ref), { referred_id: userId, bonus: 50 });
+          await logAction('referral_bonus', String(ref), { referred_id: userId, bonus: 50, currency: 'CNX' });
         }
       }
       await logAction('user_register', userId, { username: user.username, ref });
@@ -213,258 +240,232 @@ app.post('/api/claim', async (req, res) => {
       const cooldownMs = (settings.cooldown_seconds || 10) * 1000;
       const minReward = settings.min_reward || 1;
       const maxReward = settings.max_reward || 10;
-      const paused = settings.paused || false;
 
-      if (paused) throw new Error('PAUSED');
+      const lastClaimTime = data.last_claim ? data.last_claim.toMillis() : 0;
+      const now = Date.now();
+      if (now - lastClaimTime < cooldownMs) throw new Error('COOLDOWN');
 
-      if (data.last_claim) {
-        const elapsed = now().toMillis() - data.last_claim.toMillis();
-        if (elapsed < cooldownMs) throw new Error('COOLDOWN');
-      }
-
-      const reward = Math.floor(Math.random() * (maxReward - minReward + 1)) + minReward;
+      const reward = Math.random() * (maxReward - minReward) + minReward;
       t.update(userRef, {
         balance: increment(reward),
         total_earned: increment(reward),
         total_claims: increment(1),
-        last_claim: now()
+        last_claim: admin.firestore.Timestamp.now()
       });
-      return { reward, newBalance: (data.balance || 0) + reward };
-    });
 
-    await logAction('claim', user_id, { reward: result.reward, ip: req.ip });
-    res.json({ success: true, reward: result.reward, balance: result.newBalance });
+      await logAction('claim', user_id, { reward, timestamp: now });
+      return { success: true, reward };
+    });
+    res.json(result);
   } catch (err) {
-    if (err.message === 'COOLDOWN') return res.status(429).json({ error: 'Cooldown active' });
-    if (err.message === 'NO_USER') return res.status(404).json({ error: 'User not found' });
-    if (err.message === 'BANNED') return res.status(403).json({ error: 'Account banned' });
-    if (err.message === 'PAUSED') return res.status(503).json({ error: 'Faucet paused' });
-    console.error('Claim error:', err);
-    res.status(500).json({ error: 'Claim failed' });
+    if (err.message === 'COOLDOWN') {
+      res.status(429).json({ error: 'Cooldown active', message: 'Come back later' });
+    } else if (err.message === 'BANNED') {
+      res.status(403).json({ error: 'Banned' });
+    } else if (err.message === 'NO_USER') {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      console.error('Claim error:', err);
+      res.status(500).json({ error: 'Claim failed' });
+    }
   }
 });
 
 // ========================
-// 5. Withdraw
+// 5. Withdrawal
 // ========================
 app.post('/api/withdraw', async (req, res) => {
-  const { user_id, amount, address } = req.body;
-  if (!user_id || !amount || !address) return res.status(400).json({ error: 'Missing parameters' });
+  const { user_id, amount, address, currency } = req.body;
+  
+  if (!user_id || !amount || !address) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
 
-  const amt = Number(amount);
-  if (isNaN(amt) || amt < 1) return res.status(400).json({ error: 'Invalid amount' });
+  // Only FaucetPay and DOGE withdrawals allowed
+  if (currency !== 'faucetpay' && currency !== 'doge') {
+    return res.status(400).json({ error: 'Invalid currency' });
+  }
+
+  const numAmount = parseFloat(amount);
+  if (isNaN(numAmount) || numAmount < 0.10) {
+    return res.status(400).json({ error: 'Minimum withdrawal is 0.10' });
+  }
 
   const userRef = db.collection('users').doc(String(user_id));
-  const withdrawRef = db.collection('withdrawals').doc();
 
   try {
-    await db.runTransaction(async (t) => {
+    const result = await db.runTransaction(async (t) => {
       const doc = await t.get(userRef);
       if (!doc.exists) throw new Error('NO_USER');
+      
       const data = doc.data();
-      if (data.banned) throw new Error('BANNED');
-      if ((data.balance || 0) < amt) throw new Error('NO_FUNDS');
+      const balanceField = currency === 'doge' ? 'doge_balance' : 'balance';
+      const currentBalance = data[balanceField] || 0;
 
-      t.update(userRef, { balance: increment(-amt), total_withdrawals: increment(1) });
-      t.set(withdrawRef, {
+      if (currentBalance < numAmount) throw new Error('INSUFFICIENT');
+
+      const withdrawalRef = db.collection('withdrawals').doc();
+      t.set(withdrawalRef, {
         user_id: String(user_id),
-        amount: amt,
-        address: String(address),
+        username: data.username || 'Unknown',
+        amount: numAmount,
+        address,
+        currency,
         status: 'pending',
-        timestamp: serverTimestamp()
+        timestamp: admin.firestore.Timestamp.now()
       });
-    });
 
-    await logAction('withdraw_request', user_id, { amount: amt, address, ip: req.ip });
-    res.json({ success: true, message: 'Withdrawal request submitted for approval' });
-  } catch (err) {
-    if (err.message === 'NO_FUNDS') return res.status(400).json({ error: 'Insufficient balance' });
-    if (err.message === 'NO_USER') return res.status(404).json({ error: 'User not found' });
-    if (err.message === 'BANNED') return res.status(403).json({ error: 'Account banned' });
-    res.status(500).json({ error: 'Withdraw request failed' });
-  }
-});
-
-// ========================
-// 6. Swap
-// ========================
-app.post('/api/swap', async (req, res) => {
-  const { user_id, from_amount, from_token } = req.body;
-  if (!user_id || !from_amount || !from_token) return res.status(400).json({ error: 'Missing parameters' });
-
-  const amt = Number(from_amount);
-  if (isNaN(amt) || amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
-  if (!['CNX', 'DOGE'].includes(from_token)) return res.status(400).json({ error: 'Invalid token' });
-
-  const rate = from_token === 'CNX' ? 0.1 : 10;
-  const toToken = from_token === 'CNX' ? 'DOGE' : 'CNX';
-  const toAmount = parseFloat((amt * rate).toFixed(4));
-
-  const userRef = db.collection('users').doc(String(user_id));
-  const swapRef = db.collection('swaps').doc();
-
-  try {
-    await db.runTransaction(async (t) => {
-      const doc = await t.get(userRef);
-      if (!doc.exists) throw new Error('NO_USER');
-      const data = doc.data();
-      if (data.banned) throw new Error('BANNED');
-      const field = from_token === 'CNX' ? 'balance' : 'doge_balance';
-      if ((data[field] || 0) < amt) throw new Error('NO_FUNDS');
-
-      const updates = {};
-      updates[field] = increment(-amt);
-      const toField = toToken === 'CNX' ? 'balance' : 'doge_balance';
-      updates[toField] = increment(toAmount);
-      if (toToken === 'DOGE') updates.total_doge_earned = increment(toAmount);
-      t.update(userRef, updates);
-
-      t.set(swapRef, {
-        user_id: String(user_id),
-        from_token,
-        from_amount: amt,
-        to_token: toToken,
-        to_amount: toAmount,
-        rate,
-        timestamp: serverTimestamp()
+      t.update(userRef, {
+        [balanceField]: increment(-numAmount),
+        total_withdrawals: increment(1)
       });
-    });
 
-    await logAction('swap', user_id, { from: from_token, amount: amt, to: toToken, received: toAmount });
-    res.json({ success: true, from: from_token, to: toToken, received: toAmount, rate });
+      await logAction('withdrawal_request', user_id, { amount: numAmount, currency, address });
+
+      return { success: true, withdrawal_id: withdrawalRef.id };
+    });
+    res.json(result);
   } catch (err) {
-    if (err.message === 'NO_FUNDS') return res.status(400).json({ error: 'Insufficient ' + from_token + ' balance' });
-    if (err.message === 'NO_USER') return res.status(404).json({ error: 'User not found' });
-    if (err.message === 'BANNED') return res.status(403).json({ error: 'Account banned' });
-    res.status(500).json({ error: 'Swap failed' });
+    if (err.message === 'INSUFFICIENT') {
+      res.status(400).json({ error: 'Insufficient balance' });
+    } else if (err.message === 'NO_USER') {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      console.error('Withdrawal error:', err);
+      res.status(500).json({ error: 'Withdrawal failed' });
+    }
   }
 });
 
-app.get('/api/swap/rate', (req, res) => {
-  res.json({ cnx_to_doge: 0.1, doge_to_cnx: 10 });
-});
-
 // ========================
-// 7. Referral
+// 6. Withdrawal History
 // ========================
-app.get('/api/referral/:userId', async (req, res) => {
+app.get('/api/withdrawals/:userId', async (req, res) => {
   try {
-    const doc = await db.collection('users').doc(String(req.params.userId)).get();
-    if (!doc.exists) return res.json({ referrals: 0, earnings: 0, link: '' });
-    const d = doc.data();
-    res.json({
-      referrals: d.referrals || 0,
-      earnings: d.referral_earnings || 0,
-      link: 'https://t.me/' + BOT_USERNAME + '?start=ref' + req.params.userId
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed' });
-  }
-});
-
-app.get('/api/referrals/:userId', async (req, res) => {
-  try {
-    const snap = await db.collection('referrals')
-      .where('referrer_id', '==', String(req.params.userId))
+    const snapshot = await db.collection('withdrawals')
+      .where('user_id', '==', String(req.params.userId))
       .orderBy('timestamp', 'desc')
-      .limit(50)
       .get();
-    const refs = [];
-    snap.forEach(doc => {
+    
+    const withdrawals = [];
+    snapshot.forEach(doc => {
       const d = doc.data();
-      refs.push({ referred_id: d.referred_id, bonus: d.bonus, timestamp: d.timestamp ? d.timestamp.toMillis() : null });
+      withdrawals.push({
+        id: doc.id,
+        amount: d.amount,
+        address: d.address,
+        currency: d.currency,
+        status: d.status,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null
+      });
     });
-    res.json(refs);
+    res.json(withdrawals);
   } catch (err) {
-    res.status(500).json({ error: 'Failed' });
-  }
-});
-
-// ========================
-// 8. History
-// ========================
-app.get('/api/history/:userId', async (req, res) => {
-  try {
-    const uid = String(req.params.userId);
-    const history = [];
-
-    const [claimsSnap, wdSnap, swapSnap] = await Promise.all([
-      db.collection('logs').where('user_id', '==', uid).where('action', '==', 'claim').orderBy('timestamp', 'desc').limit(50).get(),
-      db.collection('withdrawals').where('user_id', '==', uid).orderBy('timestamp', 'desc').limit(50).get(),
-      db.collection('swaps').where('user_id', '==', uid).orderBy('timestamp', 'desc').limit(50).get()
-    ]);
-
-    claimsSnap.forEach(doc => {
-      const d = doc.data();
-      history.push({ type: 'claim', amount: d.details?.reward || 0, token: 'CNX', timestamp: d.timestamp ? d.timestamp.toMillis() : null, status: 'completed' });
-    });
-    wdSnap.forEach(doc => {
-      const d = doc.data();
-      history.push({ type: 'withdraw', amount: d.amount, token: 'CNX', address: d.address, timestamp: d.timestamp ? d.timestamp.toMillis() : null, status: d.status });
-    });
-    swapSnap.forEach(doc => {
-      const d = doc.data();
-      history.push({ type: 'swap', from_token: d.from_token, from_amount: d.from_amount, to_token: d.to_token, to_amount: d.to_amount, timestamp: d.timestamp ? d.timestamp.toMillis() : null, status: 'completed' });
-    });
-
-    history.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    res.json(history.slice(0, 50));
-  } catch (err) {
+    console.error('Withdrawal history error:', err);
     res.status(500).json({ error: 'Failed to fetch history' });
   }
 });
 
 // ========================
-// 9. Postback (Offerwall)
+// 7. Swap
 // ========================
-app.post('/api/postback', async (req, res) => {
-  const { user_id, reward, signature } = req.body;
-  if (!user_id || reward === undefined || !signature) return res.status(400).json({ error: 'Missing parameters' });
+app.post('/api/swap', async (req, res) => {
+  const { user_id, from_currency, to_currency, amount } = req.body;
 
-  const payload = String(user_id) + ':' + String(reward);
-  const expected = crypto.createHmac('sha256', BOT_TOKEN).update(payload).digest('hex');
-  if (signature !== expected) {
-    await logAction('postback_rejected', user_id, { reason: 'invalid_signature', ip: req.ip });
-    return res.status(403).json({ error: 'Invalid signature' });
+  if (!user_id || !from_currency || !to_currency || !amount) {
+    return res.status(400).json({ error: 'Missing parameters' });
   }
 
+  // Only swap between CNX and DOGE
+  if ((from_currency !== 'cnx' && from_currency !== 'doge') ||
+      (to_currency !== 'cnx' && to_currency !== 'doge')) {
+    return res.status(400).json({ error: 'Invalid currency pair' });
+  }
+
+  if (from_currency === to_currency) {
+    return res.status(400).json({ error: 'Cannot swap same currency' });
+  }
+
+  const numAmount = parseFloat(amount);
+  if (isNaN(numAmount) || numAmount <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+
+  const userRef = db.collection('users').doc(String(user_id));
+
   try {
-    const userRef = db.collection('users').doc(String(user_id));
-    await userRef.set({
-      balance: increment(Number(reward)),
-      total_earned: increment(Number(reward))
-    }, { merge: true });
-    await logAction('postback', user_id, { reward: Number(reward), ip: req.ip });
-    res.json({ success: true, message: 'Reward credited' });
+    const result = await db.runTransaction(async (t) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('NO_USER');
+      
+      const data = doc.data();
+      const fromField = from_currency === 'doge' ? 'doge_balance' : 'balance';
+      const toField = to_currency === 'doge' ? 'doge_balance' : 'balance';
+      const fromBalance = data[fromField] || 0;
+
+      if (fromBalance < numAmount) throw new Error('INSUFFICIENT');
+
+      // 1:1 conversion rate
+      const swapAmount = numAmount;
+      t.update(userRef, {
+        [fromField]: increment(-numAmount),
+        [toField]: increment(swapAmount)
+      });
+
+      await logAction('swap', user_id, { from: from_currency, to: to_currency, amount: numAmount });
+
+      return { success: true, swapped_amount: swapAmount };
+    });
+    res.json(result);
   } catch (err) {
-    res.status(500).json({ error: 'Postback processing failed' });
+    if (err.message === 'INSUFFICIENT') {
+      res.status(400).json({ error: 'Insufficient balance' });
+    } else if (err.message === 'NO_USER') {
+      res.status(404).json({ error: 'User not found' });
+    } else {
+      console.error('Swap error:', err);
+      res.status(500).json({ error: 'Swap failed' });
+    }
   }
 });
 
 // ========================
-// 10. Stats
+// 8. Stats
 // ========================
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', adminAuth, async (req, res) => {
   try {
     const usersSnap = await db.collection('users').get();
-    let totalUsers = 0, totalBalance = 0, totalDoge = 0, totalClaims = 0, totalWithdrawn = 0, activeToday = 0;
-    const dayAgo = Date.now() - 86400000;
+    const totalUsers = usersSnap.size;
 
+    let totalBalance = 0, totalDoge = 0;
     usersSnap.forEach(doc => {
       const d = doc.data();
-      totalUsers++;
       totalBalance += d.balance || 0;
       totalDoge += d.doge_balance || 0;
-      totalClaims += d.total_claims || 0;
-      if (d.last_claim && d.last_claim.toMillis() > dayAgo) activeToday++;
     });
 
-    const withdrawSnap = await db.collection('withdrawals').where('status', '==', 'approved').get();
+    const claimsSnap = await db.collection('logs').where('action', '==', 'claim').get();
+    const totalClaims = claimsSnap.size;
+
+    const now = Date.now();
+    const todayStart = new Date(now).setHours(0, 0, 0, 0);
+    const claimsTodaySnap = await db.collection('logs')
+      .where('action', '==', 'claim')
+      .where('timestamp', '>=', admin.firestore.Timestamp.fromMillis(todayStart))
+      .get();
+    const activeToday = new Set();
+    claimsTodaySnap.forEach(doc => {
+      const d = doc.data();
+      if (d.user_id) activeToday.add(d.user_id);
+    });
+
+    const withdrawSnap = await db.collection('withdrawals').get();
+    let totalWithdrawn = 0;
     withdrawSnap.forEach(doc => totalWithdrawn += doc.data().amount || 0);
 
     const pendingSnap = await db.collection('withdrawals').where('status', '==', 'pending').get();
 
-    res.json({ totalUsers, totalBalance, totalDoge, totalClaims, activeToday, totalWithdrawn, pendingWithdrawals: pendingSnap.size });
+    res.json({ totalUsers, totalBalance, totalDoge, totalClaims, activeToday: activeToday.size, totalWithdrawn, pendingWithdrawals: pendingSnap.size });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
@@ -485,7 +486,7 @@ app.get('/api/stats/user/:userId', async (req, res) => {
 });
 
 // ========================
-// 11. Offerwall Verification
+// 9. Offerwall Verification
 // ========================
 app.get('/offerwall-verification-XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM.txt', (req, res) => {
   res.set('Content-Type', 'text/plain').set('Cache-Control', 'no-cache, no-store, must-revalidate').send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
@@ -495,7 +496,7 @@ app.get('/verification.txt', (req, res) => {
 });
 
 // ========================
-// 12. Admin API
+// 10. Admin API
 // ========================
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
@@ -530,7 +531,16 @@ app.get('/api/admin/withdrawals', adminAuth, async (req, res) => {
     const items = [];
     snapshot.forEach(doc => {
       const d = doc.data();
-      items.push({ id: doc.id, user_id: d.user_id, amount: d.amount, address: d.address, status: d.status, timestamp: d.timestamp ? d.timestamp.toMillis() : null });
+      items.push({ 
+        id: doc.id, 
+        user_id: d.user_id, 
+        username: d.username || 'Unknown',
+        amount: d.amount, 
+        address: d.address, 
+        currency: d.currency,
+        status: d.status, 
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null 
+      });
     });
     res.json(items);
   } catch (err) {
@@ -540,7 +550,7 @@ app.get('/api/admin/withdrawals', adminAuth, async (req, res) => {
 
 app.post('/api/admin/approve-withdrawal', adminAuth, async (req, res) => {
   const { id, status } = req.body;
-  if (!id || !['approved', 'rejected'].includes(status)) return res.status(400).json({ error: 'Bad request' });
+  if (!id || !['approved', 'rejected', 'paid', 'canceled'].includes(status)) return res.status(400).json({ error: 'Bad request' });
 
   try {
     const ref = db.collection('withdrawals').doc(id);
@@ -549,11 +559,12 @@ app.post('/api/admin/approve-withdrawal', adminAuth, async (req, res) => {
     const data = doc.data();
     if (data.status !== 'pending') return res.status(400).json({ error: 'Already processed' });
 
-    if (status === 'rejected') {
+    if (status === 'rejected' || status === 'canceled') {
       const userRef = db.collection('users').doc(data.user_id);
-      await userRef.update({ balance: increment(data.amount), total_withdrawals: increment(-1) });
+      const balanceField = data.currency === 'doge' ? 'doge_balance' : 'balance';
+      await userRef.update({ [balanceField]: increment(data.amount), total_withdrawals: increment(-1) });
     }
-    await ref.update({ status });
+    await ref.update({ status, updated_at: admin.firestore.Timestamp.now() });
     await logAction('withdraw_' + status, data.user_id, { withdrawal_id: id, amount: data.amount });
     res.json({ success: true });
   } catch (err) {
@@ -615,7 +626,7 @@ app.get('/api/admin/logs', adminAuth, async (req, res) => {
 app.get('/api/admin/settings', adminAuth, async (req, res) => {
   try {
     const doc = await db.collection('settings').doc('faucet').get();
-    res.json(doc.exists ? doc.data() : { cooldown_seconds: 10, min_reward: 1, max_reward: 10, min_withdraw: 1, paused: false });
+    res.json(doc.exists ? doc.data() : { cooldown_seconds: 10, min_reward: 1, max_reward: 10, min_withdraw: 0.10, paused: false });
   } catch (err) {
     res.status(500).json({ error: 'Failed' });
   }
@@ -628,7 +639,7 @@ app.post('/api/admin/settings', adminAuth, async (req, res) => {
       cooldown_seconds: Number(cooldown_seconds) || 10,
       min_reward: Number(min_reward) || 1,
       max_reward: Number(max_reward) || 10,
-      min_withdraw: Number(min_withdraw) || 1,
+      min_withdraw: Number(min_withdraw) || 0.10,
       paused: !!paused
     }, { merge: true });
     res.json({ success: true });
@@ -653,7 +664,7 @@ app.post('/api/admin/broadcast', adminAuth, async (req, res) => {
 });
 
 // ========================
-// 13. Admin Panel Page
+// 11. Admin Panel Page
 // ========================
 app.get('/admin', (req, res) => {
   const key = req.query.admin_key;
@@ -662,7 +673,7 @@ app.get('/admin', (req, res) => {
 });
 
 // ========================
-// 14. Page Routes
+// 12. Page Routes
 // ========================
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
@@ -673,7 +684,7 @@ app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'public', 'swap
 app.get('/history', (req, res) => res.sendFile(path.join(__dirname, 'public', 'history.html')));
 
 // ========================
-// 15. Error Handling
+// 13. Error Handling
 // ========================
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
@@ -681,5 +692,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log('COINIXFAUCET v2.0 running on port ' + PORT);
+  console.log('COINIX FAUCET v2.1 running on port ' + PORT);
+  console.log('Keep-alive enabled');
 });
