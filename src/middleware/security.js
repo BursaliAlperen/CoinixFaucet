@@ -4,13 +4,13 @@ function setupSecurity(app) {
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'", "https://aoyco.in", "https://*.aoyco.in"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://aoyco.in"],
+        defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://telegram.org"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com"],
-        frameSrc: ["'self'", "https://aoyco.in", "https://*.aoyco.in"],
+        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
       },
