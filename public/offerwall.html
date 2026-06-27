@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Offerwall - COINIX</title>
+<link rel="icon" type="image/png" href="/images/coinix.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,tr,de,fr,es,it,pt,ru,ar,zh-CN,ja,ko,hi,nl,pl,sv,no,da,fi,el,cs,ro,hu,bg,uk,id,vi,th,ms,fa,he,ur,bn',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: true
+  }, 'google_translate_element');
+}
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<style>
+:root{
+  --gold:#FFD700; --gold-2:#F5A623;
+  --purple:#8b5cf6; --purple-2:#a855f7; --purple-soft:rgba(139,92,246,0.1);
+  --blue:#4A9EFF; --blue-soft:rgba(74,158,255,0.1);
+  --bg-0:#05060f; --bg-1:#0b0d1a; --bg-2:#131627; --bg-3:#1c1f35;
+  --text:#f2f4f9; --text-dim:#9aa3b8; --text-muted:#5a6380;
+  --success:#00d084; --danger:#ff4757; --warn:#f59e0b;
+  --glass:rgba(255,255,255,0.035); --glass-brd:rgba(255,255,255,0.07);
+  --radius:18px; --sidebar-w:260px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg-0);color:var(--text);display:flex;-webkit-font-smoothing:antialiased}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%,rgba(139,92,246,0.12),transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%,rgba(255,215,0,0.06),transparent 60%),
+    linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.02) 1px,transparent 0);
+  background-size:44px 44px;opacity:.5;
+}
+
+.goog-te-banner-frame.skiptranslate{display:none!important}
+body{top:0!important}
+#google_translate_element{position:fixed;top:15px;right:20px;z-index:10002}
+.goog-te-gadget{font-size:0!important}
+.goog-te-gadget-simple{background:rgba(11,13,26,0.95)!important;border:1px solid var(--glass-brd)!important;border-radius:10px!important;padding:8px 12px!important}
+.goog-te-gadget-simple span{color:var(--text)!important;font-size:13px!important}
+.goog-te-gadget-simple img{width:18px!important;height:18px!important}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;height:100vh;background:linear-gradient(180deg,rgba(11,13,26,0.98) 0%,rgba(5,6,15,0.99) 100%);backdrop-filter:blur(24px) saturate(180%);border-right:1px solid var(--glass-brd);display:flex;flex-direction:column;overflow:hidden;z-index:1000}
+.sidebar-brand{padding:20px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--glass-brd);cursor:pointer;flex-shrink:0}
+.sidebar-brand-img{width:42px;height:42px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;overflow:hidden;box-shadow:0 10px 40px rgba(255,215,0,0.22)}
+.sidebar-brand-img img{width:100%;height:100%;object-fit:cover}
+.sidebar-brand-txt{display:flex;flex-direction:column;line-height:1.15}
+.sidebar-brand-name{font-family:'Space Grotesk';font-weight:700;font-size:17px}
+.sidebar-brand-sub{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto}
+.sidebar-section{margin-bottom:16px}
+.sidebar-section-title{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;padding:8px 14px}
+.sidebar-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;transition:all .25s;margin-bottom:3px;position:relative;border:1px solid transparent}
+.sidebar-item i{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-item .label{flex:1}
+.sidebar-item:hover{color:var(--text);background:var(--glass);border-color:var(--glass-brd)}
+.sidebar-item.active{background:linear-gradient(90deg,var(--purple-soft),transparent);color:var(--purple);border-color:rgba(139,92,246,0.25);box-shadow:inset 3px 0 0 var(--purple)}
+.sidebar-item.active i{color:var(--purple)}
+.sidebar-footer{padding:14px;border-top:1px solid var(--glass-brd);flex-shrink:0}
+.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd)}
+.sidebar-user-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:13px;overflow:hidden}
+.sidebar-user-avatar img{width:100%;height:100%;object-fit:cover}
+.sidebar-user-info{flex:1;overflow:hidden}
+.sidebar-user-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar-user-bal{font-size:11px;color:var(--gold);font-family:'JetBrains Mono';display:flex;align-items:center;gap:4px}
+.sidebar-user-bal img{width:12px;height:12px}
+
+/* MAIN */
+.main{flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.header{height:70px;flex-shrink:0;background:rgba(5,6,15,0.72);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--glass-brd);display:flex;align-items:center;padding:0 24px;gap:16px;z-index:100}
+.header-title{font-family:'Space Grotesk';font-weight:700;font-size:20px;display:flex;align-items:center;gap:10px}
+.header-title i{color:var(--purple);font-size:18px}
+.header-spacer{flex:1}
+.header-balance{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;background:var(--glass);border:1px solid var(--glass-brd);font-size:13px;font-weight:600}
+.header-balance img{width:20px;height:20px}
+.header-balance .val{font-family:'JetBrains Mono';color:var(--gold)}
+.header-balance .doge{color:#c2a633}
+.header-balance-sep{width:1px;height:20px;background:var(--glass-brd);margin:0 4px}
+.header-avatar{width:40px;height:40px;border-radius:50%;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:14px;overflow:hidden}
+.header-avatar img{width:100%;height:100%;object-fit:cover}
+.mobile-menu-btn{display:none;background:none;border:none;color:var(--text);font-size:22px;cursor:pointer}
+
+/* CONTENT */
+.content{flex:1;padding:24px;overflow-y:auto;max-width:1400px;width:100%;margin:0 auto}
+.page-head{margin-bottom:24px}
+.page-title{font-family:'Space Grotesk';font-weight:700;font-size:32px;line-height:1.2;display:flex;align-items:center;gap:12px;margin-bottom:6px;background:linear-gradient(135deg,#fff 0%,var(--purple) 50%,var(--purple-2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.page-title i{color:var(--purple);font-size:26px}
+.page-sub{color:var(--text-dim);font-size:14px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{padding:22px;border-radius:var(--radius);background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);backdrop-filter:blur(10px);transition:all .3s;position:relative;overflow:hidden}
+.stat-card:hover{transform:translateY(-3px);border-color:rgba(139,92,246,0.25)}
+.stat-card-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.stat-card-ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);display:grid;place-items:center;font-size:18px;border:1px solid rgba(139,92,246,0.2)}
+.stat-card-ic.gold{background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));color:var(--gold);border-color:rgba(255,215,0,0.2)}
+.stat-card-ic.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border-color:rgba(74,158,255,0.2)}
+.stat-card-ic.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border-color:rgba(0,208,132,0.2)}
+.stat-card-lbl{font-size:12px;color:var(--text-dim);font-weight:500}
+.stat-card-val{font-family:'Space Grotesk';font-size:26px;font-weight:700;color:var(--text);line-height:1;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.stat-card-val img{width:22px;height:22px}
+.stat-card-val.gold{color:var(--gold)}
+.stat-card-sub{font-size:11px;color:var(--text-muted)}
+.stat-card-chg{font-size:11px;color:var(--success);margin-top:6px;display:flex;align-items:center;gap:4px}
+
+/* OFFERWALL */
+.offerwall-wrap{position:relative;border-radius:var(--radius);overflow:hidden;background:linear-gradient(145deg,rgba(139,92,246,0.05),rgba(139,92,246,0.01));border:1px solid rgba(139,92,246,0.2);backdrop-filter:blur(10px);min-height:700px}
+.offerwall-hd{padding:16px 20px;border-bottom:1px solid var(--glass-brd);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:rgba(0,0,0,0.2)}
+.offerwall-hd-title{font-family:'Space Grotesk';font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
+.offerwall-hd-title i{color:var(--purple)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'Inter';font-size:13px;font-weight:600;transition:all .25s;user-select:none;position:relative;overflow:hidden}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--purple-2));color:#fff;box-shadow:0 8px 24px rgba(139,92,246,0.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(139,92,246,0.4)}
+.btn-secondary{background:var(--glass);color:var(--text);border:1px solid var(--glass-brd)}
+.btn-secondary:hover{border-color:rgba(139,92,246,0.3);color:var(--purple)}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
+
+.offerwall-frame{width:100%;height:700px;border:none;background:#0a0a1a;display:block}
+
+.offerwall-loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(5,6,15,0.95);z-index:5}
+.offerwall-loader.hidden{display:none}
+.loader-spinner{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at center,var(--bg-1) 40%,transparent 41%),conic-gradient(from 0deg,var(--purple),var(--gold),var(--purple));animation:spin 1s linear infinite;display:grid;place-items:center}
+.loader-spinner img{width:32px;height:32px;object-fit:contain;animation:spin 1s linear infinite reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-size:14px;color:var(--text-dim);font-weight:500}
+.loader-sub{font-size:12px;color:var(--text-muted);max-width:300px;text-align:center}
+
+.offerwall-error{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(5,6,15,0.95);z-index:5;padding:24px;text-align:center}
+.offerwall-error.show{display:flex}
+.error-icon{width:64px;height:64px;border-radius:50%;background:rgba(255,71,87,0.1);color:var(--danger);display:grid;place-items:center;font-size:28px;border:1px solid rgba(255,71,87,0.2)}
+.error-title{font-family:'Space Grotesk';font-size:18px;font-weight:700}
+.error-msg{font-size:13px;color:var(--text-dim);max-width:400px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:10000;padding:14px 20px;border-radius:14px;background:rgba(11,13,26,0.95);border:1px solid var(--glass-brd);backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.6);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;transform:translateY(100px);opacity:0;transition:all .35s;max-width:360px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:14px}
+.toast.success{border-color:var(--success)}
+.toast.success .toast-icon{background:rgba(0,208,132,0.15);color:var(--success)}
+.toast.error{border-color:var(--danger)}
+.toast.error .toast-icon{background:rgba(255,71,87,0.15);color:var(--danger)}
+
+@media(max-width:900px){
+  body{flex-direction:column}
+  .sidebar{position:fixed;left:0;top:0;z-index:1000;transform:translateX(-100%);transition:transform .3s;width:280px}
+  .sidebar.open{transform:translateX(0)}
+  .main{width:100%}
+  .header-balance{display:none}
+  .mobile-menu-btn{display:grid}
+  .content{padding:16px}
+  .page-title{font-size:24px}
+  .stat-card-val{font-size:22px}
+  .offerwall-frame{height:600px}
+  .offerwall-wrap{min-height:600px}
+  #google_translate_element{top:80px;right:10px}
+}
+@media(max-width:500px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .offerwall-frame{height:500px}
+  .offerwall-wrap{min-height:500px}
+}
+</style>
+</head>
+<body>
+
+<div id="google_translate_element"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand" onclick="location.href='/'">
+    <div class="sidebar-brand-img"><img src="/images/coinix.png" alt="COINIX" onerror="this.style.display='none';this.parentElement.innerHTML='C'"></div>
+    <div class="sidebar-brand-txt">
+      <span class="sidebar-brand-name">COINIX</span>
+      <span class="sidebar-brand-sub">CNX Faucet</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Main</div>
+      <a class="sidebar-item" href="/"><i class="fa-solid fa-chart-pie"></i><span class="label">Dashboard</span></a>
+      <a class="sidebar-item" href="/faucet"><i class="fa-solid fa-droplet"></i><span class="label">Faucet</span></a>
+      <a class="sidebar-item active" href="/offerwall"><i class="fa-solid fa-gift"></i><span class="label">Offerwall</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Actions</div>
+      <a class="sidebar-item" href="/swap"><i class="fa-solid fa-right-left"></i><span class="label">Swap</span></a>
+      <a class="sidebar-item" href="/withdraw"><i class="fa-solid fa-paper-plane"></i><span class="label">Withdraw</span></a>
+      <a class="sidebar-item" href="/history"><i class="fa-solid fa-clock-rotate-left"></i><span class="label">History</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Social</div>
+      <a class="sidebar-item" href="/?ref=1"><i class="fa-solid fa-user-plus"></i><span class="label">Referrals</span></a>
+      <a class="sidebar-item" href="/"><i class="fa-solid fa-trophy"></i><span class="label">Leaderboard</span></a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebarName">Loading...</div>
+        <div class="sidebar-user-bal" id="sidebarBal">
+          <img src="/images/coinix.png" alt="CNX"> 0 CNX
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="header">
+    <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fa-solid fa-bars"></i></button>
+    <div class="header-title">
+      <i class="fa-solid fa-gift"></i>
+      <span>Offerwall</span>
+    </div>
+    <div class="header-spacer"></div>
+    <div class="header-balance">
+      <img src="/images/coinix.png" alt="CNX">
+      <span class="val" id="hdrBalCnx">0</span>
+      <span style="color:var(--text-dim);font-size:11px">CNX</span>
+      <span class="header-balance-sep"></span>
+      <img src="/images/dogecoin.png" alt="DOGE">
+      <span class="val doge" id="hdrBalDoge">0</span>
+      <span style="color:var(--text-dim);font-size:11px">DOGE</span>
+    </div>
+    <div class="header-avatar" id="headerAvatar">?</div>
+  </header>
+
+  <main class="content">
+    <div class="page-head">
+      <h1 class="page-title"><i class="fa-solid fa-gift"></i> Offerwall</h1>
+      <p class="page-sub">Complete offers and earn CNX instantly via verified postback</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-hd">
+          <div class="stat-card-ic gold"><i class="fa-solid fa-coins"></i></div>
+          <div class="stat-card-lbl">CNX Balance</div>
+        </div>
+        <div class="stat-card-val gold"><img src="/images/coinix.png" alt="CNX"><span id="statCnxBal">0.00</span></div>
+        <div class="stat-card-sub">Site token</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-hd">
+          <div class="stat-card-ic gold" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
+          <div class="stat-card-lbl">DOGE Balance</div>
+        </div>
+        <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt="DOGE"><span id="statDogeBal">0.00</span></div>
+        <div class="stat-card-sub">Withdrawable</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-hd">
+          <div class="stat-card-ic"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="stat-card-lbl">Today's Earnings</div>
+        </div>
+        <div class="stat-card-val gold"><img src="/images/coinix.png" alt="CNX"><span id="statToday">0</span></div>
+        <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> <span id="statTodayCount">0</span> offers today</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-hd">
+          <div class="stat-card-ic blue"><i class="fa-solid fa-sack-dollar"></i></div>
+          <div class="stat-card-lbl">Total Earnings</div>
+        </div>
+        <div class="stat-card-val gold"><img src="/images/coinix.png" alt="CNX"><span id="statTotal">0</span></div>
+        <div class="stat-card-sub"><span id="statTotalCount">0</span> completed offers</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-hd">
+          <div class="stat-card-ic green"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="stat-card-lbl">Completed Offers</div>
+        </div>
+        <div class="stat-card-val" id="statCompleted">0</div>
+        <div class="stat-card-chg"><i class="fa-solid fa-check"></i> Verified</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-card-hd">
+          <div class="stat-card-ic"><i class="fa-solid fa-bullseye"></i></div>
+          <div class="stat-card-lbl">Success Rate</div>
+        </div>
+        <div class="stat-card-val" id="statSuccessRate">100%</div>
+        <div class="stat-card-sub">Offer completion</div>
+      </div>
+    </div>
+
+    <div class="offerwall-wrap">
+      <div class="offerwall-hd">
+        <div class="offerwall-hd-title">
+          <i class="fa-solid fa-list"></i>
+          Available Offers
+          <span style="font-size:11px;color:var(--success);font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:8px">
+            <i class="fa-solid fa-circle" style="font-size:6px"></i> AUTO-CREDITED
+          </span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="refreshOfferwall()">
+          <i class="fa-solid fa-rotate"></i> Refresh
+        </button>
+      </div>
+
+      <div class="offerwall-loader" id="offerwallLoader">
+        <div class="loader-spinner">
+          <img src="/images/loading.png" alt="Loading" onerror="this.style.display='none'">
+        </div>
+        <div class="loader-text">Loading offers...</div>
+        <div class="loader-sub">Fetching the best offers for you. Rewards are auto-credited via verified postback.</div>
+      </div>
+
+      <div class="offerwall-error" id="offerwallError">
+        <div class="error-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="error-title">Failed to load offers</div>
+        <div class="error-msg">We couldn't connect to the offerwall. Please check your connection and try again.</div>
+        <button class="btn btn-primary" onclick="refreshOfferwall()">
+          <i class="fa-solid fa-rotate"></i> Retry
+        </button>
+      </div>
+
+      <iframe id="offerwallFrame" class="offerwall-frame" style="display:none"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+              loading="lazy"></iframe>
+    </div>
+
+    <div style="margin-top:24px;padding:20px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(139,92,246,0.02));border:1px solid rgba(139,92,246,0.2)">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <i class="fa-solid fa-circle-info" style="color:var(--purple);font-size:22px;margin-top:2px"></i>
+        <div>
+          <div style="font-family:'Space Grotesk';font-size:16px;font-weight:700;margin-bottom:4px">How it works</div>
+          <div style="font-size:13px;color:var(--text-dim);line-height:1.7">
+            <strong style="color:var(--text)">1.</strong> Browse available offers above<br>
+            <strong style="color:var(--text)">2.</strong> Click any offer and complete the required action<br>
+            <strong style="color:var(--text)">3.</strong> CNX is automatically credited via our verified server-to-server postback<br>
+            <strong style="color:var(--text)">4.</strong> Swap CNX → DOGE on the Swap page and withdraw to FaucetPay
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-icon"><i class="fa-solid fa-circle-check"></i></div>
+  <span id="toastMsg">Success</span>
+</div>
+
+<script>
+const API = window.location.origin;
+let TOKEN = localStorage.getItem('coinix_token') || '';
+let USER = null;
+
+if(window.Telegram?.WebApp){
+  try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch(e){}
+}
+
+let toastTimer;
+function showToast(msg, type='success'){
+  const toast = document.getElementById('toast');
+  const icon = toast.querySelector('.toast-icon i');
+  document.getElementById('toastMsg').textContent = msg;
+  toast.className = 'toast show ' + type;
+  icon.className = 'fa-solid ' + (type==='success'?'fa-circle-check':type==='error'?'fa-circle-xmark':'fa-circle-info');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
+
+async function init(){
+  if(window.Telegram?.WebApp?.initData){
+    try{
+      const res = await fetch(API + '/api/auth', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({initData: Telegram.WebApp.initData})
+      });
+      const d = await res.json();
+      if(d.token){
+        TOKEN = d.token;
+        localStorage.setItem('coinix_token', TOKEN);
+      }
+    } catch(e){}
+  }
+  await loadUser();
+  await loadStats();
+  await loadOfferwall();
+}
+
+async function loadUser(){
+  if(!TOKEN) return;
+  try{
+    const res = await fetch(API + '/api/me', {headers:{'Authorization':'Bearer '+TOKEN}});
+    if(res.ok){
+      USER = await res.json();
+      const name = USER.username || USER.first_name || 'User';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('sidebarName').textContent = name;
+      document.getElementById('sidebarBal').innerHTML = `<img src="/images/coinix.png" alt="CNX"> ${fmt(USER.balance)} CNX`;
+      document.getElementById('hdrBalCnx').textContent = fmt(USER.balance);
+      document.getElementById('hdrBalDoge').textContent = fmt(USER.doge_balance);
+      const av = document.getElementById('headerAvatar');
+      const sav = document.getElementById('sidebarAvatar');
+      if(USER.photo_url){
+        av.innerHTML = `<img src="${USER.photo_url}">`;
+        sav.innerHTML = `<img src="${USER.photo_url}">`;
+      } else {
+        av.textContent = initial;
+        sav.textContent = initial;
+      }
+    }
+  }catch(e){}
+}
+
+async function loadStats(){
+  if(!TOKEN) return;
+  try{
+    const res = await fetch(API + '/api/offerwall/stats', {headers:{'Authorization':'Bearer '+TOKEN}});
+    if(res.ok){
+      const d = await res.json();
+      document.getElementById('statCnxBal').textContent = fmt(USER?.balance || 0);
+      document.getElementById('statDogeBal').textContent = fmt(USER?.doge_balance || 0);
+      document.getElementById('statToday').textContent = fmt(d.today_earnings || 0);
+      document.getElementById('statTodayCount').textContent = d.today_count || 0;
+      document.getElementById('statTotal').textContent = fmt(d.total_earnings || 0);
+      document.getElementById('statTotalCount').textContent = d.total_count || 0;
+      document.getElementById('statCompleted').textContent = d.total_count || 0;
+      document.getElementById('statSuccessRate').textContent = (d.success_rate || 100) + '%';
+    }
+  }catch(e){}
+}
+
+async function loadOfferwall(){
+  if(!TOKEN) return;
+  const loader = document.getElementById('offerwallLoader');
+  const error = document.getElementById('offerwallError');
+  const frame = document.getElementById('offerwallFrame');
+
+  loader.classList.remove('hidden');
+  error.classList.remove('show');
+  frame.style.display = 'none';
+
+  try{
+    const res = await fetch(API + '/api/offerwall/offerwall', {headers:{'Authorization':'Bearer '+TOKEN}});
+    if(!res.ok) throw new Error('Failed');
+    const d = await res.json();
+    if(!d.url) throw new Error('No URL');
+
+    frame.onload = () => {
+      loader.classList.add('hidden');
+      frame.style.display = 'block';
+      showToast('✅ Offers loaded successfully', 'success');
+    };
+    frame.onerror = () => {
+      loader.classList.add('hidden');
+      error.classList.add('show');
+    };
+    frame.src = d.url;
+
+    setTimeout(() => {
+      if(!loader.classList.contains('hidden')){
+        loader.classList.add('hidden');
+        frame.style.display = 'block';
+      }
+    }, 8000);
+
+  }catch(e){
+    loader.classList.add('hidden');
+    error.classList.add('show');
+    showToast('❌ Failed to load offers', 'error');
+  }
+}
+
+function refreshOfferwall(){
+  loadStats();
+  loadOfferwall();
+}
+
+setInterval(() => {
+  loadUser();
+  loadStats();
+}, 30000);
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
