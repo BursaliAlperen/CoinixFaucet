@@ -1,0 +1,195 @@
+<!-- Tabs bölümüne EKLE (Broadcast'tan sonra, Settings'ten önce) -->
+<button class="tab-btn" onclick="showTab('offerwall')">
+  <i class="fa-solid fa-gift"></i> Offerwall
+</button>
+
+<!-- Tab content bölümüne EKLE (Broadcast content'ten sonra) -->
+<div class="tab-content" id="tab-offerwall" style="display:none">
+  <h3 style="margin-bottom:16px"><i class="fa-solid fa-gift"></i> Offerwall Statistics</h3>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px">
+    <div style="padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(139,92,246,0.02));border:1px solid rgba(139,92,246,0.2)">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Total Transactions</div>
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--purple);margin-top:6px" id="owTotalTx">0</div>
+    </div>
+    <div style="padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(0,208,132,0.1),rgba(0,208,132,0.02));border:1px solid rgba(0,208,132,0.2)">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Completed</div>
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--success);margin-top:6px" id="owCompleted">0</div>
+    </div>
+    <div style="padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(255,71,87,0.02));border:1px solid rgba(255,71,87,0.2)">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Chargebacks</div>
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--danger);margin-top:6px" id="owChargebacks">0</div>
+    </div>
+    <div style="padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(255,215,0,0.1),rgba(255,215,0,0.02));border:1px solid rgba(255,215,0,0.2)">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Total Rewards (CNX)</div>
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--gold);margin-top:6px" id="owTotalRewards">0</div>
+    </div>
+    <div style="padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(74,158,255,0.1),rgba(74,158,255,0.02));border:1px solid rgba(74,158,255,0.2)">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Total Revenue (USD)</div>
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--blue);margin-top:6px">$<span id="owTotalPayout">0.00</span></div>
+    </div>
+    <div style="padding:18px;border-radius:12px;background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.02));border:1px solid rgba(245,158,11,0.2)">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Today</div>
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--warn);margin-top:6px"><span id="owTodayRewards">0</span> <span style="font-size:12px;color:var(--text-dim)">CNX</span></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px"><span id="owTodayCount">0</span> offers</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+    <select id="owStatusFilter" onchange="loadOfferwallTransactions()" style="padding:10px 14px;border-radius:10px;background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);color:var(--text);font-size:13px">
+      <option value="all">All Status</option>
+      <option value="completed">Completed</option>
+      <option value="chargeback">Chargebacks</option>
+    </select>
+    <input type="text" id="owSearchInput" placeholder="Search by user, offer, transId..." style="flex:1;min-width:200px;padding:10px 14px;border-radius:10px;background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);color:var(--text);font-size:13px" oninput="loadOfferwallTransactions()">
+    <button onclick="loadOfferwallTransactions()" style="padding:10px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--purple),var(--purple-2));color:#fff;font-weight:600;cursor:pointer;font-size:13px"><i class="fa-solid fa-rotate"></i> Refresh</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div style="padding:18px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd)">
+      <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:12px"><i class="fa-solid fa-fire" style="color:var(--gold)"></i> Top 10 Offers</div>
+      <div id="owTopOffers" style="font-size:13px"></div>
+    </div>
+    <div style="padding:18px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd)">
+      <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:12px"><i class="fa-solid fa-globe" style="color:var(--blue)"></i> Top 10 Countries</div>
+      <div id="owTopCountries" style="font-size:13px"></div>
+    </div>
+  </div>
+
+  <div style="padding:18px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd)">
+    <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:12px"><i class="fa-solid fa-table-list" style="color:var(--purple)"></i> Offerwall Transactions</div>
+    <div style="overflow-x:auto;max-height:500px;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:1000px">
+        <thead>
+          <tr style="background:rgba(0,0,0,0.4);color:var(--text-dim);position:sticky;top:0;z-index:2">
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">TransID</th>
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">User</th>
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">Offer</th>
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">Type</th>
+            <th style="padding:12px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">CNX</th>
+            <th style="padding:12px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">USD</th>
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">Country</th>
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">Status</th>
+            <th style="padding:12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd)">Time</th>
+          </tr>
+        </thead>
+        <tbody id="owTxBody">
+          <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-dim)">Loading transactions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// Offerwall admin functions
+async function loadOfferwallAdminData(){
+  const adminKey = new URLSearchParams(window.location.search).get('admin_key') || localStorage.getItem('admin_key');
+  if(!adminKey) return;
+
+  try{
+    const statsRes = await fetch(API + '/api/admin/offerwall/stats?admin_key=' + adminKey);
+    if(statsRes.ok){
+      const s = await statsRes.json();
+      document.getElementById('owTotalTx').textContent = s.total_transactions || 0;
+      document.getElementById('owCompleted').textContent = s.completed_count || 0;
+      document.getElementById('owChargebacks').textContent = s.chargeback_count || 0;
+      document.getElementById('owTotalRewards').textContent = fmt(s.total_rewards || 0);
+      document.getElementById('owTotalPayout').textContent = (s.total_payout_usd || 0).toFixed(2);
+      document.getElementById('owTodayRewards').textContent = fmt(s.today_rewards || 0);
+      document.getElementById('owTodayCount').textContent = s.today_count || 0;
+
+      const topOffersEl = document.getElementById('owTopOffers');
+      if(s.top_offers && s.top_offers.length){
+        topOffersEl.innerHTML = s.top_offers.map((o,i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--glass-brd)">
+            <div style="display:flex;align-items:center;gap:8px;overflow:hidden">
+              <span style="color:var(--gold);font-weight:700;font-size:12px;min-width:20px">#${i+1}</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${o.name}</span>
+            </div>
+            <span style="color:var(--purple);font-family:'JetBrains Mono';font-weight:600;font-size:12px">${o.count}</span>
+          </div>
+        `).join('');
+      } else {
+        topOffersEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px">No data</div>';
+      }
+
+      const topCountriesEl = document.getElementById('owTopCountries');
+      if(s.top_countries && s.top_countries.length){
+        topCountriesEl.innerHTML = s.top_countries.map((c,i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--glass-brd)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="color:var(--gold);font-weight:700;font-size:12px;min-width:20px">#${i+1}</span>
+              <span>${c.name}</span>
+            </div>
+            <span style="color:var(--blue);font-family:'JetBrains Mono';font-weight:600;font-size:12px">${c.count}</span>
+          </div>
+        `).join('');
+      } else {
+        topCountriesEl.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px">No data</div>';
+      }
+    }
+    await loadOfferwallTransactions();
+  }catch(e){ console.error(e); }
+}
+
+async function loadOfferwallTransactions(){
+  const adminKey = new URLSearchParams(window.location.search).get('admin_key') || localStorage.getItem('admin_key');
+  const status = document.getElementById('owStatusFilter')?.value || 'all';
+  const search = document.getElementById('owSearchInput')?.value || '';
+  const tbody = document.getElementById('owTxBody');
+  if(!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-dim)">Loading...</td></tr>';
+
+  try{
+    const url = new URL(API + '/api/admin/offerwall');
+    url.searchParams.set('admin_key', adminKey);
+    url.searchParams.set('status', status);
+    url.searchParams.set('limit', '200');
+    if(search) url.searchParams.set('search', search);
+
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Failed');
+    const list = await res.json();
+
+    if(!list.length){
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-dim)">No transactions found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(t => {
+      const statusColor = t.status === 'completed' ? 'var(--success)' : t.status === 'chargeback' ? 'var(--danger)' : 'var(--warn)';
+      const time = t.timestamp ? new Date(t.timestamp).toLocaleString() : '-';
+      return `
+        <tr style="border-bottom:1px solid var(--glass-brd)">
+          <td style="padding:10px;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim)">${(t.trans_id||t.id||'-').substring(0,12)}...</td>
+          <td style="padding:10px;font-family:'JetBrains Mono';font-size:11px">${(t.user_id||'-').substring(0,10)}...</td>
+          <td style="padding:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(t.offer_name||'').replace(/"/g,'&quot;')}">${t.offer_name||'-'}</td>
+          <td style="padding:10px;color:var(--text-dim);font-size:11px">${t.offer_type||'-'}</td>
+          <td style="padding:10px;text-align:right;font-family:'JetBrains Mono';font-weight:600;color:var(--gold)">${fmt(t.amount)}</td>
+          <td style="padding:10px;text-align:right;font-family:'JetBrains Mono';font-size:11px;color:var(--text-dim)">$${(t.payout_usd||0).toFixed(3)}</td>
+          <td style="padding:10px;font-size:11px">${t.country||'-'}</td>
+          <td style="padding:10px"><span style="display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${statusColor}22;color:${statusColor};text-transform:uppercase;letter-spacing:.5px">${t.status||'pending'}</span></td>
+          <td style="padding:10px;font-size:11px;color:var(--text-muted)">${time}</td>
+        </tr>
+      `;
+    }).join('');
+
+  }catch(e){
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--danger)">Failed to load</td></tr>';
+  }
+}
+
+// showTab fonksiyonunu güncelle
+const originalShowTab = window.showTab;
+window.showTab = function(tabName){
+  if(originalShowTab) originalShowTab(tabName);
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  const target = document.getElementById('tab-' + tabName);
+  if(target) target.style.display = 'block';
+  if(tabName === 'offerwall') loadOfferwallAdminData();
+};
+
+function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
+</script>
