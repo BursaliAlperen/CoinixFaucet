@@ -1,9 +1,10 @@
 const { db, admin } = require('../config/firebase');
 const logger = require('../utils/logger');
 const jwt = require('jsonwebtoken');
+const { validateTelegramInitData } = require('../middleware/auth');
 
 const BOT_USERNAME = process.env.BOT_USERNAME || 'your_bot';
-const JWT_SECRET = process.env.JWT_SECRET || 'coinix-default-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET || 'b}$8h7w)BKeC7jwQ+bhVB%ZElD)*jK@=$4W%9S,s4%a7Njv.YeG$pTfzh:2?1D4j';
 const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
 const increment = (n) => admin.firestore.FieldValue.increment(n);
 
@@ -21,6 +22,10 @@ async function logAction(action, userId, details = {}) {
 async function auth(req, res) {
   const { initData, ref } = req.body;
   if (!initData) return res.status(400).json({ error: 'Missing initData' });
+
+  if (!validateTelegramInitData(initData)) {
+    return res.status(403).json({ error: 'Invalid Telegram data signature' });
+  }
 
   let user;
   try {
@@ -81,6 +86,9 @@ async function auth(req, res) {
       }
       await logAction('user_register', userId, { username: user.username, ref });
     } else {
+      if (doc.data().banned) {
+        return res.status(403).json({ error: 'User banned' });
+      }
       const updates = {};
       if (user.photo_url) updates.photo_url = user.photo_url;
       if (user.username) updates.username = user.username;
@@ -95,9 +103,35 @@ async function auth(req, res) {
   }
 }
 
+async function getMe(req, res) {
+  try {
+    const doc = await db.collection('users').doc(String(req.user.userId)).get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    res.json({
+      telegram_id: d.telegram_id,
+      username: d.username,
+      first_name: d.first_name,
+      photo_url: d.photo_url,
+      balance: d.balance || 0,
+      doge_balance: d.doge_balance || 0,
+      total_earned: d.total_earned || 0,
+      total_claims: d.total_claims || 0,
+      total_withdrawals: d.total_withdrawals || 0,
+      referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings || 0,
+      last_claim: d.last_claim ? d.last_claim.toMillis() : null,
+      banned: d.banned || false
+    });
+  } catch (err) {
+    logger.error('GetMe error', { error: err.message });
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
 async function getBalance(req, res) {
   try {
-    const doc = await db.collection('users').doc(String(req.params.userId)).get();
+    const doc = await db.collection('users').doc(String(req.user.userId)).get();
     if (!doc.exists) {
       return res.json({ balance: 0, doge_balance: 0, total_earned: 0, total_doge_earned: 0, total_claims: 0, total_withdrawals: 0, referrals: 0, referral_earnings: 0, last_claim: null });
     }
@@ -121,7 +155,7 @@ async function getBalance(req, res) {
 
 async function getReferral(req, res) {
   try {
-    const userId = String(req.params.userId);
+    const userId = String(req.user.userId);
     const doc = await db.collection('users').doc(userId).get();
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
     const d = doc.data();
@@ -133,4 +167,4 @@ async function getReferral(req, res) {
   }
 }
 
-module.exports = { auth, getBalance, getReferral };
+module.exports = { auth, getMe, getBalance, getReferral };
