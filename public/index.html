@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="offerwall-verification" content="XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM">
-<title>COINIXFAUCET - CNX</title><style>
+  <title>COINIXFAUCET - CNX</title>
+  <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -121,13 +122,6 @@
     }
     button.action:hover { background: #111827; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
     button.action svg { width: 16px; height: 16px; }
-    button.action-green {
-      width: 100%; padding: 12px; background: #16a34a; color: #fff;
-      border: none; border-radius: 10px; cursor: pointer;
-      font-size: 14px; font-weight: 600; transition: all 0.2s ease;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    button.action-green:hover { background: #15803d; transform: translateY(-1px); }
     .msg { margin-top: 10px; font-size: 13px; color: #16a34a; min-height: 20px; text-align: center; font-weight: 500; }
     .msg.err { color: #dc2626; }
     .tasks-frame-wrap { border-radius: 10px; overflow: hidden; border: 1px solid #e5e7eb; }
@@ -139,66 +133,33 @@
       font-size: 12px; font-weight: 600; color: #c2410c; margin-top: 8px;
     }
     .doge-badge svg { width: 18px; height: 18px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-    .stat-box {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 12px; padding: 18px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      transition: box-shadow 0.25s ease;
+    .referral-box {
+      background: #f0fdf4; border: 1.5px solid #bbf7d0;
+      border-radius: 12px; padding: 16px; margin-bottom: 16px;
     }
-    .stat-box:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
-    .stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 6px; }
-    .stat-value { font-size: 22px; font-weight: 800; color: #1f2937; }
-    .stat-value.green { color: #16a34a; }
-    .stat-value.orange { color: #d97706; }
-    .stat-value.blue { color: #2563eb; }
-    .stat-value.red { color: #dc2626; }
-    .stat-sub { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-    .swap-box {
-      background: #f9fafb; border: 1.5px solid #e5e7eb;
-      border-radius: 12px; padding: 18px; margin-bottom: 14px;
+    .referral-box h3 { font-size: 14px; color: #166534; margin-bottom: 8px; }
+    .referral-link {
+      background: #fff; border: 1px solid #86efac;
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 13px; font-family: monospace;
+      color: #166534; word-break: break-all;
+      margin-bottom: 10px; cursor: pointer;
     }
-    .swap-row {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-    }
-    .swap-row label { font-size: 12px; font-weight: 600; color: #6b7280; min-width: 50px; }
-    .swap-row input { flex: 1; margin-bottom: 0; }
-    .swap-token {
-      display: flex; align-items: center; gap: 6px;
-      background: #fff; border: 1px solid #d1d5db;
-      padding: 8px 12px; border-radius: 8px;
-      font-size: 13px; font-weight: 600; color: #374151;
-    }
-    .swap-token svg { width: 20px; height: 20px; }
-    .swap-arrow {
-      text-align: center; margin: 10px 0;
-      color: #9ca3af;
-    }
-    .swap-arrow svg { width: 24px; height: 24px; }
-    .swap-rate { text-align: center; font-size: 12px; color: #6b7280; margin-bottom: 14px; }
-    .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .history-table th, .history-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    .history-table th { color: #6b7280; font-weight: 600; font-size: 11px; text-transform: uppercase; }
-    .history-table tr:hover { background: #f9fafb; }
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-    .badge-green { background: #dcfce7; color: #166534; }
-    .badge-orange { background: #ffedd5; color: #9a3412; }
-    .badge-blue { background: #dbeafe; color: #1e40af; }
-    .badge-red { background: #fee2e2; color: #991b1b; }
-    .empty-state { text-align: center; padding: 30px; color: #9ca3af; }
-    .empty-state svg { width: 40px; height: 40px; margin-bottom: 8px; }
+    .referral-stats { display: flex; gap: 16px; margin-top: 10px; }
+    .referral-stat { text-align: center; }
+    .referral-stat .num { font-size: 20px; font-weight: 800; color: #16a34a; }
+    .referral-stat .lbl { font-size: 11px; color: #6b7280; }
     @media (max-width: 400px) {
       .container { padding: 12px; }
       .card { padding: 16px; }
-      .stats-grid { grid-template-columns: 1fr; }
       .balance-wrap { padding: 6px 10px; }
       .balance-text { font-size: 13px; }
-      .history-table { font-size: 11px; }
-      .history-table th, .history-table td { padding: 8px 4px; }
     }
-  </style><script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -206,6 +167,10 @@
       <div class="logo-sub">CNX FAUCET PLATFORM</div>
     </div>
     <nav class="sidebar-nav">
+      <a class="nav-item active" href="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+      </a>
       <a class="nav-item" href="/dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         Dashboard
@@ -233,6 +198,7 @@
     </nav>
     <div class="sidebar-footer">COINIX v1.0</div>
   </div>
+
   <div class="topbar">
     <div class="topbar-left">
       <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
@@ -244,83 +210,111 @@
         </div>
       </div>
     </div>
-    <div class="balance-wrap"><svg class="cnx-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0" y1="0" x2="32" y2="32">
-      <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/>
-    </linearGradient>
-    <filter id="cnxShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.25"/>
-    </filter>
-  </defs>
-  <circle cx="16" cy="16" r="14" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
-  <text x="16" y="20.5" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="Arial, sans-serif" letter-spacing="0.5">CNX</text>
-</svg><div class="balance-text"><span id="bal">0</span> CNX</div></div>
+    <div class="balance-wrap">
+      <svg class="cnx-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cnxGrad" x1="0" y1="0" x2="32" y2="32">
+            <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/>
+          </linearGradient>
+          <filter id="cnxShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.25"/>
+          </filter>
+        </defs>
+        <circle cx="16" cy="16" r="14" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
+        <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        <text x="16" y="20.5" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="Arial, sans-serif" letter-spacing="0.5">CNX</text>
+      </svg>
+      <div class="balance-text"><span id="bal">0</span> CNX</div>
+    </div>
   </div>
+
   <div class="container">
-  <div class="card">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
-      Faucet Claim
+
+    <!-- Referral Box -->
+    <div class="referral-box" id="referralBox" style="display:none;">
+      <h3>Referral Program</h3>
+      <div class="referral-link" id="refLink" onclick="copyRef()">Loading...</div>
+      <div class="referral-stats">
+        <div class="referral-stat">
+          <div class="num" id="refCount">0</div>
+          <div class="lbl">Referrals</div>
+        </div>
+        <div class="referral-stat">
+          <div class="num" id="refEarnings">0</div>
+          <div class="lbl">Earned (CNX)</div>
+        </div>
+      </div>
     </div>
-    <button class="claim-btn" id="claimBtn" onclick="doClaim()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
-      CLAIM CNX
-    </button>
-    <div class="cooldown" id="cooldownText">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      Ready to claim
+
+    <div class="card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        Faucet Claim
+      </div>
+      <button class="claim-btn" id="claimBtn" onclick="doClaim()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        CLAIM CNX
+      </button>
+      <div class="cooldown" id="cooldownText">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Ready to claim
+      </div>
     </div>
+
+    <div style="text-align:center; margin-bottom:16px;">
+      <div class="doge-badge">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dogeGrad" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+            <filter id="dogeShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.2"/>
+            </filter>
+          </defs>
+          <circle cx="16" cy="16" r="14" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
+          <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <ellipse cx="16" cy="14" rx="5" ry="4.5" fill="#fff"/>
+          <ellipse cx="13.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
+          <ellipse cx="18.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
+          <circle cx="13.5" cy="13" r="1" fill="#111"/><circle cx="18.5" cy="13" r="1" fill="#111"/>
+          <ellipse cx="16" cy="16.5" rx="1.2" ry="0.8" fill="#111"/>
+          <path d="M14 18.5c0.8 0.8 2.4 0.8 3.2 0" stroke="#111" stroke-width="0.6" fill="none" stroke-linecap="round"/>
+          <text x="16" y="23.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#92400e" font-family="Arial, sans-serif">DOGE</text>
+        </svg>
+        Powered by Dogecoin
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        PTC / Tasks (AoyCo)
+      </div>
+      <div class="tasks-frame-wrap">
+        <iframe src="https://www.aoyco.com/offerwall" frameborder="0" scrolling="yes"></iframe>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        Withdraw
+      </div>
+      <label class="label">FaucetPay Email or CNX Address</label>
+      <input type="text" id="wdAddress" placeholder="Enter your address">
+      <label class="label">Amount (CNX)</label>
+      <input type="number" id="wdAmount" placeholder="Min 1 CNX">
+      <button class="action" onclick="doWithdraw()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        Request Withdrawal
+      </button>
+      <div class="msg" id="wdMsg"></div>
+    </div>
+
   </div>
 
-  <div style="text-align:center; margin-bottom:16px;">
-    <div class="doge-badge"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0" y1="0" x2="32" y2="32">
-      <stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/>
-    </linearGradient>
-    <filter id="dogeShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.2"/>
-    </filter>
-  </defs>
-  <circle cx="16" cy="16" r="14" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-  <ellipse cx="16" cy="14" rx="5" ry="4.5" fill="#fff"/>
-  <ellipse cx="13.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
-  <ellipse cx="18.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
-  <circle cx="13.5" cy="13" r="1" fill="#111"/><circle cx="18.5" cy="13" r="1" fill="#111"/>
-  <ellipse cx="16" cy="16.5" rx="1.2" ry="0.8" fill="#111"/>
-  <path d="M14 18.5c0.8 0.8 2.4 0.8 3.2 0" stroke="#111" stroke-width="0.6" fill="none" stroke-linecap="round"/>
-  <text x="16" y="23.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#92400e" font-family="Arial, sans-serif">DOGE</text>
-</svg>Powered by Dogecoin</div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-      PTC / Tasks (AoyCo)
-    </div>
-    <div class="tasks-frame-wrap">
-      <iframe src="https://www.aoyco.com/offerwall" frameborder="0" scrolling="yes"></iframe>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-      Withdraw
-    </div>
-    <label class="label">FaucetPay Email or CNX Address</label>
-    <input type="text" id="wdAddress" placeholder="Enter your address">
-    <label class="label">Amount (CNX)</label>
-    <input type="number" id="wdAmount" placeholder="Min 1 CNX">
-    <button class="action" onclick="doWithdraw()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-      Request Withdrawal
-    </button>
-    <div class="msg" id="wdMsg"></div>
-  </div></div><script>
+  <script>
     const API = window.location.origin;
     let userId = null;
     let lastClaim = 0;
@@ -335,26 +329,82 @@
       hamburger.classList.toggle('open');
     }
 
-    function init() {
+    function getRefFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('ref') || params.get('startapp');
+    }
+
+    async function authUser() {
       let user = null;
-      if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-        user = Telegram.WebApp.initDataUnsafe.user;
-        userId = String(user.id);
+      let initData = null;
+
+      if (window.Telegram && Telegram.WebApp) {
+        initData = Telegram.WebApp.initData;
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
-      } else {
-        userId = 'test_' + Math.floor(Math.random() * 100000);
+
+        if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+          user = Telegram.WebApp.initDataUnsafe.user;
+          userId = String(user.id);
+        }
       }
-      if (user) {
-        if (user.photo_url) document.getElementById('profileImg').src = user.photo_url;
-        const name = user.username ? '@' + user.username : (user.first_name || 'User');
-        document.getElementById('profileName').textContent = name;
-        document.getElementById('profileId').textContent = 'ID: ' + userId;
-      } else {
+
+      if (!user) {
+        userId = 'test_' + Math.floor(Math.random() * 100000);
         document.getElementById('profileName').textContent = 'Test User';
         document.getElementById('profileId').textContent = 'ID: ' + userId;
+        document.getElementById('referralBox').style.display = 'none';
+        return;
       }
-      loadBalance();
+
+      // Show profile
+      if (user.photo_url) document.getElementById('profileImg').src = user.photo_url;
+      const name = user.username ? '@' + user.username : (user.first_name || 'User');
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('profileId').textContent = 'ID: ' + userId;
+
+      // Auth with backend
+      try {
+        const ref = getRefFromUrl();
+        const res = await fetch(API + '/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData, ref })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadReferralData();
+        }
+      } catch (e) {
+        console.error('Auth error:', e);
+      }
+    }
+
+    async function loadReferralData() {
+      if (!userId) return;
+      try {
+        const res = await fetch(API + '/api/referral/' + userId);
+        const data = await res.json();
+        document.getElementById('refLink').textContent = data.link;
+        document.getElementById('refCount').textContent = data.referrals;
+        document.getElementById('refEarnings').textContent = data.earnings;
+        document.getElementById('referralBox').style.display = 'block';
+      } catch (e) {
+        console.error('Ref error:', e);
+      }
+    }
+
+    function copyRef() {
+      const link = document.getElementById('refLink').textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link);
+        alert('Referral link copied!');
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = link; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        alert('Referral link copied!');
+      }
     }
 
     async function loadBalance() {
@@ -362,12 +412,9 @@
       try {
         const res = await fetch(API + '/api/balance/' + userId);
         const data = await res.json();
-        const balEl = document.getElementById('bal');
-        if (balEl) balEl.textContent = data.balance;
-        const dogeEl = document.getElementById('dogeBal');
-        if (dogeEl) dogeEl.textContent = (data.doge_balance || 0).toFixed(2);
+        document.getElementById('bal').textContent = data.balance;
         lastClaim = data.last_claim || 0;
-        if (document.getElementById('claimBtn')) updateCooldown();
+        updateCooldown();
       } catch (e) { console.error(e); }
     }
 
@@ -376,7 +423,6 @@
       const diff = now - lastClaim;
       const btn = document.getElementById('claimBtn');
       const txt = document.getElementById('cooldownText');
-      if (!btn || !txt) return;
       if (diff < 10000) {
         const wait = Math.ceil((10000 - diff) / 1000);
         btn.disabled = true;
@@ -439,5 +485,12 @@
       }
     }
 
+    function init() {
+      authUser();
+      loadBalance();
+    }
+
     window.onload = init;
-  </script></body></html>
+  </script>
+</body>
+</html>
