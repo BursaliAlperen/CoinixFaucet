@@ -9,165 +9,286 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f8f9fa;
+      background: #f0f2f5;
       color: #222;
       line-height: 1.5;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    /* Top Bar */
+    /* ===== SIDEBAR / DRAWER ===== */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 98;
+    }
+    .sidebar-overlay.open { opacity: 1; visibility: visible; }
+
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 260px; height: 100%;
+      background: #fff;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      z-index: 99;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 16px rgba(0,0,0,0.12);
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-header {
+      padding: 24px 20px;
+      background: #1a1a2e;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .sidebar-header .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #fbbf24;
+    }
+    .sidebar-header .logo-sub {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 0;
+      overflow-y: auto;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: #f3f4f6;
+      color: #1a1a2e;
+      border-left-color: #fbbf24;
+    }
+    .nav-item svg {
+      width: 20px; height: 20px;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+    .nav-item:hover svg, .nav-item.active svg {
+      color: #1a1a2e;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    /* ===== TOP BAR ===== */
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 18px;
+      padding: 12px 16px;
       background: #fff;
       border-bottom: 1px solid #e5e7eb;
       position: sticky;
       top: 0;
       z-index: 10;
+      gap: 12px;
     }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+    .hamburger {
+      width: 38px; height: 38px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      background: none;
+      border: none;
+    }
+    .hamburger:hover { background: #f3f4f6; }
+    .hamburger span {
+      display: block;
+      width: 20px; height: 2.5px;
+      background: #374151;
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
     .profile-wrap {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
     .profile-img {
-      width: 40px;
-      height: 40px;
+      width: 38px; height: 38px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid #e5e7eb;
       background: #f0f0f0;
+      flex-shrink: 0;
+    }
+    .profile-info {
+      min-width: 0;
+      overflow: hidden;
     }
     .profile-name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      color: #374151;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .profile-name span {
-      display: block;
-      font-size: 11px;
-      font-weight: 400;
+    .profile-id {
+      font-size: 10px;
       color: #9ca3af;
       margin-top: 1px;
     }
+
     .balance-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      padding: 8px 14px;
-      border-radius: 20px;
+      background: #fffbeb;
+      border: 1.5px solid #fcd34d;
+      padding: 7px 14px;
+      border-radius: 24px;
+      flex-shrink: 0;
     }
-    .balance-wrap svg {
-      width: 22px;
-      height: 22px;
+    .balance-wrap svg.cnx-icon {
+      width: 24px; height: 24px;
+      flex-shrink: 0;
     }
     .balance-text {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      color: #15803d;
+      color: #b45309;
+      white-space: nowrap;
     }
 
-    /* Container */
+    /* ===== CONTAINER ===== */
     .container {
-      max-width: 520px;
+      max-width: 540px;
       margin: 0 auto;
-      padding: 20px 16px;
+      padding: 16px;
     }
 
-    /* Card */
+    /* ===== CARD ===== */
     .card {
       background: #fff;
       border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 20px;
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-      transition: box-shadow 0.2s ease;
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
     }
     .card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+      transform: translateY(-1px);
     }
 
-    /* Section Title */
     .section-title {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 700;
       color: #374151;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 14px;
+      letter-spacing: 0.6px;
+      margin-bottom: 16px;
       padding-bottom: 10px;
       border-bottom: 1px solid #f3f4f6;
     }
     .section-title svg {
-      width: 18px;
-      height: 18px;
+      width: 18px; height: 18px;
       color: #6b7280;
     }
 
-    /* Claim Button */
+    /* ===== CLAIM ===== */
     .claim-btn {
       width: 100%;
-      padding: 20px;
-      font-size: 18px;
+      padding: 18px;
+      font-size: 17px;
       font-weight: 700;
       background: #16a34a;
       color: #fff;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
       transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(22,163,74,0.25);
+      box-shadow: 0 3px 12px rgba(22,163,74,0.3);
     }
     .claim-btn:hover:not(:disabled) {
       background: #15803d;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(22,163,74,0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(22,163,74,0.4);
     }
-    .claim-btn:active:not(:disabled) {
-      transform: translateY(0);
-    }
+    .claim-btn:active:not(:disabled) { transform: translateY(0); }
     .claim-btn:disabled {
       background: #9ca3af;
       cursor: not-allowed;
       box-shadow: none;
+      transform: none;
     }
-    .claim-btn svg {
-      width: 22px;
-      height: 22px;
-    }
+    .claim-btn svg { width: 22px; height: 22px; }
 
     .cooldown {
       text-align: center;
-      margin-top: 12px;
+      margin-top: 14px;
       color: #6b7280;
       font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
+      font-weight: 500;
     }
-    .cooldown svg {
-      width: 14px;
-      height: 14px;
-      color: #9ca3af;
-    }
+    .cooldown svg { width: 15px; height: 15px; color: #9ca3af; }
 
-    /* Inputs */
+    /* ===== INPUTS ===== */
     .label {
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
       color: #6b7280;
       margin-bottom: 6px;
       display: block;
@@ -176,16 +297,16 @@
       width: 100%;
       padding: 12px 14px;
       margin-bottom: 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 10px;
       font-size: 14px;
       background: #fafafa;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
     input[type="text"]:focus, input[type="number"]:focus {
       outline: none;
-      border-color: #16a34a;
-      box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
       background: #fff;
     }
 
@@ -195,7 +316,7 @@
       background: #1f2937;
       color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 600;
@@ -208,11 +329,9 @@
     button.action:hover {
       background: #111827;
       transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-    button.action svg {
-      width: 16px;
-      height: 16px;
-    }
+    button.action svg { width: 16px; height: 16px; }
 
     .msg {
       margin-top: 10px;
@@ -222,49 +341,114 @@
       text-align: center;
       font-weight: 500;
     }
-    .msg.err {
-      color: #dc2626;
-    }
+    .msg.err { color: #dc2626; }
 
+    /* ===== TASKS IFRAME ===== */
+    .tasks-frame-wrap {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
     iframe {
       width: 100%;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      height: 420px;
+      border: none;
+      height: 440px;
       display: block;
       background: #fff;
     }
 
-    .divider {
-      height: 1px;
-      background: #e5e7eb;
-      margin: 8px 0 16px 0;
+    /* ===== DOGE BADGE (separate) ===== */
+    .doge-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #c2410c;
+      margin-top: 8px;
     }
+    .doge-badge svg { width: 18px; height: 18px; }
 
     /* Responsive */
     @media (max-width: 400px) {
-      .container { padding: 14px 12px; }
-      .card { padding: 18px; }
+      .container { padding: 12px; }
+      .card { padding: 16px; }
+      .balance-wrap { padding: 6px 10px; }
+      .balance-text { font-size: 13px; }
     }
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
-  <!-- Top Bar -->
+  <!-- SIDEBAR OVERLAY -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-text">COINIX</div>
+      <div class="logo-sub">CNX FAUCET PLATFORM</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#" onclick="scrollToSection('faucet'); toggleSidebar(); return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        Faucet
+      </a>
+      <a class="nav-item" href="#" onclick="scrollToSection('tasks'); toggleSidebar(); return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        PTC / Tasks
+      </a>
+      <a class="nav-item" href="#" onclick="scrollToSection('withdraw'); toggleSidebar(); return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        Withdraw
+      </a>
+      <a class="nav-item" href="#" onclick="scrollToSection('funds'); toggleSidebar(); return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        Funds
+      </a>
+      <a class="nav-item" href="#" onclick="scrollToSection('swap'); toggleSidebar(); return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        Swap
+      </a>
+    </nav>
+    <div class="sidebar-footer">COINIX v1.0</div>
+  </div>
+
+  <!-- TOP BAR -->
   <div class="topbar">
-    <div class="profile-wrap">
-      <img class="profile-img" id="profileImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E" alt="Profile">
-      <div class="profile-name" id="profileName">
-        User
-        <span id="profileId">Loading...</span>
+    <div class="topbar-left">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="profile-wrap">
+        <img class="profile-img" id="profileImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E" alt="Profile">
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">User</div>
+          <div class="profile-id" id="profileId">Loading...</div>
+        </div>
       </div>
     </div>
+
     <div class="balance-wrap">
-      <!-- DOGE Coin SVG -->
-      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="16" cy="16" r="15" fill="#C2A633" stroke="#B5982E" stroke-width="1"/>
-        <text x="16" y="21" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff" font-family="Arial">D</text>
+      <!-- CNX Token SVG -->
+      <svg class="cnx-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cnxGrad" x1="0" y1="0" x2="32" y2="32">
+            <stop offset="0%" stop-color="#fbbf24"/>
+            <stop offset="100%" stop-color="#d97706"/>
+          </linearGradient>
+          <filter id="cnxShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.25"/>
+          </filter>
+        </defs>
+        <circle cx="16" cy="16" r="14" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
+        <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        <text x="16" y="20.5" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="Arial, sans-serif" letter-spacing="0.5">CNX</text>
       </svg>
       <div class="balance-text"><span id="bal">0</span> CNX</div>
     </div>
@@ -272,8 +456,8 @@
 
   <div class="container">
 
-    <!-- Claim Card -->
-    <div class="card">
+    <!-- FAUCET CARD -->
+    <div class="card" id="faucet">
       <div class="section-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
         Faucet Claim
@@ -288,17 +472,51 @@
       </div>
     </div>
 
-    <!-- Tasks -->
-    <div class="card">
-      <div class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-        Tasks (AoyCo)
+    <!-- DOGE BADGE (separate) -->
+    <div style="text-align:center; margin-bottom:16px;">
+      <div class="doge-badge">
+        <!-- DOGE Coin SVG -->
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dogeGrad" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#fbbf24"/>
+              <stop offset="50%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+            <filter id="dogeShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.2"/>
+            </filter>
+          </defs>
+          <circle cx="16" cy="16" r="14" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
+          <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <!-- Shiba Inu simplified face -->
+          <ellipse cx="16" cy="14" rx="5" ry="4.5" fill="#fff"/>
+          <ellipse cx="13.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
+          <ellipse cx="18.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
+          <circle cx="13.5" cy="13" r="1" fill="#111"/>
+          <circle cx="18.5" cy="13" r="1" fill="#111"/>
+          <ellipse cx="16" cy="16.5" rx="1.2" ry="0.8" fill="#111"/>
+          <path d="M14 18.5c0.8 0.8 2.4 0.8 3.2 0" stroke="#111" stroke-width="0.6" fill="none" stroke-linecap="round"/>
+          <!-- DOGE text -->
+          <text x="16" y="23.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#92400e" font-family="Arial, sans-serif">DOGE</text>
+        </svg>
+        Powered by Dogecoin
       </div>
-      <iframe src="https://www.aoyco.com/offerwall" frameborder="0" scrolling="yes"></iframe>
     </div>
 
-    <!-- Withdraw -->
-    <div class="card">
+    <!-- TASKS / PTC CARD -->
+    <div class="card" id="tasks">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        PTC / Tasks (AoyCo)
+      </div>
+      <div class="tasks-frame-wrap">
+        <iframe src="https://www.aoyco.com/offerwall" frameborder="0" scrolling="yes"></iframe>
+      </div>
+    </div>
+
+    <!-- WITHDRAW CARD -->
+    <div class="card" id="withdraw">
       <div class="section-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
         Withdraw
@@ -322,7 +540,27 @@
     let lastClaim = 0;
     let cooldownTimer = null;
 
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const hamburger = document.getElementById('hamburger');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+      hamburger.classList.toggle('open');
+    }
+
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function init() {
+      // Client-side route handling
+      const path = window.location.pathname.replace('/', '');
+      if (path) {
+        setTimeout(() => scrollToSection(path), 300);
+      }
+
       let user = null;
       if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         user = Telegram.WebApp.initDataUnsafe.user;
@@ -333,16 +571,15 @@
         userId = 'test_' + Math.floor(Math.random() * 100000);
       }
 
-      // Set profile info
       if (user) {
         if (user.photo_url) {
           document.getElementById('profileImg').src = user.photo_url;
         }
         const name = user.username ? '@' + user.username : (user.first_name || 'User');
-        document.getElementById('profileName').childNodes[0].nodeValue = name + ' ';
+        document.getElementById('profileName').textContent = name;
         document.getElementById('profileId').textContent = 'ID: ' + userId;
       } else {
-        document.getElementById('profileName').childNodes[0].nodeValue = 'Test User ';
+        document.getElementById('profileName').textContent = 'Test User';
         document.getElementById('profileId').textContent = 'ID: ' + userId;
       }
 
@@ -370,11 +607,11 @@
       if (diff < 10000) {
         const wait = Math.ceil((10000 - diff) / 1000);
         btn.disabled = true;
-        txt.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline></svg> Wait ' + wait + 's...';
+        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Wait ' + wait + 's...';
         if (!cooldownTimer) cooldownTimer = setInterval(updateCooldown, 1000);
       } else {
         btn.disabled = false;
-        txt.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline></svg> Ready to claim!';
+        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Ready to claim!';
         if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
       }
     }
@@ -394,12 +631,12 @@
           document.getElementById('bal').textContent = data.balance;
           lastClaim = Date.now();
           updateCooldown();
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg> You won ' + data.reward + ' CNX!';
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> You won ' + data.reward + ' CNX!';
         } else {
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> ' + (data.error || 'Error');
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ' + (data.error || 'Error');
         }
       } catch (e) {
-        document.getElementById('cooldownText').innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> Network error';
+        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Network error';
       }
     }
 
@@ -409,7 +646,7 @@
       const address = document.getElementById('wdAddress').value;
       const msg = document.getElementById('wdMsg');
       if (!amount || !address) {
-        msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> Fill all fields';
+        msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Fill all fields';
         msg.className = 'msg err';
         return;
       }
@@ -421,15 +658,15 @@
         });
         const data = await res.json();
         if (data.success) {
-          msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg> Withdrawal requested! Awaiting admin approval.';
+          msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Withdrawal requested! Awaiting admin approval.';
           msg.className = 'msg';
           loadBalance();
         } else {
-          msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> ' + (data.error || 'Failed');
+          msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ' + (data.error || 'Failed');
           msg.className = 'msg err';
         }
       } catch (e) {
-        msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> Network error';
+        msg.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Network error';
         msg.className = 'msg err';
       }
     }
