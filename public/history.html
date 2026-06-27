@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="offerwall-verification" content="XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM">
-<title>COINIX Dashboard - CNX</title><style>
+<title>COINIX History - CNX</title><style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -206,7 +206,7 @@
       <div class="logo-sub">CNX FAUCET PLATFORM</div>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item active" href="/dashboard">
+      <a class="nav-item" href="/dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         Dashboard
       </a>
@@ -226,7 +226,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
         Swap
       </a>
-      <a class="nav-item" href="/history">
+      <a class="nav-item active" href="/history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
         History
       </a>
@@ -261,92 +261,15 @@
   <div class="container">
   <div class="card">
     <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-      Dashboard
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      Transaction History
     </div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Total Users</div>
-        <div class="stat-value blue" id="statUsers">-</div>
-        <div class="stat-sub">Registered accounts</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Active Today</div>
-        <div class="stat-value green" id="statActive">-</div>
-        <div class="stat-sub">Claimed in last 24h</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Claims</div>
-        <div class="stat-value orange" id="statClaims">-</div>
-        <div class="stat-sub">All time faucet claims</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Balance</div>
-        <div class="stat-value" id="statBalance">-</div>
-        <div class="stat-sub">CNX in circulation</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Withdrawn</div>
-        <div class="stat-value red" id="statWithdrawn">-</div>
-        <div class="stat-sub">Approved withdrawals</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Pending</div>
-        <div class="stat-value orange" id="statPending">-</div>
-        <div class="stat-sub">Awaiting approval</div>
+    <div id="historyContent">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <p>Loading history...</p>
       </div>
     </div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-      My Stats
-    </div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">My Balance</div>
-        <div class="stat-value green" id="myBalance">-</div>
-        <div class="stat-sub">Available CNX</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">My Claims</div>
-        <div class="stat-value blue" id="myClaims">-</div>
-        <div class="stat-sub">Total claims made</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Earned</div>
-        <div class="stat-value orange" id="myEarned">-</div>
-        <div class="stat-sub">Total CNX earned</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Withdrawn</div>
-        <div class="stat-value red" id="myWithdrawn">-</div>
-        <div class="stat-sub">Approved payouts</div>
-      </div>
-    </div>
-  </div>
-
-  <div style="text-align:center; margin-bottom:16px;">
-    <div class="doge-badge"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0" y1="0" x2="32" y2="32">
-      <stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/>
-    </linearGradient>
-    <filter id="dogeShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.2"/>
-    </filter>
-  </defs>
-  <circle cx="16" cy="16" r="14" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-  <ellipse cx="16" cy="14" rx="5" ry="4.5" fill="#fff"/>
-  <ellipse cx="13.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
-  <ellipse cx="18.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
-  <circle cx="13.5" cy="13" r="1" fill="#111"/><circle cx="18.5" cy="13" r="1" fill="#111"/>
-  <ellipse cx="16" cy="16.5" rx="1.2" ry="0.8" fill="#111"/>
-  <path d="M14 18.5c0.8 0.8 2.4 0.8 3.2 0" stroke="#111" stroke-width="0.6" fill="none" stroke-linecap="round"/>
-  <text x="16" y="23.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#92400e" font-family="Arial, sans-serif">DOGE</text>
-</svg>Powered by Dogecoin</div>
   </div></div><script>
     const API = window.location.origin;
     let userId = null;
@@ -468,33 +391,47 @@
 
     window.onload = init;
   </script><script>
-    async function loadStats() {
-      try {
-        const res = await fetch(API + '/api/stats');
-        const data = await res.json();
-        document.getElementById('statUsers').textContent = data.totalUsers.toLocaleString();
-        document.getElementById('statActive').textContent = data.activeToday.toLocaleString();
-        document.getElementById('statClaims').textContent = data.totalClaims.toLocaleString();
-        document.getElementById('statBalance').textContent = data.totalBalance.toLocaleString() + ' CNX';
-        document.getElementById('statWithdrawn').textContent = data.totalWithdrawn.toLocaleString() + ' CNX';
-        document.getElementById('statPending').textContent = data.pendingWithdrawals.toLocaleString();
-      } catch (e) { console.error('Stats error:', e); }
-    }
-    async function loadMyStats() {
+    async function loadHistory() {
       if (!userId) return;
+      const container = document.getElementById('historyContent');
       try {
-        const res = await fetch(API + '/api/stats/user/' + userId);
+        const res = await fetch(API + '/api/history/' + userId);
         const data = await res.json();
-        document.getElementById('myBalance').textContent = data.balance.toLocaleString() + ' CNX';
-        document.getElementById('myClaims').textContent = data.claims.toLocaleString();
-        document.getElementById('myEarned').textContent = data.earned.toLocaleString() + ' CNX';
-        document.getElementById('myWithdrawn').textContent = data.withdrawn.toLocaleString() + ' CNX';
-      } catch (e) { console.error('My stats error:', e); }
+        if (data.length === 0) {
+          container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><p>No transactions yet</p></div>';
+          return;
+        }
+        let rows = '<table class="history-table"><thead><tr><th>Type</th><th>Amount</th><th>Details</th><th>Status</th><th>Time</th></tr></thead><tbody>';
+        data.forEach(item => {
+          let typeBadge = '', amount = '', details = '', statusBadge = '';
+          if (item.type === 'claim') {
+            typeBadge = '<span class="badge badge-green">Claim</span>';
+            amount = '+' + item.amount + ' CNX';
+            details = 'Faucet';
+            statusBadge = '<span class="badge badge-green">Done</span>';
+          } else if (item.type === 'withdraw') {
+            typeBadge = '<span class="badge badge-blue">Withdraw</span>';
+            amount = '-' + item.amount + ' CNX';
+            details = item.address ? item.address.substring(0,12)+'...' : '-';
+            statusBadge = item.status === 'approved' ? '<span class="badge badge-green">Approved</span>' : '<span class="badge badge-orange">Pending</span>';
+          } else if (item.type === 'swap') {
+            typeBadge = '<span class="badge badge-orange">Swap</span>';
+            amount = item.from_amount + ' ' + item.from_token + ' &rarr; ' + item.to_amount + ' ' + item.to_token;
+            details = 'Rate: ' + (item.from_amount/item.to_amount).toFixed(4);
+            statusBadge = '<span class="badge badge-green">Done</span>';
+          }
+          const time = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '-';
+          rows += '<tr><td>' + typeBadge + '</td><td>' + amount + '</td><td>' + details + '</td><td>' + statusBadge + '</td><td>' + time + '</td></tr>';
+        });
+        rows += '</tbody></table>';
+        container.innerHTML = rows;
+      } catch (e) {
+        container.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><p>Failed to load history</p></div>';
+      }
     }
-    const origInit = init;
+    const origInitHist = init;
     init = function() {
-      origInit();
-      loadStats();
-      loadMyStats();
+      origInitHist();
+      loadHistory();
     };
   </script></body></html>

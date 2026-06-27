@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="offerwall-verification" content="XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM">
-<title>COINIX Dashboard - CNX</title><style>
+<title>COINIX Faucet - CNX</title><style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -206,11 +206,11 @@
       <div class="logo-sub">CNX FAUCET PLATFORM</div>
     </div>
     <nav class="sidebar-nav">
-      <a class="nav-item active" href="/dashboard">
+      <a class="nav-item" href="/dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         Dashboard
       </a>
-      <a class="nav-item" href="/faucet">
+      <a class="nav-item active" href="/faucet">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
         Faucet
       </a>
@@ -261,72 +261,18 @@
   <div class="container">
   <div class="card">
     <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-      Dashboard
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+      Faucet Claim
     </div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Total Users</div>
-        <div class="stat-value blue" id="statUsers">-</div>
-        <div class="stat-sub">Registered accounts</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Active Today</div>
-        <div class="stat-value green" id="statActive">-</div>
-        <div class="stat-sub">Claimed in last 24h</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Claims</div>
-        <div class="stat-value orange" id="statClaims">-</div>
-        <div class="stat-sub">All time faucet claims</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Balance</div>
-        <div class="stat-value" id="statBalance">-</div>
-        <div class="stat-sub">CNX in circulation</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Withdrawn</div>
-        <div class="stat-value red" id="statWithdrawn">-</div>
-        <div class="stat-sub">Approved withdrawals</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Pending</div>
-        <div class="stat-value orange" id="statPending">-</div>
-        <div class="stat-sub">Awaiting approval</div>
-      </div>
+    <button class="claim-btn" id="claimBtn" onclick="doClaim()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+      CLAIM CNX
+    </button>
+    <div class="cooldown" id="cooldownText">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      Ready to claim
     </div>
   </div>
-
-  <div class="card">
-    <div class="section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-      My Stats
-    </div>
-    <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">My Balance</div>
-        <div class="stat-value green" id="myBalance">-</div>
-        <div class="stat-sub">Available CNX</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">My Claims</div>
-        <div class="stat-value blue" id="myClaims">-</div>
-        <div class="stat-sub">Total claims made</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Earned</div>
-        <div class="stat-value orange" id="myEarned">-</div>
-        <div class="stat-sub">Total CNX earned</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Withdrawn</div>
-        <div class="stat-value red" id="myWithdrawn">-</div>
-        <div class="stat-sub">Approved payouts</div>
-      </div>
-    </div>
-  </div>
-
   <div style="text-align:center; margin-bottom:16px;">
     <div class="doge-badge"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -467,34 +413,4 @@
     }
 
     window.onload = init;
-  </script><script>
-    async function loadStats() {
-      try {
-        const res = await fetch(API + '/api/stats');
-        const data = await res.json();
-        document.getElementById('statUsers').textContent = data.totalUsers.toLocaleString();
-        document.getElementById('statActive').textContent = data.activeToday.toLocaleString();
-        document.getElementById('statClaims').textContent = data.totalClaims.toLocaleString();
-        document.getElementById('statBalance').textContent = data.totalBalance.toLocaleString() + ' CNX';
-        document.getElementById('statWithdrawn').textContent = data.totalWithdrawn.toLocaleString() + ' CNX';
-        document.getElementById('statPending').textContent = data.pendingWithdrawals.toLocaleString();
-      } catch (e) { console.error('Stats error:', e); }
-    }
-    async function loadMyStats() {
-      if (!userId) return;
-      try {
-        const res = await fetch(API + '/api/stats/user/' + userId);
-        const data = await res.json();
-        document.getElementById('myBalance').textContent = data.balance.toLocaleString() + ' CNX';
-        document.getElementById('myClaims').textContent = data.claims.toLocaleString();
-        document.getElementById('myEarned').textContent = data.earned.toLocaleString() + ' CNX';
-        document.getElementById('myWithdrawn').textContent = data.withdrawn.toLocaleString() + ' CNX';
-      } catch (e) { console.error('My stats error:', e); }
-    }
-    const origInit = init;
-    init = function() {
-      origInit();
-      loadStats();
-      loadMyStats();
-    };
   </script></body></html>
