@@ -7,26 +7,39 @@
   <title>COINIXFAUCET - CNX</title>
   <style>
     :root {
-      --bg: #f0f2f5; --card: #fff; --text: #222; --muted: #6b7280;
-      --accent: #fbbf24; --accent-dark: #d97706; --success: #16a34a; --danger: #dc2626;
-      --border: #e5e7eb; --shadow: 0 1px 3px rgba(0,0,0,0.04);
-      --shadow-hover: 0 6px 20px rgba(0,0,0,0.07);
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #fbbf24;
+      --accent-dark: #d97706;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --border: #334155;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+      --shadow-hover: 0 8px 30px rgba(0,0,0,0.5);
     }
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       :root {
-        --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8;
-        --border: #334155; --shadow: 0 1px 3px rgba(0,0,0,0.3);
-        --shadow-hover: 0 6px 20px rgba(0,0,0,0.4);
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
       }
-      .topbar { background: #1e293b !important; border-color: #334155 !important; }
-      .sidebar { background: #1e293b !important; }
+      .topbar { background: #ffffff !important; border-color: #e2e8f0 !important; }
+      .sidebar { background: #ffffff !important; }
       .sidebar-header { background: #0f172a !important; }
-      .nav-item:hover, .nav-item.active { background: #334155 !important; color: #fbbf24 !important; }
-      input { background: #0f172a !important; border-color: #475569 !important; color: #f8fafc !important; }
-      input:focus { background: #1e293b !important; }
-      .referral-box { background: #064e3b !important; border-color: #10b981 !important; }
-      .referral-box h3 { color: #a7f3d0 !important; }
-      .referral-link { background: #0f172a !important; border-color: #059669 !important; color: #a7f3d0 !important; }
+      .nav-item:hover, .nav-item.active { background: #f1f5f9 !important; color: #0f172a !important; }
+      .nav-item:hover svg, .nav-item.active svg { color: #0f172a !important; }
+      input { background: #f8fafc !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
+      input:focus { background: #ffffff !important; }
+      .referral-box { background: #f0fdf4 !important; border-color: #86efac !important; }
+      .referral-box h3 { color: #166534 !important; }
+      .referral-link { background: #ffffff !important; border-color: #86efac !important; color: #166534 !important; }
+      .profile-name { color: #1e293b !important; }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -36,7 +49,7 @@
     }
     .sidebar-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.45); opacity: 0; visibility: hidden;
+      background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 98;
     }
     .sidebar-overlay.open { opacity: 1; visibility: visible; }
@@ -45,28 +58,30 @@
       background: var(--card); transform: translateX(-100%);
       transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
       z-index: 99; display: flex; flex-direction: column;
-      box-shadow: 2px 0 16px rgba(0,0,0,0.12);
+      box-shadow: 2px 0 24px rgba(0,0,0,0.3);
     }
     .sidebar.open { transform: translateX(0); }
     .sidebar-header {
-      padding: 24px 20px; background: #1a1a2e; color: #fff;
+      padding: 20px; background: #0f172a; color: #fff;
       border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 12px;
     }
-    .sidebar-header .logo-text { font-size: 22px; font-weight: 800; letter-spacing: 1.5px; color: #fbbf24; }
-    .sidebar-header .logo-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; letter-spacing: 0.5px; }
+    .sidebar-header .logo-img { width: 40px; height: 40px; object-fit: contain; }
+    .sidebar-header .logo-text { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--accent); }
+    .sidebar-header .logo-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; letter-spacing: 0.5px; }
     .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
     .nav-item {
       display: flex; align-items: center; gap: 14px;
       padding: 14px 20px; font-size: 14px; font-weight: 500;
-      color: #374151; cursor: pointer; transition: all 0.15s ease;
+      color: #94a3b8; cursor: pointer; transition: all 0.15s ease;
       border-left: 3px solid transparent; text-decoration: none;
     }
     .nav-item:hover, .nav-item.active {
-      background: #f3f4f6; color: #1a1a2e; border-left-color: #fbbf24;
+      background: #334155; color: #f8fafc; border-left-color: var(--accent);
     }
-    .nav-item svg { width: 20px; height: 20px; color: #6b7280; flex-shrink: 0; }
-    .nav-item:hover svg, .nav-item.active svg { color: #1a1a2e; }
-    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: #9ca3af; text-align: center; }
+    .nav-item svg { width: 20px; height: 20px; color: #64748b; flex-shrink: 0; }
+    .nav-item:hover svg, .nav-item.active svg { color: var(--accent); }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); font-size: 11px; color: #64748b; text-align: center; }
     .topbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 12px 16px; background: var(--card);
@@ -80,96 +95,99 @@
       cursor: pointer; border-radius: 8px; transition: background 0.2s;
       flex-shrink: 0; background: none; border: none;
     }
-    .hamburger:hover { background: #f3f4f6; }
-    .hamburger span { display: block; width: 20px; height: 2.5px; background: #374151; border-radius: 2px; transition: all 0.2s ease; }
+    .hamburger:hover { background: #334155; }
+    .hamburger span { display: block; width: 20px; height: 2.5px; background: var(--text); border-radius: 2px; transition: all 0.2s ease; }
     .hamburger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
     .hamburger.open span:nth-child(2) { opacity: 0; }
     .hamburger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
     .profile-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .profile-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: #f0f0f0; flex-shrink: 0; }
+    .profile-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); background: #1e293b; flex-shrink: 0; }
     .profile-info { min-width: 0; overflow: hidden; }
-    .profile-name { font-size: 13px; font-weight: 600; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .profile-id { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+    .profile-name { font-size: 13px; font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-id { font-size: 10px; color: #94a3b8; margin-top: 1px; }
     .balance-wrap {
       display: flex; align-items: center; gap: 8px;
-      background: #fffbeb; border: 1.5px solid #fcd34d;
+      background: rgba(251, 191, 36, 0.1); border: 1.5px solid rgba(251, 191, 36, 0.3);
       padding: 7px 14px; border-radius: 24px; flex-shrink: 0;
     }
-    .balance-wrap svg.cnx-icon { width: 24px; height: 24px; flex-shrink: 0; }
-    .balance-text { font-size: 14px; font-weight: 700; color: #b45309; white-space: nowrap; }
+    .balance-wrap img { width: 28px; height: 28px; object-fit: contain; }
+    .balance-text { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
     .card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 22px; margin-bottom: 16px;
+      border-radius: 16px; padding: 24px; margin-bottom: 16px;
       box-shadow: var(--shadow);
       transition: box-shadow 0.25s ease, transform 0.25s ease;
     }
-    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
     .section-title {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 10px;
       font-size: 13px; font-weight: 700; color: var(--muted);
       text-transform: uppercase; letter-spacing: 0.6px;
-      margin-bottom: 16px; padding-bottom: 10px;
+      margin-bottom: 16px; padding-bottom: 12px;
       border-bottom: 1px solid var(--border);
     }
-    .section-title svg { width: 18px; height: 18px; color: #6b7280; }
+    .section-title img { width: 24px; height: 24px; object-fit: contain; }
+    .section-title svg { width: 20px; height: 20px; color: var(--accent); }
     .claim-btn {
-      width: 100%; padding: 18px; font-size: 17px; font-weight: 700;
-      background: var(--success); color: #fff; border: none; border-radius: 12px;
+      width: 100%; padding: 20px; font-size: 18px; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: #0f172a; border: none; border-radius: 14px;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 10px; transition: all 0.2s ease;
-      box-shadow: 0 3px 12px rgba(22,163,74,0.3);
+      gap: 12px; transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
     }
-    .claim-btn:hover:not(:disabled) { background: #15803d; transform: translateY(-2px); box-shadow: 0 6px 18px rgba(22,163,74,0.4); }
+    .claim-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(251, 191, 36, 0.4); }
     .claim-btn:active:not(:disabled) { transform: translateY(0); }
-    .claim-btn:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
-    .claim-btn svg { width: 22px; height: 22px; }
-    .cooldown { text-align: center; margin-top: 14px; color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
-    .cooldown svg { width: 15px; height: 15px; color: #9ca3af; }
+    .claim-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; transform: none; color: #94a3b8; }
+    .claim-btn img { width: 32px; height: 32px; object-fit: contain; }
+    .cooldown { text-align: center; margin-top: 16px; color: var(--muted); font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; }
+    .cooldown svg { width: 16px; height: 16px; }
     .label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
     input[type="text"], input[type="number"] {
       width: 100%; padding: 12px 14px; margin-bottom: 14px;
-      border: 1.5px solid #d1d5db; border-radius: 10px; font-size: 14px;
-      background: #fafafa; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      border: 1.5px solid var(--border); border-radius: 10px; font-size: 14px;
+      background: #0f172a; color: var(--text); transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
     input[type="text"]:focus, input[type="number"]:focus {
-      outline: none; border-color: #f59e0b;
-      box-shadow: 0 0 0 3px rgba(245,158,11,0.12); background: #fff;
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15); background: #1e293b;
     }
     button.action {
-      width: 100%; padding: 12px; background: #1f2937; color: #fff;
-      border: none; border-radius: 10px; cursor: pointer;
+      width: 100%; padding: 12px; background: #334155; color: #f8fafc;
+      border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
       font-size: 14px; font-weight: 600; transition: all 0.2s ease;
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    button.action:hover { background: #111827; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    button.action:hover { background: #475569; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     button.action svg { width: 16px; height: 16px; }
     .msg { margin-top: 10px; font-size: 13px; color: var(--success); min-height: 20px; text-align: center; font-weight: 500; }
     .msg.err { color: var(--danger); }
-    .tasks-frame-wrap { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .tasks-frame-wrap { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
     iframe { width: 100%; border: none; height: 440px; display: block; background: var(--card); }
     .doge-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #fff7ed; border: 1px solid #fed7aa;
-      padding: 4px 10px; border-radius: 16px;
-      font-size: 12px; font-weight: 600; color: #c2410c; margin-top: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2);
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 8px;
     }
-    .doge-badge svg { width: 18px; height: 18px; }
+    .doge-badge img { width: 22px; height: 22px; object-fit: contain; }
     .referral-box {
-      background: #f0fdf4; border: 1.5px solid #bbf7d0;
-      border-radius: 12px; padding: 16px; margin-bottom: 16px;
+      background: rgba(34, 197, 94, 0.1); border: 1.5px solid rgba(34, 197, 94, 0.2);
+      border-radius: 14px; padding: 18px; margin-bottom: 16px;
     }
-    .referral-box h3 { font-size: 14px; color: #166534; margin-bottom: 8px; }
+    .referral-box h3 { font-size: 14px; color: var(--success); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
     .referral-link {
-      background: #fff; border: 1px solid #86efac;
-      border-radius: 8px; padding: 10px 12px;
+      background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 10px; padding: 12px 14px;
       font-size: 13px; font-family: monospace;
-      color: #166534; word-break: break-all;
-      margin-bottom: 10px; cursor: pointer;
+      color: var(--success); word-break: break-all;
+      margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
     }
-    .referral-stats { display: flex; gap: 16px; margin-top: 10px; }
-    .referral-stat { text-align: center; }
-    .referral-stat .num { font-size: 20px; font-weight: 800; color: var(--success); }
+    .referral-link:hover { border-color: var(--success); background: rgba(15, 23, 42, 0.8); }
+    .referral-stats { display: flex; gap: 20px; margin-top: 12px; }
+    .referral-stat { text-align: center; flex: 1; }
+    .referral-stat .num { font-size: 22px; font-weight: 800; color: var(--success); }
     .referral-stat .lbl { font-size: 11px; color: var(--muted); }
     .loading-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -178,16 +196,12 @@
       transition: opacity 0.3s ease, visibility 0.3s ease;
     }
     .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-    .loading-spinner {
-      width: 40px; height: 40px; border: 3px solid var(--border);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { margin-top: 12px; font-size: 14px; color: var(--muted); }
+    .loading-logo { width: 100px; height: 100px; object-fit: contain; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
+    .loading-text { margin-top: 16px; font-size: 14px; color: var(--muted); font-weight: 500; }
     @media (max-width: 400px) {
       .container { padding: 12px; }
-      .card { padding: 16px; }
+      .card { padding: 18px; }
       .balance-wrap { padding: 6px 10px; }
       .balance-text { font-size: 13px; }
     }
@@ -197,15 +211,18 @@
 <body>
 
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
+    <img class="loading-logo" src="/images/bot-avatar.png" alt="COINIX">
     <div class="loading-text">Connecting...</div>
   </div>
 
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="logo-text">COINIX</div>
-      <div class="logo-sub">CNX FAUCET PLATFORM</div>
+      <img class="logo-img" src="/images/coinix-logo.png" alt="COINIX">
+      <div>
+        <div class="logo-text">COINIX</div>
+        <div class="logo-sub">CNX FAUCET PLATFORM</div>
+      </div>
     </div>
     <nav class="sidebar-nav">
       <a class="nav-item active" href="/">
@@ -244,7 +261,7 @@
     <div class="topbar-left">
       <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
       <div class="profile-wrap">
-        <img class="profile-img" id="profileImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E" alt="Profile">
+        <img class="profile-img" id="profileImg" src="/images/bot-avatar.png" alt="Profile">
         <div class="profile-info">
           <div class="profile-name" id="profileName">User</div>
           <div class="profile-id" id="profileId">Loading...</div>
@@ -252,19 +269,7 @@
       </div>
     </div>
     <div class="balance-wrap">
-      <svg class="cnx-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="cnxGrad" x1="0" y1="0" x2="32" y2="32">
-            <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/>
-          </linearGradient>
-          <filter id="cnxShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.25"/>
-          </filter>
-        </defs>
-        <circle cx="16" cy="16" r="14" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-        <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
-        <text x="16" y="20.5" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="Arial, sans-serif" letter-spacing="0.5">CNX</text>
-      </svg>
+      <img src="/images/cnx-coin.png" alt="CNX">
       <div class="balance-text"><span id="bal">0</span> CNX</div>
     </div>
   </div>
@@ -288,11 +293,11 @@
 
     <div class="card">
       <div class="section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        <img src="/images/faucet-icon.png" alt="Faucet">
         Faucet Claim
       </div>
       <button class="claim-btn" id="claimBtn" onclick="doClaim()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        <img src="/images/cnx-coin.png" alt="CNX">
         CLAIM CNX
       </button>
       <div class="cooldown" id="cooldownText">
@@ -303,25 +308,7 @@
 
     <div style="text-align:center; margin-bottom:16px;">
       <div class="doge-badge">
-        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="dogeGrad" x1="0" y1="0" x2="32" y2="32">
-              <stop offset="0%" stop-color="#fbbf24"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#d97706"/>
-            </linearGradient>
-            <filter id="dogeShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.2"/>
-            </filter>
-          </defs>
-          <circle cx="16" cy="16" r="14" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-          <circle cx="16" cy="16" r="11" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-          <ellipse cx="16" cy="14" rx="5" ry="4.5" fill="#fff"/>
-          <ellipse cx="13.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
-          <ellipse cx="18.5" cy="13" rx="1.8" ry="2.2" fill="#e5e7eb"/>
-          <circle cx="13.5" cy="13" r="1" fill="#111"/><circle cx="18.5" cy="13" r="1" fill="#111"/>
-          <ellipse cx="16" cy="16.5" rx="1.2" ry="0.8" fill="#111"/>
-          <path d="M14 18.5c0.8 0.8 2.4 0.8 3.2 0" stroke="#111" stroke-width="0.6" fill="none" stroke-linecap="round"/>
-          <text x="16" y="23.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="#92400e" font-family="Arial, sans-serif">DOGE</text>
-        </svg>
+        <img src="/images/doge-coin.png" alt="DOGE">
         Powered by Dogecoin
       </div>
     </div>
@@ -395,7 +382,6 @@
       if (!tgUser) {
         hideLoading();
         document.querySelector('.loading-text').textContent = 'Please open via Telegram Mini App';
-        document.querySelector('.loading-spinner').style.display = 'none';
         return;
       }
       if (tgUser.photo_url) document.getElementById('profileImg').src = tgUser.photo_url;
@@ -417,7 +403,6 @@
       } catch (e) {
         console.error('Auth error:', e);
         document.querySelector('.loading-text').textContent = 'Auth failed. Please restart.';
-        document.querySelector('.loading-spinner').style.display = 'none';
       }
     }
 
@@ -481,12 +466,12 @@
         if (data.success) {
           document.getElementById('bal').textContent = data.balance;
           lastClaim = Date.now(); updateCooldown();
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> You won ' + data.reward + ' CNX!';
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> You won ' + data.reward + ' CNX!';
         } else {
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ' + (data.error || 'Error');
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> ' + (data.error || 'Error');
         }
       } catch (e) {
-        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Network error';
+        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Network error';
       }
     }
 
@@ -496,7 +481,7 @@
       const address = document.getElementById('wdAddress').value;
       const msg = document.getElementById('wdMsg');
       if (!amount || !address) {
-        msg.innerHTML = '<span style="color:#dc2626">Fill all fields</span>'; return;
+        msg.innerHTML = '<span style="color:#ef4444">Fill all fields</span>'; return;
       }
       try {
         const res = await fetch(API + '/api/withdraw', {
@@ -505,13 +490,13 @@
         });
         const data = await res.json();
         if (data.success) {
-          msg.innerHTML = '<span style="color:#16a34a">Withdrawal requested! Awaiting admin approval.</span>';
+          msg.innerHTML = '<span style="color:#22c55e">Withdrawal requested! Awaiting admin approval.</span>';
           loadBalance();
         } else {
-          msg.innerHTML = '<span style="color:#dc2626">' + (data.error || 'Failed') + '</span>';
+          msg.innerHTML = '<span style="color:#ef4444">' + (data.error || 'Failed') + '</span>';
         }
       } catch (e) {
-        msg.innerHTML = '<span style="color:#dc2626">Network error</span>';
+        msg.innerHTML = '<span style="color:#ef4444">Network error</span>';
       }
     }
 
