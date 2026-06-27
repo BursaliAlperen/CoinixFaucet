@@ -11,7 +11,7 @@ const helmet = require('helmet');
 const admin = require('firebase-admin');
 
 // ============================================
-// FIREBASE - Uses serviceAccountKey.json
+// FIREBASE - Secret File (serviceAccountKey.json)
 // ============================================
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -37,9 +37,9 @@ const BOT_USERNAME = process.env.BOT_USERNAME || 'your_bot';
 const JWT_SECRET = process.env.JWT_SECRET || 'b}$8h7w)BKeC7jwQ+bhVB%ZElD)*jK@=$4W%9S,s4%a7Njv.YeG$pTfzh:2?1D4j';
 const ADMIN_SECRET = process.env.ADMIN_ID;
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY;
-const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID || '1582';
-const OFFERWALL_SECRET = process.env.OFFERWALL_SECRET_KEY || 'uugscq4j4qs4v06t4p61unsb57zztb';
-const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
+const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
+const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
+const APP_URL = process.env.APP_URL || 'https://yourdomain.com';
 const PORT = process.env.PORT || 3000;
 
 // ============================================
@@ -49,13 +49,13 @@ function setupSecurity(app) {
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://wall.offerwall.me"],
+        defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
         scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://telegram.org"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com"],
-        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://wall.offerwall.me"],
+        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
       },
@@ -66,12 +66,28 @@ function setupSecurity(app) {
 }
 
 // ============================================
-// RATE LIMITER
+// RATE LIMITERS
 // ============================================
-const generalLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, message: { error: 'Too many requests' }, standardHeaders: true, legacyHeaders: false });
-const authLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 10, message: { error: 'Too many auth attempts' }, standardHeaders: true, legacyHeaders: false });
-const claimLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, message: { error: 'Too many claims' }, standardHeaders: true, legacyHeaders: false });
-const withdrawLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: { error: 'Too many withdrawals' }, standardHeaders: true, legacyHeaders: false });
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 60,
+  message: { error: 'Too many requests, please try again later.' },
+  standardHeaders: true, legacyHeaders: false,
+});
+const authLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, max: 10,
+  message: { error: 'Too many auth attempts, please try again later.' },
+  standardHeaders: true, legacyHeaders: false,
+});
+const claimLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 30,
+  message: { error: 'Too many claims, please slow down.' },
+  standardHeaders: true, legacyHeaders: false,
+});
+const withdrawLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, max: 10,
+  message: { error: 'Too many withdrawal requests.' },
+  standardHeaders: true, legacyHeaders: false,
+});
 
 // ============================================
 // AUTH MIDDLEWARE
@@ -94,8 +110,10 @@ function validateTelegramInitData(initData) {
 function jwtAuth(req, res, next) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Missing token' });
-  try { req.user = jwt.verify(token, JWT_SECRET); next(); }
-  catch (e) { return res.status(403).json({ error: 'Invalid token' }); }
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (e) { return res.status(403).json({ error: 'Invalid token' }); }
 }
 
 function adminAuth(req, res, next) {
@@ -108,23 +126,27 @@ function adminAuth(req, res, next) {
 // UTILS
 // ============================================
 async function logAction(action, userId, details = {}) {
-  try { await db.collection('logs').add({ action, user_id: userId || null, details, ip: details.ip || null, timestamp: serverTimestamp() }); }
-  catch (e) { logger.error('Log error', { error: e.message }); }
+  try {
+    await db.collection('logs').add({
+      action, user_id: userId || null, details,
+      ip: details.ip || null, timestamp: serverTimestamp()
+    });
+  } catch (e) { logger.error('Log error', { error: e.message }); }
 }
 
 // ============================================
-// CONTROLLERS
+// CONTROLLERS - AUTH
 // ============================================
-
-// AUTH
 async function auth(req, res) {
   const { initData, ref } = req.body;
   if (!initData) return res.status(400).json({ error: 'Missing initData' });
   if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid Telegram data signature' });
 
   let user;
-  try { const urlParams = new URLSearchParams(initData); user = JSON.parse(urlParams.get('user')); }
-  catch (e) { return res.status(400).json({ error: 'Bad user data' }); }
+  try {
+    const urlParams = new URLSearchParams(initData);
+    user = JSON.parse(urlParams.get('user'));
+  } catch (e) { return res.status(400).json({ error: 'Bad user data' }); }
   if (!user || !user.id) return res.status(400).json({ error: 'No user data' });
 
   const userId = String(user.id);
@@ -162,7 +184,10 @@ async function auth(req, res) {
     }
     const token = jwt.sign({ userId, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ success: true, user_id: userId, username: user.username, token });
-  } catch (err) { logger.error('Auth error', { error: err.message }); res.status(500).json({ error: 'Auth failed' }); }
+  } catch (err) {
+    logger.error('Auth error', { error: err.message });
+    res.status(500).json({ error: 'Auth failed' });
+  }
 }
 
 async function getMe(req, res) {
@@ -170,7 +195,14 @@ async function getMe(req, res) {
     const doc = await db.collection('users').doc(String(req.user.userId)).get();
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
     const d = doc.data();
-    res.json({ telegram_id: d.telegram_id, username: d.username, first_name: d.first_name, photo_url: d.photo_url, balance: d.balance || 0, doge_balance: d.doge_balance || 0, total_earned: d.total_earned || 0, total_claims: d.total_claims || 0, total_withdrawals: d.total_withdrawals || 0, referrals: d.referrals || 0, referral_earnings: d.referral_earnings || 0, last_claim: d.last_claim ? d.last_claim.toMillis() : null, banned: d.banned || false });
+    res.json({
+      telegram_id: d.telegram_id, username: d.username, first_name: d.first_name,
+      photo_url: d.photo_url, balance: d.balance || 0, doge_balance: d.doge_balance || 0,
+      total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
+      total_withdrawals: d.total_withdrawals || 0, referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings || 0,
+      last_claim: d.last_claim ? d.last_claim.toMillis() : null, banned: d.banned || false
+    });
   } catch (err) { logger.error('GetMe error', { error: err.message }); res.status(500).json({ error: 'Server error' }); }
 }
 
@@ -194,7 +226,9 @@ async function getReferral(req, res) {
   } catch (err) { logger.error('Referral error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
 }
 
-// FAUCET
+// ============================================
+// CONTROLLERS - FAUCET
+// ============================================
 async function claim(req, res) {
   const userId = String(req.user.userId);
   const userRef = db.collection('users').doc(userId);
@@ -213,7 +247,9 @@ async function claim(req, res) {
   } catch (err) { logger.error('Claim error', { error: err.message, userId }); res.status(500).json({ error: 'Claim failed' }); }
 }
 
-// SWAP
+// ============================================
+// CONTROLLERS - SWAP
+// ============================================
 async function swap(req, res) {
   const userId = String(req.user.userId);
   const { amount, direction } = req.body;
@@ -238,7 +274,9 @@ async function swap(req, res) {
   } catch (err) { logger.error('Swap error', { error: err.message, userId }); res.status(500).json({ error: 'Swap failed' }); }
 }
 
-// WITHDRAW
+// ============================================
+// CONTROLLERS - WITHDRAW
+// ============================================
 async function withdraw(req, res) {
   const userId = String(req.user.userId);
   const { faucetpay_email, amount } = req.body;
@@ -285,11 +323,13 @@ async function getWithdrawStats(req, res) {
   } catch (err) { logger.error('Withdraw stats error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
 }
 
-// OFFERWALL.ME
+// ============================================
+// CONTROLLERS - OFFERWALL.ME
+// ============================================
 async function getOfferwallUrl(req, res) {
   const userId = String(req.user.userId);
-  // offerwall.me format: https://wall.offerwall.me/?app={APP_ID}&user={USER_ID}
-  const url = `https://wall.offerwall.me/?app=${OFFERWALL_APP_ID}&user=${userId}`;
+  const subId = Buffer.from(userId).toString('base64');
+  const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}?subid=${subId}`;
   res.json({ url });
 }
 
@@ -301,32 +341,26 @@ async function getShortlinks(req, res) {
   res.json({ message: 'Shortlinks loaded', userId: req.user.userId });
 }
 
-// OFFERWALL POSTBACK - offerwall.me format
+// offerwall.me native postback (subid, transid, reward, signature)
 async function postback(req, res) {
   try {
-    // offerwall.me postback: ?uid={user_id}&amount={amount}&status={status}&sig={signature}
-    const { uid, amount, status, sig } = req.query;
-    if (!uid || !amount || !sig) return res.status(400).send('missing params');
-    
-    // Verify signature: MD5(uid + amount + SECRET)
-    const expected = crypto.createHash('md5').update(`${uid}${amount}${OFFERWALL_SECRET}`).digest('hex');
-    if (sig !== expected) return res.status(403).send('invalid sig');
-    
-    if (status !== '1') return res.send('ok'); // Only credit on success
-    
-    const userRef = db.collection('users').doc(String(uid));
+    const { subid, transid, reward, signature } = req.body;
+    if (!subid || !transid || !reward || !signature) return res.status(400).send('missing params');
+    const expected = crypto.createHash('md5').update(`${subid}.${transid}.${reward}.${OFFERWALL_SECRET_KEY}`).digest('hex');
+    if (signature !== expected) return res.status(403).send('invalid sig');
+    const userId = Buffer.from(subid, 'base64').toString('ascii');
+    const userRef = db.collection('users').doc(userId);
     const doc = await userRef.get();
     if (!doc.exists) return res.status(404).send('user not found');
     if (doc.data().banned) return res.status(403).send('banned');
-    
-    const amt = Number(amount);
+    const amt = Number(reward);
     await userRef.update({ balance: increment(amt), total_earned: increment(amt), total_ptc_earnings: increment(amt) });
-    await db.collection('offerwall_completions').add({ user_id: uid, amount: amt, source: 'offerwall_me', timestamp: serverTimestamp() });
+    await db.collection('offerwall_completions').add({ user_id: userId, trans_id: transid, amount: amt, source: 'offerwall.me', timestamp: serverTimestamp() });
     res.send('ok');
   } catch (err) { logger.error('Offerwall postback error', { error: err.message }); res.status(500).send('error'); }
 }
 
-// CUSTOM POSTBACK
+// Custom postback (user_id, amount, signature with ADMIN_SECRET_KEY)
 async function offerwallPostback(req, res) {
   try {
     const { user_id, amount, signature } = req.body;
@@ -343,15 +377,22 @@ async function offerwallPostback(req, res) {
   } catch (err) { logger.error('Custom postback error', { error: err.message }); res.status(500).send('error'); }
 }
 
-// STATS
+// ============================================
+// CONTROLLERS - STATS
+// ============================================
 async function getGlobalStats(req, res) {
   try {
     const usersSnap = await db.collection('users').get();
     const totalUsers = usersSnap.size;
     const activeToday = usersSnap.docs.filter(d => { const lc = d.data().last_claim; return lc && (Date.now() - lc.toMillis() < 86400000); }).length;
+    const totalClaims = usersSnap.docs.reduce((s, d) => s + (d.data().total_claims || 0), 0);
+    const totalCnx = usersSnap.docs.reduce((s, d) => s + (d.data().balance || 0), 0);
+    const totalDoge = usersSnap.docs.reduce((s, d) => s + (d.data().doge_balance || 0), 0);
     const wdSnap = await db.collection('withdrawals').get();
-    const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-    res.json({ totalUsers, activeToday, totalPaid });
+    const totalWithdrawn = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const pendingWd = wdSnap.docs.filter(d => d.data().status === 'pending').length;
+    const ptcTotal = usersSnap.docs.reduce((s, d) => s + (d.data().total_ptc_earnings || 0), 0);
+    res.json({ totalUsers, activeToday, totalClaims, totalWithdrawn, totalCnx, totalDoge, pendingWd, ptcTotal });
   } catch (err) { logger.error('Global stats error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -386,7 +427,20 @@ async function getAdminCharts(req, res) {
   } catch (err) { logger.error('Admin charts error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
 }
 
-// ADMIN
+async function getAdminSignups(req, res) {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const since = new Date(Date.now() - days * 86400000);
+    const snap = await db.collection('users').where('created_at', '>=', admin.firestore.Timestamp.fromDate(since)).get();
+    const daily = {};
+    snap.docs.forEach(d => { const date = d.data().created_at?.toDate().toISOString().split('T')[0]; if (date) daily[date] = (daily[date] || 0) + 1; });
+    res.json(daily);
+  } catch (err) { logger.error('Admin signups error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// CONTROLLERS - ADMIN
+// ============================================
 async function getUsers(req, res) {
   try {
     const snap = await db.collection('users').orderBy('created_at', 'desc').limit(100).get();
@@ -404,6 +458,21 @@ async function getAdminWithdrawals(req, res) {
 async function approveWithdrawal(req, res) {
   try { await db.collection('withdrawals').doc(req.body.id).update({ status: 'approved', approved_at: serverTimestamp() }); res.json({ success: true }); }
   catch (err) { logger.error('Approve error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
+}
+
+async function rejectWithdrawal(req, res) {
+  try {
+    const ref = db.collection('withdrawals').doc(req.body.id);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
+    const d = doc.data();
+    if (d.status === 'rejected') return res.json({ success: true });
+    await ref.update({ status: 'rejected', rejected_at: serverTimestamp() });
+    if (d.user_id && d.amount) {
+      await db.collection('users').doc(d.user_id).update({ doge_balance: increment(d.amount) });
+    }
+    res.json({ success: true });
+  } catch (err) { logger.error('Reject error', { error: err.message }); res.status(500).json({ error: 'Failed' }); }
 }
 
 async function addBalance(req, res) {
@@ -493,18 +562,19 @@ app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
 app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
 
-// Postback routes
-app.get('/api/postback', postback);  // offerwall.me uses GET
+app.post('/api/postback', postback);
 app.post('/api/offerwall-postback', offerwallPostback);
 
 app.get('/api/stats', adminAuth, getGlobalStats);
 app.get('/api/stats/user/:userId', jwtAuth, getUserStats);
 app.get('/api/stats/user/:userId/charts', jwtAuth, getUserCharts);
 app.get('/api/admin/charts', adminAuth, getAdminCharts);
+app.get('/api/admin/signups', adminAuth, getAdminSignups);
 
 app.get('/api/admin/users', adminAuth, getUsers);
 app.get('/api/admin/withdrawals', adminAuth, getAdminWithdrawals);
 app.post('/api/admin/approve-withdrawal', adminAuth, approveWithdrawal);
+app.post('/api/admin/reject-withdrawal', adminAuth, rejectWithdrawal);
 app.post('/api/admin/add-balance', adminAuth, addBalance);
 app.post('/api/admin/ban-user', adminAuth, banUser);
 app.post('/api/admin/delete-user', adminAuth, deleteUser);
@@ -533,5 +603,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  logger.info('COINIX FAUCET v2.2.0 running', { port: PORT, env: process.env.NODE_ENV || 'development', url: APP_URL });
+  logger.info('COINIX FAUCET v2.3.0 running', { port: PORT, env: process.env.NODE_ENV || 'development', url: APP_URL });
 });
