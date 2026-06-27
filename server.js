@@ -28,6 +28,9 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Serve static files from public/
+app.use(express.static(path.join(__dirname, 'public')));
+
 // ========================
 // Logger
 // ========================
@@ -51,18 +54,132 @@ async function logAction(action, userId, details = {}) {
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 
 // ========================
-// 2. Balance API
+// 2. Telegram WebApp Auth (validate initData)
+// ========================
+function validateTelegramInitData(initData) {
+  const urlParams = new URLSearchParams(initData);
+  const hash = urlParams.get('hash');
+  urlParams.delete('hash');
+
+  const dataCheckString = Array.from(urlParams.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('\n');
+
+  const secretKey = crypto.createHmac('sha256', 'WebAppData')
+    .update(process.env.BOT_TOKEN)
+    .digest();
+
+  const checkHash = crypto.createHmac('sha256', secretKey)
+    .update(dataCheckString)
+    .digest('hex');
+
+  return hash === checkHash;
+}
+
+// ========================
+// 3. User Registration / Login (Telegram auto-login)
+// ========================
+app.post('/api/auth', async (req, res) => {
+  const { initData, ref } = req.body;
+
+  // Validate Telegram initData
+  let user = null;
+  if (initData && process.env.BOT_TOKEN) {
+    try {
+      const isValid = validateTelegramInitData(initData);
+      if (!isValid) return res.status(403).json({ error: 'Invalid Telegram data' });
+
+      const urlParams = new URLSearchParams(initData);
+      const userData = JSON.parse(urlParams.get('user'));
+      user = userData;
+    } catch (e) {
+      console.error('Auth parse error:', e);
+    }
+  }
+
+  if (!user) return res.status(400).json({ error: 'No user data' });
+
+  const userId = String(user.id);
+  const userRef = db.collection('users').doc(userId);
+
+  try {
+    const doc = await userRef.get();
+    if (!doc.exists) {
+      // New user - create with referral tracking
+      const newUser = {
+        telegram_id: userId,
+        username: user.username || null,
+        first_name: user.first_name || null,
+        last_name: user.last_name || null,
+        photo_url: user.photo_url || null,
+        balance: 0,
+        doge_balance: 0,
+        total_earned: 0,
+        total_claims: 0,
+        referrals: 0,
+        referral_earnings: 0,
+        referred_by: ref || null,
+        last_claim: null,
+        created_at: admin.firestore.FieldValue.serverTimestamp()
+      };
+      await userRef.set(newUser);
+
+      // Credit referrer if exists
+      if (ref && ref !== userId) {
+        const refRef = db.collection('users').doc(String(ref));
+        const refDoc = await refRef.get();
+        if (refDoc.exists) {
+          await refRef.update({
+            referrals: admin.firestore.FieldValue.increment(1),
+            balance: admin.firestore.FieldValue.increment(50), // 50 CNX referral bonus
+            referral_earnings: admin.firestore.FieldValue.increment(50)
+          });
+          await db.collection('referrals').add({
+            referrer_id: String(ref),
+            referred_id: userId,
+            bonus: 50,
+            timestamp: admin.firestore.FieldValue.serverTimestamp()
+          });
+          await logAction('referral_bonus', String(ref), { referred_id: userId, bonus: 50 });
+        }
+      }
+
+      await logAction('user_register', userId, { username: user.username, ref });
+    } else {
+      // Update existing user photo if changed
+      const updates = {};
+      if (user.photo_url) updates.photo_url = user.photo_url;
+      if (user.username) updates.username = user.username;
+      if (Object.keys(updates).length > 0) {
+        await userRef.update(updates);
+      }
+    }
+
+    res.json({ success: true, user_id: userId, username: user.username });
+  } catch (err) {
+    console.error('Auth error:', err);
+    res.status(500).json({ error: 'Auth failed' });
+  }
+});
+
+// ========================
+// 4. Balance API
 // ========================
 app.get('/api/balance/:userId', async (req, res) => {
   try {
     const doc = await db.collection('users').doc(String(req.params.userId)).get();
     if (!doc.exists) {
-      return res.json({ balance: 0, doge_balance: 0, last_claim: null });
+      return res.json({ balance: 0, doge_balance: 0, total_earned: 0, total_claims: 0, referrals: 0, referral_earnings: 0, last_claim: null });
     }
     const data = doc.data();
     res.json({
       balance: data.balance || 0,
       doge_balance: data.doge_balance || 0,
+      total_earned: data.total_earned || 0,
+      total_claims: data.total_claims || 0,
+      referrals: data.referrals || 0,
+      referral_earnings: data.referral_earnings || 0,
       last_claim: data.last_claim ? data.last_claim.toMillis() : null
     });
   } catch (err) {
@@ -72,7 +189,7 @@ app.get('/api/balance/:userId', async (req, res) => {
 });
 
 // ========================
-// 3. Faucet Claim
+// 5. Faucet Claim
 // ========================
 app.post('/api/claim', async (req, res) => {
   const { user_id } = req.body;
@@ -84,7 +201,7 @@ app.post('/api/claim', async (req, res) => {
     const result = await db.runTransaction(async (t) => {
       const doc = await t.get(userRef);
       const now = admin.firestore.Timestamp.now();
-      const data = doc.exists ? doc.data() : { balance: 0, last_claim: null };
+      const data = doc.exists ? doc.data() : { balance: 0, total_earned: 0, total_claims: 0, last_claim: null };
 
       if (data.last_claim) {
         const elapsed = now.toMillis() - data.last_claim.toMillis();
@@ -95,13 +212,20 @@ app.post('/api/claim', async (req, res) => {
 
       const reward = Math.floor(Math.random() * 10) + 1;
       const newBalance = (data.balance || 0) + reward;
+      const newTotalEarned = (data.total_earned || 0) + reward;
+      const newTotalClaims = (data.total_claims || 0) + 1;
 
-      t.set(userRef, { balance: newBalance, last_claim: now }, { merge: true });
-      return { reward, newBalance };
+      t.update(userRef, {
+        balance: newBalance,
+        total_earned: newTotalEarned,
+        total_claims: newTotalClaims,
+        last_claim: now
+      });
+      return { reward, newBalance, newTotalEarned, newTotalClaims };
     });
 
     await logAction('claim', user_id, { reward: result.reward, ip: req.ip });
-    res.json({ success: true, reward: result.reward, balance: result.newBalance });
+    res.json({ success: true, reward: result.reward, balance: result.newBalance, total_earned: result.newTotalEarned, total_claims: result.newTotalClaims });
   } catch (err) {
     if (err.message === 'COOLDOWN') {
       return res.status(429).json({ error: 'Cooldown active. Wait 10 seconds.' });
@@ -112,7 +236,7 @@ app.post('/api/claim', async (req, res) => {
 });
 
 // ========================
-// 4. Postback (Offerwall)
+// 6. Postback (Offerwall)
 // ========================
 app.post('/api/postback', async (req, res) => {
   const { user_id, reward, signature } = req.body;
@@ -134,7 +258,8 @@ app.post('/api/postback', async (req, res) => {
   try {
     const userRef = db.collection('users').doc(String(user_id));
     await userRef.set({
-      balance: admin.firestore.FieldValue.increment(Number(reward))
+      balance: admin.firestore.FieldValue.increment(Number(reward)),
+      total_earned: admin.firestore.FieldValue.increment(Number(reward))
     }, { merge: true });
 
     await logAction('postback', user_id, { reward: Number(reward), ip: req.ip });
@@ -146,22 +271,7 @@ app.post('/api/postback', async (req, res) => {
 });
 
 // ========================
-// 4.5 AoyCo Offerwall Verification
-// ========================
-app.get('/offerwall-verification-XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM.txt', (req, res) => {
-  res.set('Content-Type', 'text/plain');
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
-});
-
-// Alternative verification endpoint (some platforms check root)
-app.get('/verification.txt', (req, res) => {
-  res.set('Content-Type', 'text/plain');
-  res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
-});
-
-// ========================
-// 5. Withdraw Request
+// 7. Withdraw Request
 // ========================
 app.post('/api/withdraw', async (req, res) => {
   const { user_id, amount, address } = req.body;
@@ -205,7 +315,262 @@ app.post('/api/withdraw', async (req, res) => {
 });
 
 // ========================
-// 6. Admin Middleware
+// 8. Swap System
+// ========================
+app.post('/api/swap', async (req, res) => {
+  const { user_id, from_amount, from_token } = req.body;
+  if (!user_id || !from_amount || !from_token) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
+  const amt = Number(from_amount);
+  if (isNaN(amt) || amt <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+  if (!['CNX', 'DOGE'].includes(from_token)) {
+    return res.status(400).json({ error: 'Invalid token' });
+  }
+
+  const rate = from_token === 'CNX' ? 0.1 : 10;
+  const toToken = from_token === 'CNX' ? 'DOGE' : 'CNX';
+  const toAmount = parseFloat((amt * rate).toFixed(4));
+
+  const userRef = db.collection('users').doc(String(user_id));
+  const swapRef = db.collection('swaps').doc();
+
+  try {
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('NO_USER');
+      const data = doc.data();
+      const field = from_token === 'CNX' ? 'balance' : 'doge_balance';
+      if ((data[field] || 0) < amt) throw new Error('NO_FUNDS');
+
+      const updates = {};
+      updates[field] = admin.firestore.FieldValue.increment(-amt);
+      const toField = toToken === 'CNX' ? 'balance' : 'doge_balance';
+      updates[toField] = admin.firestore.FieldValue.increment(toAmount);
+      t.update(userRef, updates);
+
+      t.set(swapRef, {
+        user_id: String(user_id),
+        from_token: from_token,
+        from_amount: amt,
+        to_token: toToken,
+        to_amount: toAmount,
+        rate: rate,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    await logAction('swap', user_id, { from: from_token, amount: amt, to: toToken, received: toAmount });
+    res.json({ success: true, from: from_token, to: toToken, received: toAmount, rate });
+  } catch (err) {
+    if (err.message === 'NO_FUNDS') return res.status(400).json({ error: 'Insufficient ' + from_token + ' balance' });
+    if (err.message === 'NO_USER') return res.status(404).json({ error: 'User not found' });
+    console.error('Swap error:', err);
+    res.status(500).json({ error: 'Swap failed' });
+  }
+});
+
+app.get('/api/swap/rate', (req, res) => {
+  res.json({ cnx_to_doge: 0.1, doge_to_cnx: 10 });
+});
+
+// ========================
+// 9. Referral System
+// ========================
+app.get('/api/referral/:userId', async (req, res) => {
+  try {
+    const doc = await db.collection('users').doc(String(req.params.userId)).get();
+    if (!doc.exists) return res.json({ referrals: 0, earnings: 0, link: '' });
+    const data = doc.data();
+    res.json({
+      referrals: data.referrals || 0,
+      earnings: data.referral_earnings || 0,
+      link: 'https://t.me/' + (process.env.BOT_USERNAME || 'your_bot') + '?start=ref' + req.params.userId
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+app.get('/api/referrals/:userId', async (req, res) => {
+  try {
+    const snap = await db.collection('referrals')
+      .where('referrer_id', '==', String(req.params.userId))
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    const refs = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      refs.push({
+        referred_id: d.referred_id,
+        bonus: d.bonus,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null
+      });
+    });
+    res.json(refs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ========================
+// 10. History API
+// ========================
+app.get('/api/history/:userId', async (req, res) => {
+  try {
+    const uid = String(req.params.userId);
+    const history = [];
+
+    const claimsSnap = await db.collection('logs')
+      .where('user_id', '==', uid)
+      .where('action', '==', 'claim')
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    claimsSnap.forEach(doc => {
+      const d = doc.data();
+      history.push({
+        type: 'claim',
+        amount: d.details?.reward || 0,
+        token: 'CNX',
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
+        status: 'completed'
+      });
+    });
+
+    const wdSnap = await db.collection('withdrawals')
+      .where('user_id', '==', uid)
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    wdSnap.forEach(doc => {
+      const d = doc.data();
+      history.push({
+        type: 'withdraw',
+        amount: d.amount,
+        token: 'CNX',
+        address: d.address,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
+        status: d.status
+      });
+    });
+
+    const swapSnap = await db.collection('swaps')
+      .where('user_id', '==', uid)
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    swapSnap.forEach(doc => {
+      const d = doc.data();
+      history.push({
+        type: 'swap',
+        from_token: d.from_token,
+        from_amount: d.from_amount,
+        to_token: d.to_token,
+        to_amount: d.to_amount,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
+        status: 'completed'
+      });
+    });
+
+    history.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    res.json(history.slice(0, 50));
+  } catch (err) {
+    console.error('History error:', err);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
+// ========================
+// 11. Stats API
+// ========================
+app.get('/api/stats', async (req, res) => {
+  try {
+    const usersSnap = await db.collection('users').get();
+    let totalUsers = 0;
+    let totalBalance = 0;
+    let totalClaims = 0;
+    let activeToday = 0;
+    const now = Date.now();
+    const dayAgo = now - 86400000;
+
+    usersSnap.forEach(doc => {
+      const d = doc.data();
+      totalUsers++;
+      totalBalance += d.balance || 0;
+      if (d.last_claim) {
+        totalClaims += d.total_claims || 0;
+        if (d.last_claim.toMillis() > dayAgo) activeToday++;
+      }
+    });
+
+    const withdrawSnap = await db.collection('withdrawals').get();
+    let totalWithdrawn = 0;
+    let pendingWithdrawals = 0;
+    withdrawSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.status === 'approved') totalWithdrawn += d.amount || 0;
+      if (d.status === 'pending') pendingWithdrawals++;
+    });
+
+    res.json({
+      totalUsers,
+      totalBalance,
+      totalClaims,
+      activeToday,
+      totalWithdrawn,
+      pendingWithdrawals
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+app.get('/api/stats/user/:userId', async (req, res) => {
+  try {
+    const userDoc = await db.collection('users').doc(String(req.params.userId)).get();
+    if (!userDoc.exists) return res.json({ balance: 0, claims: 0, earned: 0, withdrawn: 0, referrals: 0 });
+
+    const userData = userDoc.data();
+    const balance = userData.balance || 0;
+    const claims = userData.total_claims || 0;
+    const earned = userData.total_earned || 0;
+    const referrals = userData.referrals || 0;
+
+    const wdSnap = await db.collection('withdrawals')
+      .where('user_id', '==', String(req.params.userId))
+      .where('status', '==', 'approved')
+      .get();
+    let withdrawn = 0;
+    wdSnap.forEach(doc => withdrawn += doc.data().amount || 0);
+
+    res.json({ balance, claims, earned, withdrawn, referrals });
+  } catch (err) {
+    console.error('User stats error:', err);
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ========================
+// 12. AoyCo Offerwall Verification
+// ========================
+app.get('/offerwall-verification-XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
+});
+
+app.get('/verification.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
+});
+
+// ========================
+// 13. Admin Middleware
 // ========================
 function adminAuth(req, res, next) {
   const key = req.query.admin_key || req.headers['x-admin-key'];
@@ -216,7 +581,7 @@ function adminAuth(req, res, next) {
 }
 
 // ========================
-// 7. Admin API Routes
+// 14. Admin API Routes
 // ========================
 app.get('/api/admin/users', adminAuth, async (req, res) => {
   try {
@@ -227,6 +592,9 @@ app.get('/api/admin/users', adminAuth, async (req, res) => {
       users.push({
         id: doc.id,
         balance: d.balance || 0,
+        total_earned: d.total_earned || 0,
+        total_claims: d.total_claims || 0,
+        referrals: d.referrals || 0,
         last_claim: d.last_claim ? d.last_claim.toMillis() : null
       });
     });
@@ -327,7 +695,7 @@ app.get('/api/admin/logs', adminAuth, async (req, res) => {
 });
 
 // ========================
-// 8. Admin Panel Page
+// 15. Admin Panel Page
 // ========================
 app.get('/admin', (req, res) => {
   const key = req.query.admin_key;
@@ -359,7 +727,7 @@ button:hover{background:#555;}
 
 <h2>Users</h2>
 <table id="tblUsers">
-<thead><tr><th>ID</th><th>Balance</th><th>Last Claim</th></tr></thead>
+<thead><tr><th>ID</th><th>Balance</th><th>Earned</th><th>Claims</th><th>Referrals</th><th>Last Claim</th></tr></thead>
 <tbody></tbody>
 </table>
 
@@ -388,7 +756,7 @@ function fmtTime(ts){ if(!ts)return '-'; return new Date(ts).toLocaleString(); }
 
 function loadUsers(){
   fetch('/api/admin/users',{headers:hdr}).then(r=>r.json()).then(data=>{
-    var rows=data.map(u=>'<tr><td>'+u.id+'</td><td>'+u.balance+'</td><td>'+fmtTime(u.last_claim)+'</td></tr>').join('');
+    var rows=data.map(u=>'<tr><td>'+u.id+'</td><td>'+u.balance+'</td><td>'+(u.total_earned||0)+'</td><td>'+(u.total_claims||0)+'</td><td>'+(u.referrals||0)+'</td><td>'+fmtTime(u.last_claim)+'</td></tr>').join('');
     document.querySelector('#tblUsers tbody').innerHTML=rows;
   });
 }
@@ -428,90 +796,7 @@ loadUsers(); loadWithdrawals(); loadLogs();
 });
 
 // ========================
-// 9. Stats API
-// ========================
-app.get('/api/stats', async (req, res) => {
-  try {
-    const usersSnap = await db.collection('users').get();
-    let totalUsers = 0;
-    let totalBalance = 0;
-    let totalClaims = 0;
-    let activeToday = 0;
-    const now = Date.now();
-    const dayAgo = now - 86400000;
-
-    usersSnap.forEach(doc => {
-      const d = doc.data();
-      totalUsers++;
-      totalBalance += d.balance || 0;
-      if (d.last_claim) {
-        totalClaims++;
-        if (d.last_claim.toMillis() > dayAgo) activeToday++;
-      }
-    });
-
-    const withdrawSnap = await db.collection('withdrawals').get();
-    let totalWithdrawn = 0;
-    let pendingWithdrawals = 0;
-    withdrawSnap.forEach(doc => {
-      const d = doc.data();
-      if (d.status === 'approved') totalWithdrawn += d.amount || 0;
-      if (d.status === 'pending') pendingWithdrawals++;
-    });
-
-    const logsSnap = await db.collection('logs').where('action', '==', 'claim').get();
-    let totalClaimsCount = 0;
-    logsSnap.forEach(() => totalClaimsCount++);
-
-    res.json({
-      totalUsers,
-      totalBalance,
-      totalClaims: totalClaimsCount,
-      activeToday,
-      totalWithdrawn,
-      pendingWithdrawals
-    });
-  } catch (err) {
-    console.error('Stats error:', err);
-    res.status(500).json({ error: 'Failed to fetch stats' });
-  }
-});
-
-app.get('/api/stats/user/:userId', async (req, res) => {
-  try {
-    const userDoc = await db.collection('users').doc(String(req.params.userId)).get();
-    if (!userDoc.exists) return res.json({ balance: 0, claims: 0, earned: 0, withdrawn: 0 });
-
-    const userData = userDoc.data();
-    const balance = userData.balance || 0;
-
-    const logsSnap = await db.collection('logs')
-      .where('user_id', '==', String(req.params.userId))
-      .where('action', '==', 'claim')
-      .get();
-    let claims = 0;
-    let earned = 0;
-    logsSnap.forEach(doc => {
-      claims++;
-      earned += doc.data().details?.reward || 0;
-    });
-
-    const wdSnap = await db.collection('withdrawals')
-      .where('user_id', '==', String(req.params.userId))
-      .where('status', '==', 'approved')
-      .get();
-    let withdrawn = 0;
-    wdSnap.forEach(doc => withdrawn += doc.data().amount || 0);
-
-    res.json({ balance, claims, earned, withdrawn });
-  } catch (err) {
-    console.error('User stats error:', err);
-    res.status(500).json({ error: 'Failed' });
-  }
-});
-
-// ========================
-// 9. Serve Frontend Pages
+// 16. Serve HTML Pages from public/
 // ========================
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
@@ -522,163 +807,23 @@ app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'public', 'swap
 app.get('/history', (req, res) => res.sendFile(path.join(__dirname, 'public', 'history.html')));
 
 // ========================
-// 10. Swap System
-// ========================
-app.post('/api/swap', async (req, res) => {
-  const { user_id, from_amount, from_token } = req.body;
-  if (!user_id || !from_amount || !from_token) {
-    return res.status(400).json({ error: 'Missing parameters' });
-  }
-  const amt = Number(from_amount);
-  if (isNaN(amt) || amt <= 0) {
-    return res.status(400).json({ error: 'Invalid amount' });
-  }
-  if (!['CNX', 'DOGE'].includes(from_token)) {
-    return res.status(400).json({ error: 'Invalid token' });
-  }
-
-  // Rate: 1 CNX = 0.1 DOGE, 1 DOGE = 10 CNX
-  const rate = from_token === 'CNX' ? 0.1 : 10;
-  const toToken = from_token === 'CNX' ? 'DOGE' : 'CNX';
-  const toAmount = parseFloat((amt * rate).toFixed(4));
-
-  const userRef = db.collection('users').doc(String(user_id));
-  const swapRef = db.collection('swaps').doc();
-
-  try {
-    await db.runTransaction(async (t) => {
-      const doc = await t.get(userRef);
-      if (!doc.exists) throw new Error('NO_USER');
-      const data = doc.data();
-      const field = from_token === 'CNX' ? 'balance' : 'doge_balance';
-      if ((data[field] || 0) < amt) throw new Error('NO_FUNDS');
-
-      const updates = {};
-      updates[field] = admin.firestore.FieldValue.increment(-amt);
-      const toField = toToken === 'CNX' ? 'balance' : 'doge_balance';
-      updates[toField] = admin.firestore.FieldValue.increment(toAmount);
-      t.update(userRef, updates);
-
-      t.set(swapRef, {
-        user_id: String(user_id),
-        from_token: from_token,
-        from_amount: amt,
-        to_token: toToken,
-        to_amount: toAmount,
-        rate: rate,
-        timestamp: admin.firestore.FieldValue.serverTimestamp()
-      });
-    });
-
-    await logAction('swap', user_id, { from: from_token, amount: amt, to: toToken, received: toAmount });
-    res.json({ success: true, from: from_token, to: toToken, received: toAmount, rate });
-  } catch (err) {
-    if (err.message === 'NO_FUNDS') return res.status(400).json({ error: 'Insufficient ' + from_token + ' balance' });
-    if (err.message === 'NO_USER') return res.status(404).json({ error: 'User not found' });
-    console.error('Swap error:', err);
-    res.status(500).json({ error: 'Swap failed' });
-  }
-});
-
-app.get('/api/swap/rate', (req, res) => {
-  res.json({ cnx_to_doge: 0.1, doge_to_cnx: 10 });
-});
-
-// ========================
-// 11. History API
-// ========================
-app.get('/api/history/:userId', async (req, res) => {
-  try {
-    const uid = String(req.params.userId);
-    const history = [];
-
-    // Claims
-    const claimsSnap = await db.collection('logs')
-      .where('user_id', '==', uid)
-      .where('action', '==', 'claim')
-      .orderBy('timestamp', 'desc')
-      .limit(50)
-      .get();
-    claimsSnap.forEach(doc => {
-      const d = doc.data();
-      history.push({
-        type: 'claim',
-        amount: d.details?.reward || 0,
-        token: 'CNX',
-        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
-        status: 'completed'
-      });
-    });
-
-    // Withdrawals
-    const wdSnap = await db.collection('withdrawals')
-      .where('user_id', '==', uid)
-      .orderBy('timestamp', 'desc')
-      .limit(50)
-      .get();
-    wdSnap.forEach(doc => {
-      const d = doc.data();
-      history.push({
-        type: 'withdraw',
-        amount: d.amount,
-        token: 'CNX',
-        address: d.address,
-        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
-        status: d.status
-      });
-    });
-
-    // Swaps
-    const swapSnap = await db.collection('swaps')
-      .where('user_id', '==', uid)
-      .orderBy('timestamp', 'desc')
-      .limit(50)
-      .get();
-    swapSnap.forEach(doc => {
-      const d = doc.data();
-      history.push({
-        type: 'swap',
-        from_token: d.from_token,
-        from_amount: d.from_amount,
-        to_token: d.to_token,
-        to_amount: d.to_amount,
-        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
-        status: 'completed'
-      });
-    });
-
-    // Sort by timestamp desc
-    history.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    res.json(history.slice(0, 50));
-  } catch (err) {
-    console.error('History error:', err);
-    res.status(500).json({ error: 'Failed to fetch history' });
-  }
-});
-
-// ========================
-// 10. Static Files (all HTML pages)
-// ========================
-app.use(express.static(path.join(__dirname, 'public')));
-
-// ========================
-// 11. Debug: List files
+// 17. Debug: List files
 // ========================
 app.get('/debug/files', (req, res) => {
   const fs = require('fs');
   try {
-    const files = fs.readdirSync(__dirname);
+    const files = fs.readdirSync(path.join(__dirname, 'public'));
     res.json({
-      dirname: __dirname,
-      files: files.filter(f => f.endsWith('.html') || f.endsWith('.js') || f.endsWith('.json')),
-      message: 'If dashboard.html is NOT in this list, you forgot to deploy it!'
+      public_dir: path.join(__dirname, 'public'),
+      files: files,
+      message: 'These files should be in public/ directory'
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message, message: 'public/ directory not found!' });
   }
 });
 
 app.listen(PORT, () => {
   console.log('COINIXFAUCET server running on port ' + PORT);
-  console.log('Serving files from: ' + __dirname);
+  console.log('Serving files from: ' + path.join(__dirname, 'public'));
 });
