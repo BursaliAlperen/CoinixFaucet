@@ -4,8 +4,8 @@ const { db } = require('../config/firebase');
 const logger = require('../utils/logger');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const JWT_SECRET = process.env.JWT_SECRET || 'coinix-default-secret-change-me';
-const ADMIN_SECRET = process.env.ADMIN_ID; // Admin secret key from env
+const JWT_SECRET = process.env.JWT_SECRET || 'b}$8h7w)BKeC7jwQ+bhVB%ZElD)*jK@=$4W%9S,s4%a7Njv.YeG$pTfzh:2?1D4j';
+const ADMIN_SECRET = process.env.ADMIN_ID;
 
 function validateTelegramInitData(initData) {
   if (!initData || !BOT_TOKEN) return false;
@@ -27,7 +27,6 @@ function validateTelegramInitData(initData) {
 function telegramAuth(req, res, next) {
   const initData = req.body?.initData || req.headers['x-telegram-init-data'];
   if (!initData) return res.status(401).json({ error: 'Missing Telegram initData' });
-
   if (!validateTelegramInitData(initData)) {
     return res.status(403).json({ error: 'Invalid Telegram data' });
   }
