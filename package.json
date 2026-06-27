@@ -1,7 +1,7 @@
 {
   "name": "coinix-faucet",
   "version": "2.2.0",
-  "description": "COINIX Faucet - Single File Backend",
+  "description": "COINIX Faucet - Secure Single File Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

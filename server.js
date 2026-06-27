@@ -9,7 +9,15 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const admin = require('firebase-admin');
-const { body, param } = require('express-validator');
+
+// ============================================
+// FIREBASE - Uses serviceAccountKey.json (secret file)
+// ============================================
+const serviceAccount = require('./serviceAccountKey.json');
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+const db = admin.firestore();
+const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
+const increment = (n) => admin.firestore.FieldValue.increment(n);
 
 // ============================================
 // LOGGER
@@ -20,15 +28,6 @@ const logger = {
   debug: (msg, meta = {}) => console.log(`[DEBUG] ${msg}`, meta),
   warn: (msg, meta = {}) => console.warn(`[WARN] ${msg}`, meta)
 };
-
-// ============================================
-// FIREBASE - Uses serviceAccountKey.json (secret file)
-// ============================================
-const serviceAccount = require('./serviceAccountKey.json');
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-const db = admin.firestore();
-const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
-const increment = (n) => admin.firestore.FieldValue.increment(n);
 
 // ============================================
 // CONFIG
@@ -122,19 +121,6 @@ function adminAuth(req, res, next) {
   if (!ADMIN_SECRET || key !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
   next();
 }
-
-// ============================================
-// VALIDATORS
-// ============================================
-const claimBody = [body('amount').optional().isFloat({ min: 0 }).withMessage('Invalid amount')];
-const withdrawBody = [
-  body('faucetpay_email').isEmail().withMessage('Valid FaucetPay email required'),
-  body('amount').isFloat({ min: 0.1 }).withMessage('Minimum 0.10 DOGE')
-];
-const swapBody = [
-  body('amount').isFloat({ min: 0 }).withMessage('Invalid amount'),
-  body('direction').isIn(['cnx-to-doge', 'doge-to-cnx']).withMessage('Invalid direction')
-];
 
 // ============================================
 // UTILS
@@ -268,7 +254,8 @@ async function swap(req, res) {
   const userId = String(req.user.userId);
   const { amount, direction } = req.body;
   const amt = Number(amount);
-  if (!amt || amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
+  if (!amt || amt <= 0 || isNaN(amt)) return res.status(400).json({ error: 'Invalid amount' });
+  if (!direction || !['cnx-to-doge', 'doge-to-cnx'].includes(direction)) return res.status(400).json({ error: 'Invalid direction' });
   const userRef = db.collection('users').doc(userId);
   try {
     const doc = await userRef.get();
@@ -278,10 +265,10 @@ async function swap(req, res) {
     if (direction === 'cnx-to-doge') {
       if ((d.balance || 0) < amt) return res.status(400).json({ error: 'Insufficient CNX' });
       await userRef.update({ balance: admin.firestore.FieldValue.increment(-amt), doge_balance: admin.firestore.FieldValue.increment(amt) });
-    } else if (direction === 'doge-to-cnx') {
+    } else {
       if ((d.doge_balance || 0) < amt) return res.status(400).json({ error: 'Insufficient DOGE' });
       await userRef.update({ doge_balance: admin.firestore.FieldValue.increment(-amt), balance: admin.firestore.FieldValue.increment(amt) });
-    } else return res.status(400).json({ error: 'Invalid direction' });
+    }
     await db.collection('swaps').add({ user_id: userId, amount: amt, direction, timestamp: serverTimestamp() });
     res.json({ success: true, message: 'Swap completed' });
   } catch (err) { logger.error('Swap error', { error: err.message, userId }); res.status(500).json({ error: 'Swap failed' }); }
@@ -294,7 +281,7 @@ async function withdraw(req, res) {
   const userId = String(req.user.userId);
   const { faucetpay_email, amount } = req.body;
   const amt = Number(amount);
-  if (!amt || amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
+  if (!amt || amt <= 0 || isNaN(amt)) return res.status(400).json({ error: 'Invalid amount' });
   if (!faucetpay_email || !faucetpay_email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
   const userRef = db.collection('users').doc(userId);
   try {
@@ -530,12 +517,12 @@ app.use('/api', generalLimiter);
 
 app.get('/api/me', jwtAuth, getMe);
 app.get('/api/balance', jwtAuth, getBalance);
-app.post('/api/claim', claimLimiter, jwtAuth, claimBody, claim);
-app.post('/api/withdraw', withdrawLimiter, jwtAuth, withdrawBody, withdraw);
+app.post('/api/claim', claimLimiter, jwtAuth, claim);
+app.post('/api/withdraw', withdrawLimiter, jwtAuth, withdraw);
 app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
 app.get('/api/withdrawals/recent', getRecentWithdrawals);
 app.get('/api/withdrawals/stats', jwtAuth, getWithdrawStats);
-app.post('/api/swap', jwtAuth, swapBody, swap);
+app.post('/api/swap', jwtAuth, swap);
 app.get('/api/referral', jwtAuth, getReferral);
 
 app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
