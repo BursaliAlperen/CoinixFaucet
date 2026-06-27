@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="offerwall-verification" content="XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM">
+  <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
   <title>COINIXFAUCET - CNX</title>
   <style>
     :root {
@@ -319,7 +319,7 @@
         PTC / Tasks (AoyCo)
       </div>
       <div class="tasks-frame-wrap">
-        <iframe src="https://www.aoyco.com/offerwall" frameborder="0" scrolling="yes"></iframe>
+        <iframe src="https://aoyco.in/offerwall" frameborder="0" scrolling="yes"></iframe>
       </div>
     </div>
 
@@ -355,8 +355,13 @@
     }
 
     function getRefFromUrl() {
+      // Telegram Mini App start_param: ?tgWebAppStartParam=ref_123
+      // veya query string ?ref=123 ya da ?startapp=ref_123
       const params = new URLSearchParams(window.location.search);
-      return params.get('ref') || params.get('startapp');
+      const start = params.get('tgWebAppStartParam') || params.get('startapp') || params.get('ref') || '';
+      // "ref_123" veya "123" formatlarini destekle
+      const m = start.match(/^ref_?(\d+)/i);
+      return m ? m[1] : (start.match(/^\d+$/) ? start : '');
     }
 
     function hideLoading() {
@@ -380,8 +385,9 @@
         }
       }
       if (!tgUser) {
+        // Telegram WebApp disinda acildi — demo moduna gec, sessizce
         hideLoading();
-        document.querySelector('.loading-text').textContent = 'Please open via Telegram Mini App';
+        document.body.classList.add('demo-mode');
         return;
       }
       if (tgUser.photo_url) document.getElementById('profileImg').src = tgUser.photo_url;
@@ -464,7 +470,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          document.getElementById('bal').textContent = data.balance;
+          if (typeof data.balance === 'number') document.getElementById('bal').textContent = data.balance;
           lastClaim = Date.now(); updateCooldown();
           document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> You won ' + data.reward + ' CNX!';
         } else {

@@ -236,14 +236,13 @@
       </form>
 
       <div class="info-box">
-        <strong>ℹ️ How to Withdraw</strong><br>
+        <strong>How to Withdraw</strong><br>
         1. Earn CNX from faucet/ads<br>
-        2. Swap CNX → DOGE here<br>
+        2. Swap CNX to DOGE here<br>
         3. Go to Withdraw<br>
         4. Enter DOGE amount<br>
         5. Withdraw via FaucetPay<br>
-        • Exchange rate: 1:1<br>
-        • No fees
+        Exchange rate: 1:1 - No fees
       </div>
     </div>
   </div>
@@ -254,7 +253,8 @@
 
     async function init() {
       const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) return alert('Telegram data not available');
+      // Telegram WebApp dışında açılırsa sessizce demo moduna geç
+      if (!initData) { document.body.classList.add('demo-mode'); return; }
 
       try {
         const res = await fetch('/api/auth', {
@@ -263,12 +263,12 @@
           body: JSON.stringify({ initData })
         });
         const data = await res.json();
-        if (!data.success) return alert('Auth failed');
+        if (!data.success) { document.body.classList.add('demo-mode'); return; }
         userId = data.user_id;
         loadBalance();
       } catch (err) {
         console.error(err);
-        alert('Initialization failed');
+        document.body.classList.add('demo-mode');
       }
     }
 
@@ -319,13 +319,13 @@
       const alertDiv = document.getElementById('alertDiv');
 
       if (!amount || amount <= 0) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Invalid amount</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Invalid amount</div>';
         return;
       }
 
       const available = fromCurrency === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
       if (available < amount) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Insufficient balance</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Insufficient balance</div>';
         return;
       }
 
@@ -347,17 +347,17 @@
         const result = await res.json();
 
         if (result.success) {
-          alertDiv.innerHTML = `<div class="alert alert-success">✓ Swapped ${amount.toFixed(2)} ${fromCurrency.toUpperCase()} for ${result.swapped_amount.toFixed(2)} ${toCurrency.toUpperCase()}!</div>`;
+          alertDiv.innerHTML = `<div class="alert alert-success">Swapped ${amount.toFixed(2)} ${fromCurrency.toUpperCase()} for ${result.swapped_amount.toFixed(2)} ${toCurrency.toUpperCase()}</div>`;
           document.getElementById('swapForm').reset();
           setTimeout(() => {
             loadBalance();
             alertDiv.innerHTML = '';
           }, 1500);
         } else {
-          alertDiv.innerHTML = `<div class="alert alert-error">❌ ${result.error || 'Swap failed'}</div>`;
+          alertDiv.innerHTML = `<div class="alert alert-error">${result.error || 'Swap failed'}</div>`;
         }
       } catch (err) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Network error</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Network error</div>';
         console.error(err);
       } finally {
         btn.disabled = false;

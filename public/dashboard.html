@@ -3,37 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
   <title>Dashboard - COINIX</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg: #f0f2f5; --card: #fff; --text: #222; --muted: #6b7280;
-      --accent: #fbbf24; --success: #16a34a; --danger: #dc2626;
+      --accent: #fbbf24; --accent-dark: #d97706;
+      --success: #16a34a; --danger: #dc2626; --info: #2563eb;
       --border: #e5e7eb; --shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
     @media (prefers-color-scheme: dark) {
       :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --border: #334155; --shadow: 0 1px 3px rgba(0,0,0,0.3); }
       .topbar { background: #1e293b !important; border-color: #334155 !important; }
+      .chart-card { background: #1e293b !important; }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     .topbar { display: flex; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; gap: 12px; }
-    .back-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: none; cursor: pointer; }
+    .back-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: none; cursor: pointer; color: var(--text); }
     .back-btn:hover { background: #f3f4f6; }
     .topbar h1 { font-size: 16px; font-weight: 700; }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
     .stat-card {
       background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 18px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+      padding: 16px; box-shadow: var(--shadow); transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; gap: 12px;
     }
     .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
     .stat-card.full { grid-column: 1 / -1; }
-    .stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .stat-value { font-size: 22px; font-weight: 800; color: var(--text); }
-    .stat-value.accent { color: var(--accent); }
-    .stat-value.success { color: var(--success); }
-    .stat-value.danger { color: var(--danger); }
-    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stat-icon svg { width: 22px; height: 22px; }
+    .stat-icon.accent { background: rgba(251, 191, 36, 0.12); color: var(--accent); }
+    .stat-icon.success { background: rgba(22, 163, 74, 0.12); color: var(--success); }
+    .stat-icon.info { background: rgba(37, 99, 235, 0.12); color: var(--info); }
+    .stat-icon.danger { background: rgba(220, 38, 38, 0.12); color: var(--danger); }
+    .stat-info { min-width: 0; flex: 1; }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 20px; font-weight: 800; color: var(--text); margin-top: 2px; word-break: break-all; }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .chart-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow);
+    }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .chart-title { font-size: 13px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+    .chart-title svg { width: 16px; height: 16px; color: var(--accent); }
+    .chart-wrapper { position: relative; height: 220px; }
+
+    .range-tabs { display: flex; gap: 6px; background: var(--bg); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
+    .range-tab { padding: 6px 12px; font-size: 11px; font-weight: 700; background: transparent; border: none; cursor: pointer; color: var(--muted); border-radius: 7px; transition: all 0.15s; }
+    .range-tab.active { background: var(--card); color: var(--accent); box-shadow: var(--shadow); }
+
+    .breakdown { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+    .breakdown-item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+    .breakdown-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+    .breakdown-value { font-size: 18px; font-weight: 800; margin-top: 2px; }
+    .breakdown-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-state svg { width: 48px; height: 48px; opacity: 0.3; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; }
+
     .loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
     .loading-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s; }
     .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -50,59 +84,289 @@
     <h1>Dashboard</h1>
   </div>
   <div class="container">
-    <div class="stats-grid" id="statsGrid">
+
+    <div class="stats-grid">
       <div class="stat-card full">
-        <div class="stat-label">Current Balance</div>
-        <div class="stat-value accent" id="stBalance">0 CNX</div>
+        <div class="stat-icon accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Current Balance</div>
+          <div class="stat-value" id="stBalance">0 CNX</div>
+        </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Total Earnings (USD)</div>
-        <div class="stat-value" id="stUsd">$0.00</div>
-        <div class="stat-sub">1 CNX ≈ $0.001</div>
+        <div class="stat-icon accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Faucet Earned</div>
+          <div class="stat-value" id="stFaucet">0</div>
+          <div class="stat-sub">CNX</div>
+        </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">CNX Earned</div>
-        <div class="stat-value success" id="stCnx">0</div>
+        <div class="stat-icon info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">PTC / Ads</div>
+          <div class="stat-value" id="stPtc">0</div>
+          <div class="stat-sub">CNX</div>
+        </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">DOGE Earned</div>
-        <div class="stat-value" id="stDoge">0</div>
+        <div class="stat-icon success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Total Claims</div>
+          <div class="stat-value" id="stClaims">0</div>
+        </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Claims Completed</div>
-        <div class="stat-value" id="stClaims">0</div>
+        <div class="stat-icon danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Withdrawals</div>
+          <div class="stat-value" id="stWithdrawals">0</div>
+        </div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Withdrawals Completed</div>
-        <div class="stat-value" id="stWithdrawals">0</div>
+        <div class="stat-icon accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">DOGE Balance</div>
+          <div class="stat-value" id="stDoge">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="stat-info">
+          <div class="stat-label">Referrals</div>
+          <div class="stat-value" id="stRefs">0</div>
+          <div class="stat-sub" id="stRefsSub">0 CNX earned</div>
+        </div>
       </div>
     </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Earnings Activity
+        </div>
+        <div class="range-tabs" id="rangeTabs">
+          <button class="range-tab" data-days="7">7d</button>
+          <button class="range-tab active" data-days="30">30d</button>
+          <button class="range-tab" data-days="90">90d</button>
+        </div>
+      </div>
+      <div class="chart-wrapper"><canvas id="earningsChart"></canvas></div>
+      <div class="breakdown" id="breakdownGrid"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+          Activity Breakdown
+        </div>
+      </div>
+      <div class="chart-wrapper" style="height:240px;"><canvas id="activityChart"></canvas></div>
+    </div>
+
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+      <p>No activity yet. Start claiming from the Faucet or watch PTC ads to see your stats here.</p>
+    </div>
+
   </div>
+
   <script>
     const API = window.location.origin;
+    let userId = null;
+    let earningsChart = null;
+    let activityChart = null;
+    let currentDays = 30;
+
+    function fmt(n) {
+      if (n === null || n === undefined || isNaN(n)) return '0';
+      const num = Number(n);
+      if (num >= 1000) return num.toFixed(0);
+      if (num >= 1) return num.toFixed(2);
+      return num.toFixed(4);
+    }
+
     async function init() {
       if (window.Telegram && Telegram.WebApp) Telegram.WebApp.ready();
-      let userId = null;
       if (window.Telegram && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         userId = String(Telegram.WebApp.initDataUnsafe.user.id);
       }
-      if (!userId) { document.getElementById('loadingOverlay').classList.add('hidden'); return; }
+      // No "Telegram data not available" — graceful degradation
+      if (!userId) {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+      await Promise.all([loadStats(), loadCharts(currentDays)]);
+      document.getElementById('loadingOverlay').classList.add('hidden');
+
+      document.querySelectorAll('.range-tab').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          document.querySelectorAll('.range-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentDays = Number(btn.dataset.days);
+          await loadCharts(currentDays);
+        });
+      });
+    }
+
+    async function loadStats() {
       try {
-        const res = await fetch(API + '/api/stats/user/' + userId);
-        const d = await res.json();
-        document.getElementById('stBalance').textContent = (d.balance || 0) + ' CNX';
-        document.getElementById('stCnx').textContent = d.earned || 0;
-        document.getElementById('stUsd').textContent = '$' + ((d.earned || 0) * 0.001).toFixed(2);
+        const [statsRes, balanceRes] = await Promise.all([
+          fetch(API + '/api/stats/user/' + userId),
+          fetch(API + '/api/balance/' + userId)
+        ]);
+        const d = await statsRes.json();
+        const b = await balanceRes.json();
+        document.getElementById('stBalance').textContent = fmt(d.balance) + ' CNX';
+        document.getElementById('stFaucet').textContent = fmt(d.earned);
+        document.getElementById('stPtc').textContent = fmt(b.total_ptc_earnings || 0);
         document.getElementById('stClaims').textContent = d.claims || 0;
         document.getElementById('stWithdrawals').textContent = d.withdrawn || 0;
+        document.getElementById('stDoge').textContent = fmt(b.doge_balance);
+        document.getElementById('stRefs').textContent = d.referrals || 0;
+        document.getElementById('stRefsSub').textContent = fmt(d.referral_earnings || b.referral_earnings || 0) + ' CNX earned';
       } catch (e) { console.error(e); }
-      try {
-        const res2 = await fetch(API + '/api/balance/' + userId);
-        const d2 = await res2.json();
-        document.getElementById('stDoge').textContent = d2.doge_balance || 0;
-      } catch (e) { console.error(e); }
-      document.getElementById('loadingOverlay').classList.add('hidden');
     }
+
+    async function loadCharts(days) {
+      try {
+        const res = await fetch(API + '/api/stats/user/' + userId + '/charts?days=' + days);
+        const data = await res.json();
+        renderEarningsChart(data.series || []);
+        renderActivityChart(data.counts || {});
+        renderBreakdown(data.counts || {}, data.series || []);
+        const empty = document.getElementById('emptyState');
+        const totalActivity = (data.series || []).reduce((s, d) => s + d.faucet + d.ptc + d.offerwall, 0);
+        if (totalActivity === 0 && (data.counts || {}).faucet === 0) {
+          empty.style.display = 'block';
+        } else {
+          empty.style.display = 'none';
+        }
+      } catch (e) {
+        console.error('Charts error:', e);
+      }
+    }
+
+    function isDark() {
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    function chartColors() {
+      const dark = isDark();
+      return {
+        text: dark ? '#f8fafc' : '#1e293b',
+        muted: dark ? '#94a3b8' : '#64748b',
+        grid: dark ? 'rgba(148,163,184,0.12)' : 'rgba(0,0,0,0.06)',
+        faucet: '#fbbf24',
+        ptc: '#2563eb',
+        offerwall: '#16a34a',
+        referral: '#a855f7',
+        swap: '#ef4444'
+      };
+    }
+
+    function renderEarningsChart(series) {
+      const c = chartColors();
+      const labels = series.map(d => d.date.slice(5));
+      const ctx = document.getElementById('earningsChart').getContext('2d');
+      if (earningsChart) earningsChart.destroy();
+      earningsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Faucet', data: series.map(d => d.faucet), borderColor: c.faucet, backgroundColor: c.faucet + '22', tension: 0.3, fill: true, pointRadius: 0, borderWidth: 2 },
+            { label: 'PTC', data: series.map(d => d.ptc), borderColor: c.ptc, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+            { label: 'Offerwall', data: series.map(d => d.offerwall), borderColor: c.offerwall, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
+            { label: 'Referrals', data: series.map(d => d.referrals), borderColor: c.referral, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top', labels: { color: c.text, font: { size: 10, weight: '600' }, boxWidth: 12, padding: 8 } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { ticks: { color: c.muted, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } },
+            y: { ticks: { color: c.muted, font: { size: 9 } }, grid: { color: c.grid }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function renderActivityChart(counts) {
+      const c = chartColors();
+      const ctx = document.getElementById('activityChart').getContext('2d');
+      if (activityChart) activityChart.destroy();
+      const data = [
+        counts.faucet || 0,
+        counts.ptc || 0,
+        counts.offerwall || 0,
+        counts.swap || 0,
+        counts.referral || 0,
+        counts.withdrawal || 0
+      ];
+      const labels = ['Faucet Claims', 'PTC Rewards', 'Offerwall', 'Swaps', 'Referrals', 'Withdrawals'];
+      const colors = [c.faucet, c.ptc, c.offerwall, c.swap, c.referral, c.muted];
+      const total = data.reduce((a, b) => a + b, 0);
+      if (total === 0) {
+        // Render placeholder
+        activityChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels: ['No activity yet'], datasets: [{ data: [1], backgroundColor: [c.grid], borderWidth: 0 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '70%' }
+        });
+        return;
+      }
+      activityChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: colors, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { color: c.text, font: { size: 11 }, boxWidth: 12, padding: 8 } },
+            tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + ctx.parsed } }
+          },
+          cutout: '60%'
+        }
+      });
+    }
+
+    function renderBreakdown(counts, series) {
+      const c = chartColors();
+      const totals = (series || []).reduce((acc, d) => {
+        acc.faucet += d.faucet; acc.ptc += d.ptc; acc.offerwall += d.offerwall; acc.referrals += d.referrals;
+        return acc;
+      }, { faucet: 0, ptc: 0, offerwall: 0, referrals: 0 });
+      const grid = document.getElementById('breakdownGrid');
+      grid.innerHTML = `
+        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.faucet}"></span>Faucet</div><div class="breakdown-value" style="color:${c.faucet}">${fmt(totals.faucet)} CNX</div></div>
+        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.ptc}"></span>PTC</div><div class="breakdown-value" style="color:${c.ptc}">${fmt(totals.ptc)} CNX</div></div>
+        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.offerwall}"></span>Offerwall</div><div class="breakdown-value" style="color:${c.offerwall}">${fmt(totals.offerwall)} CNX</div></div>
+        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.referral}"></span>Referrals</div><div class="breakdown-value" style="color:${c.referral}">${fmt(totals.referrals)} CNX</div></div>
+      `;
+    }
+
     window.onload = init;
   </script>
 </body>

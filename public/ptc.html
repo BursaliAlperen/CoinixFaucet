@@ -157,7 +157,7 @@
 
     <!-- Info -->
     <div class="alert alert-info">
-      📺 Click on ads and watch videos to earn DOGE
+      Click on ads and watch videos to earn DOGE
     </div>
 
     <!-- Offerwall Section -->
@@ -199,11 +199,11 @@
 
     <!-- Info Box -->
     <div class="info-box">
-      <strong>💡 Tips to Maximize Earnings</strong><br>
-      • Complete all available offers<br>
-      • Watch full video ads<br>
-      • Return daily for new ads<br>
-      • Withdraw when you reach minimum
+      <strong>Tips to Maximize Earnings</strong><br>
+      - Complete all available offers<br>
+      - Watch full video ads<br>
+      - Return daily for new ads<br>
+      - Withdraw when you reach minimum
     </div>
   </div>
 
@@ -213,7 +213,11 @@
 
     async function init() {
       const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) return alert('Telegram data not available');
+      if (!initData) {
+        document.body.classList.add('demo-mode');
+        document.getElementById('cnxBalance').textContent = '0.00';
+        return;
+      }
 
       try {
         const res = await fetch('/api/auth', {
@@ -222,13 +226,13 @@
           body: JSON.stringify({ initData })
         });
         const data = await res.json();
-        if (!data.success) return alert('Auth failed');
+        if (!data.success) { document.body.classList.add('demo-mode'); return; }
         userId = data.user_id;
         loadBalance();
         loadOfferwall();
       } catch (err) {
         console.error(err);
-        alert('Initialization failed');
+        document.body.classList.add('demo-mode');
       }
     }
 
@@ -246,29 +250,29 @@
     function loadOfferwall() {
       if (!userId) return;
       const container = document.getElementById('offerwallContainer');
-      
-      // Create offerwall iframe
+
+      // AoyCo offerwall iframe (uid olarak telegram id gonderiyoruz)
       const iframe = document.createElement('iframe');
       iframe.style.width = '100%';
       iframe.style.height = '600px';
       iframe.style.border = 'none';
-      iframe.src = `https://aoyco.in/offerwall/XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM/${userId}`;
-      
+      iframe.src = `https://aoyco.in/offerwall/${AOYCO_API_KEY}/${userId}`;
+
       container.innerHTML = '';
       container.appendChild(iframe);
     }
 
     function loadPTCPopup() {
       if (!userId) return;
-      
-      // Open PTC in new window for better experience
+
+      // AoyCo PTC popup
       const width = 800;
       const height = 600;
       const left = (screen.width - width) / 2;
       const top = (screen.height - height) / 2;
-      
+
       window.open(
-        `https://aoyco.in/ptc/XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM/${userId}`,
+        `https://aoyco.in/ptc/${AOYCO_API_KEY}/${userId}`,
         'PTCWindow',
         `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
       );

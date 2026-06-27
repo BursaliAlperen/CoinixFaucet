@@ -247,12 +247,12 @@
 
         <div style="margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
           <p style="font-size: 12px; color: var(--muted);">
-            ⓘ <strong>Withdrawal Info</strong><br>
-            • Earn CNX from faucet/ads<br>
-            • Swap CNX → DOGE when ready<br>
-            • Withdraw DOGE via FaucetPay<br>
-            • Minimum: 0.10 DOGE<br>
-            • Status: Pending → Paid
+            <strong>Withdrawal Info</strong><br>
+            - Earn CNX from faucet and ads<br>
+            - Swap CNX to DOGE when ready<br>
+            - Withdraw DOGE via FaucetPay<br>
+            - Minimum: 0.10 DOGE<br>
+            - Status: Pending then Paid
           </p>
         </div>
       </div>
@@ -286,7 +286,7 @@
     // Initialize
     async function init() {
       const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) return alert('Telegram data not available');
+      if (!initData) { document.body.classList.add('demo-mode'); return; }
 
       try {
         const res = await fetch('/api/auth', {
@@ -295,12 +295,12 @@
           body: JSON.stringify({ initData })
         });
         const data = await res.json();
-        if (!data.success) return alert('Auth failed');
+        if (!data.success) { document.body.classList.add('demo-mode'); return; }
         userId = data.user_id;
         loadBalance();
       } catch (err) {
         console.error(err);
-        alert('Initialization failed');
+        document.body.classList.add('demo-mode');
       }
     }
 
@@ -328,18 +328,18 @@
       const alertDiv = document.getElementById('withdrawAlert');
 
       if (!amount || amount < 0.10) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Minimum withdrawal is 0.10</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Minimum withdrawal is 0.10</div>';
         return;
       }
 
       const balance = currency === 'doge' ? userBalance.doge_balance : userBalance.balance;
       if (balance < amount) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Insufficient balance</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Insufficient balance</div>';
         return;
       }
 
       if (!address) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Address required</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Address required</div>';
         return;
       }
 
@@ -356,14 +356,14 @@
         const result = await res.json();
 
         if (result.success) {
-          alertDiv.innerHTML = '<div class="alert alert-success">✓ Withdrawal request submitted!<br>Status will update soon</div>';
+          alertDiv.innerHTML = '<div class="alert alert-success">Withdrawal request submitted<br>Status will update soon</div>';
           document.getElementById('withdrawForm').reset();
           setTimeout(loadBalance, 1000);
         } else {
-          alertDiv.innerHTML = `<div class="alert alert-error">❌ ${result.error || 'Withdrawal failed'}</div>`;
+          alertDiv.innerHTML = `<div class="alert alert-error">${result.error || 'Withdrawal failed'}</div>`;
         }
       } catch (err) {
-        alertDiv.innerHTML = '<div class="alert alert-error">❌ Network error</div>';
+        alertDiv.innerHTML = '<div class="alert alert-error">Network error</div>';
         console.error(err);
       } finally {
         btn.disabled = false;
