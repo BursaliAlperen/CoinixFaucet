@@ -30,7 +30,7 @@ html{scroll-behavior:smooth}
 body{
   font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   background:var(--bg-0);color:var(--text);
-  min-height:100vh;overflow-x:hidden;line-height:1.6;
+  min-height:100vh;overflow:hidden;line-height:1.6;
   -webkit-font-smoothing:antialiased;
 }
 body::before{
@@ -72,7 +72,7 @@ body::after{
 .sidebar-brand-txt{display:flex;flex-direction:column;line-height:1.15;overflow:hidden}
 .sidebar-brand-name{font-family:'Space Grotesk';font-weight:700;font-size:17px;color:var(--text)}
 .sidebar-brand-sub{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
-.sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto}
+.sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto;overflow-x:hidden}
 .sidebar-section{margin-bottom:16px}
 .sidebar-section-title{
   font-size:10px;font-weight:700;color:var(--text-muted);
@@ -114,7 +114,8 @@ body::after{
 .sidebar-user-avatar img{width:100%;height:100%;object-fit:cover}
 .sidebar-user-info{flex:1;overflow:hidden}
 .sidebar-user-name{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sidebar-user-bal{font-size:11px;color:var(--gold);font-family:'JetBrains Mono'}
+.sidebar-user-bal{font-size:11px;color:var(--gold);font-family:'JetBrains Mono';display:flex;align-items:center;gap:4px}
+.sidebar-user-bal img{width:12px;height:12px}
 .sidebar-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);
   z-index:199;opacity:0;pointer-events:none;transition:opacity .3s;
@@ -122,14 +123,14 @@ body::after{
 .sidebar-overlay.active{opacity:1;pointer-events:all}
 
 /* MAIN */
-.main-wrap{margin-left:var(--sidebar-w);min-height:100vh;transition:margin-left .3s;display:flex;flex-direction:column}
+.main-wrap{margin-left:var(--sidebar-w);height:100vh;transition:margin-left .3s;display:flex;flex-direction:column;overflow:hidden}
 
 /* HEADER */
 .header{
   position:sticky;top:0;z-index:100;height:var(--header-h);
   background:rgba(5,6,15,0.72);backdrop-filter:blur(24px) saturate(180%);
   border-bottom:1px solid var(--glass-brd);
-  display:flex;align-items:center;padding:0 24px;gap:16px;
+  display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;
 }
 .header-menu-btn{
   display:none;background:none;border:none;color:var(--text);
@@ -214,13 +215,13 @@ body::after{
 .notif-desc{font-size:12px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .notif-time{font-size:10px;color:var(--text-muted);margin-top:4px}
 
-/* CONTENT */
-.content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto}
-.page-section{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1)}
+/* CONTENT - NO SCROLL */
+.content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow:hidden}
+.page-section{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1);height:100%;overflow:hidden}
 .page-section.active{display:block}
 @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-.page-head{margin-bottom:28px}
+.page-head{margin-bottom:20px;flex-shrink:0}
 .page-head-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .page-title{
   font-family:'Space Grotesk';font-weight:700;
@@ -365,9 +366,9 @@ body::after{
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--gold);background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.15)}
 
-/* TABLES */
+/* TABLES - Scrollable */
 .table-wrap{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);overflow:hidden}
-.table-scroll{overflow-x:auto;max-height:500px;overflow-y:auto}
+.table-scroll{overflow-x:auto;max-height:400px;overflow-y:auto}
 .table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
 .table th{
   padding:14px 16px;text-align:left;
@@ -485,7 +486,7 @@ body::after{
 .offerwall-iframe-wrap{
   border-radius:var(--radius);overflow:hidden;
   border:1px solid var(--glass-brd);
-  background:#000;min-height:600px;position:relative;
+  background:#000;min-height:600px;max-height:calc(100vh - 300px);position:relative;overflow:auto;
 }
 .offerwall-iframe-wrap iframe{width:100%;height:800px;border:none;display:block}
 
@@ -664,28 +665,6 @@ body::after{
 .faq-a ul,.faq-a ol{margin:8px 0 8px 20px}
 .faq-a li{margin-bottom:4px}
 
-/* CONTACT */
-.contact-msg{
-  padding:16px;border-radius:12px;
-  background:rgba(0,0,0,0.3);border:1px solid var(--glass-brd);
-  margin-bottom:12px;
-}
-.contact-msg-hd{display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;color:var(--text-dim)}
-.contact-msg-subject{font-weight:600;color:var(--gold);font-size:13px;margin-bottom:4px}
-.contact-msg-body{font-size:13px;color:var(--text);line-height:1.5}
-.contact-msg-status{
-  display:inline-block;padding:3px 10px;border-radius:20px;
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-}
-.contact-msg-status.pending{background:rgba(245,158,11,0.15);color:var(--warn)}
-.contact-msg-status.replied{background:rgba(0,208,132,0.15);color:var(--success)}
-.contact-reply{
-  margin-top:10px;padding:12px;border-radius:10px;
-  background:rgba(74,158,255,0.05);border:1px solid rgba(74,158,255,0.2);
-}
-.contact-reply-hd{font-size:11px;color:var(--blue);font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
-.contact-reply-body{font-size:13px;color:var(--text)}
-
 /* RESPONSIVE */
 @media(max-width:900px){
   .sidebar{transform:translateX(-100%)}
@@ -776,9 +755,6 @@ body::after{
       <a class="sidebar-item" data-route="/leaderboard" onclick="navigate('/leaderboard')">
         <i class="fa-solid fa-trophy"></i><span class="label">Leaderboard</span>
       </a>
-      <a class="sidebar-item" data-route="/contact" onclick="navigate('/contact')">
-        <i class="fa-solid fa-envelope"></i><span class="label">Contact Admin</span>
-      </a>
     </div>
 
     <div class="sidebar-section" id="adminSection" style="display:none">
@@ -794,7 +770,10 @@ body::after{
       <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
       <div class="sidebar-user-info">
         <div class="sidebar-user-name" id="sidebarName">Loading...</div>
-        <div class="sidebar-user-bal" id="sidebarBal">0 CNX</div>
+        <div class="sidebar-user-bal" id="sidebarBal">
+          <img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'">
+          0 CNX
+        </div>
       </div>
       <i class="fa-solid fa-chevron-right" style="color:var(--text-muted);font-size:12px"></i>
     </div>
@@ -1342,46 +1321,6 @@ body::after{
   </div>
 </section>
 
-<!-- CONTACT -->
-<section class="page-section" id="page-contact">
-  <div class="page-head">
-    <h1 class="page-title"><i class="fa-solid fa-envelope"></i> Contact Admin</h1>
-    <p class="page-sub">Send a message to the admin team</p>
-  </div>
-
-  <div class="grid grid-2">
-    <div class="card">
-      <div class="card-title mb-2"><i class="fa-solid fa-paper-plane"></i> Send Message</div>
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-tag"></i> Subject</label>
-        <select class="form-select" id="contactSubject">
-          <option value="General Inquiry">General Inquiry</option>
-          <option value="Withdrawal Issue">Withdrawal Issue</option>
-          <option value="Bug Report">Bug Report</option>
-          <option value="Feature Request">Feature Request</option>
-          <option value="Account Issue">Account Issue</option>
-          <option value="Other">Other</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label"><i class="fa-solid fa-message"></i> Message</label>
-        <textarea class="form-textarea" id="contactMsg" rows="6" placeholder="Describe your issue or question..."></textarea>
-        <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Min 5 characters. Admin will reply within 24 hours.</div>
-      </div>
-      <button class="btn btn-primary btn-block" id="contactBtn" onclick="sendContact()">
-        <i class="fa-solid fa-paper-plane"></i> Send Message
-      </button>
-    </div>
-
-    <div class="card">
-      <div class="card-title mb-2"><i class="fa-solid fa-clock-rotate-left"></i> Your Messages</div>
-      <div id="contactHistory" style="max-height:500px;overflow-y:auto">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ADMIN -->
 <section class="page-section" id="page-admin">
   <div class="page-head">
@@ -1394,9 +1333,7 @@ body::after{
       <div class="tab active" onclick="setAdminTab(this,'dash')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
       <div class="tab" onclick="setAdminTab(this,'users')"><i class="fa-solid fa-users"></i> Users</div>
       <div class="tab" onclick="setAdminTab(this,'wd')"><i class="fa-solid fa-wallet"></i> Withdrawals</div>
-      <div class="tab" onclick="setAdminTab(this,'msgs')"><i class="fa-solid fa-envelope"></i> Messages</div>
       <div class="tab" onclick="setAdminTab(this,'logs')"><i class="fa-solid fa-scroll"></i> Logs</div>
-      <div class="tab" onclick="setAdminTab(this,'settings')"><i class="fa-solid fa-gear"></i> Settings</div>
     </div>
 
     <div id="admTabDash">
@@ -1405,10 +1342,6 @@ body::after{
         <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-signal"></i></div><div class="stat-lbl">Online Today</div><div class="stat-val" id="admOnline">0</div></div>
         <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-droplet"></i></div><div class="stat-lbl">Total Claims</div><div class="stat-val" id="admClaims">0</div></div>
         <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-paper-plane"></i></div><div class="stat-lbl">Total Withdrawn</div><div class="stat-val gold" id="admWithdrawn">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-circle-clock"></i></div><div class="stat-lbl">Pending WDs</div><div class="stat-val" style="color:var(--warn)" id="admPending">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-envelope"></i></div><div class="stat-lbl">Pending Messages</div><div class="stat-val" style="color:var(--blue)" id="admMsgs">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-bell"></i></div><div class="stat-lbl">Unread Notifs</div><div class="stat-val" style="color:var(--danger)" id="admNotifs">0</div></div>
-        <div class="stat-card"><div class="stat-ic"><i class="fa-solid fa-heart-pulse"></i></div><div class="stat-lbl">System Health</div><div class="stat-val" style="color:var(--success)">OK</div></div>
       </div>
     </div>
 
@@ -1440,30 +1373,12 @@ body::after{
       </div></div>
     </div>
 
-    <div id="admTabMsgs" style="display:none">
-      <div class="card-title mb-2"><i class="fa-solid fa-envelope"></i> User Messages</div>
-      <div id="admMsgsList">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
-    </div>
-
     <div id="admTabLogs" style="display:none">
       <div class="card">
         <div class="card-title mb-2"><i class="fa-solid fa-scroll"></i> Audit Logs</div>
         <div class="table-wrap"><div class="table-scroll">
           <table class="table" id="admLogsTbl"><thead><tr><th>Action</th><th>User</th><th>Details</th><th>Time</th></tr></thead><tbody><tr><td colspan="4"><div class="loading"><div class="spinner"></div></div></td></tr></tbody></table>
         </div></div>
-      </div>
-    </div>
-
-    <div id="admTabSettings" style="display:none">
-      <div class="card" style="max-width:600px">
-        <div class="card-title mb-2"><i class="fa-solid fa-gear"></i> Faucet Settings</div>
-        <div class="form-group mt-2"><label class="form-label">Cooldown (seconds)</label><input class="form-input" type="number" id="setCd" value="10"></div>
-        <div class="form-group"><label class="form-label">Reward per claim</label><input class="form-input" type="number" id="setRw" value="0.5" step="0.1"></div>
-        <div class="form-group"><label class="form-label">Min Withdraw (DOGE)</label><input class="form-input" type="number" id="setMinWd" value="0.1" step="0.01"></div>
-        <div class="form-group"><label class="form-label"><input type="checkbox" id="setPause"> Pause Faucet</label></div>
-        <button class="btn btn-primary" onclick="adminSave()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
       </div>
     </div>
   </div>
@@ -1485,7 +1400,7 @@ body::after{
 const API = window.location.origin;
 let TOKEN = localStorage.getItem('coinix_token') || '';
 let USER = null;
-let ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID'; // Replace with your admin Telegram ID
+const ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID'; // Replace with your admin Telegram ID
 let CUR_ROUTE = '/';
 let SWAP_DIR = 'cnx-to-doge';
 let CLAIM_CD = 10000;
@@ -1559,7 +1474,7 @@ function updateUserUI(){
   
   // Sidebar
   document.getElementById('sidebarName').textContent = name;
-  document.getElementById('sidebarBal').textContent = bal + ' CNX';
+  document.getElementById('sidebarBal').innerHTML = `<img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'"> ${bal} CNX`;
   const sav = document.getElementById('sidebarAvatar');
   sav.innerHTML = photo ? `<img src="${photo}">` : initial;
   
@@ -1633,13 +1548,13 @@ function showPage(route){
     '/':'page-home','/faucet':'page-faucet','/offerwall':'page-offerwall',
     '/balance':'page-balance','/swap':'page-swap','/withdraw':'page-withdraw',
     '/history':'page-history','/referral':'page-referral','/leaderboard':'page-leaderboard',
-    '/contact':'page-contact','/admin':'page-admin'
+    '/admin':'page-admin'
   };
   const titles = {
     '/':'Dashboard','/faucet':'Faucet','/offerwall':'Offerwall',
     '/balance':'Balance','/swap':'Swap','/withdraw':'Withdraw',
     '/history':'History','/referral':'Referral','/leaderboard':'Leaderboard',
-    '/contact':'Contact Admin','/admin':'Admin Panel'
+    '/admin':'Admin Panel'
   };
   const id = map[route] || 'page-home';
   const page = document.getElementById(id);
@@ -1654,7 +1569,6 @@ function showPage(route){
   if(route === '/history') { HIST_CACHE = []; loadHistory(); }
   if(route === '/referral') loadReferral();
   if(route === '/leaderboard') loadLeaderboard();
-  if(route === '/contact') loadContactHistory();
   if(route === '/admin') {
     if(USER && USER.telegram_id === ADMIN_ID) adminLoad();
     else { showToast('Admin access denied','error'); navigate('/'); }
@@ -2162,58 +2076,6 @@ function loadLeaderboard(){
 }
 
 // ============================================
-// CONTACT (USER → ADMIN)
-// ============================================
-async function sendContact(){
-  const subject = document.getElementById('contactSubject').value;
-  const message = document.getElementById('contactMsg').value.trim();
-  if(!message || message.length < 5){ showToast('Message too short (min 5 chars)','error'); return; }
-  const btn = document.getElementById('contactBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Sending...';
-  try{
-    const res = await fetch(API + '/api/contact', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({subject, message})
-    });
-    const d = await res.json();
-    if(res.ok){
-      showToast('Message sent to admin!','success');
-      document.getElementById('contactMsg').value = '';
-      loadContactHistory();
-    } else showToast(d.error || 'Failed','error');
-  } catch(e){ showToast('Network error','error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Message'; }
-}
-
-async function loadContactHistory(){
-  if(!TOKEN) return;
-  const c = document.getElementById('contactHistory');
-  try{
-    const res = await fetch(API + '/api/messages', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      const list = await res.json();
-      if(!list.length){
-        c.innerHTML = '<div class="empty-state" style="padding:30px"><div class="empty-state-icon"><img src="/images/loading.png"></div><p>No messages yet</p></div>';
-        return;
-      }
-      c.innerHTML = list.map(m => `
-        <div class="contact-msg">
-          <div class="contact-msg-hd">
-            <span class="contact-msg-subject"><i class="fa-solid fa-tag"></i> ${m.subject || 'General'}</span>
-            <span class="contact-msg-status ${m.status}">${m.status}</span>
-          </div>
-          <div class="contact-msg-body">${m.message}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:6px">${timeAgo(m.timestamp)}</div>
-          ${m.reply ? `<div class="contact-reply"><div class="contact-reply-hd"><i class="fa-solid fa-reply"></i> Admin Reply</div><div class="contact-reply-body">${m.reply}</div></div>` : ''}
-        </div>
-      `).join('');
-    }
-  } catch(e){}
-}
-
-// ============================================
 // ADMIN
 // ============================================
 async function adminLoad(){
@@ -2227,29 +2089,16 @@ async function adminLoad(){
       document.getElementById('admWithdrawn').textContent = formatNum(d.totalPaid||0);
       document.getElementById('admClaims').textContent = d.totalClaims||0;
     }
-    // Load admin notifs count
-    const nRes = await fetch(API + '/api/admin/notifications?admin_key=' + ADMIN_ID);
-    if(nRes.ok){
-      const nd = await nRes.json();
-      document.getElementById('admNotifs').textContent = nd.unreadCount||0;
-    }
-    // Load messages count
-    const mRes = await fetch(API + '/api/admin/messages?admin_key=' + ADMIN_ID);
-    if(mRes.ok){
-      const ml = await mRes.json();
-      document.getElementById('admMsgs').textContent = ml.filter(m => m.status === 'pending').length;
-    }
     adminLoadUsers();
     adminLoadWd();
     adminLoadLogs();
-    adminLoadMsgs();
   } catch(e){}
 }
 
 function setAdminTab(el, tab){
   el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  ['dash','users','wd','msgs','logs','settings'].forEach(t => {
+  ['dash','users','wd','logs'].forEach(t => {
     document.getElementById('admTab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tab?'block':'none';
   });
 }
@@ -2306,7 +2155,6 @@ async function adminLoadWd(){
           <td class="text-dim">${timeAgo(w.timestamp)}</td>
         </tr>
       `).join('');
-      document.getElementById('admPending').textContent = pend.length;
     }
   }catch(e){}
 }
@@ -2354,51 +2202,6 @@ async function adminLoadLogs(){
       `).join('') : '<tr><td colspan="4"><div class="empty-state" style="padding:30px"><p>No logs</p></div></td></tr>';
     }
   }catch(e){}
-}
-
-async function adminLoadMsgs(){
-  try{
-    const res = await fetch(API + '/api/admin/messages?admin_key=' + ADMIN_ID);
-    if(res.ok){
-      const list = await res.json();
-      const c = document.getElementById('admMsgsList');
-      if(!list.length){ c.innerHTML = '<div class="empty-state" style="padding:30px"><p>No messages</p></div>'; return; }
-      c.innerHTML = list.map(m => `
-        <div class="contact-msg">
-          <div class="contact-msg-hd">
-            <span class="contact-msg-subject"><i class="fa-solid fa-user"></i> ${m.username} · ${m.subject || 'General'}</span>
-            <span class="contact-msg-status ${m.status}">${m.status}</span>
-          </div>
-          <div class="contact-msg-body">${m.message}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:6px">${timeAgo(m.timestamp)}</div>
-          ${m.status === 'pending' ? `
-            <div style="margin-top:10px;display:flex;gap:8px">
-              <input class="form-input" id="reply-${m.id}" placeholder="Type reply..." style="flex:1">
-              <button class="btn btn-primary btn-sm" onclick="adminReply('${m.id}')"><i class="fa-solid fa-reply"></i> Reply</button>
-            </div>
-          ` : m.reply ? `<div class="contact-reply"><div class="contact-reply-hd"><i class="fa-solid fa-reply"></i> Your Reply</div><div class="contact-reply-body">${m.reply}</div></div>` : ''}
-        </div>
-      `).join('');
-    }
-  }catch(e){}
-}
-
-async function adminReply(msgId){
-  const reply = document.getElementById('reply-'+msgId).value.trim();
-  if(!reply || reply.length < 3){ showToast('Reply too short','error'); return; }
-  try{
-    const res = await fetch(API + '/api/admin/reply-message?admin_key=' + ADMIN_ID, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({messageId: msgId, reply})
-    });
-    if(res.ok){ showToast('Reply sent','success'); adminLoadMsgs(); }
-  }catch(e){}
-}
-
-async function adminSave(){
-  const data = {cooldown:parseInt(document.getElementById('setCd').value),minReward:parseFloat(document.getElementById('setRw').value),minWithdraw:parseFloat(document.getElementById('setMinWd').value),paused:document.getElementById('setPause').checked};
-  try{ const r=await fetch(API+'/api/admin/settings?admin_key='+ADMIN_ID,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); if(r.ok) showToast('Saved','success'); }catch(e){}
 }
 
 // ============================================
