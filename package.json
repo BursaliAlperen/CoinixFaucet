@@ -5,16 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "deploy": "git push heroku main"
+    "dev": "nodemon server.js"
   },
-  "keywords": [
-    "faucet",
-    "telegram",
-    "crypto",
-    "dogecoin",
-    "offerwall"
-  ],
+  "keywords": ["faucet", "telegram", "crypto", "dogecoin", "offerwall"],
   "author": "COINIX Team",
   "license": "MIT",
   "dependencies": {
@@ -27,9 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "compression": "^1.7.4",
     "axios": "^1.7.2",
-    "uuid": "^10.0.0",
-    "morgan": "^1.10.0",
-    "express-validator": "^7.1.0"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
