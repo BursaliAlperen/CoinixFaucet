@@ -57,11 +57,12 @@ app.get('/api/balance/:userId', async (req, res) => {
   try {
     const doc = await db.collection('users').doc(String(req.params.userId)).get();
     if (!doc.exists) {
-      return res.json({ balance: 0, last_claim: null });
+      return res.json({ balance: 0, doge_balance: 0, last_claim: null });
     }
     const data = doc.data();
     res.json({
       balance: data.balance || 0,
+      doge_balance: data.doge_balance || 0,
       last_claim: data.last_claim ? data.last_claim.toMillis() : null
     });
   } catch (err) {
@@ -148,6 +149,13 @@ app.post('/api/postback', async (req, res) => {
 // 4.5 AoyCo Offerwall Verification
 // ========================
 app.get('/offerwall-verification-XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
+});
+
+// Alternative verification endpoint (some platforms check root)
+app.get('/verification.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
   res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
 });
@@ -505,18 +513,153 @@ app.get('/api/stats/user/:userId', async (req, res) => {
 // ========================
 // 9. Serve Frontend Pages
 // ========================
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
-app.get('/faucet', (req, res) => res.sendFile(path.join(__dirname, 'faucet.html')));
-app.get('/ptc', (req, res) => res.sendFile(path.join(__dirname, 'ptc.html')));
-app.get('/withdraw', (req, res) => res.sendFile(path.join(__dirname, 'withdraw.html')));
-app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'swap.html')));
-app.get('/funds', (req, res) => res.sendFile(path.join(__dirname, 'funds.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
+app.get('/faucet', (req, res) => res.sendFile(path.join(__dirname, 'public', 'faucet.html')));
+app.get('/ptc', (req, res) => res.sendFile(path.join(__dirname, 'public', 'ptc.html')));
+app.get('/withdraw', (req, res) => res.sendFile(path.join(__dirname, 'public', 'withdraw.html')));
+app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'public', 'swap.html')));
+app.get('/history', (req, res) => res.sendFile(path.join(__dirname, 'public', 'history.html')));
+
+// ========================
+// 10. Swap System
+// ========================
+app.post('/api/swap', async (req, res) => {
+  const { user_id, from_amount, from_token } = req.body;
+  if (!user_id || !from_amount || !from_token) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
+  const amt = Number(from_amount);
+  if (isNaN(amt) || amt <= 0) {
+    return res.status(400).json({ error: 'Invalid amount' });
+  }
+  if (!['CNX', 'DOGE'].includes(from_token)) {
+    return res.status(400).json({ error: 'Invalid token' });
+  }
+
+  // Rate: 1 CNX = 0.1 DOGE, 1 DOGE = 10 CNX
+  const rate = from_token === 'CNX' ? 0.1 : 10;
+  const toToken = from_token === 'CNX' ? 'DOGE' : 'CNX';
+  const toAmount = parseFloat((amt * rate).toFixed(4));
+
+  const userRef = db.collection('users').doc(String(user_id));
+  const swapRef = db.collection('swaps').doc();
+
+  try {
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('NO_USER');
+      const data = doc.data();
+      const field = from_token === 'CNX' ? 'balance' : 'doge_balance';
+      if ((data[field] || 0) < amt) throw new Error('NO_FUNDS');
+
+      const updates = {};
+      updates[field] = admin.firestore.FieldValue.increment(-amt);
+      const toField = toToken === 'CNX' ? 'balance' : 'doge_balance';
+      updates[toField] = admin.firestore.FieldValue.increment(toAmount);
+      t.update(userRef, updates);
+
+      t.set(swapRef, {
+        user_id: String(user_id),
+        from_token: from_token,
+        from_amount: amt,
+        to_token: toToken,
+        to_amount: toAmount,
+        rate: rate,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    await logAction('swap', user_id, { from: from_token, amount: amt, to: toToken, received: toAmount });
+    res.json({ success: true, from: from_token, to: toToken, received: toAmount, rate });
+  } catch (err) {
+    if (err.message === 'NO_FUNDS') return res.status(400).json({ error: 'Insufficient ' + from_token + ' balance' });
+    if (err.message === 'NO_USER') return res.status(404).json({ error: 'User not found' });
+    console.error('Swap error:', err);
+    res.status(500).json({ error: 'Swap failed' });
+  }
+});
+
+app.get('/api/swap/rate', (req, res) => {
+  res.json({ cnx_to_doge: 0.1, doge_to_cnx: 10 });
+});
+
+// ========================
+// 11. History API
+// ========================
+app.get('/api/history/:userId', async (req, res) => {
+  try {
+    const uid = String(req.params.userId);
+    const history = [];
+
+    // Claims
+    const claimsSnap = await db.collection('logs')
+      .where('user_id', '==', uid)
+      .where('action', '==', 'claim')
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    claimsSnap.forEach(doc => {
+      const d = doc.data();
+      history.push({
+        type: 'claim',
+        amount: d.details?.reward || 0,
+        token: 'CNX',
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
+        status: 'completed'
+      });
+    });
+
+    // Withdrawals
+    const wdSnap = await db.collection('withdrawals')
+      .where('user_id', '==', uid)
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    wdSnap.forEach(doc => {
+      const d = doc.data();
+      history.push({
+        type: 'withdraw',
+        amount: d.amount,
+        token: 'CNX',
+        address: d.address,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
+        status: d.status
+      });
+    });
+
+    // Swaps
+    const swapSnap = await db.collection('swaps')
+      .where('user_id', '==', uid)
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    swapSnap.forEach(doc => {
+      const d = doc.data();
+      history.push({
+        type: 'swap',
+        from_token: d.from_token,
+        from_amount: d.from_amount,
+        to_token: d.to_token,
+        to_amount: d.to_amount,
+        timestamp: d.timestamp ? d.timestamp.toMillis() : null,
+        status: 'completed'
+      });
+    });
+
+    // Sort by timestamp desc
+    history.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    res.json(history.slice(0, 50));
+  } catch (err) {
+    console.error('History error:', err);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
 
 // ========================
 // 10. Static Files (all HTML pages)
 // ========================
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ========================
 // 11. Debug: List files
