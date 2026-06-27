@@ -816,302 +816,257 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const API = window.location.origin;
-    const AOYCO_API_KEY = 'XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM';
-    let userId = null, lastClaim = 0, cooldownTimer = null, tgUser = null, initData = null, livePollTimer = null;
+/* =========================================================
+   COINIX SECURE CLIENT v2.2.0
+   Backend Trust Only - No localStorage, No client logic
+   ========================================================= */
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebarOverlay');
-      const hamburger = document.getElementById('hamburger');
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('open');
-      hamburger.classList.toggle('open');
-    }
+const API = window.location.origin;
+let token = null;
+let currentUser = null;
+let livePollTimer = null;
 
-    function getRefFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const start = params.get('tgWebAppStartParam') || params.get('startapp') || params.get('ref') || '';
-      const m = start.match(/^ref_?(\d+)/i);
-      return m ? m[1] : (start.match(/^\d+$/) ? start : '');
-    }
+// ---------- API Helper with JWT ----------
+async function api(endpoint, opts = {}) {
+  const res = await fetch(`${API}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-    function hideLoading() {
-      document.getElementById('loadingOverlay').classList.add('hidden');
-    }
+// ---------- UI Utilities ----------
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const hamburger = document.getElementById('hamburger');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open');
+  hamburger.classList.toggle('open');
+}
 
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
-      const icons = {
-        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
-        error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-      };
-      t.className = 'toast show ' + type;
-      t.innerHTML = (icons[type] || icons.info) + ' ' + msg;
-      clearTimeout(t._timer);
-      t._timer = setTimeout(() => { t.classList.remove('show'); }, 2800);
-    }
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
 
-    function copyRef() {
-      const link = document.getElementById('refLinkText').textContent;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(link).then(() => showToast('Referral link copied!', 'success'));
-      }
-    }
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+  t.className = 'toast show ' + type;
+  t.innerHTML = (icons[type] || icons.info) + ' ' + msg;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+}
 
-    async function authUser() {
-      tgUser = null; initData = null;
-      if (window.Telegram && Telegram.WebApp) {
-        initData = Telegram.WebApp.initData;
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-          tgUser = Telegram.WebApp.initDataUnsafe.user;
-          userId = String(tgUser.id);
-        }
-      }
-      if (!tgUser) {
-        hideLoading();
-        document.body.classList.add('demo-mode');
-        loadLiveFeed();
-        loadTasksFrame();
-        return;
-      }
-      if (tgUser.photo_url) document.getElementById('profileImg').src = tgUser.photo_url;
-      const name = tgUser.username ? '@' + tgUser.username : (tgUser.first_name || 'User');
-      document.getElementById('profileName').textContent = name;
-      document.getElementById('profileId').textContent = 'ID: ' + userId;
+function copyRef() {
+  const link = document.getElementById('refLinkText').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(link).then(() => showToast('Referral link copied!', 'success'));
+  }
+}
 
-      try {
-        const ref = getRefFromUrl();
-        const res = await fetch(API + '/api/auth', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData, ref })
-        });
-        const data = await res.json();
-        if (data.success) {
-          await Promise.all([loadReferralData(), loadBalance(), loadTasksFrame(), loadLiveFeed()]);
-          hideLoading();
-          startLivePolling();
-        } else throw new Error(data.error || 'Auth failed');
-      } catch (e) {
-        console.error('Auth error:', e);
-        document.querySelector('.loading-text').textContent = 'Auth failed. Please restart.';
-      }
-    }
+function fmt(n) {
+  return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 });
+}
 
-    async function loadReferralData() {
-      if (!userId) return;
-      try {
-        const res = await fetch(API + '/api/referral/' + userId);
-        const data = await res.json();
-        document.getElementById('refLinkText').textContent = data.link;
-        document.getElementById('refCount').textContent = data.referrals;
-        document.getElementById('refEarnings').textContent = data.earnings;
-        document.getElementById('referralBox').style.display = 'block';
-      } catch (e) { console.error('Ref error:', e); }
-    }
+function timeAgo(ms) {
+  if (!ms) return 'Never';
+  const s = Math.floor((Date.now() - ms) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
 
-    async function loadBalance() {
-      if (!userId) return;
-      try {
-        const res = await fetch(API + '/api/balance/' + userId);
-        const data = await res.json();
-        document.getElementById('bal').textContent = data.balance;
-        document.getElementById('heroCnx').textContent = data.balance;
-        document.getElementById('heroDoge').textContent = (data.doge_balance || 0).toFixed(2);
-        document.getElementById('heroClaims').textContent = data.total_claims || 0;
-        lastClaim = data.last_claim || 0;
-        updateCooldown();
-      } catch (e) { console.error(e); }
-    }
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
 
-    function updateCooldown() {
-      const diff = Date.now() - lastClaim;
-      const btn = document.getElementById('claimBtn');
-      const txt = document.getElementById('cooldownText');
-      if (diff < 10000) {
-        const wait = Math.ceil((10000 - diff) / 1000);
-        btn.disabled = true;
-        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Wait ' + wait + 's...';
-        if (!cooldownTimer) cooldownTimer = setInterval(updateCooldown, 1000);
-      } else {
-        btn.disabled = false;
-        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ready to claim!';
-        if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
-      }
-    }
+function displayName(u) {
+  return u ? (u.username ? '@' + u.username : (u.first_name || 'User')) : 'User';
+}
 
-    async function doClaim() {
-      if (!userId) return;
-      const btn = document.getElementById('claimBtn');
-      btn.disabled = true;
-      try {
-        const res = await fetch(API + '/api/claim', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId })
-        });
-        const data = await res.json();
-        if (data.success) {
-          if (typeof data.balance === 'number') {
-            document.getElementById('bal').textContent = data.balance;
-            document.getElementById('heroCnx').textContent = data.balance;
-            document.getElementById('heroClaims').textContent = (parseInt(document.getElementById('heroClaims').textContent) || 0) + 1;
-          }
-          lastClaim = Date.now(); updateCooldown();
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> You won ' + data.reward.toFixed(2) + ' CNX!';
-          showToast('+' + data.reward.toFixed(2) + ' CNX claimed!', 'success');
-        } else {
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ' + (data.error || 'Error');
-        }
-      } catch (e) {
-        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Network error';
-      }
-    }
+function initials(name) {
+  return name ? name.split(' ').map(x => x[0]).join('').toUpperCase().slice(0, 2) : '??';
+}
 
-    function loadTasksFrame() {
-      const wrap = document.getElementById('tasksFrameWrap');
-      // AoyCo requires USER_ID to be alphanumeric only — sanitize if needed
-      let safeId = userId ? String(userId).replace(/[^a-zA-Z0-9]/g, '') : 'guest' + Date.now();
-      // If sanitization removed everything (rare), fall back to a numeric ID
-      if (!safeId) safeId = '0';
+// ---------- Auth ----------
+async function authUser() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) {
+    hideLoading();
+    document.body.classList.add('demo-mode');
+    loadLiveFeed();
+    return;
+  }
 
-      const iframe = document.createElement('iframe');
-      iframe.style.width = '100%';
-      iframe.style.height = '480px';
-      iframe.style.border = 'none';
-      iframe.style.display = 'block';
-      iframe.allow = 'popups; fullscreen';
-      iframe.referrerPolicy = 'no-referrer';
-      iframe.src = `https://aoyco.in/offerwall/${AOYCO_API_KEY}/${safeId}`;
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor('#0f172a');
+  tg.setBackgroundColor('#0f172a');
 
-      iframe.onload = () => {
-        // hide the fallback if iframe loaded
-        const fb = wrap.querySelector('.tasks-fallback');
-        if (fb) fb.style.display = 'none';
-      };
-      iframe.onerror = () => {
-        wrap.innerHTML = '<div class="tasks-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p style="font-size:13px;">Failed to load offers.<br>Open <a href="/ptc" style="color:var(--accent);text-decoration:underline;">PTC page</a> directly.</p></div>';
-      };
+  const initData = tg.initData;
+  const ref = tg.initDataUnsafe?.start_param || null;
+  const tgUser = tg.initDataUnsafe?.user;
 
-      wrap.innerHTML = '';
-      wrap.appendChild(iframe);
-    }
+  if (!tgUser) {
+    hideLoading();
+    document.body.classList.add('demo-mode');
+    loadLiveFeed();
+    return;
+  }
 
-    /* ============ LIVE WITHDRAWALS FEED ============ */
-    function escapeHtml(s) {
-      return String(s || '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
-    }
-    function timeAgo(ms) {
-      const diff = Math.max(0, Date.now() - ms);
-      const sec = Math.floor(diff / 1000);
-      if (sec < 60) return sec + 's ago';
-      const min = Math.floor(sec / 60);
-      if (min < 60) return min + 'm ago';
-      const hr = Math.floor(min / 60);
-      if (hr < 24) return hr + 'h ago';
-      const day = Math.floor(hr / 24);
-      return day + 'd ago';
-    }
-    function displayName(u) {
-      if (u.username) return '@' + u.username;
-      if (u.first_name) {
-        const last = u.last_name ? ' ' + u.last_name : '';
-        return u.first_name + last;
-      }
-      return 'User ' + String(u.user_id || '').slice(-4);
-    }
-    function initials(name) {
-      const parts = String(name || '?').trim().split(/\s+/);
-      const a = (parts[0] || '?').charAt(0);
-      const b = parts[1] ? parts[1].charAt(0) : '';
-      return (a + b).toUpperCase();
-    }
-    function colorFromId(id) {
-      const palette = ['#fbbf24', '#22c55e', '#3b82f6', '#a855f7', '#ef4444', '#06b6d4', '#f97316', '#ec4899'];
-      const n = parseInt(String(id || '0').replace(/\D/g, '')) || 0;
-      return palette[n % palette.length];
-    }
-    function renderLiveFeed(items) {
-      const feed = document.getElementById('liveFeed');
-      if (!items || !items.length) {
-        feed.innerHTML = '<div class="live-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>No withdrawals yet — be the first to cash out!</p></div>';
-        return;
-      }
-      feed.innerHTML = items.map(w => {
-        const name = escapeHtml(displayName(w));
-        const photo = w.photo_url;
-        const avatarStyle = photo ? '' : 'background: linear-gradient(135deg, ' + colorFromId(w.user_id) + ', ' + colorFromId((w.user_id || '0') + '1') + ');';
-        const avatarContent = photo
-          ? '<img class="live-avatar" src="' + escapeHtml(photo) + '" onerror="this.outerHTML=\'<div class=&quot;live-avatar&quot; style=&quot;' + avatarStyle + '&quot;>' + escapeHtml(initials(name)) + '</div>\'" alt="">'
-          : '<div class="live-avatar" style="' + avatarStyle + '">' + escapeHtml(initials(name)) + '</div>';
-        const verifiedSvg = '<svg class="verified" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17l-3.88-3.88L3.71 13.71 9 19l11-11-1.41-1.41z"/></svg>';
-        return `
-          <div class="live-row">
-            ${avatarContent}
-            <div class="live-info">
-              <div class="live-name">${name}${verifiedSvg}</div>
-              <div class="live-meta">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                ${timeAgo(w.timestamp)} · ${escapeHtml(w.masked_address || '')}
-              </div>
-            </div>
-            <div class="live-amount">
-              <div class="live-amount-value">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>
-                ${Number(w.amount).toFixed(2)}
-              </div>
-              <div class="live-amount-coin">${escapeHtml((w.currency || 'doge').toUpperCase())}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+  // Profile
+  if (tgUser.photo_url) document.getElementById('profileImg').src = tgUser.photo_url;
+  document.getElementById('profileName').textContent = displayName(tgUser);
+  document.getElementById('profileId').textContent = 'ID: ' + tgUser.id;
 
-    async function loadLiveFeed() {
-      try {
-        const [feedRes, statsRes] = await Promise.all([
-          fetch(API + '/api/withdrawals/recent?limit=25'),
-          fetch(API + '/api/withdrawals/stats')
-        ]);
-        const items = await feedRes.json();
-        const stats = await statsRes.json();
-        renderLiveFeed(items);
-        if (stats && typeof stats.today_count === 'number') {
-          document.getElementById('liveTodayCount').textContent = stats.today_count;
-          document.getElementById('liveTotalCount').textContent = stats.total_count;
-        }
-      } catch (e) {
-        console.error('Live feed error:', e);
-        document.getElementById('liveFeed').innerHTML = '<div class="live-empty"><p>Live feed temporarily unavailable.</p></div>';
-      }
-    }
-
-    function startLivePolling() {
-      if (livePollTimer) clearInterval(livePollTimer);
-      livePollTimer = setInterval(loadLiveFeed, 30000); // every 30s
-    }
-
-    /* ============ END LIVE FEED ============ */
-
-    // Smooth scroll to FAQ when clicked in sidebar
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('a[href="#faq"]').forEach(a => {
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          const el = document.getElementById('faq');
-          if (el) {
-            // close sidebar first
-            const sb = document.getElementById('sidebar');
-            if (sb.classList.contains('open')) toggleSidebar();
-            setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
-          }
-        });
-      });
+  try {
+    const auth = await api('/api/auth', {
+      method: 'POST',
+      body: { initData, ref }
     });
+    token = auth.token;
+    currentUser = { id: auth.user_id, username: auth.username };
 
-    window.onload = authUser;
-  </script>
+    await refreshUserData();
+    loadReferralData();
+    loadLiveFeed();
+    loadTasksFrame();
+
+    hideLoading();
+  } catch (err) {
+    hideLoading();
+    showToast('Auth failed: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+// ---------- Data Refresh (Source of Truth = Backend) ----------
+async function refreshUserData() {
+  try {
+    const me = await api('/api/me');
+    renderUser(me);
+  } catch (err) {
+    console.error('Refresh error:', err);
+  }
+}
+
+function renderUser(u) {
+  document.getElementById('bal').textContent = fmt(u.balance);
+  document.getElementById('heroCnx').textContent = fmt(u.balance);
+  document.getElementById('heroDoge').textContent = fmt(u.doge_balance);
+  document.getElementById('heroClaims').textContent = fmt(u.total_claims);
+  document.getElementById('refCount').textContent = fmt(u.referrals);
+  document.getElementById('refEarnings').textContent = fmt(u.referral_earnings);
+
+  const btn = document.getElementById('claimBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Claim 0.5 CNX';
+    btn.onclick = doClaim;
+  }
+}
+
+// ---------- Claim (Backend decides everything) ----------
+async function doClaim() {
+  const btn = document.getElementById('claimBtn');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = 'Processing...';
+
+  try {
+    const result = await api('/api/claim', { method: 'POST' });
+    showToast(`+${result.amount} CNX claimed!`, 'success');
+    await refreshUserData();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.textContent = oldText;
+    btn.disabled = false;
+  }
+}
+
+// ---------- Referral ----------
+async function loadReferralData() {
+  try {
+    const data = await api('/api/referral');
+    document.getElementById('refLinkText').textContent = data.link;
+    document.getElementById('refCount').textContent = fmt(data.referrals);
+    document.getElementById('refEarnings').textContent = fmt(data.earnings);
+  } catch (err) {
+    console.error('Referral error:', err);
+  }
+}
+
+// ---------- Live Feed ----------
+async function loadLiveFeed() {
+  try {
+    const stats = await api('/api/withdrawals/stats');
+    document.getElementById('liveTodayCount').textContent = fmt(stats.today);
+    document.getElementById('liveTotalCount').textContent = fmt(stats.allTime);
+
+    const recent = await api('/api/withdrawals/recent');
+    const feed = document.getElementById('liveFeed');
+    if (!recent.length) {
+      feed.innerHTML = '<div class="live-empty">No withdrawals yet. Be the first!</div>';
+      return;
+    }
+    feed.innerHTML = recent.map(w => {
+      const email = escapeHtml(w.faucetpay_email || 'unknown');
+      const amt = fmt(w.amount);
+      const ago = timeAgo(w.timestamp);
+      return `<div class="live-item"><div class="live-dot"></div><div class="live-info"><span class="live-email">${email}</span><span class="live-amount">${amt} DOGE</span></div><span class="live-time">${ago}</span></div>`;
+    }).join('');
+  } catch (err) {
+    console.error('Live feed error:', err);
+  }
+}
+
+// ---------- Tasks Frame ----------
+function loadTasksFrame() {
+  const wrap = document.getElementById('tasksFrameWrap');
+  if (!wrap) return;
+  // Offerwall.me iframe
+  wrap.innerHTML = `<iframe src="about:blank" id="tasksFrame" style="width:100%;height:600px;border:none;border-radius:12px;" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>`;
+  if (currentUser) {
+    api('/api/offerwall/offerwall').then(d => {
+      document.getElementById('tasksFrame').src = d.url;
+    }).catch(() => {});
+  }
+}
+
+// ---------- Init ----------
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hamburger').addEventListener('click', toggleSidebar);
+  document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = a.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if (el) {
+        const sb = document.getElementById('sidebar');
+        if (sb.classList.contains('open')) toggleSidebar();
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+      }
+    });
+  });
+});
+
+window.onload = authUser;
+</script>
 </body>
 </html>

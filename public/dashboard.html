@@ -188,186 +188,46 @@
   </div>
 
   <script>
-    const API = window.location.origin;
-    let userId = null;
-    let earningsChart = null;
-    let activityChart = null;
-    let currentDays = 30;
+/* COINIX DASHBOARD - Secure Thin Client */
+const API = window.location.origin;
+let token = null;
 
-    function fmt(n) {
-      if (n === null || n === undefined || isNaN(n)) return '0';
-      const num = Number(n);
-      if (num >= 1000) return num.toFixed(0);
-      if (num >= 1) return num.toFixed(2);
-      return num.toFixed(4);
-    }
+async function api(endpoint, opts = {}) {
+  const res = await fetch(`${API}${endpoint}`, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+    ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-    async function init() {
-      if (window.Telegram && Telegram.WebApp) Telegram.WebApp.ready();
-      if (window.Telegram && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-        userId = String(Telegram.WebApp.initDataUnsafe.user.id);
-      }
-      // No "Telegram data not available" — graceful degradation
-      if (!userId) {
-        document.getElementById('loadingOverlay').classList.add('hidden');
-        document.getElementById('emptyState').style.display = 'block';
-        return;
-      }
-      await Promise.all([loadStats(), loadCharts(currentDays)]);
-      document.getElementById('loadingOverlay').classList.add('hidden');
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }); }
 
-      document.querySelectorAll('.range-tab').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          document.querySelectorAll('.range-tab').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentDays = Number(btn.dataset.days);
-          await loadCharts(currentDays);
-        });
-      });
-    }
+async function init() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready(); tg.expand();
+  const initData = tg.initData;
+  try {
+    const auth = await api('/api/auth', { method: 'POST', body: { initData } });
+    token = auth.token;
+    await loadStats();
+  } catch (err) { console.error(err); }
+}
 
-    async function loadStats() {
-      try {
-        const [statsRes, balanceRes] = await Promise.all([
-          fetch(API + '/api/stats/user/' + userId),
-          fetch(API + '/api/balance/' + userId)
-        ]);
-        const d = await statsRes.json();
-        const b = await balanceRes.json();
-        document.getElementById('stBalance').textContent = fmt(d.balance) + ' CNX';
-        document.getElementById('stFaucet').textContent = fmt(d.earned);
-        document.getElementById('stPtc').textContent = fmt(b.total_ptc_earnings || 0);
-        document.getElementById('stClaims').textContent = d.claims || 0;
-        document.getElementById('stWithdrawals').textContent = d.withdrawn || 0;
-        document.getElementById('stDoge').textContent = fmt(b.doge_balance);
-        document.getElementById('stRefs').textContent = d.referrals || 0;
-        document.getElementById('stRefsSub').textContent = fmt(d.referral_earnings || b.referral_earnings || 0) + ' CNX earned';
-      } catch (e) { console.error(e); }
-    }
+async function loadStats() {
+  try {
+    const me = await api('/api/me');
+    document.getElementById('dash-balance').textContent = fmt(me.balance) + ' CNX';
+    document.getElementById('dash-doge').textContent = fmt(me.doge_balance) + ' DOGE';
+    document.getElementById('dash-earned').textContent = fmt(me.total_earned) + ' CNX';
+    document.getElementById('dash-claims').textContent = fmt(me.total_claims);
+    document.getElementById('dash-refs').textContent = fmt(me.referrals);
+  } catch (err) { console.error(err); }
+}
 
-    async function loadCharts(days) {
-      try {
-        const res = await fetch(API + '/api/stats/user/' + userId + '/charts?days=' + days);
-        const data = await res.json();
-        renderEarningsChart(data.series || []);
-        renderActivityChart(data.counts || {});
-        renderBreakdown(data.counts || {}, data.series || []);
-        const empty = document.getElementById('emptyState');
-        const totalActivity = (data.series || []).reduce((s, d) => s + d.faucet + d.ptc + d.offerwall, 0);
-        if (totalActivity === 0 && (data.counts || {}).faucet === 0) {
-          empty.style.display = 'block';
-        } else {
-          empty.style.display = 'none';
-        }
-      } catch (e) {
-        console.error('Charts error:', e);
-      }
-    }
-
-    function isDark() {
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    function chartColors() {
-      const dark = isDark();
-      return {
-        text: dark ? '#f8fafc' : '#1e293b',
-        muted: dark ? '#94a3b8' : '#64748b',
-        grid: dark ? 'rgba(148,163,184,0.12)' : 'rgba(0,0,0,0.06)',
-        faucet: '#fbbf24',
-        ptc: '#2563eb',
-        offerwall: '#16a34a',
-        referral: '#a855f7',
-        swap: '#ef4444'
-      };
-    }
-
-    function renderEarningsChart(series) {
-      const c = chartColors();
-      const labels = series.map(d => d.date.slice(5));
-      const ctx = document.getElementById('earningsChart').getContext('2d');
-      if (earningsChart) earningsChart.destroy();
-      earningsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            { label: 'Faucet', data: series.map(d => d.faucet), borderColor: c.faucet, backgroundColor: c.faucet + '22', tension: 0.3, fill: true, pointRadius: 0, borderWidth: 2 },
-            { label: 'PTC', data: series.map(d => d.ptc), borderColor: c.ptc, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-            { label: 'Offerwall', data: series.map(d => d.offerwall), borderColor: c.offerwall, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 },
-            { label: 'Referrals', data: series.map(d => d.referrals), borderColor: c.referral, backgroundColor: 'transparent', tension: 0.3, pointRadius: 0, borderWidth: 2 }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true, position: 'top', labels: { color: c.text, font: { size: 10, weight: '600' }, boxWidth: 12, padding: 8 } },
-            tooltip: { mode: 'index', intersect: false }
-          },
-          scales: {
-            x: { ticks: { color: c.muted, font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } },
-            y: { ticks: { color: c.muted, font: { size: 9 } }, grid: { color: c.grid }, beginAtZero: true }
-          }
-        }
-      });
-    }
-
-    function renderActivityChart(counts) {
-      const c = chartColors();
-      const ctx = document.getElementById('activityChart').getContext('2d');
-      if (activityChart) activityChart.destroy();
-      const data = [
-        counts.faucet || 0,
-        counts.ptc || 0,
-        counts.offerwall || 0,
-        counts.swap || 0,
-        counts.referral || 0,
-        counts.withdrawal || 0
-      ];
-      const labels = ['Faucet Claims', 'PTC Rewards', 'Offerwall', 'Swaps', 'Referrals', 'Withdrawals'];
-      const colors = [c.faucet, c.ptc, c.offerwall, c.swap, c.referral, c.muted];
-      const total = data.reduce((a, b) => a + b, 0);
-      if (total === 0) {
-        // Render placeholder
-        activityChart = new Chart(ctx, {
-          type: 'doughnut',
-          data: { labels: ['No activity yet'], datasets: [{ data: [1], backgroundColor: [c.grid], borderWidth: 0 }] },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '70%' }
-        });
-        return;
-      }
-      activityChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{ data, backgroundColor: colors, borderWidth: 0 }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right', labels: { color: c.text, font: { size: 11 }, boxWidth: 12, padding: 8 } },
-            tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + ctx.parsed } }
-          },
-          cutout: '60%'
-        }
-      });
-    }
-
-    function renderBreakdown(counts, series) {
-      const c = chartColors();
-      const totals = (series || []).reduce((acc, d) => {
-        acc.faucet += d.faucet; acc.ptc += d.ptc; acc.offerwall += d.offerwall; acc.referrals += d.referrals;
-        return acc;
-      }, { faucet: 0, ptc: 0, offerwall: 0, referrals: 0 });
-      const grid = document.getElementById('breakdownGrid');
-      grid.innerHTML = `
-        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.faucet}"></span>Faucet</div><div class="breakdown-value" style="color:${c.faucet}">${fmt(totals.faucet)} CNX</div></div>
-        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.ptc}"></span>PTC</div><div class="breakdown-value" style="color:${c.ptc}">${fmt(totals.ptc)} CNX</div></div>
-        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.offerwall}"></span>Offerwall</div><div class="breakdown-value" style="color:${c.offerwall}">${fmt(totals.offerwall)} CNX</div></div>
-        <div class="breakdown-item"><div class="breakdown-label"><span class="breakdown-dot" style="background:${c.referral}"></span>Referrals</div><div class="breakdown-value" style="color:${c.referral}">${fmt(totals.referrals)} CNX</div></div>
-      `;
-    }
-
-    window.onload = init;
-  </script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

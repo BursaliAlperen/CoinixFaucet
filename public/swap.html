@@ -371,177 +371,55 @@
   </div>
 
   <script>
-    let userId = null;
-    let userBalance = { cnx: 0, doge_balance: 0 };
-    // Allowed currencies are FIXED to only CNX and DOGE
-    const ALLOWED = ['cnx', 'doge'];
+/* COINIX SWAP - Secure Thin Client */
+const API = window.location.origin;
+let token = null;
 
-    function coinSvgFor(cur) {
-      if (cur === 'doge') {
-        return '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v6c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7l-8-5z"/></svg>';
-      }
-      return '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/><path d="M9 8h4a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9V8zm0 6h5a2 2 0 0 1 2 2 2 2 0 0 1-2 2H9v-4z" fill="#0f172a"/></svg>';
-    }
+async function api(endpoint, opts = {}) {
+  const res = await fetch(`${API}${endpoint}`, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+    ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-    function refreshCurrencyIcons() {
-      const from = document.getElementById('fromCurrency').value;
-      const to = from === 'cnx' ? 'doge' : 'cnx';
-      const fromIcon = document.getElementById('fromCoinIcon');
-      const toIcon = document.getElementById('toCoinIcon');
-      fromIcon.className = 'coin-icon' + (from === 'doge' ? ' doge' : '');
-      fromIcon.innerHTML = coinSvgFor(from);
-      toIcon.className = 'coin-icon' + (to === 'doge' ? ' doge' : '');
-      toIcon.innerHTML = coinSvgFor(to);
-      document.getElementById('fromCurrencyLabel').textContent = from === 'cnx' ? 'CNX' : 'DOGE';
-      document.getElementById('toCurrencyLabel').textContent = to === 'cnx' ? 'CNX' : 'DOGE';
-      document.getElementById('rateLabel').textContent = 'Rate: 1:1';
-    }
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }); }
+function showToast(msg, type='info') { console.log(`[${type}]`, msg); }
 
-    async function init() {
-      const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) { document.body.classList.add('demo-mode'); return; }
+async function init() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready(); tg.expand();
+  const initData = tg.initData;
+  try {
+    const auth = await api('/api/auth', { method: 'POST', body: { initData } });
+    token = auth.token;
+    await loadBalance();
+  } catch (err) { console.error(err); }
+}
 
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData })
-        });
-        const data = await res.json();
-        if (!data.success) { document.body.classList.add('demo-mode'); return; }
-        userId = data.user_id;
-        loadBalance();
-      } catch (err) {
-        console.error(err);
-        document.body.classList.add('demo-mode');
-      }
-    }
+async function loadBalance() {
+  try {
+    const me = await api('/api/me');
+    document.getElementById('bal-cnx').textContent = fmt(me.balance) + ' CNX';
+    document.getElementById('bal-doge').textContent = fmt(me.doge_balance) + ' DOGE';
+  } catch (err) { console.error(err); }
+}
 
-    async function loadBalance() {
-      if (!userId) return;
-      try {
-        const res = await fetch(`/api/balance/${userId}`);
-        const data = await res.json();
-        userBalance = { cnx: data.balance, doge_balance: data.doge_balance };
-        document.getElementById('dogeBalance').textContent = data.doge_balance.toFixed(2);
-        document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
-        updateAvailableBalance();
-        updateToAmount();
-      } catch (err) {
-        console.error(err);
-      }
-    }
+async function handleSwap() {
+  const amount = document.getElementById('swap-amount')?.value;
+  const direction = document.getElementById('swap-dir')?.value;
+  if (!amount) return showToast('Enter amount', 'error');
+  try {
+    await api('/api/swap', { method: 'POST', body: { amount: Number(amount), direction } });
+    showToast('Swap successful', 'success');
+    await loadBalance();
+  } catch (err) { showToast(err.message, 'error'); }
+}
 
-    function swapCurrencies() {
-      const from = document.getElementById('fromCurrency').value;
-      const to = from === 'cnx' ? 'doge' : 'cnx';
-      document.getElementById('fromCurrency').value = to;
-      // Also flip the visual To label by re-rendering icons
-      refreshCurrencyIcons();
-      // Clear input
-      document.getElementById('fromAmount').value = '';
-      document.getElementById('toAmount').value = '';
-      document.getElementById('toReceive').textContent = '0.00';
-      updateAvailableBalance();
-    }
-
-    function setMax() {
-      const from = document.getElementById('fromCurrency').value;
-      const available = from === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
-      document.getElementById('fromAmount').value = available.toFixed(2);
-      updateToAmount();
-    }
-
-    function updateAvailableBalance() {
-      const from = document.getElementById('fromCurrency').value;
-      const available = from === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
-      document.getElementById('fromAvailable').textContent = available.toFixed(2);
-    }
-
-    function updateToAmount() {
-      const fromAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
-      // 1:1 fixed rate
-      document.getElementById('toAmount').value = fromAmount.toFixed(2);
-      document.getElementById('toReceive').textContent = fromAmount.toFixed(2);
-    }
-
-    // Wire fromCurrency change
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('fromCurrency').addEventListener('change', () => {
-        refreshCurrencyIcons();
-        document.getElementById('fromAmount').value = '';
-        document.getElementById('toAmount').value = '';
-        document.getElementById('toReceive').textContent = '0.00';
-        updateAvailableBalance();
-      });
-      document.getElementById('fromAmount').addEventListener('input', updateToAmount);
-      refreshCurrencyIcons();
-    });
-
-    async function handleSwap(e) {
-      e.preventDefault();
-      if (!userId) return;
-
-      const fromCurrency = document.getElementById('fromCurrency').value;
-      const toCurrency = fromCurrency === 'cnx' ? 'doge' : 'cnx';
-      const amount = parseFloat(document.getElementById('fromAmount').value);
-      const alertDiv = document.getElementById('alertDiv');
-
-      // Hard guard — only CNX/DOGE allowed
-      if (!ALLOWED.includes(fromCurrency) || !ALLOWED.includes(toCurrency)) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Only CNX ↔ DOGE swaps are allowed.</div></div>';
-        return;
-      }
-
-      if (!amount || amount <= 0) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Enter a valid amount</div></div>';
-        return;
-      }
-
-      const available = fromCurrency === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
-      if (available < amount) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Insufficient balance</div></div>';
-        return;
-      }
-
-      const btn = document.getElementById('swapBtn');
-      btn.disabled = true;
-      document.getElementById('swapBtnText').innerHTML = '<span class="loading"></span> Processing...';
-
-      try {
-        const res = await fetch('/api/swap', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: userId,
-            from_currency: fromCurrency,
-            to_currency: toCurrency,
-            amount
-          })
-        });
-        const result = await res.json();
-
-        if (result.success) {
-          alertDiv.innerHTML = `<div class="alert alert-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>Swapped <strong>${amount.toFixed(2)} ${fromCurrency.toUpperCase()}</strong> for <strong>${result.swapped_amount.toFixed(2)} ${toCurrency.toUpperCase()}</strong></div></div>`;
-          document.getElementById('swapForm').reset();
-          refreshCurrencyIcons();
-          setTimeout(() => {
-            loadBalance();
-            alertDiv.innerHTML = '';
-          }, 1500);
-        } else {
-          alertDiv.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>${result.error || 'Swap failed'}</div></div>`;
-        }
-      } catch (err) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Network error</div></div>';
-        console.error(err);
-      } finally {
-        btn.disabled = false;
-        document.getElementById('swapBtnText').textContent = 'Swap Now';
-      }
-    }
-
-    window.addEventListener('load', init);
-  </script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

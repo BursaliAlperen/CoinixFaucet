@@ -314,126 +314,56 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const API = window.location.origin;
-    const AOYCO_API_KEY = 'XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM';
-    let userId = null, lastClaim = 0, cooldownTimer = null;
+/* COINIX FAUCET - Secure Thin Client */
+const API = window.location.origin;
+let token = null;
 
-    function showToast(msg, type = 'info') {
-      const t = document.getElementById('toast');
-      const icons = {
-        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
-      };
-      t.className = 'toast show ' + type;
-      t.innerHTML = (icons[type] || '') + ' ' + msg;
-      clearTimeout(t._timer);
-      t._timer = setTimeout(() => { t.classList.remove('show'); }, 2800);
-    }
+async function api(endpoint, opts = {}) {
+  const res = await fetch(`${API}${endpoint}`, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+    ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-    async function init() {
-      const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) { document.body.classList.add('demo-mode'); loadTasksFrame(); return; }
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }); }
+function showToast(msg, type='info') { console.log(`[${type}]`, msg); }
 
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData })
-        });
-        const data = await res.json();
-        if (!data.success) { document.body.classList.add('demo-mode'); loadTasksFrame(); return; }
-        userId = data.user_id;
-        loadBalance();
-        loadTasksFrame();
-      } catch (err) {
-        console.error(err);
-        document.body.classList.add('demo-mode');
-        loadTasksFrame();
-      }
-    }
+async function init() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready(); tg.expand();
+  const initData = tg.initData;
+  try {
+    const auth = await api('/api/auth', { method: 'POST', body: { initData } });
+    token = auth.token;
+    await loadBalance();
+  } catch (err) { console.error(err); }
+}
 
-    async function loadBalance() {
-      if (!userId) return;
-      try {
-        const res = await fetch(API + '/api/balance/' + userId);
-        const data = await res.json();
-        document.getElementById('cnxBalance').textContent = data.balance;
-        document.getElementById('dogeBalance').textContent = (data.doge_balance || 0).toFixed(2);
-        document.getElementById('statClaims').textContent = data.total_claims || 0;
-        document.getElementById('statEarned').textContent = (data.total_earned || 0).toFixed(2);
-        document.getElementById('statDoge').textContent = (data.total_doge_earned || 0).toFixed(2);
-        lastClaim = data.last_claim || 0;
-        updateCooldown();
-      } catch (e) { console.error(e); }
-    }
+async function loadBalance() {
+  try {
+    const me = await api('/api/me');
+    document.getElementById('bal').textContent = fmt(me.balance);
+    const btn = document.getElementById('claimBtn');
+    if (btn) { btn.disabled = false; btn.onclick = doClaim; }
+  } catch (err) { console.error(err); }
+}
 
-    function updateCooldown() {
-      const diff = Date.now() - lastClaim;
-      const btn = document.getElementById('claimBtn');
-      const txt = document.getElementById('cooldownText');
-      if (diff < 10000) {
-        const wait = Math.ceil((10000 - diff) / 1000);
-        btn.disabled = true;
-        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Wait ' + wait + 's...';
-        if (!cooldownTimer) cooldownTimer = setInterval(updateCooldown, 1000);
-      } else {
-        btn.disabled = false;
-        txt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ready to claim!';
-        if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
-      }
-    }
+async function doClaim() {
+  const btn = document.getElementById('claimBtn');
+  btn.disabled = true;
+  try {
+    const res = await api('/api/claim', { method: 'POST' });
+    showToast(`+${res.amount} CNX!`, 'success');
+    await loadBalance();
+  } catch (err) { showToast(err.message, 'error'); }
+  finally { btn.disabled = false; }
+}
 
-    async function doClaim() {
-      if (!userId) return;
-      const btn = document.getElementById('claimBtn');
-      btn.disabled = true;
-      try {
-        const res = await fetch(API + '/api/claim', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId })
-        });
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('cnxBalance').textContent = data.balance;
-          document.getElementById('statEarned').textContent = (parseFloat(document.getElementById('statEarned').textContent) + data.reward).toFixed(2);
-          document.getElementById('statClaims').textContent = (parseInt(document.getElementById('statClaims').textContent) || 0) + 1;
-          lastClaim = Date.now(); updateCooldown();
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> You won ' + data.reward.toFixed(2) + ' CNX!';
-          showToast('+' + data.reward.toFixed(2) + ' CNX', 'success');
-        } else {
-          document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ' + (data.error || 'Error');
-        }
-      } catch (e) {
-        document.getElementById('cooldownText').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Network error';
-      }
-    }
-
-    function loadTasksFrame() {
-      const wrap = document.getElementById('tasksFrameWrap');
-      // Sanitize USER_ID for AoyCo (alphanumeric only)
-      let safeId = userId ? String(userId).replace(/[^a-zA-Z0-9]/g, '') : 'guest' + Date.now();
-      if (!safeId) safeId = '0';
-
-      const iframe = document.createElement('iframe');
-      iframe.style.width = '100%';
-      iframe.style.height = '460px';
-      iframe.style.border = 'none';
-      iframe.style.display = 'block';
-      iframe.allow = 'popups; fullscreen';
-      iframe.referrerPolicy = 'no-referrer';
-      iframe.src = `https://aoyco.in/offerwall/${AOYCO_API_KEY}/${safeId}`;
-
-      iframe.onload = () => {
-        const fb = wrap.querySelector('.tasks-fallback');
-        if (fb) fb.style.display = 'none';
-      };
-      iframe.onerror = () => {
-        wrap.innerHTML = '<div class="tasks-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p style="font-size:13px;">Could not load offers.<br>Try the <a href="/ptc" style="color:var(--accent);text-decoration:underline;">PTC page</a>.</p></div>';
-      };
-
-      wrap.innerHTML = '';
-      wrap.appendChild(iframe);
-    }
-
-    window.addEventListener('load', init);
-  </script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

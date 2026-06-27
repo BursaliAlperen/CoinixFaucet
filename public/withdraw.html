@@ -386,211 +386,66 @@
   </div>
 
   <script>
-    let userId = null;
-    let userBalance = { doge_balance: 0, balance: 0 };
+/* COINIX WITHDRAW - Secure Thin Client */
+const API = window.location.origin;
+let token = null;
 
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(tab).classList.add('active');
-        if (tab === 'history') loadHistory();
-      });
-    });
+async function api(endpoint, opts = {}) {
+  const res = await fetch(`${API}${endpoint}`, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+    ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-    // Strict FaucetPay email validation
-    function isValidFaucetPayEmail(email) {
-      if (!email || typeof email !== 'string') return false;
-      const v = email.trim().toLowerCase();
-      // Basic email regex (sufficient for faucetpay emails)
-      const re = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
-      if (!re.test(v)) return false;
-      // Block obvious wallet-like strings (no spaces, must have @ and TLD)
-      if (v.includes(' ')) return false;
-      // Disallow DOGE address-like input (starts with D/n/m, length > 20, alphanumeric)
-      if (/^[dnm][a-z0-9]{25,}$/i.test(v.split('@')[0])) return false;
-      return true;
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }); }
+function showToast(msg, type='info') { console.log(`[${type}]`, msg); }
+
+async function init() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready(); tg.expand();
+  const initData = tg.initData;
+  try {
+    const auth = await api('/api/auth', { method: 'POST', body: { initData } });
+    token = auth.token;
+    await loadBalance();
+    await loadHistory();
+  } catch (err) { console.error(err); }
+}
+
+async function loadBalance() {
+  try {
+    const me = await api('/api/me');
+    document.getElementById('bal-doge').textContent = fmt(me.doge_balance) + ' DOGE';
+  } catch (err) { console.error(err); }
+}
+
+async function loadHistory() {
+  try {
+    const data = await api('/api/withdrawals');
+    const tbody = document.getElementById('wd-history');
+    if (tbody) {
+      tbody.innerHTML = data.map(w => `<tr><td>${fmt(w.amount)}</td><td>${w.status}</td><td>${new Date(w.timestamp).toLocaleDateString()}</td></tr>`).join('');
     }
+  } catch (err) { console.error(err); }
+}
 
-    function setAmount(v) {
-      document.getElementById('amount').value = v;
-      validateAmount();
-    }
-    function setMax() {
-      document.getElementById('amount').value = userBalance.doge_balance.toFixed(2);
-      validateAmount();
-    }
+async function handleWithdraw() {
+  const email = document.getElementById('fp-email')?.value?.trim();
+  const amount = document.getElementById('wd-amount')?.value;
+  if (!email || !amount) return showToast('Fill all fields', 'error');
+  try {
+    await api('/api/withdraw', { method: 'POST', body: { faucetpay_email: email, amount: Number(amount) } });
+    showToast('Withdrawal submitted', 'success');
+    await loadBalance();
+    await loadHistory();
+  } catch (err) { showToast(err.message, 'error'); }
+}
 
-    function validateAmount() {
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      const hint = document.getElementById('amountHint');
-      if (amount <= 0) {
-        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Enter an amount';
-        hint.className = 'form-hint';
-      } else if (amount < 0.10) {
-        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Minimum is 0.10 DOGE';
-        hint.className = 'form-hint err';
-      } else if (amount > userBalance.doge_balance) {
-        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Insufficient balance (' + userBalance.doge_balance.toFixed(2) + ' DOGE available)';
-        hint.className = 'form-hint err';
-      } else {
-        hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Looks good!';
-        hint.className = 'form-hint ok';
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('amount').addEventListener('input', validateAmount);
-      document.getElementById('address').addEventListener('input', () => {
-        const addr = document.getElementById('address').value.trim();
-        const hint = document.getElementById('addressHint');
-        if (!addr) {
-          hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Only your <strong>FaucetPay email</strong> is accepted. Wallet addresses and usernames are not supported.';
-          hint.className = 'form-hint';
-        } else if (!isValidFaucetPayEmail(addr)) {
-          hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Invalid email — please enter your FaucetPay email address';
-          hint.className = 'form-hint err';
-        } else {
-          hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Valid FaucetPay email';
-          hint.className = 'form-hint ok';
-        }
-      });
-    });
-
-    async function init() {
-      const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) { document.body.classList.add('demo-mode'); return; }
-
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData })
-        });
-        const data = await res.json();
-        if (!data.success) { document.body.classList.add('demo-mode'); return; }
-        userId = data.user_id;
-        loadBalance();
-      } catch (err) {
-        console.error(err);
-        document.body.classList.add('demo-mode');
-      }
-    }
-
-    async function loadBalance() {
-      if (!userId) return;
-      try {
-        const res = await fetch(`/api/balance/${userId}`);
-        const data = await res.json();
-        userBalance = data;
-        document.getElementById('dogeBalance').textContent = data.doge_balance.toFixed(2);
-        document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
-        validateAmount();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    async function handleWithdraw(e) {
-      e.preventDefault();
-      if (!userId) return;
-
-      const amount = parseFloat(document.getElementById('amount').value);
-      const address = document.getElementById('address').value.trim();
-      const alertDiv = document.getElementById('withdrawAlert');
-
-      if (!amount || amount < 0.10) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Minimum withdrawal is 0.10 DOGE</div></div>';
-        return;
-      }
-
-      if (amount > userBalance.doge_balance) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Insufficient DOGE balance. Swap CNX to DOGE first.</div></div>';
-        return;
-      }
-
-      if (!address) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Please enter your FaucetPay email.</div></div>';
-        return;
-      }
-
-      if (!isValidFaucetPayEmail(address)) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Invalid email. Only <strong>FaucetPay email addresses</strong> are accepted (e.g. you@faucetpay.email). Wallet addresses and usernames are not supported.</div></div>';
-        return;
-      }
-
-      const btn = document.getElementById('withdrawBtn');
-      btn.disabled = true;
-      document.getElementById('withdrawBtnText').innerHTML = '<div class="spinner"></div> Processing...';
-
-      try {
-        const res = await fetch('/api/withdraw', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, amount, address, currency: 'doge' })
-        });
-        const result = await res.json();
-
-        if (result.success) {
-          alertDiv.innerHTML = '<div class="alert alert-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><div>Withdrawal request submitted! DOGE will be sent to your FaucetPay email after admin approval.</div></div>';
-          document.getElementById('withdrawForm').reset();
-          document.getElementById('addressHint').className = 'form-hint';
-          document.getElementById('amountHint').className = 'form-hint';
-          setTimeout(loadBalance, 1000);
-        } else {
-          alertDiv.innerHTML = `<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>${result.error || 'Withdrawal failed'}</div></div>`;
-        }
-      } catch (err) {
-        alertDiv.innerHTML = '<div class="alert alert-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Network error</div></div>';
-        console.error(err);
-      } finally {
-        btn.disabled = false;
-        document.getElementById('withdrawBtnText').textContent = 'Withdraw to FaucetPay';
-      }
-    }
-
-    async function loadHistory() {
-      if (!userId) return;
-      const historyList = document.getElementById('historyList');
-      historyList.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
-
-      try {
-        const res = await fetch(`/api/withdrawals/${userId}`);
-        const withdrawals = await res.json();
-
-        if (!withdrawals.length) {
-          historyList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No withdrawals yet</p></div>';
-          return;
-        }
-
-        historyList.innerHTML = withdrawals.map(w => {
-          const date = new Date(w.timestamp).toLocaleString();
-          const statusClass = `status-${w.status}`;
-          return `
-            <div class="history-item">
-              <div class="history-left">
-                <div class="history-amount">
-                  <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="2" r="3"/><circle cx="12" cy="22" r="3"/><path d="M12 6v12"/></svg>
-                  ${w.amount.toFixed(2)} ${(w.currency || 'doge').toUpperCase()}
-                </div>
-                <div class="history-date">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  ${date}
-                </div>
-              </div>
-              <div class="history-status ${statusClass}">${w.status}</div>
-            </div>
-          `;
-        }).join('');
-      } catch (err) {
-        historyList.innerHTML = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><p style="color:var(--danger)">Failed to load history</p></div>';
-        console.error(err);
-      }
-    }
-
-    window.addEventListener('load', init);
-  </script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>

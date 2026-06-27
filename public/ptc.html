@@ -448,110 +448,51 @@
   </div>
 
   <script>
-    const API = window.location.origin;
-    const AOYCO_API_KEY = 'XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM';
-    let userId = null;
+/* COINIX PTC - Secure Thin Client */
+const API = window.location.origin;
+let token = null;
 
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-btn').forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-selected', 'false');
-        });
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        document.getElementById('tab-' + tab).classList.add('active');
-      });
-    });
+async function api(endpoint, opts = {}) {
+  const res = await fetch(`${API}${endpoint}`, {
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+    ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
 
-    // Sanitize USER_ID for AoyCo (alphanumeric only)
-    function safeUserId(uid) {
-      let s = uid ? String(uid).replace(/[^a-zA-Z0-9]/g, '') : '';
-      return s || '0';
-    }
+function fmt(n) { return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 4 }); }
 
-    async function init() {
-      const initData = window.Telegram?.WebApp?.initData;
-      if (!initData) {
-        document.body.classList.add('demo-mode');
-        document.getElementById('cnxBalance').textContent = '0.00';
-        return;
-      }
+async function init() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready(); tg.expand();
+  const initData = tg.initData;
+  try {
+    const auth = await api('/api/auth', { method: 'POST', body: { initData } });
+    token = auth.token;
+    await loadBalance();
+    await loadOfferwall();
+  } catch (err) { console.error(err); }
+}
 
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData })
-        });
-        const data = await res.json();
-        if (!data.success) { document.body.classList.add('demo-mode'); return; }
-        userId = data.user_id;
-        loadBalance();
-        loadOfferwall();
-      } catch (err) {
-        console.error(err);
-        document.body.classList.add('demo-mode');
-      }
-    }
+async function loadBalance() {
+  try {
+    const me = await api('/api/me');
+    document.getElementById('bal').textContent = fmt(me.balance);
+  } catch (err) { console.error(err); }
+}
 
-    async function loadBalance() {
-      if (!userId) return;
-      try {
-        const res = await fetch(API + '/api/balance/' + userId);
-        const data = await res.json();
-        document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
-      } catch (err) {
-        console.error(err);
-      }
-    }
+async function loadOfferwall() {
+  try {
+    const data = await api('/api/offerwall/offerwall');
+    const frame = document.getElementById('offerwall-frame');
+    if (frame) frame.src = data.url;
+  } catch (err) { console.error(err); }
+}
 
-    function loadOfferwall() {
-      if (!userId) return;
-      const container = document.getElementById('offerwallContainer');
-      const safeId = safeUserId(userId);
-
-      const iframe = document.createElement('iframe');
-      iframe.style.width = '100%';
-      iframe.style.height = '600px';
-      iframe.style.border = 'none';
-      iframe.style.display = 'block';
-      iframe.allow = 'popups; fullscreen';
-      iframe.referrerPolicy = 'no-referrer';
-      iframe.src = `https://aoyco.in/offerwall/${AOYCO_API_KEY}/${safeId}`;
-
-      iframe.onload = () => {
-        const fb = container.querySelector('.iframe-fallback');
-        if (fb) fb.style.display = 'none';
-      };
-      iframe.onerror = () => {
-        container.innerHTML = '<div class="iframe-fallback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p style="font-size:13px;">Could not load offers.<br>Please try again later.</p></div>';
-      };
-
-      container.innerHTML = '';
-      container.appendChild(iframe);
-    }
-
-    function loadPTCPopup() {
-      if (!userId) return;
-      const safeId = safeUserId(userId);
-      const width = 800, height = 600;
-      const left = (screen.width - width) / 2;
-      const top = (screen.height - height) / 2;
-      window.open(
-        `https://aoyco.in/ptc/${AOYCO_API_KEY}/${safeId}`,
-        'PTCWindow',
-        `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-      );
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) loadBalance();
-    });
-
-    window.addEventListener('load', init);
-  </script>
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>
