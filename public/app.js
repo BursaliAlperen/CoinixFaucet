@@ -293,8 +293,18 @@ async function init() {
   await loadUser();
   if (state.lastClaim > 0) startTimer();
   loadLB();
+  setOfferwallURL();
   hideLoading();
   setTimeout(() => toast('Welcome to CoinixFaucet!', 'ok'), 500);
+}
+
+function setOfferwallURL() {
+  const frame = document.getElementById('offerwallFrame');
+  if (frame && state.user) {
+    const apiKey = 'YOUR_API_KEY'; // Replace with your AoyCo API Key
+    const userId = state.user.telegram_id;
+    frame.src = `https://aoyco.in/offerwall/${apiKey}/${userId}`;
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
