@@ -420,19 +420,122 @@ loadUsers(); loadWithdrawals(); loadLogs();
 });
 
 // ========================
-// 9. Serve Frontend (SPA Fallback)
+// 9. Stats API
 // ========================
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+app.get('/api/stats', async (req, res) => {
+  try {
+    const usersSnap = await db.collection('users').get();
+    let totalUsers = 0;
+    let totalBalance = 0;
+    let totalClaims = 0;
+    let activeToday = 0;
+    const now = Date.now();
+    const dayAgo = now - 86400000;
+
+    usersSnap.forEach(doc => {
+      const d = doc.data();
+      totalUsers++;
+      totalBalance += d.balance || 0;
+      if (d.last_claim) {
+        totalClaims++;
+        if (d.last_claim.toMillis() > dayAgo) activeToday++;
+      }
+    });
+
+    const withdrawSnap = await db.collection('withdrawals').get();
+    let totalWithdrawn = 0;
+    let pendingWithdrawals = 0;
+    withdrawSnap.forEach(doc => {
+      const d = doc.data();
+      if (d.status === 'approved') totalWithdrawn += d.amount || 0;
+      if (d.status === 'pending') pendingWithdrawals++;
+    });
+
+    const logsSnap = await db.collection('logs').where('action', '==', 'claim').get();
+    let totalClaimsCount = 0;
+    logsSnap.forEach(() => totalClaimsCount++);
+
+    res.json({
+      totalUsers,
+      totalBalance,
+      totalClaims: totalClaimsCount,
+      activeToday,
+      totalWithdrawn,
+      pendingWithdrawals
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
 });
 
-// SPA fallback for all client routes
-app.get('/withdraw', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/faucet', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/ptc', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/funds', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/api/stats/user/:userId', async (req, res) => {
+  try {
+    const userDoc = await db.collection('users').doc(String(req.params.userId)).get();
+    if (!userDoc.exists) return res.json({ balance: 0, claims: 0, earned: 0, withdrawn: 0 });
+
+    const userData = userDoc.data();
+    const balance = userData.balance || 0;
+
+    const logsSnap = await db.collection('logs')
+      .where('user_id', '==', String(req.params.userId))
+      .where('action', '==', 'claim')
+      .get();
+    let claims = 0;
+    let earned = 0;
+    logsSnap.forEach(doc => {
+      claims++;
+      earned += doc.data().details?.reward || 0;
+    });
+
+    const wdSnap = await db.collection('withdrawals')
+      .where('user_id', '==', String(req.params.userId))
+      .where('status', '==', 'approved')
+      .get();
+    let withdrawn = 0;
+    wdSnap.forEach(doc => withdrawn += doc.data().amount || 0);
+
+    res.json({ balance, claims, earned, withdrawn });
+  } catch (err) {
+    console.error('User stats error:', err);
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// ========================
+// 9. Serve Frontend Pages
+// ========================
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
+app.get('/faucet', (req, res) => res.sendFile(path.join(__dirname, 'faucet.html')));
+app.get('/ptc', (req, res) => res.sendFile(path.join(__dirname, 'ptc.html')));
+app.get('/withdraw', (req, res) => res.sendFile(path.join(__dirname, 'withdraw.html')));
+app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'swap.html')));
+app.get('/funds', (req, res) => res.sendFile(path.join(__dirname, 'funds.html')));
+
+// ========================
+// 10. Static Files (all HTML pages)
+// ========================
+app.use(express.static(path.join(__dirname)));
+
+// ========================
+// 11. Debug: List files
+// ========================
+app.get('/debug/files', (req, res) => {
+  const fs = require('fs');
+  try {
+    const files = fs.readdirSync(__dirname);
+    res.json({
+      dirname: __dirname,
+      files: files.filter(f => f.endsWith('.html') || f.endsWith('.js') || f.endsWith('.json')),
+      message: 'If dashboard.html is NOT in this list, you forgot to deploy it!'
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log('COINIXFAUCET server running on port ' + PORT);
+  console.log('Serving files from: ' + __dirname);
 });
