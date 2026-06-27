@@ -11,46 +11,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<!-- GTranslate -->
 <script type="text/javascript">
-function googleTranslateElementInit() {
+function googleTranslateElementInit(){
   new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    includedLanguages: 'en,tr,de,fr,es,it,pt,ru,ar,zh-CN,ja,ko,hi,nl,pl,sv,no,da,fi,el,cs,ro,hu,bg,uk,id,vi,th,ms,fa,he,ur,bn',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: true
-  }, 'google_translate_element');
+    pageLanguage:'en',
+    includedLanguages:'en,tr,de,fr,es,it,pt,ru,ar,zh-CN,ja,ko,hi,nl,pl,sv,no,da,fi,el,cs,ro,hu,bg,uk,id,vi,th,ms,fa,he,ur,bn',
+    layout:google.translate.TranslateElement.InlineLayout.SIMPLE
+  },'google_translate_element');
 }
 </script>
 <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
 <style>
 :root{
-  --gold:#FFD700; --gold-2:#F5A623; --gold-3:#B8860B;
+  --gold:#FFD700;--gold-2:#F5A623;--gold-3:#B8860B;
   --gold-soft:rgba(255,215,0,0.1);
-  --purple:#8b5cf6; --purple-2:#a855f7; --purple-soft:rgba(139,92,246,0.1);
-  --blue:#4A9EFF; --blue-soft:rgba(74,158,255,0.1);
-  --bg-0:#05060f; --bg-1:#0b0d1a; --bg-2:#131627; --bg-3:#1c1f35;
-  --text:#f2f4f9; --text-dim:#9aa3b8; --text-muted:#5a6380;
-  --success:#00d084; --danger:#ff4757; --warn:#f59e0b;
-  --glass:rgba(255,255,255,0.035); --glass-brd:rgba(255,255,255,0.07);
-  --radius:18px; --sidebar-w:260px; --header-h:70px;
+  --blue:#4A9EFF;--blue-soft:rgba(74,158,255,0.1);
+  --purple:#8b5cf6;--purple-soft:rgba(139,92,246,0.1);
+  --bg-0:#05060f;--bg-1:#0b0d1a;--bg-2:#131627;--bg-3:#1c1f35;
+  --text:#f2f4f9;--text-dim:#9aa3b8;--text-muted:#5a6380;
+  --success:#00d084;--danger:#ff4757;--warn:#f59e0b;
+  --glass:rgba(255,255,255,0.035);--glass-brd:rgba(255,255,255,0.07);
+  --radius:18px;--sidebar-w:260px;--header-h:70px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
 body{
-  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:'Inter',sans-serif;
   background:var(--bg-0);color:var(--text);
   display:flex;
   -webkit-font-smoothing:antialiased;
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
-  background:
-    radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,215,0,0.09),transparent 60%),
-    radial-gradient(ellipse 60% 40% at 100% 100%,rgba(74,158,255,0.06),transparent 60%),
-    linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);
+  background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,215,0,0.09),transparent 60%),
+  radial-gradient(ellipse 60% 40% at 100% 100%,rgba(74,158,255,0.06),transparent 60%),
+  linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);
 }
 body::after{
   content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
@@ -58,18 +53,19 @@ body::after{
   background-size:44px 44px;opacity:.5;
 }
 
-/* GTranslate */
+/* Google Translate - Fixed Bottom */
 .goog-te-banner-frame.skiptranslate{display:none!important}
 body{top:0!important}
 #google_translate_element{
-  position:fixed;top:15px;right:20px;z-index:10002;
+  position:fixed;bottom:20px;right:20px;z-index:10002;
 }
 .goog-te-gadget{font-size:0!important}
 .goog-te-gadget-simple{
   background:rgba(11,13,26,0.95)!important;
   border:1px solid var(--glass-brd)!important;
-  border-radius:10px!important;
-  padding:8px 12px!important;
+  border-radius:30px!important;
+  padding:10px 18px!important;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5)!important;
 }
 .goog-te-gadget-simple span{color:var(--text)!important;font-size:13px!important}
 .goog-te-gadget-simple img{width:18px!important;height:18px!important}
@@ -85,10 +81,12 @@ body{top:0!important}
   background:linear-gradient(180deg,rgba(11,13,26,0.98) 0%,rgba(5,6,15,0.99) 100%);
   backdrop-filter:blur(24px) saturate(180%);
   border-right:1px solid var(--glass-brd);
-  display:flex;flex-direction:column;overflow:hidden;
-  z-index:1000;
+  display:flex;flex-direction:column;overflow:hidden;z-index:1000;
 }
-.sidebar-brand{padding:20px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--glass-brd);cursor:pointer;flex-shrink:0}
+.sidebar-brand{
+  padding:20px 18px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--glass-brd);cursor:pointer;flex-shrink:0;
+}
 .sidebar-brand-img{
   width:42px;height:42px;border-radius:12px;flex-shrink:0;
   background:linear-gradient(135deg,var(--gold),var(--gold-2));
@@ -101,15 +99,23 @@ body{top:0!important}
 .sidebar-brand-sub{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
 .sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto}
 .sidebar-section{margin-bottom:16px}
-.sidebar-section-title{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;padding:8px 14px}
+.sidebar-section-title{
+  font-size:10px;font-weight:700;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1.5px;padding:8px 14px;
+}
 .sidebar-item{
-  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:10px;
   color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;
-  cursor:pointer;transition:all .25s;margin-bottom:3px;position:relative;border:1px solid transparent;
+  cursor:pointer;transition:all .25s;margin-bottom:3px;
+  position:relative;border:1px solid transparent;
 }
 .sidebar-item i{font-size:16px;width:20px;text-align:center;flex-shrink:0}
 .sidebar-item .label{flex:1}
-.sidebar-item .badge{background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;animation:pulse 2s infinite}
+.sidebar-item .badge{
+  background:var(--danger);color:#fff;font-size:9px;font-weight:700;
+  padding:2px 6px;border-radius:20px;animation:pulse 2s infinite;
+}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .sidebar-item:hover{color:var(--text);background:var(--glass);border-color:var(--glass-brd)}
 .sidebar-item.active{
@@ -119,7 +125,11 @@ body{top:0!important}
 }
 .sidebar-item.active i{color:var(--gold)}
 .sidebar-footer{padding:14px;border-top:1px solid var(--glass-brd);flex-shrink:0}
-.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd);cursor:pointer}
+.sidebar-user{
+  display:flex;align-items:center;gap:10px;padding:10px;
+  border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd);
+  cursor:pointer;
+}
 .sidebar-user:hover{border-color:rgba(255,215,0,0.3)}
 .sidebar-user-avatar{
   width:36px;height:36px;border-radius:50%;flex-shrink:0;
@@ -138,21 +148,24 @@ body{top:0!important}
   height:var(--header-h);flex-shrink:0;
   background:rgba(5,6,15,0.72);backdrop-filter:blur(24px) saturate(180%);
   border-bottom:1px solid var(--glass-brd);
-  display:flex;align-items:center;padding:0 24px;gap:16px;
-  z-index:100;
+  display:flex;align-items:center;padding:0 24px;gap:16px;z-index:100;
 }
 .header-menu-btn{
   display:none;background:none;border:none;color:var(--text);
   font-size:20px;cursor:pointer;padding:8px;border-radius:8px;
 }
 .header-menu-btn:hover{background:var(--glass)}
-.header-title{font-family:'Space Grotesk';font-weight:700;font-size:20px;display:flex;align-items:center;gap:10px}
+.header-title{
+  font-family:'Space Grotesk';font-weight:700;font-size:20px;
+  display:flex;align-items:center;gap:10px;
+}
 .header-title i{color:var(--gold);font-size:18px}
 .header-spacer{flex:1}
 .header-balance{
-  display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;
-  background:var(--glass);border:1px solid var(--glass-brd);font-size:13px;font-weight:600;
-  cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:30px;
+  background:var(--glass);border:1px solid var(--glass-brd);
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;
 }
 .header-balance:hover{border-color:rgba(255,215,0,0.3)}
 .header-balance img{width:20px;height:20px}
@@ -211,70 +224,93 @@ body{top:0!important}
 .notif-desc{font-size:12px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .notif-time{font-size:10px;color:var(--text-muted);margin-top:4px}
 
-/* CONTENT */
-.content{flex:1;padding:24px;overflow-y:auto;max-width:1400px;width:100%;margin:0 auto}
-.page-head{margin-bottom:24px}
+/* CONTENT - NO SCROLL ON MAIN */
+.content{
+  flex:1;padding:24px;
+  max-width:1400px;width:100%;margin:0 auto;
+  overflow:hidden; /* NO SCROLL */
+  display:flex;flex-direction:column;
+}
+
+/* PAGE SECTIONS */
+.page-section{
+  display:none;
+  flex:1;overflow:hidden;
+  animation:pageIn .4s cubic-bezier(.4,0,.2,1);
+}
+.page-section.active{display:flex;flex-direction:column}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.page-head{margin-bottom:20px;flex-shrink:0}
 .page-title{
-  font-family:'Space Grotesk';font-weight:700;font-size:32px;line-height:1.2;
+  font-family:'Space Grotesk';font-weight:700;font-size:28px;line-height:1.2;
   display:flex;align-items:center;gap:12px;margin-bottom:6px;
   background:linear-gradient(135deg,#fff 0%,var(--gold) 50%,var(--gold-2) 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
-.page-title i{color:var(--gold);font-size:26px}
+.page-title i{color:var(--gold);font-size:24px}
 .page-sub{color:var(--text-dim);font-size:14px}
 
-/* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+/* STATS GRID */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px;margin-bottom:20px;flex-shrink:0;
+}
 .stat-card{
-  padding:22px;border-radius:var(--radius);
+  padding:18px;border-radius:var(--radius);
   background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
   border:1px solid var(--glass-brd);backdrop-filter:blur(10px);
   transition:all .3s;position:relative;overflow:hidden;
 }
 .stat-card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.2)}
 .stat-card-ic{
-  width:42px;height:42px;border-radius:12px;
+  width:40px;height:40px;border-radius:12px;
   background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));
   color:var(--gold);display:grid;place-items:center;font-size:18px;
-  border:1px solid rgba(255,215,0,0.2);margin-bottom:12px;
+  border:1px solid rgba(255,215,0,0.2);margin-bottom:10px;
 }
 .stat-card-ic.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border-color:rgba(74,158,255,0.3)}
 .stat-card-ic.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border-color:rgba(0,208,132,0.3)}
 .stat-card-ic.purple{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);border-color:rgba(139,92,246,0.3)}
 .stat-card-lbl{font-size:12px;color:var(--text-dim);margin-bottom:4px;display:flex;align-items:center;gap:6px}
 .stat-card-lbl img{width:14px;height:14px}
-.stat-card-val{font-family:'Space Grotesk';font-size:26px;font-weight:700;color:var(--text);line-height:1.1;display:flex;align-items:center;gap:8px}
-.stat-card-val img{width:22px;height:22px}
+.stat-card-val{font-family:'Space Grotesk';font-size:24px;font-weight:700;color:var(--text);line-height:1.1;display:flex;align-items:center;gap:8px}
+.stat-card-val img{width:20px;height:20px}
 .stat-card-val.gold{color:var(--gold)}
 .stat-card-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
 .stat-card-chg{font-size:11px;color:var(--success);margin-top:6px;display:flex;align-items:center;gap:4px}
 
 /* CARDS */
-.grid{display:grid;gap:20px}
-.grid-2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.grid{display:grid;gap:16px}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
 .card{
   position:relative;
   background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));
   border:1px solid var(--glass-brd);border-radius:var(--radius);
-  padding:22px;backdrop-filter:blur(10px);
+  padding:20px;backdrop-filter:blur(10px);
   transition:all .3s;overflow:hidden;
 }
 .card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.15)}
-.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
-.card-title{font-family:'Space Grotesk';font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.card-title{font-family:'Space Grotesk';font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px}
 .card-title i{color:var(--gold)}
 .card-sub{color:var(--text-dim);font-size:13px}
+
+/* SCROLLABLE AREAS - Only these can scroll */
+.scrollable{
+  overflow-y:auto;flex:1;
+  padding-right:8px;
+}
 
 /* BUTTONS */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:12px 20px;border-radius:12px;border:none;cursor:pointer;
-  font-family:'Inter';font-size:14px;font-weight:600;
-  transition:all .25s;text-decoration:none;
-  user-select:none;-webkit-tap-highlight-color:transparent;
-  position:relative;overflow:hidden;
+  padding:11px 18px;border-radius:11px;border:none;cursor:pointer;
+  font-family:'Inter';font-size:13px;font-weight:600;
+  transition:all .25s;user-select:none;position:relative;overflow:hidden;
 }
+.btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,0.4) 0%,transparent 60%);opacity:0;transition:opacity .3s}
+.btn:active::after{opacity:1}
 .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#0a0a14;box-shadow:0 8px 24px rgba(255,215,0,0.25)}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(255,215,0,0.4)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -282,32 +318,80 @@ body{top:0!important}
 .btn-secondary:hover{border-color:rgba(255,215,0,0.3);color:var(--gold)}
 .btn-ghost{background:transparent;color:var(--text-dim)}
 .btn-ghost:hover{color:var(--gold);background:var(--glass)}
-.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
-.btn-lg{padding:14px 26px;font-size:15px}
+.btn-sm{padding:7px 12px;font-size:11px;border-radius:8px}
+.btn-lg{padding:13px 24px;font-size:14px}
 .btn-block{width:100%}
 
+/* FORMS */
+.form-group{margin-bottom:14px}
+.form-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px}
+.form-label i{color:var(--gold);font-size:11px}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:11px 14px;border-radius:11px;
+  background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);
+  color:var(--text);font-family:'Inter';font-size:13px;transition:all .25s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  outline:none;border-color:rgba(255,215,0,0.4);background:rgba(0,0,0,0.5);
+  box-shadow:0 0 0 3px rgba(255,215,0,0.08);
+}
+.form-hint{font-size:10px;color:var(--text-muted);margin-top:5px;display:flex;align-items:center;gap:5px}
+.form-hint i{color:var(--gold);font-size:9px}
+
+/* TABS */
+.tabs{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap;padding:3px;background:var(--glass);border:1px solid var(--glass-brd);border-radius:12px;width:fit-content;flex-shrink:0}
+.tab{padding:8px 14px;border-radius:9px;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:5px;border:1px solid transparent}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold);background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.15)}
+
+/* TABLES - Scrollable */
+.table-wrap{
+  background:var(--glass);border:1px solid var(--glass-brd);
+  border-radius:var(--radius);overflow:hidden;flex:1;
+  display:flex;flex-direction:column;
+}
+.table-scroll{overflow-x:auto;overflow-y:auto;flex:1}
+.table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+.table th{
+  padding:12px 14px;text-align:left;
+  background:rgba(0,0,0,0.4);color:var(--text-dim);
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  border-bottom:1px solid var(--glass-brd);
+  position:sticky;top:0;z-index:2;
+}
+.table td{padding:12px 14px;border-bottom:1px solid var(--glass-brd);color:var(--text)}
+.table tbody tr:last-child td{border-bottom:none}
+.table tbody tr{transition:background .2s}
+.table tbody tr:hover td{background:rgba(255,255,255,0.02)}
+.table .mono{font-family:'JetBrains Mono';font-weight:600;font-size:11px}
+.table .gold{color:var(--gold)}
+.table .success{color:var(--success)}
+.table .danger{color:var(--danger)}
+.table .warn{color:var(--warn)}
+.table .blue{color:var(--blue)}
+
 /* FAQ */
-.faq-item{background:var(--glass);border:1px solid var(--glass-brd);border-radius:12px;margin-bottom:10px;overflow:hidden}
-.faq-q{padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:14px}
+.faq-item{background:var(--glass);border:1px solid var(--glass-brd);border-radius:11px;margin-bottom:8px;overflow:hidden}
+.faq-q{padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:600;font-size:13px}
 .faq-q i{color:var(--gold);transition:transform .3s}
 .faq-item.open .faq-q i{transform:rotate(180deg)}
-.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;padding:0 20px;color:var(--text-dim);font-size:13px}
-.faq-item.open .faq-a{max-height:400px;padding:0 20px 16px}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;padding:0 18px;color:var(--text-dim);font-size:12px}
+.faq-item.open .faq-a{max-height:400px;padding:0 18px 14px}
 .faq-a a{color:var(--gold);text-decoration:none}
-.faq-a ul,.faq-a ol{margin:8px 0 8px 20px}
-.faq-a li{margin-bottom:4px}
+.faq-a ul,.faq-a ol{margin:6px 0 6px 18px}
+.faq-a li{margin-bottom:3px}
 
 /* TOAST */
 .toast{
-  position:fixed;bottom:24px;right:24px;z-index:10000;
-  padding:14px 20px;border-radius:14px;
+  position:fixed;bottom:90px;right:20px;z-index:10000;
+  padding:13px 18px;border-radius:13px;
   background:rgba(11,13,26,0.95);border:1px solid var(--glass-brd);
   backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.6);
-  display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;
-  transform:translateY(100px);opacity:0;transition:all .35s;max-width:360px;
+  display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;
+  transform:translateY(100px);opacity:0;transition:all .35s;max-width:340px;
 }
 .toast.show{transform:translateY(0);opacity:1}
-.toast-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:14px}
+.toast-icon{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:13px}
 .toast.success{border-color:var(--success)}
 .toast.success .toast-icon{background:rgba(0,208,132,0.15);color:var(--success)}
 .toast.error{border-color:var(--danger)}
@@ -315,54 +399,47 @@ body{top:0!important}
 .toast.info{border-color:var(--blue)}
 .toast.info .toast-icon{background:rgba(74,158,255,0.15);color:var(--blue)}
 
-/* LOADING */
-.spinner{
-  width:36px;height:36px;
-  background:url('/images/loading.png') center/contain no-repeat;
-  animation:spin 1s linear infinite;
-}
+/* SPINNER */
+.spinner{width:32px;height:32px;background:url('/images/loading.png') center/contain no-repeat;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim)}
 
 /* UTILITIES */
 .text-gold{color:var(--gold)}
-.text-blue{color:var(--blue)}
 .text-dim{color:var(--text-dim)}
-.text-muted{color:var(--text-muted)}
 .text-success{color:var(--success)}
-.mt-1{margin-top:8px}.mt-2{margin-top:16px}.mt-3{margin-top:24px}
-.mb-2{margin-bottom:16px}
+.text-blue{color:var(--blue)}
+.mt-1{margin-top:7px}.mt-2{margin-top:14px}.mt-3{margin-top:20px}
+.mb-2{margin-bottom:14px}
 .flex-between{display:flex;justify-content:space-between;align-items:center}
 
-/* MOBILE */
+/* RESPONSIVE */
 @media(max-width:900px){
-  .sidebar{
-    position:fixed;left:0;top:0;z-index:1000;
-    transform:translateX(-100%);transition:transform .3s;width:280px;
-  }
+  .sidebar{position:fixed;left:0;top:0;z-index:1000;transform:translateX(-100%);transition:transform .3s;width:280px}
   .sidebar.open{transform:translateX(0)}
   .main{width:100%}
   .header-menu-btn{display:grid}
   .header-balance{display:none}
   .content{padding:16px}
-  .page-title{font-size:24px}
-  .stat-card-val{font-size:22px}
-  #google_translate_element{top:80px;right:10px}
-}
-@media(max-width:500px){
+  .page-title{font-size:22px}
   .stats-grid{grid-template-columns:1fr 1fr}
   .grid-4{grid-template-columns:1fr 1fr}
+  #google_translate_element{bottom:15px;right:10px}
+  .toast{bottom:80px;right:10px;left:10px;max-width:none}
+}
+@media(max-width:500px){
+  .stats-grid{grid-template-columns:1fr}
+  .grid-4{grid-template-columns:1fr}
+  .page-title{font-size:20px}
 }
 </style>
 </head>
 <body>
 
-<!-- GTranslate -->
 <div id="google_translate_element"></div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand" onclick="location.href='/'">
+  <div class="sidebar-brand" onclick="navigate('/')">
     <div class="sidebar-brand-img"><img src="/images/coinix.png" alt="COINIX" onerror="this.style.display='none';this.parentElement.innerHTML='C'"></div>
     <div class="sidebar-brand-txt">
       <span class="sidebar-brand-name">COINIX</span>
@@ -373,25 +450,24 @@ body{top:0!important}
   <nav class="sidebar-nav">
     <div class="sidebar-section">
       <div class="sidebar-section-title">Main</div>
-      <a class="sidebar-item active" href="/"><i class="fa-solid fa-chart-pie"></i><span class="label">Dashboard</span></a>
-      <a class="sidebar-item" href="/faucet"><i class="fa-solid fa-droplet"></i><span class="label">Faucet</span><span class="badge">FREE</span></a>
-      <a class="sidebar-item" href="/offerwall"><i class="fa-solid fa-gift"></i><span class="label">Offerwall</span></a>
+      <a class="sidebar-item active" data-route="/" onclick="navigate('/')"><i class="fa-solid fa-chart-pie"></i><span class="label">Dashboard</span></a>
+      <a class="sidebar-item" data-route="/faucet" onclick="navigate('/faucet')"><i class="fa-solid fa-droplet"></i><span class="label">Faucet</span><span class="badge">FREE</span></a>
+      <a class="sidebar-item" data-route="/ptc" onclick="navigate('/ptc')"><i class="fa-solid fa-gift"></i><span class="label">PTC / Tasks</span></a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">Actions</div>
-      <a class="sidebar-item" href="/swap"><i class="fa-solid fa-right-left"></i><span class="label">Swap</span></a>
-      <a class="sidebar-item" href="/withdraw"><i class="fa-solid fa-paper-plane"></i><span class="label">Withdraw</span></a>
-      <a class="sidebar-item" href="/history"><i class="fa-solid fa-clock-rotate-left"></i><span class="label">History</span></a>
+      <a class="sidebar-item" data-route="/swap" onclick="navigate('/swap')"><i class="fa-solid fa-right-left"></i><span class="label">Swap</span></a>
+      <a class="sidebar-item" data-route="/withdraw" onclick="navigate('/withdraw')"><i class="fa-solid fa-paper-plane"></i><span class="label">Withdraw</span></a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-section-title">Social</div>
-      <a class="sidebar-item" href="/?ref=1"><i class="fa-solid fa-user-plus"></i><span class="label">Referrals</span></a>
-      <a class="sidebar-item" href="/"><i class="fa-solid fa-trophy"></i><span class="label">Leaderboard</span></a>
+      <div class="sidebar-section-title">Info</div>
+      <a class="sidebar-item" data-route="/faq" onclick="navigate('/faq')"><i class="fa-solid fa-circle-question"></i><span class="label">FAQ</span></a>
+      <a class="sidebar-item" data-route="/admin" onclick="navigate('/admin')"><i class="fa-solid fa-shield-halved"></i><span class="label">Admin</span></a>
     </div>
   </nav>
 
   <div class="sidebar-footer">
-    <div class="sidebar-user">
+    <div class="sidebar-user" onclick="navigate('/withdraw')">
       <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
       <div class="sidebar-user-info">
         <div class="sidebar-user-name" id="sidebarName">Loading...</div>
@@ -409,11 +485,11 @@ body{top:0!important}
     <button class="header-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fa-solid fa-bars"></i></button>
     <div class="header-title">
       <i class="fa-solid fa-circle-dot"></i>
-      <span>Dashboard</span>
+      <span id="headerTitle">Dashboard</span>
     </div>
     <div class="header-spacer"></div>
 
-    <div class="header-balance" onclick="location.href='/withdraw'">
+    <div class="header-balance" onclick="navigate('/withdraw')">
       <img src="/images/coinix.png" alt="CNX">
       <span class="val" id="hdrBalCnx">0</span>
       <span class="text-dim" style="font-size:11px">CNX</span>
@@ -434,7 +510,7 @@ body{top:0!important}
           <span class="clear" onclick="markNotifsRead()">Mark all read</span>
         </div>
         <div class="dropdown-list" id="notifList">
-          <div class="empty-state" style="padding:30px">
+          <div style="text-align:center;padding:30px;color:var(--text-dim)">
             <i class="fa-solid fa-bell-slash" style="font-size:32px;opacity:.3;margin-bottom:10px"></i>
             <p>No notifications yet</p>
           </div>
@@ -442,112 +518,607 @@ body{top:0!important}
       </div>
     </div>
 
-    <div class="header-avatar" id="headerAvatar">?</div>
+    <div class="header-avatar" id="headerAvatar" onclick="navigate('/withdraw')">?</div>
   </header>
 
   <main class="content">
-    <div class="page-head">
-      <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
-      <p class="page-sub">Overview of your COINIX earnings and activity</p>
-    </div>
 
-    <!-- BALANCE CARDS -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-        <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
-        <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="dashCnx">0.00</span></div>
-        <div class="stat-card-sub">Site Token</div>
+    <!-- DASHBOARD / HOME -->
+    <section class="page-section active" id="page-home">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
+        <p class="page-sub">Overview of your COINIX earnings and activity</p>
       </div>
-      <div class="stat-card">
-        <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
-        <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
-        <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="dashDoge">0.00</span></div>
-        <div class="stat-card-sub">Withdrawable</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-ic green"><i class="fa-solid fa-chart-line"></i></div>
-        <div class="stat-card-lbl">Today's Earnings</div>
-        <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="dashToday">0.00</span></div>
-        <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> Active</div>
-      </div>
-    </div>
 
-    <!-- STATS -->
-    <div class="stats-grid" style="margin-bottom:24px">
-      <div class="stat-card">
-        <div class="stat-card-ic"><i class="fa-solid fa-droplet"></i></div>
-        <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Faucet</div>
-        <div class="stat-card-val gold" id="dashFaucet">0 CNX</div>
-        <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> +0.5 per claim</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
-        <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Offerwall</div>
-        <div class="stat-card-val" id="dashOw">0 CNX</div>
-        <div class="stat-card-chg"><i class="fa-solid fa-bolt"></i> Instant</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
-        <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Referrals</div>
-        <div class="stat-card-val gold" id="dashRef">0 CNX</div>
-        <div class="stat-card-chg"><i class="fa-solid fa-coins"></i> <span id="dashRefCount">0</span> referrals</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-solid fa-paper-plane"></i></div>
-        <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> Withdrawals</div>
-        <div class="stat-card-val" style="color:#c2a633" id="dashWd">0 DOGE</div>
-        <div class="stat-card-chg"><i class="fa-solid fa-check"></i> 0 successful</div>
-      </div>
-    </div>
-
-    <!-- QUICK ACTIONS -->
-    <div class="card mb-2">
-      <div class="card-hd">
-        <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
-      </div>
-      <div class="grid grid-4">
-        <div class="card" onclick="location.href='/faucet'" style="cursor:pointer;padding:16px">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));color:var(--gold);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-droplet"></i></div>
-          <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Faucet</div>
-          <div style="font-size:12px;color:var(--text-dim)">Claim free CNX every 10s</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
+          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="dashCnx">0.00</span></div>
+          <div class="stat-card-sub">Site Token</div>
         </div>
-        <div class="card" onclick="location.href='/offerwall'" style="cursor:pointer;padding:16px">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-gift"></i></div>
-          <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Offerwall</div>
-          <div style="font-size:12px;color:var(--text-dim)">Complete offers for rewards</div>
+        <div class="stat-card">
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
+          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="dashDoge">0.00</span></div>
+          <div class="stat-card-sub">Withdrawable</div>
         </div>
-        <div class="card" onclick="location.href='/swap'" style="cursor:pointer;padding:16px">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-right-left"></i></div>
-          <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Swap</div>
-          <div style="font-size:12px;color:var(--text-dim)">CNX ↔ DOGE 1:1</div>
-        </div>
-        <div class="card" onclick="location.href='/withdraw'" style="cursor:pointer;padding:16px">
-          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-paper-plane"></i></div>
-          <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Withdraw</div>
-          <div style="font-size:12px;color:var(--text-dim)">DOGE → FaucetPay</div>
+        <div class="stat-card">
+          <div class="stat-card-ic green"><i class="fa-solid fa-chart-line"></i></div>
+          <div class="stat-card-lbl">Today's Earnings</div>
+          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="dashToday">0.00</span></div>
+          <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> Active</div>
         </div>
       </div>
-    </div>
 
-    <!-- LIVE WITHDRAWALS -->
-    <div class="card mt-3">
-      <div class="card-hd">
-        <div class="card-title"><i class="fa-solid fa-signal"></i> Live Withdrawals</div>
-        <span class="text-success" style="font-size:11px;font-weight:600"><i class="fa-solid fa-circle" style="font-size:6px"></i> LIVE</span>
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-droplet"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Faucet</div>
+          <div class="stat-card-val gold" id="dashFaucet">0 CNX</div>
+          <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> +0.5 per claim</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> PTC / Ads</div>
+          <div class="stat-card-val" id="dashPtc">0 CNX</div>
+          <div class="stat-card-chg"><i class="fa-solid fa-bolt"></i> Instant</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Referrals</div>
+          <div class="stat-card-val gold" id="dashRef">0 CNX</div>
+          <div class="stat-card-chg"><i class="fa-solid fa-coins"></i> <span id="dashRefCount">0</span> referrals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-solid fa-paper-plane"></i></div>
+          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> Withdrawals</div>
+          <div class="stat-card-val" style="color:#c2a633" id="dashWd">0 DOGE</div>
+          <div class="stat-card-chg"><i class="fa-solid fa-check"></i> 0 successful</div>
+        </div>
       </div>
-      <div id="liveList" style="max-height:300px;overflow-y:auto">
-        <div style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></div>
+
+      <div class="card mb-2" style="flex-shrink:0">
+        <div class="card-hd">
+          <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
+        </div>
+        <div class="grid grid-4">
+          <div class="card" onclick="navigate('/faucet')" style="cursor:pointer;padding:14px">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));color:var(--gold);display:grid;place-items:center;font-size:15px;margin-bottom:8px"><i class="fa-solid fa-droplet"></i></div>
+            <div style="font-family:'Space Grotesk';font-size:14px;font-weight:700;margin-bottom:3px">Faucet</div>
+            <div style="font-size:11px;color:var(--text-dim)">Claim free CNX every 10s</div>
+          </div>
+          <div class="card" onclick="navigate('/ptc')" style="cursor:pointer;padding:14px">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);display:grid;place-items:center;font-size:15px;margin-bottom:8px"><i class="fa-solid fa-gift"></i></div>
+            <div style="font-family:'Space Grotesk';font-size:14px;font-weight:700;margin-bottom:3px">PTC Ads</div>
+            <div style="font-size:11px;color:var(--text-dim)">Earn watching ads</div>
+          </div>
+          <div class="card" onclick="navigate('/swap')" style="cursor:pointer;padding:14px">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);display:grid;place-items:center;font-size:15px;margin-bottom:8px"><i class="fa-solid fa-right-left"></i></div>
+            <div style="font-family:'Space Grotesk';font-size:14px;font-weight:700;margin-bottom:3px">Swap</div>
+            <div style="font-size:11px;color:var(--text-dim)">CNX → DOGE</div>
+          </div>
+          <div class="card" onclick="navigate('/withdraw')" style="cursor:pointer;padding:14px">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);display:grid;place-items:center;font-size:15px;margin-bottom:8px"><i class="fa-solid fa-paper-plane"></i></div>
+            <div style="font-family:'Space Grotesk';font-size:14px;font-weight:700;margin-bottom:3px">Withdraw</div>
+            <div style="font-size:11px;color:var(--text-dim)">DOGE → FaucetPay</div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="card-hd">
+          <div class="card-title"><i class="fa-solid fa-signal"></i> Live Withdrawals</div>
+          <span class="text-success" style="font-size:10px;font-weight:600"><i class="fa-solid fa-circle" style="font-size:6px"></i> LIVE</span>
+        </div>
+        <div id="liveList" class="scrollable">
+          <div style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAUCET -->
+    <section class="page-section" id="page-faucet">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-droplet"></i> Free Faucet</h1>
+        <p class="page-sub">Claim free CNX every 10 seconds — unlimited</p>
+      </div>
+
+      <div class="stats-grid" style="flex-shrink:0">
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
+          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="faucetCnx">0.00</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
+          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="faucetDoge">0.00</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div style="text-align:center;padding:30px">
+          <div style="font-size:48px;font-weight:700;color:var(--gold);margin-bottom:16px">0.5 CNX</div>
+          <div style="color:var(--text-dim);margin-bottom:20px">You can claim once every <strong style="color:var(--gold)">10 seconds</strong>. Reward: <strong style="color:var(--gold)">0.5 CNX</strong> per claim.</div>
+          <button class="btn btn-primary btn-lg" id="claimBtn" onclick="doClaim()" style="padding:14px 32px;font-size:15px">
+            <i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX
+          </button>
+          <div id="claimStatus" style="margin-top:14px;color:var(--success);font-size:13px">
+            <i class="fa-solid fa-circle-check"></i> Ready to claim!
+          </div>
+        </div>
+
+        <div class="stats-grid" style="margin-top:auto;flex-shrink:0">
+          <div class="stat-card">
+            <div class="stat-card-lbl"><i class="fa-solid fa-hand-holding-dollar"></i> Total Claims</div>
+            <div class="stat-card-val gold" id="statClaims">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-lbl"><i class="fa-solid fa-coins"></i> Earned</div>
+            <div class="stat-card-val gold" id="statEarned">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-lbl"><i class="fa-brands fa-dogecoin"></i> DOGE</div>
+            <div class="stat-card-val" style="color:#c2a633" id="statDoge">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-2" style="flex-shrink:0">
+        <div class="card-title mb-2"><i class="fa-solid fa-lightbulb"></i> How to maximize earnings</div>
+        <div class="grid grid-4">
+          <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+            <div style="color:var(--gold);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-1"></i> Claim</div>
+            <div style="font-size:11px;color:var(--text-dim)">Every 10 seconds</div>
+          </div>
+          <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+            <div style="color:var(--blue);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-2"></i> PTC Ads</div>
+            <div style="font-size:11px;color:var(--text-dim)">Watch for bonus</div>
+          </div>
+          <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+            <div style="color:var(--success);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-3"></i> Swap</div>
+            <div style="font-size:11px;color:var(--text-dim)">CNX → DOGE</div>
+          </div>
+          <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+            <div style="color:var(--purple);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-4"></i> Withdraw</div>
+            <div style="font-size:11px;color:var(--text-dim)">To FaucetPay</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-2" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="card-hd">
+          <div class="card-title"><i class="fa-solid fa-gift"></i> AoyCo Faucet / Offers</div>
+          <div class="card-sub">Complete surveys, watch videos and sign-ups to earn extra CNX.</div>
+        </div>
+        <div id="offerwallContainer" class="scrollable" style="min-height:200px">
+          <div style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading faucet offers...</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PTC / TASKS -->
+    <section class="page-section" id="page-ptc">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-gift"></i> PTC & More</h1>
+        <p class="page-sub">Click on ads and watch videos to earn CNX</p>
+      </div>
+
+      <div class="stats-grid" style="flex-shrink:0">
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Earned</div>
+          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="ptcEarned">0.00</span></div>
+          <div class="stat-card-sub">From PTC / Offerwall</div>
+        </div>
+      </div>
+
+      <div class="tabs" style="flex-shrink:0">
+        <div class="tab active" onclick="setPtcTab(this,'ptc')"><i class="fa-solid fa-gift"></i> PTC Ads</div>
+        <div class="tab" onclick="setPtcTab(this,'more')"><i class="fa-solid fa-ellipsis"></i> More</div>
+      </div>
+
+      <div id="ptcTabPtc" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-title mb-2"><i class="fa-solid fa-gift"></i> Offerwall Ads</div>
+          <div class="card-sub" style="margin-bottom:14px">Complete offers and tasks to earn more CNX.</div>
+          <div id="ptcOfferwallBox" class="scrollable" style="min-height:200px">
+            <div style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading ads...</div></div>
+          </div>
+        </div>
+
+        <div class="card mt-2" style="flex-shrink:0">
+          <div class="card-title mb-2"><i class="fa-solid fa-window-restore"></i> PTC Popup Network</div>
+          <div class="card-sub" style="margin-bottom:12px">Click through advertisements in a popup window and earn instant rewards.</div>
+          <button class="btn btn-primary" onclick="openPtcPopup()"><i class="fa-solid fa-external-link"></i> Open PTC Ads</button>
+        </div>
+      </div>
+
+      <div id="ptcTabMore" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card" style="flex-shrink:0">
+          <div class="card-title mb-2"><i class="fa-solid fa-lightbulb"></i> Tips to Maximize Earnings</div>
+          <ul style="margin-left:20px;color:var(--text-dim);font-size:12px;line-height:1.8">
+            <li>Complete all available offers</li>
+            <li>Watch full video ads to get credit</li>
+            <li>Return daily for new ads</li>
+            <li>Use a real email so postback works</li>
+          </ul>
+        </div>
+
+        <div class="card mt-2" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-title mb-2"><i class="fa-solid fa-rocket"></i> Coming Soon</div>
+          <div class="card-sub" style="margin-bottom:14px">We're adding more ways to earn CNX. Stay tuned!</div>
+          <div class="grid grid-4">
+            <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+              <div style="color:var(--gold);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-link"></i> Shortlinks</div>
+              <div style="font-size:11px;color:var(--text-dim)">Visit links to earn</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px"><i class="fa-solid fa-clock"></i> Soon</div>
+            </div>
+            <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+              <div style="color:var(--blue);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-clipboard-list"></i> Surveys</div>
+              <div style="font-size:11px;color:var(--text-dim)">Answer & earn</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px"><i class="fa-solid fa-clock"></i> Soon</div>
+            </div>
+            <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+              <div style="color:var(--success);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-calendar-check"></i> Daily Bonus</div>
+              <div style="font-size:11px;color:var(--text-dim)">Streak rewards</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px"><i class="fa-solid fa-clock"></i> Soon</div>
+            </div>
+            <div style="padding:12px;background:rgba(0,0,0,0.3);border-radius:10px">
+              <div style="color:var(--purple);font-weight:600;margin-bottom:3px;font-size:12px"><i class="fa-solid fa-trophy"></i> Leaderboard</div>
+              <div style="font-size:11px;color:var(--text-dim)">Top earners</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px"><i class="fa-solid fa-clock"></i> Soon</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-2" style="flex-shrink:0">
+          <div class="card-title mb-2"><i class="fa-solid fa-code"></i> In Development</div>
+          <div class="card-sub">Want more earning options? Bookmark this page — new tabs appear as features launch. Share with friends via referrals for +50 CNX each. Check the announcement channel for updates.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SWAP -->
+    <section class="page-section" id="page-swap">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-right-left"></i> Swap CNX ↔ DOGE</h1>
+        <p class="page-sub">Convert instantly at 1:1 rate — zero fees</p>
+      </div>
+
+      <div class="stats-grid" style="flex-shrink:0">
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
+          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="swapCnx">0.00</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
+          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="swapDoge">0.00</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:500px;margin:0 auto;flex-shrink:0">
+        <div class="form-group">
+          <div class="flex-between" style="margin-bottom:8px">
+            <span style="font-size:12px;color:var(--text-dim)">From</span>
+            <span style="font-size:11px;color:var(--gold);cursor:pointer" onclick="setSwapMax()">Available: <span id="swapAvail">0.00</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="number" class="form-input" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="calcSwap()" style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;background:var(--gold-soft);border:1px solid rgba(255,215,0,0.25);color:var(--gold);font-weight:600;font-size:13px;flex-shrink:0">
+              <img src="/images/coinix.png" alt="" style="width:18px;height:18px" onerror="this.style.display='none'">
+              <span id="swapFromCur">CNX</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.25)">25%</button>
+            <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.5)">50%</button>
+            <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.75)">75%</button>
+            <button class="btn btn-ghost btn-sm" onclick="setSwapMax()">MAX</button>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:12px 0">
+          <button class="btn btn-ghost" onclick="flipSwap()" style="width:40px;height:40px;border-radius:50%;padding:0">
+            <i class="fa-solid fa-arrow-down-arrow-up"></i>
+          </button>
+        </div>
+
+        <div class="form-group">
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">To (estimated)</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="number" class="form-input" id="swapTo" placeholder="0.00" readonly style="flex:1">
+            <div style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;background:rgba(194,166,51,0.1);border:1px solid rgba(194,166,51,0.25);color:#c2a633;font-weight:600;font-size:13px;flex-shrink:0">
+              <img src="/images/dogecoin.png" alt="" style="width:18px;height:18px" onerror="this.style.display='none'">
+              <span id="swapToCur">DOGE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-between" style="padding:12px 0;border-top:1px solid var(--glass-brd);margin-top:8px;font-size:12px">
+          <span class="text-dim">You will receive: <span class="text-gold" id="swapReceive">0.00</span></span>
+          <span class="text-dim">Rate: 1:1 · No fees</span>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg mt-2" id="swapBtn" onclick="doSwap()">
+          <i class="fa-solid fa-right-left"></i> Swap Now
+        </button>
+      </div>
+
+      <div class="card mt-2" style="flex-shrink:0">
+        <div class="card-title mb-2"><i class="fa-solid fa-circle-info"></i> How to withdraw</div>
+        <ol style="margin-left:20px;color:var(--text-dim);font-size:12px;line-height:1.8">
+          <li>Earn CNX from faucet/ads</li>
+          <li>Swap CNX → DOGE here (1:1)</li>
+          <li>Go to <a onclick="navigate('/withdraw')" style="color:var(--gold);cursor:pointer">Withdraw page</a></li>
+          <li>Enter your FaucetPay email</li>
+          <li>Receive DOGE after admin approval</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- WITHDRAW -->
+    <section class="page-section" id="page-withdraw">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-paper-plane"></i> Withdraw DOGE</h1>
+        <p class="page-sub">Send DOGE to your FaucetPay email</p>
+      </div>
+
+      <div class="stats-grid" style="flex-shrink:0">
+        <div class="stat-card">
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
+          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="wdDoge">0.00</span></div>
+          <div class="stat-card-sub">Ready to withdraw</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
+          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
+          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="wdCnx">0.00</span></div>
+          <div class="stat-card-sub" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE →</div>
+        </div>
+      </div>
+
+      <div class="tabs" style="flex-shrink:0">
+        <div class="tab active" onclick="setWdTab(this,'form')"><i class="fa-solid fa-paper-plane"></i> Withdraw</div>
+        <div class="tab" onclick="setWdTab(this,'history')"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
+      </div>
+
+      <div id="wdTabForm" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="card" style="border-color:rgba(74,158,255,0.2);background:linear-gradient(135deg,rgba(74,158,255,0.06),rgba(74,158,255,0.02));flex-shrink:0">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <i class="fa-solid fa-circle-info" style="color:var(--blue);font-size:18px;margin-top:2px"></i>
+            <div>
+              <div style="font-weight:600;margin-bottom:3px;font-size:13px">FaucetPay Only</div>
+              <div style="font-size:12px;color:var(--text-dim)">Withdrawals are sent to your <strong class="text-gold">FaucetPay email</strong>. Minimum: <strong class="text-gold">0.10 DOGE</strong> · Rate: 1:1 (no fees)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-2" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-coins"></i> Currency</label>
+            <div class="form-input" style="display:flex;align-items:center;gap:8px;padding:10px 13px">
+              <img src="/images/dogecoin.png" alt="" style="width:18px;height:18px" onerror="this.style.display='none'">
+              DOGE (via FaucetPay)
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-hashtag"></i> Amount (DOGE)</label>
+            <input type="number" class="form-input" id="wdAmount" placeholder="0.00" step="0.01" min="0.1">
+            <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(0.5)">0.5</button>
+              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(1)">1</button>
+              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(5)">5</button>
+              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(10)">10</button>
+              <button class="btn btn-ghost btn-sm" onclick="setWdAmt('max')">MAX</button>
+            </div>
+            <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Minimum withdrawal: <strong class="text-gold">0.10 DOGE</strong></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-envelope"></i> FaucetPay Email</label>
+            <input type="email" class="form-input" id="wdEmail" placeholder="your@faucetpay.email">
+            <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Only your FaucetPay email is accepted. Wallet addresses and usernames are not supported.</div>
+          </div>
+
+          <button class="btn btn-primary btn-block btn-lg mt-2" id="wdBtn" onclick="doWithdraw()" style="flex-shrink:0">
+            <i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay
+          </button>
+        </div>
+      </div>
+
+      <div id="wdTabHistory" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-title mb-2"><i class="fa-solid fa-clock-rotate-left"></i> Withdrawal History</div>
+          <div class="table-wrap" style="flex:1">
+            <div class="table-scroll">
+              <table class="table" id="wdHistoryTable">
+                <thead><tr><th>ID</th><th>Amount</th><th>Email</th><th>Status</th><th>Time</th></tr></thead>
+                <tbody><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- FAQ -->
-    <div class="card mt-3">
-      <div class="card-title mb-2"><i class="fa-solid fa-circle-question"></i> FAQ</div>
-      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I earn CNX? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ul><li><strong>Claiming faucet</strong> every 10 seconds</li><li><strong>Offerwall</strong> — complete offers</li><li><strong>Referrals</strong> — invite friends (+50 CNX each)</li></ul></div></div>
-      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How to withdraw? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ol><li>Earn CNX</li><li>Swap CNX → DOGE (1:1)</li><li>Withdraw to FaucetPay email</li><li>Minimum 0.10 DOGE</li></ol></div></div>
-      <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Exchange rate? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">1 CNX = 1 DOGE. Zero fees.</div></div>
-    </div>
+    <section class="page-section" id="page-faq">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-circle-question"></i> FAQ</h1>
+        <p class="page-sub">Frequently Asked Questions</p>
+      </div>
+
+      <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="scrollable">
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I earn CNX? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ul><li><strong>Claiming the faucet</strong> every 10 seconds</li><li><strong>Watching PTC ads</strong> and completing offers on the PTC / Tasks page</li><li><strong>Referral program</strong> — invite friends and earn <strong>+50 CNX</strong> per signup</li></ul></div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I withdraw? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ol><li>Earn <strong>CNX</strong> from the faucet and ads.</li><li>Go to <strong>Swap</strong> and convert CNX → DOGE (1:1, no fees).</li><li>Go to <strong>Withdraw</strong> page.</li><li>Enter your <strong>FaucetPay email</strong> and the DOGE amount.</li><li>Minimum withdrawal is <strong>0.10 DOGE</strong>.</li><li>The admin processes your payout and DOGE arrives on your FaucetPay account.</li></ol></div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do you only accept FaucetPay email for withdrawals? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes. To keep things simple, withdrawals are sent via <strong>FaucetPay</strong> only. Please enter the email address you registered with on FaucetPay. DOGE wallet addresses and usernames are <strong>not</strong> supported.<br><br>Don't have a FaucetPay account? <a href="https://faucetpay.io" target="_blank">Create one here</a> — it's free.</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How does the referral program work? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Share your unique referral link with friends. When they sign up via your link, you receive <strong>+50 CNX</strong> automatically. There's no limit on referrals — invite as many friends as you like.</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How long does withdrawal take? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Most withdrawals are processed within <strong>24 hours</strong>. You can check the status of every withdrawal under the History tab on the Withdraw page.</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is the exchange rate CNX → DOGE? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">The swap rate is <strong>1 CNX = 1 DOGE</strong> with no fees. You can swap back and forth anytime on the <a onclick="navigate('/swap')" style="color:var(--gold);cursor:pointer">Swap page</a>.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section class="page-section" id="page-admin">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel</h1>
+        <p class="page-sub">System management dashboard</p>
+      </div>
+
+      <div class="tabs" style="flex-shrink:0">
+        <div class="tab active" onclick="setAdminTab(this,'dash')"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+        <div class="tab" onclick="setAdminTab(this,'users')"><i class="fa-solid fa-users"></i> Users</div>
+        <div class="tab" onclick="setAdminTab(this,'wd')"><i class="fa-solid fa-wallet"></i> Withdrawals</div>
+        <div class="tab" onclick="setAdminTab(this,'broadcast')"><i class="fa-solid fa-bullhorn"></i> Broadcast</div>
+        <div class="tab" onclick="setAdminTab(this,'settings')"><i class="fa-solid fa-gear"></i> Settings</div>
+        <div class="tab" onclick="setAdminTab(this,'logs')"><i class="fa-solid fa-scroll"></i> Logs</div>
+      </div>
+
+      <div id="admTabDash" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div class="stats-grid" style="flex-shrink:0">
+          <div class="stat-card">
+            <div class="stat-card-ic"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-card-lbl">Total Users</div>
+            <div class="stat-card-val gold" id="admUsers">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-ic green"><i class="fa-solid fa-signal"></i></div>
+            <div class="stat-card-lbl">Online Today</div>
+            <div class="stat-card-val" id="admOnline">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-ic blue"><i class="fa-solid fa-droplet"></i></div>
+            <div class="stat-card-lbl">Total Claims</div>
+            <div class="stat-card-val" id="admClaims">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-ic gold"><i class="fa-solid fa-paper-plane"></i></div>
+            <div class="stat-card-lbl">Total Withdrawn</div>
+            <div class="stat-card-val gold" id="admWithdrawn">0</div>
+          </div>
+        </div>
+
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-title mb-2"><i class="fa-solid fa-chart-line"></i> Activity Overview</div>
+          <div class="scrollable">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+              <div style="padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">
+                <div style="font-size:11px;color:var(--text-dim);margin-bottom:3px">Today's Claims</div>
+                <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700;color:var(--gold)" id="admTodayClaims">0</div>
+              </div>
+              <div style="padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">
+                <div style="font-size:11px;color:var(--text-dim);margin-bottom:3px">Today's WDs</div>
+                <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700;color:var(--purple)" id="admTodayWds">0</div>
+              </div>
+              <div style="padding:14px;background:rgba(0,0,0,0.3);border-radius:10px">
+                <div style="font-size:11px;color:var(--text-dim);margin-bottom:3px">New Users Today</div>
+                <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700;color:var(--success)" id="admNewUsers">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="admTabUsers" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card mb-2" style="flex-shrink:0">
+          <div class="card-title"><i class="fa-solid fa-user-gear"></i> Adjust User Balance</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-top:10px">
+            <input class="form-input" id="adjUser" placeholder="User ID">
+            <input class="form-input" id="adjAmt" type="number" placeholder="Amount">
+            <select class="form-select" id="adjCur"><option value="cnx">CNX</option><option value="doge">DOGE</option></select>
+            <button class="btn btn-primary" onclick="adminAdjust()"><i class="fa-solid fa-check"></i></button>
+          </div>
+        </div>
+
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-title mb-2"><i class="fa-solid fa-users"></i> All Users</div>
+          <div class="table-wrap" style="flex:1">
+            <div class="table-scroll">
+              <table class="table" id="admUsersTbl">
+                <thead><tr><th>ID</th><th>User</th><th>CNX</th><th>DOGE</th><th>Claims</th><th>Referrals</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="admTabWd" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card-title mb-2" style="flex-shrink:0"><i class="fa-solid fa-clock" style="color:var(--warn)"></i> Pending Withdrawals</div>
+        <div class="table-wrap mb-2" style="flex:1">
+          <div class="table-scroll">
+            <table class="table" id="admPendTbl">
+              <thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Email</th><th>Time</th><th>Actions</th></tr></thead>
+              <tbody><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-title mb-2" style="flex-shrink:0"><i class="fa-solid fa-list"></i> All Withdrawals</div>
+        <div class="table-wrap" style="flex:1">
+          <div class="table-scroll">
+            <table class="table" id="admAllWdTbl">
+              <thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Email</th><th>Status</th><th>Time</th></tr></thead>
+              <tbody><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="admTabBroadcast" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card" style="max-width:600px;margin:0 auto;flex-shrink:0">
+          <div class="card-title"><i class="fa-solid fa-bullhorn"></i> Send Broadcast</div>
+          <div class="form-group mt-2">
+            <label class="form-label"><i class="fa-solid fa-message"></i> Message</label>
+            <textarea class="form-textarea" id="broadcastMsg" rows="5" placeholder="Enter broadcast message..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="adminBroadcast()"><i class="fa-solid fa-paper-plane"></i> Send Broadcast</button>
+        </div>
+      </div>
+
+      <div id="admTabSettings" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card" style="max-width:600px;margin:0 auto;flex-shrink:0">
+          <div class="card-title"><i class="fa-solid fa-gear"></i> Faucet Settings</div>
+          <div class="form-group mt-2">
+            <label class="form-label"><i class="fa-solid fa-clock"></i> Cooldown (seconds)</label>
+            <input class="form-input" type="number" id="setCd" value="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-coins"></i> Reward per claim</label>
+            <input class="form-input" type="number" id="setRw" value="0.5" step="0.1">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-paper-plane"></i> Min Withdraw (DOGE)</label>
+            <input class="form-input" type="number" id="setMinWd" value="0.1" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label"><input type="checkbox" id="setPause"> Pause Faucet</label>
+          </div>
+          <button class="btn btn-primary" onclick="adminSave()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+        </div>
+      </div>
+
+      <div id="admTabLogs" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+        <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="card-title mb-2"><i class="fa-solid fa-scroll"></i> Audit Logs</div>
+          <div class="table-wrap" style="flex:1">
+            <div class="table-scroll">
+              <table class="table" id="admLogsTbl">
+                <thead><tr><th>Action</th><th>User</th><th>Details</th><th>Time</th></tr></thead>
+                <tbody><tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -562,13 +1133,15 @@ const API = window.location.origin;
 let TOKEN = localStorage.getItem('coinix_token') || '';
 let USER = null;
 let NOTIFS = [];
+let SWAP_DIR = 'cnx-to-doge';
+let CLAIM_CD = 10000;
+let CLAIM_TIMER = null;
+const ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID';
 
-// Telegram init
 if(window.Telegram?.WebApp){
   try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch(e){}
 }
 
-// Toast
 let toastTimer;
 function showToast(msg, type='success'){
   const toast = document.getElementById('toast');
@@ -582,18 +1155,6 @@ function showToast(msg, type='success'){
 
 function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
 
-function timeAgo(ts){
-  if(!ts) return '';
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff/60000);
-  if(m < 1) return 'just now';
-  if(m < 60) return m + 'm ago';
-  const h = Math.floor(m/60);
-  if(h < 24) return h + 'h ago';
-  return Math.floor(h/24) + 'd ago';
-}
-
-// Dropdown
 function toggleDropdown(id, e){
   e.stopPropagation();
   document.querySelectorAll('.dropdown-menu').forEach(m => {
@@ -607,7 +1168,28 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Auth
+function navigate(route){
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+  
+  const pageMap = {'/':'page-home','/faucet':'page-faucet','/ptc':'page-ptc','/swap':'page-swap','/withdraw':'page-withdraw','/faq':'page-faq','/admin':'page-admin'};
+  const titleMap = {'/':'Dashboard','/faucet':'Faucet','/ptc':'PTC / Tasks','/swap':'Swap','/withdraw':'Withdraw','/faq':'FAQ','/admin':'Admin Panel'};
+  
+  const pageId = pageMap[route] || 'page-home';
+  document.getElementById(pageId).classList.add('active');
+  document.querySelector(`[data-route="${route}"]`)?.classList.add('active');
+  document.getElementById('headerTitle').textContent = titleMap[route] || 'COINIX';
+  
+  document.getElementById('sidebar').classList.remove('open');
+  
+  if(route === '/') loadLive();
+  if(route === '/faucet') loadOfferwall();
+  if(route === '/ptc') loadPtcOfferwall();
+  if(route === '/swap') { document.getElementById('swapAvail').textContent = USER ? fmt(USER.balance) : '0.00'; }
+  if(route === '/withdraw') loadWdHistory();
+  if(route === '/admin') loadAdmin();
+}
+
 async function init(){
   if(window.Telegram?.WebApp?.initData){
     try{
@@ -620,18 +1202,14 @@ async function init(){
       if(d.token){
         TOKEN = d.token;
         localStorage.setItem('coinix_token', TOKEN);
-        if(d.isNewUser){
-          showToast('✅ User account created successfully!', 'success');
-        } else {
-          showToast('✅ Data loaded successfully', 'success');
-        }
+        showToast('✅ User account created!', 'success');
       }
     } catch(e){
       showToast('⚠️ Network error', 'error');
     }
   }
   await loadUser();
-  await loadLive();
+  loadLive();
 }
 
 async function loadUser(){
@@ -647,6 +1225,35 @@ async function loadUser(){
       document.getElementById('hdrBalCnx').textContent = fmt(USER.balance);
       document.getElementById('hdrBalDoge').textContent = fmt(USER.doge_balance);
       
+      // Dashboard
+      document.getElementById('dashCnx').textContent = fmt(USER.balance);
+      document.getElementById('dashDoge').textContent = fmt(USER.doge_balance);
+      document.getElementById('dashToday').textContent = fmt((USER.total_earned||0) * 0.05);
+      document.getElementById('dashFaucet').textContent = fmt((USER.total_earned||0) - (USER.total_ptc_earnings||0)) + ' CNX';
+      document.getElementById('dashPtc').textContent = fmt(USER.total_ptc_earnings||0) + ' CNX';
+      document.getElementById('dashRef').textContent = fmt(USER.referral_earnings||0) + ' CNX';
+      document.getElementById('dashRefCount').textContent = USER.referrals || 0;
+      document.getElementById('dashWd').textContent = fmt(USER.total_withdrawals||0) + ' DOGE';
+      
+      // Faucet
+      document.getElementById('faucetCnx').textContent = fmt(USER.balance);
+      document.getElementById('faucetDoge').textContent = fmt(USER.doge_balance);
+      document.getElementById('statClaims').textContent = USER.total_claims || 0;
+      document.getElementById('statEarned').textContent = fmt(USER.total_earned || 0);
+      document.getElementById('statDoge').textContent = fmt(USER.doge_balance || 0);
+      
+      // PTC
+      document.getElementById('ptcEarned').textContent = fmt(USER.total_ptc_earnings || 0);
+      
+      // Swap
+      document.getElementById('swapCnx').textContent = fmt(USER.balance);
+      document.getElementById('swapDoge').textContent = fmt(USER.doge_balance);
+      document.getElementById('swapAvail').textContent = fmt(USER.balance);
+      
+      // Withdraw
+      document.getElementById('wdCnx').textContent = fmt(USER.balance);
+      document.getElementById('wdDoge').textContent = fmt(USER.doge_balance);
+      
       const av = document.getElementById('headerAvatar');
       const sav = document.getElementById('sidebarAvatar');
       if(USER.photo_url){
@@ -657,108 +1264,23 @@ async function loadUser(){
         sav.textContent = initial;
       }
       
-      // Update dashboard
-      document.getElementById('dashCnx').textContent = fmt(USER.balance);
-      document.getElementById('dashDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('dashToday').textContent = fmt((USER.total_earned||0) * 0.05);
-      document.getElementById('dashFaucet').textContent = fmt((USER.total_earned||0) - (USER.total_ptc_earnings||0)) + ' CNX';
-      document.getElementById('dashOw').textContent = fmt(USER.total_ptc_earnings||0) + ' CNX';
-      document.getElementById('dashRef').textContent = fmt(USER.referral_earnings||0) + ' CNX';
-      document.getElementById('dashRefCount').textContent = USER.referrals || 0;
-      document.getElementById('dashWd').textContent = fmt(USER.total_withdrawals||0) + ' DOGE';
-      
-      showToast('✅ User data loaded', 'success');
+      updateClaimCD();
+      showToast('✅ Data loaded', 'success');
     }
   }catch(e){}
 }
 
-async function loadLive(){
+async function doClaim(){
+  const btn = document.getElementById('claimBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:18px;height:18px"></div> Claiming...';
   try{
-    const res = await fetch(API + '/api/withdrawals/recent');
+    const res = await fetch(API + '/api/claim', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body: '{}'
+    });
+    const d = await res.json();
     if(res.ok){
-      const list = await res.json();
-      const c = document.getElementById('liveList');
-      if(!list.length){
-        c.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox" style="font-size:32px;opacity:.3;margin-bottom:10px"></i><p>No withdrawals yet</p></div>';
-        return;
-      }
-      c.innerHTML = list.slice(0,8).map(w => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-brd)">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:50%;background:var(--blue-soft);display:grid;place-items:center;color:var(--blue);font-size:12px"><i class="fa-solid fa-user"></i></div>
-            <div>
-              <div style="font-size:12px;color:var(--text-dim)">${w.user_id ? w.user_id.substring(0,8)+'...' : 'User'}</div>
-              <div style="font-size:10px;color:var(--text-muted)">${timeAgo(w.timestamp)}</div>
-            </div>
-          </div>
-          <div style="font-family:'JetBrains Mono';font-weight:600;color:var(--gold);font-size:13px;display:flex;align-items:center;gap:6px">
-            <img src="/images/dogecoin.png" style="width:14px;height:14px">
-            ${fmt(w.amount)} DOGE
-          </div>
-        </div>
-      `).join('');
-      showToast('✅ Live data loaded', 'success');
-    }
-  } catch(e){}
-}
-
-// Notifications
-async function loadNotifs(){
-  if(!TOKEN) return;
-  try{
-    const res = await fetch(API + '/api/notifications', {headers:{'Authorization':'Bearer '+TOKEN}});
+      await res.json();
     if(res.ok){
-      const d = await res.json();
-      NOTIFS = d.notifications || [];
-      renderNotifs();
-      const badge = document.getElementById('notifDot');
-      if(d.unreadCount > 0){
-        badge.style.display = 'grid';
-        badge.textContent = d.unreadCount > 99 ? '99+' : d.unreadCount;
-      }
-    }
-  } catch(e){}
-}
-function renderNotifs(){
-  const list = document.getElementById('notifList');
-  if(!NOTIFS.length){
-    list.innerHTML = '<div class="empty-state" style="padding:30px"><i class="fa-solid fa-bell-slash" style="font-size:32px;opacity:.3;margin-bottom:10px"></i><p>No notifications yet</p></div>';
-    return;
-  }
-  list.innerHTML = NOTIFS.slice(0,20).map(n => `
-    <div class="notif-item">
-      <div class="notif-icon ${n.type==='gold'?'gold':n.type==='green'?'green':'blue'}">
-        <i class="fa-solid ${n.type==='gold'?'fa-coins':n.type==='green'?'fa-check':'fa-info'}"></i>
-      </div>
-      <div class="notif-body">
-        <div class="notif-title">${n.title}</div>
-        <div class="notif-desc">${n.message}</div>
-        <div class="notif-time">${timeAgo(n.timestamp)}</div>
-      </div>
-    </div>
-  `).join('');
-}
-async function markNotifsRead(){
-  if(!TOKEN) return;
-  try{
-    await fetch(API + '/api/notifications/read', {method:'POST',headers:{'Authorization':'Bearer '+TOKEN}});
-    NOTIFS.forEach(n => n.read = true);
-    renderNotifs();
-    document.getElementById('notifDot').style.display = 'none';
-    showToast('✅ All marked as read','success');
-  } catch(e){}
-}
-
-// Auto-refresh
-setInterval(() => {
-  loadUser();
-  loadNotifs();
-}, 30000);
-
-document.addEventListener('DOMContentLoaded', () => {
-  init();
-  loadNotifs();
-});
-</script>
-</body>
-</html>
