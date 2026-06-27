@@ -1,225 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="offerwall-verification" content="XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM">
-<meta name="theme-color" content="#1976d2">
-<title>CoinixFaucet - Free CNX</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="offerwall-verification" content="XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM">
+  <title>COINIXFAUCET - CNX</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f8f9fa;
+      color: #222;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Top Bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .profile-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .profile-img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e5e7eb;
+      background: #f0f0f0;
+    }
+    .profile-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .profile-name span {
+      display: block;
+      font-size: 11px;
+      font-weight: 400;
+      color: #9ca3af;
+      margin-top: 1px;
+    }
+    .balance-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 8px 14px;
+      border-radius: 20px;
+    }
+    .balance-wrap svg {
+      width: 22px;
+      height: 22px;
+    }
+    .balance-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #15803d;
+    }
+
+    /* Container */
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px 16px;
+    }
+
+    /* Card */
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s ease;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    /* Section Title */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .section-title svg {
+      width: 18px;
+      height: 18px;
+      color: #6b7280;
+    }
+
+    /* Claim Button */
+    .claim-btn {
+      width: 100%;
+      padding: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(22,163,74,0.25);
+    }
+    .claim-btn:hover:not(:disabled) {
+      background: #15803d;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(22,163,74,0.35);
+    }
+    .claim-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+    .claim-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .claim-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .cooldown {
+      text-align: center;
+      margin-top: 12px;
+      color: #6b7280;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .cooldown svg {
+      width: 14px;
+      height: 14px;
+      color: #9ca3af;
+    }
+
+    /* Inputs */
+    .label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 6px;
+      display: block;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fafafa;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #16a34a;
+      box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
+      background: #fff;
+    }
+
+    button.action {
+      width: 100%;
+      padding: 12px;
+      background: #1f2937;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    button.action:hover {
+      background: #111827;
+      transform: translateY(-1px);
+    }
+    button.action svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .msg {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #16a34a;
+      min-height: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .msg.err {
+      color: #dc2626;
+    }
+
+    iframe {
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      height: 420px;
+      display: block;
+      background: #fff;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 0 16px 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .container { padding: 14px 12px; }
+      .card { padding: 18px; }
+    }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
 
-<!-- Loading -->
-<div id="loading" class="loading">
-  <img src="coinix.png" class="loading-logo" alt="Coinix">
-  <div class="spinner"></div>
-  <p>Loading CoinixFaucet...</p>
-</div>
-
-<!-- Toast -->
-<div id="toastBox"></div>
-
-<!-- Reward popup -->
-<div id="rewardPopup" class="reward-popup">
-  <span>+</span><span id="rewardAmt">0</span><span> CNX</span>
-</div>
-
-<!-- Header -->
-<header class="header">
-  <div class="header-inner">
-    <div class="logo">
-      <img src="coinix.png" class="logo-img" alt="">
-      <span>CoinixFaucet</span>
-    </div>
-    <div class="user-info">
-      <img id="profImg" class="prof-img" style="display:none;" alt="">
-      <div id="profPlaceholder" class="prof-placeholder">?</div>
-      <span id="userName">User</span>
-    </div>
-  </div>
-</header>
-
-<!-- Balance Bar -->
-<div class="balance-bar">
-  <div class="balance-inner">
-    <div class="balance-label">Your Balance</div>
-    <div class="balance-amount"><span id="balDisplay">0</span> <span class="coin">CNX</span></div>
-  </div>
-</div>
-
-<!-- Main Container -->
-<div class="container">
-
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('faucet')">FAUCET</button>
-    <button class="tab-btn" onclick="switchTab('tasks')">TASKS</button>
-    <button class="tab-btn" onclick="switchTab('withdraw')">WITHDRAW</button>
-    <button class="tab-btn" onclick="switchTab('swap')">SWAP</button>
-    <button class="tab-btn" onclick="switchTab('refs')">REFS</button>
-    <button class="tab-btn admin-tab" id="adminTabBtn" style="display:none;" onclick="switchTab('admin')">ADMIN</button>
-  </div>
-
-  <!-- FAUCET TAB -->
-  <div id="tab-faucet" class="tab-content active">
-    <div class="faucet-box">
-      <div class="faucet-title">CNX Faucet</div>
-      <p class="faucet-desc">Claim free CNX every 10 seconds!</p>
-
-      <div id="faucetReady">
-        <div class="timer-ready">READY!</div>
-        <button class="claim-btn" id="claimBtn" onclick="doClaim()">CLAIM NOW</button>
-        <p class="reward-info">Reward: 1 - 10 CNX</p>
-      </div>
-
-      <div id="faucetWait" style="display:none;">
-        <div class="timer-wait" id="timerDisplay">00:00</div>
-        <button class="claim-btn disabled" disabled>WAIT...</button>
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="profile-wrap">
+      <img class="profile-img" id="profileImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20c0-4 4-6 8-6s8 2 8 6'/%3E%3C/svg%3E" alt="Profile">
+      <div class="profile-name" id="profileName">
+        User
+        <span id="profileId">Loading...</span>
       </div>
     </div>
-
-    <div class="info-box">
-      <h3>Stats</h3>
-      <div class="stats-row">
-        <div class="stat"><span class="stat-num" id="stEarned">0</span><span class="stat-label">Total Earned</span></div>
-        <div class="stat"><span class="stat-num" id="stWithdrawn">0</span><span class="stat-label">Withdrawn</span></div>
-        <div class="stat"><span class="stat-num" id="stRefs">0</span><span class="stat-label">Referrals</span></div>
-        <div class="stat"><span class="stat-num" id="stRefEarn">0</span><span class="stat-label">Ref Earnings</span></div>
-      </div>
-    </div>
-
-    <div class="info-box">
-      <h3>Top Earners</h3>
-      <div id="lbList" class="simple-list">
-        <div class="empty">Loading...</div>
-      </div>
+    <div class="balance-wrap">
+      <!-- DOGE Coin SVG -->
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="15" fill="#C2A633" stroke="#B5982E" stroke-width="1"/>
+        <text x="16" y="21" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff" font-family="Arial">D</text>
+      </svg>
+      <div class="balance-text"><span id="bal">0</span> CNX</div>
     </div>
   </div>
 
-  <!-- TASKS TAB -->
-  <div id="tab-tasks" class="tab-content">
-    <div class="info-box">
-      <h3>Available Tasks</h3>
-      <div id="taskList" class="simple-list">
-        <div class="empty">Loading tasks...</div>
+  <div class="container">
+
+    <!-- Claim Card -->
+    <div class="card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        Faucet Claim
+      </div>
+      <button class="claim-btn" id="claimBtn" onclick="doClaim()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></svg>
+        CLAIM CNX
+      </button>
+      <div class="cooldown" id="cooldownText">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Ready to claim
       </div>
     </div>
 
-    <div class="info-box">
-      <h3>Offerwall</h3>
-      <p class="small">Complete offers to earn 100-5000 CNX!</p>
-      <iframe class="offer-iframe" id="offerwallFrame" src="" frameborder="0" loading="lazy"></iframe>
+    <!-- Tasks -->
+    <div class="card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        Tasks (AoyCo)
+      </div>
+      <iframe src="https://www.aoyco.com/offerwall" frameborder="0" scrolling="yes"></iframe>
     </div>
+
+    <!-- Withdraw -->
+    <div class="card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        Withdraw
+      </div>
+      <label class="label">FaucetPay Email or CNX Address</label>
+      <input type="text" id="wdAddress" placeholder="Enter your address">
+      <label class="label">Amount (CNX)</label>
+      <input type="number" id="wdAmount" placeholder="Min 1 CNX">
+      <button class="action" onclick="doWithdraw()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        Request Withdrawal
+      </button>
+      <div class="msg" id="wdMsg"></div>
+    </div>
+
   </div>
 
-  <!-- WITHDRAW TAB -->
-  <div id="tab-withdraw" class="tab-content">
-    <div class="info-box">
-      <h3>Withdraw CNX</h3>
-      <div class="wd-info">
-        <div class="wd-row"><span>Min Withdraw:</span><span class="wd-val">500 CNX</span></div>
-        <div class="wd-row"><span>Your Balance:</span><span class="wd-val" id="wdBal">0 CNX</span></div>
-      </div>
-      <form id="wdForm" onsubmit="doWithdraw(event)">
-        <div class="form-row">
-          <label>Amount (CNX)</label>
-          <input type="number" id="wdAmount" min="500" placeholder="500" required>
-        </div>
-        <div class="form-row">
-          <label>Method</label>
-          <select id="wdMethod">
-            <option value="faucetpay">FaucetPay (Email)</option>
-            <option value="crypto">Crypto Wallet</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label>Address / Email</label>
-          <input type="text" id="wdAddress" placeholder="your@email.com" required>
-        </div>
-        <button type="submit" class="submit-btn">Request Withdrawal</button>
-      </form>
-    </div>
+  <script>
+    const API = window.location.origin;
+    let userId = null;
+    let lastClaim = 0;
+    let cooldownTimer = null;
 
-    <div class="info-box">
-      <h3>History</h3>
-      <div id="wdHistory" class="simple-list">
-        <div class="empty">No withdrawals yet</div>
-      </div>
-    </div>
-  </div>
+    function init() {
+      let user = null;
+      if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+        user = Telegram.WebApp.initDataUnsafe.user;
+        userId = String(user.id);
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+      } else {
+        userId = 'test_' + Math.floor(Math.random() * 100000);
+      }
 
-  <!-- SWAP TAB -->
-  <div id="tab-swap" class="tab-content">
-    <div class="info-box">
-      <h3>CNX Swap</h3>
-      <div class="swap-box">
-        <div class="form-row">
-          <label>CNX Amount</label>
-          <input type="number" id="swapFrom" placeholder="0" min="1" oninput="calcSwap()">
-        </div>
-        <div class="swap-arrow">v</div>
-        <div class="form-row">
-          <label>USDT (Mock)</label>
-          <input type="text" id="swapTo" placeholder="0" readonly>
-        </div>
-        <div class="swap-rate" id="swapRate">1 CNX = 0.001 USDT</div>
-        <button class="submit-btn" onclick="doSwap()">Swap Now</button>
-      </div>
-    </div>
-  </div>
+      // Set profile info
+      if (user) {
+        if (user.photo_url) {
+          document.getElementById('profileImg').src = user.photo_url;
+        }
+        const name = user.username ? '@' + user.username : (user.first_name || 'User');
+        document.getElementById('profileName').childNodes[0].nodeValue = name + ' ';
+        document.getElementById('profileId').textContent = 'ID: ' + userId;
+      } else {
+        document.getElementById('profileName').childNodes[0].nodeValue = 'Test User ';
+        document.getElementById('profileId').textContent = 'ID: ' + userId;
+      }
 
-  <!-- REFERRALS TAB -->
-  <div id="tab-refs" class="tab-content">
-    <div class="info-box">
-      <h3>Your Referral</h3>
-      <p class="small">Earn <strong>10%</strong> from every claim your referrals make!</p>
-      <div class="ref-box" onclick="copyRef()">
-        <div class="ref-code" id="refCode">-----</div>
-        <div class="ref-hint">Tap to copy link</div>
-      </div>
-      <div class="stats-row">
-        <div class="stat"><span class="stat-num" id="refCount">0</span><span class="stat-label">Referrals</span></div>
-        <div class="stat"><span class="stat-num" id="refEarn">0</span><span class="stat-label">Bonus Earned</span></div>
-      </div>
-    </div>
-  </div>
+      loadBalance();
+    }
 
-  <!-- ADMIN TAB -->
-  <div id="tab-admin" class="tab-content">
-    <div class="info-box">
-      <h3>Admin Dashboard</h3>
-      <div class="stats-row">
-        <div class="stat"><span class="stat-num" id="adUsers">0</span><span class="stat-label">Total Users</span></div>
-        <div class="stat"><span class="stat-num" id="adClaims">0</span><span class="stat-label">Total Claims</span></div>
-        <div class="stat"><span class="stat-num" id="adWDs">0</span><span class="stat-label">Withdrawals</span></div>
-        <div class="stat"><span class="stat-num" id="adPending">0</span><span class="stat-label">Pending</span></div>
-      </div>
-    </div>
+    async function loadBalance() {
+      if (!userId) return;
+      try {
+        const res = await fetch(API + '/api/balance/' + userId);
+        const data = await res.json();
+        document.getElementById('bal').textContent = data.balance;
+        lastClaim = data.last_claim || 0;
+        updateCooldown();
+      } catch (e) {
+        console.error(e);
+      }
+    }
 
-    <div class="info-box">
-      <h3>Pending Withdrawals</h3>
-      <div id="adminWDList" class="simple-list">
-        <div class="empty">Loading...</div>
-      </div>
-    </div>
+    function updateCooldown() {
+      const now = Date.now();
+      const diff = now - lastClaim;
+      const btn = document.getElementById('claimBtn');
+      const txt = document.getElementById('cooldownText');
+      if (diff < 10000) {
+        const wait = Math.ceil((10000 - diff) / 1000);
+        btn.disabled = true;
+        txt.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline></svg> Wait ' + wait + 's...';
+        if (!cooldownTimer) cooldownTimer = setInterval(updateCooldown, 1000);
+      } else {
+        btn.disabled = false;
+        txt.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><polyline points=\"12 6 12 12 16 14\"></polyline></svg> Ready to claim!';
+        if (cooldownTimer) { clearInterval(cooldownTimer); cooldownTimer = null; }
+      }
+    }
 
-    <div class="info-box">
-      <h3>All Users</h3>
-      <div id="adminUserList" class="simple-list">
-        <div class="empty">Loading...</div>
-      </div>
-    </div>
-  </div>
+    async function doClaim() {
+      if (!userId) return;
+      const btn = document.getElementById('claimBtn');
+      btn.disabled = true;
+      try {
+        const res = await fetch(API + '/api/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('bal').textContent = data.balance;
+          lastClaim = Date.now();
+          updateCooldown();
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg> You won ' + data.reward + ' CNX!';
+        } else {
+          document.getElementById('cooldownText').innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> ' + (data.error || 'Error');
+        }
+      } catch (e) {
+        document.getElementById('cooldownText').innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> Network error';
+      }
+    }
 
-</div>
+    async function doWithdraw() {
+      if (!userId) return;
+      const amount = document.getElementById('wdAmount').value;
+      const address = document.getElementById('wdAddress').value;
+      const msg = document.getElementById('wdMsg');
+      if (!amount || !address) {
+        msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> Fill all fields';
+        msg.className = 'msg err';
+        return;
+      }
+      try {
+        const res = await fetch(API + '/api/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, amount: Number(amount), address })
+        });
+        const data = await res.json();
+        if (data.success) {
+          msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#16a34a\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><polyline points=\"20 6 9 17 4 12\"></polyline></svg> Withdrawal requested! Awaiting admin approval.';
+          msg.className = 'msg';
+          loadBalance();
+        } else {
+          msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> ' + (data.error || 'Failed');
+          msg.className = 'msg err';
+        }
+      } catch (e) {
+        msg.innerHTML = '<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#dc2626\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"width:14px;height:14px;vertical-align:middle;margin-right:4px;\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg> Network error';
+        msg.className = 'msg err';
+      }
+    }
 
-<!-- Footer -->
-<footer class="footer">
-  <p>CoinixFaucet v1.0 | Powered by Render + Firebase</p>
-</footer>
-
-<script src="app.js"></script>
+    window.onload = init;
+  </script>
 </body>
 </html>
