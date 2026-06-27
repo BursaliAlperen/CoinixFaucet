@@ -145,6 +145,14 @@ app.post('/api/postback', async (req, res) => {
 });
 
 // ========================
+// 4.5 AoyCo Offerwall Verification
+// ========================
+app.get('/offerwall-verification-XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
+});
+
+// ========================
 // 5. Withdraw Request
 // ========================
 app.post('/api/withdraw', async (req, res) => {
@@ -412,11 +420,18 @@ loadUsers(); loadWithdrawals(); loadLogs();
 });
 
 // ========================
-// 9. Serve Frontend
+// 9. Serve Frontend (SPA Fallback)
 // ========================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// SPA fallback for all client routes
+app.get('/withdraw', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/swap', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/faucet', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/ptc', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/funds', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 app.listen(PORT, () => {
   console.log('COINIXFAUCET server running on port ' + PORT);
