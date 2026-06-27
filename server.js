@@ -149,6 +149,7 @@ app.post('/api/auth', async (req, res) => {
         doge_balance: 0,
         total_earned: 0,
         total_doge_earned: 0,
+        total_ptc_earnings: 0,
         total_claims: 0,
         total_withdrawals: 0,
         referrals: 0,
@@ -166,7 +167,7 @@ app.post('/api/auth', async (req, res) => {
         if (refDoc.exists && !refDoc.data().banned) {
           await refRef.update({
             referrals: increment(1),
-            balance: increment(50), // 30% bonus in CNX
+            balance: increment(50),
             referral_earnings: increment(50)
           });
           await db.collection('referrals').add({
@@ -246,6 +247,7 @@ app.post('/api/claim', async (req, res) => {
       if (now - lastClaimTime < cooldownMs) throw new Error('COOLDOWN');
 
       const reward = Math.random() * (maxReward - minReward) + minReward;
+      const newBalance = (data.balance || 0) + reward;
       t.update(userRef, {
         balance: increment(reward),
         total_earned: increment(reward),
@@ -254,7 +256,7 @@ app.post('/api/claim', async (req, res) => {
       });
 
       await logAction('claim', user_id, { reward, timestamp: now });
-      return { success: true, reward };
+      return { success: true, reward, balance: newBalance };
     });
     res.json(result);
   } catch (err) {
@@ -465,7 +467,11 @@ app.get('/api/stats', adminAuth, async (req, res) => {
 
     const pendingSnap = await db.collection('withdrawals').where('status', '==', 'pending').get();
 
-    res.json({ totalUsers, totalBalance, totalDoge, totalClaims, activeToday: activeToday.size, totalWithdrawn, pendingWithdrawals: pendingSnap.size });
+    // PTC / Offerwall totals
+    const ptcSnap = await db.collection('logs').where('action', 'in', ['ptc_reward', 'offerwall_reward']).get();
+    let totalPtc = ptcSnap.size;
+
+    res.json({ totalUsers, totalBalance, totalDoge, totalClaims, totalPtc, activeToday: activeToday.size, totalWithdrawn, pendingWithdrawals: pendingSnap.size });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
@@ -485,14 +491,191 @@ app.get('/api/stats/user/:userId', async (req, res) => {
   }
 });
 
+// Detailed user chart data (last 30 days activity, broken down by source)
+app.get('/api/stats/user/:userId/charts', async (req, res) => {
+  try {
+    const userId = String(req.params.userId);
+    const days = Math.min(parseInt(req.query.days) || 30, 90);
+    const sinceMs = Date.now() - days * 24 * 60 * 60 * 1000;
+    const sinceTs = admin.firestore.Timestamp.fromMillis(sinceMs);
+
+    // Initialize per-day buckets
+    const buckets = {};
+    for (let i = 0; i < days; i++) {
+      const d = new Date(Date.now() - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      buckets[key] = { date: key, faucet: 0, ptc: 0, offerwall: 0, referrals: 0, swap: 0 };
+    }
+
+    // Pull all relevant logs for this user
+    const logsSnap = await db.collection('logs')
+      .where('user_id', '==', userId)
+      .where('timestamp', '>=', sinceTs)
+      .get();
+
+    logsSnap.forEach(doc => {
+      const l = doc.data();
+      if (!l.timestamp) return;
+      const key = new Date(l.timestamp.toMillis()).toISOString().slice(0, 10);
+      if (!buckets[key]) return;
+      const reward = parseFloat((l.details && (l.details.reward || l.details.amount || l.details.bonus)) || 0);
+      switch (l.action) {
+        case 'claim': buckets[key].faucet += reward; break;
+        case 'ptc_reward': buckets[key].ptc += reward; break;
+        case 'offerwall_reward': buckets[key].offerwall += reward; break;
+        case 'referral_bonus': buckets[key].referrals += reward; break;
+        case 'swap': buckets[key].swap += (l.details && l.details.amount) || 0; break;
+      }
+    });
+
+    const series = Object.values(buckets).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Action counts
+    const counts = { faucet: 0, ptc: 0, offerwall: 0, swap: 0, referral: 0, withdrawal: 0 };
+    logsSnap.forEach(doc => {
+      const l = doc.data();
+      if (l.action === 'claim') counts.faucet++;
+      else if (l.action === 'ptc_reward') counts.ptc++;
+      else if (l.action === 'offerwall_reward') counts.offerwall++;
+      else if (l.action === 'swap') counts.swap++;
+      else if (l.action === 'referral_bonus') counts.referral++;
+      else if (l.action === 'withdrawal_request') counts.withdrawal++;
+    });
+
+    // Withdrawals count
+    const wdSnap = await db.collection('withdrawals').where('user_id', '==', userId).get();
+    counts.withdrawal = wdSnap.size;
+
+    res.json({ series, counts });
+  } catch (err) {
+    console.error('User charts error:', err);
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// Admin: aggregate chart data (totals over time)
+app.get('/api/admin/charts', adminAuth, async (req, res) => {
+  try {
+    const days = Math.min(parseInt(req.query.days) || 30, 90);
+    const sinceMs = Date.now() - days * 24 * 60 * 60 * 1000;
+    const sinceTs = admin.firestore.Timestamp.fromMillis(sinceMs);
+
+    const buckets = {};
+    for (let i = 0; i < days; i++) {
+      const d = new Date(Date.now() - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      buckets[key] = { date: key, claims: 0, ptc: 0, offerwall: 0, swaps: 0, withdrawals: 0, newUsers: 0 };
+    }
+
+    const logsSnap = await db.collection('logs').where('timestamp', '>=', sinceTs).get();
+    logsSnap.forEach(doc => {
+      const l = doc.data();
+      if (!l.timestamp) return;
+      const key = new Date(l.timestamp.toMillis()).toISOString().slice(0, 10);
+      if (!buckets[key]) return;
+      switch (l.action) {
+        case 'claim': buckets[key].claims++; break;
+        case 'ptc_reward': buckets[key].ptc++; break;
+        case 'offerwall_reward': buckets[key].offerwall++; break;
+        case 'swap': buckets[key].swaps++; break;
+        case 'withdrawal_request': buckets[key].withdrawals++; break;
+      }
+    });
+
+    const usersSnap = await db.collection('users').where('created_at', '>=', sinceTs).get();
+    usersSnap.forEach(doc => {
+      const u = doc.data();
+      if (!u.created_at) return;
+      const key = new Date(u.created_at.toMillis()).toISOString().slice(0, 10);
+      if (buckets[key]) buckets[key].newUsers++;
+    });
+
+    const series = Object.values(buckets).sort((a, b) => a.date.localeCompare(b.date));
+    res.json({ series });
+  } catch (err) {
+    console.error('Admin charts error:', err);
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
+// Referral info for current user
+app.get('/api/referral/:userId', async (req, res) => {
+  try {
+    const userId = String(req.params.userId);
+    const doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    const botUsername = BOT_USERNAME;
+    const link = `https://t.me/${botUsername}?startapp=ref_${userId}`;
+    res.json({
+      link,
+      referrals: d.referrals || 0,
+      earnings: d.referral_earnings || 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed' });
+  }
+});
+
 // ========================
-// 9. Offerwall Verification
+// 9. Offerwall Verification + AoyCo Postback
 // ========================
 app.get('/offerwall-verification-XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM.txt', (req, res) => {
   res.set('Content-Type', 'text/plain').set('Cache-Control', 'no-cache, no-store, must-revalidate').send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
 });
 app.get('/verification.txt', (req, res) => {
   res.set('Content-Type', 'text/plain').send('XMLbUdRaXY8jOv7YXykOYi47Oh65ZPKM');
+});
+app.get('/aoycoin-verification-ca1c0822-9ad3-4ea9-8482-1e0db06a69fc.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain').send('ca1c0822-9ad3-4ea9-8482-1e0db06a69fc');
+});
+
+// AoyCo Postback (PTC / Offerwall rewards)
+// Configurable via env: AOYCO_POSTBACK_SECRET
+// Expected query: uid, reward, currency (cnx|doge), type (ptc|offerwall), txid (optional), signature (HMAC)
+app.post('/api/aoyco/postback', async (req, res) => {
+  try {
+    const { uid, reward, currency = 'cnx', type = 'offerwall', txid, signature } = req.body;
+    if (!uid || reward === undefined) return res.status(400).send('missing params');
+
+    // HMAC verify if secret configured
+    if (AOYCO_SECRET_KEY) {
+      const expectedSig = crypto.createHmac('sha256', AOYCO_SECRET_KEY)
+        .update(`${uid}:${reward}:${currency}:${txid || ''}`)
+        .digest('hex');
+      if (signature !== expectedSig) {
+        await logAction('postback_invalid_signature', null, { uid, reward });
+        return res.status(403).send('invalid signature');
+      }
+    }
+
+    const numReward = parseFloat(reward);
+    if (isNaN(numReward) || numReward <= 0) return res.status(400).send('invalid reward');
+
+    const userId = String(uid);
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).send('user not found');
+    if (userDoc.data().banned) return res.status(403).send('user banned');
+
+    const balanceField = currency === 'doge' ? 'doge_balance' : 'balance';
+    const totalField = currency === 'doge' ? 'total_doge_earned' : 'total_earned';
+
+    await userRef.update({
+      [balanceField]: increment(numReward),
+      [totalField]: increment(numReward),
+      total_ptc_earnings: increment(numReward)
+    });
+
+    await logAction(type === 'ptc' ? 'ptc_reward' : 'offerwall_reward', userId, {
+      reward: numReward, currency, txid: txid || null
+    });
+
+    res.json({ success: true, reward: numReward, currency });
+  } catch (err) {
+    console.error('Postback error:', err);
+    res.status(500).send('error');
+  }
 });
 
 // ========================
@@ -511,6 +694,8 @@ app.get('/api/admin/users', adminAuth, async (req, res) => {
         balance: d.balance || 0,
         doge_balance: d.doge_balance || 0,
         total_earned: d.total_earned || 0,
+        total_doge_earned: d.total_doge_earned || 0,
+        total_ptc_earnings: d.total_ptc_earnings || 0,
         total_claims: d.total_claims || 0,
         referrals: d.referrals || 0,
         referral_earnings: d.referral_earnings || 0,
