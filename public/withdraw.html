@@ -3,35 +3,408 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
   <title>Withdraw - COINIX</title>
   <style>
-    :root { --bg: #f0f2f5; --card: #fff; --text: #222; --muted: #6b7280; --accent: #fbbf24; --border: #e5e7eb; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --border: #334155; } .topbar { background: #1e293b !important; border-color: #334155 !important; } }
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #fbbf24;
+      --accent-dark: #d97706;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --border: #334155;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      }
+      .topbar { background: #ffffff !important; border-color: #e2e8f0 !important; }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .topbar { display: flex; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); gap: 12px; }
-    .back-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: none; cursor: pointer; }
-    .back-btn:hover { background: #f3f4f6; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    .topbar {
+      display: flex; align-items: center; padding: 12px 16px;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      gap: 12px; position: sticky; top: 0; z-index: 10;
+    }
+    .back-btn {
+      width: 38px; height: 38px; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 8px; border: none; background: none; cursor: pointer;
+      color: var(--text); transition: background 0.2s;
+    }
+    .back-btn:hover { background: var(--border); }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 16px; text-align: center; }
-    .card h2 { font-size: 18px; margin-bottom: 8px; }
-    .card p { color: var(--muted); font-size: 14px; }
-    .btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--accent); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .card p { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+    
+    .balance-display {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+    }
+    .balance-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; text-align: center;
+    }
+    .balance-item .value {
+      font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 4px;
+    }
+    .balance-item .label {
+      font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block; font-size: 13px; font-weight: 600;
+      margin-bottom: 6px; color: var(--text);
+    }
+    .form-group input, .form-group select {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--bg); color: var(--text);
+      font-size: 14px; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none; border-color: var(--accent);
+    }
+    
+    .btn {
+      width: 100%; padding: 12px 16px;
+      border: none; border-radius: 8px; font-size: 14px;
+      font-weight: 600; cursor: pointer;
+      transition: all 0.2s; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: var(--accent); color: #000;
+    }
+    .btn-primary:hover {
+      background: var(--accent-dark); transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(251, 191, 36, 0.3);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5; cursor: not-allowed; transform: none;
+    }
+    
+    .tabs {
+      display: flex; gap: 8px; margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1; padding: 12px; background: none; border: none;
+      color: var(--muted); font-weight: 600; font-size: 13px;
+      cursor: pointer; border-bottom: 3px solid transparent;
+      transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .tab-btn.active {
+      color: var(--accent); border-bottom-color: var(--accent);
+    }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .alert {
+      padding: 12px 14px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 16px; border: 1px solid;
+    }
+    .alert-info {
+      background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: #3b82f6;
+    }
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444;
+    }
+    .alert-success {
+      background: rgba(34, 197, 94, 0.1); color: #22c55e; border-color: #22c55e;
+    }
+    
+    .history-list {
+      display: flex; flex-direction: column; gap: 8px;
+      max-height: 400px; overflow-y: auto;
+    }
+    .history-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+    .history-left {
+      flex: 1;
+    }
+    .history-amount {
+      font-weight: 600; font-size: 14px; margin-bottom: 4px;
+    }
+    .history-date {
+      font-size: 12px; color: var(--muted);
+    }
+    .history-status {
+      font-size: 11px; font-weight: 600;
+      padding: 4px 8px; border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .status-pending {
+      background: rgba(251, 191, 36, 0.2); color: var(--accent);
+    }
+    .status-approved {
+      background: rgba(34, 197, 94, 0.2); color: var(--success);
+    }
+    .status-paid {
+      background: rgba(34, 197, 94, 0.2); color: var(--success);
+    }
+    .status-rejected {
+      background: rgba(239, 68, 68, 0.2); color: var(--danger);
+    }
+    .status-canceled {
+      background: rgba(239, 68, 68, 0.2); color: var(--danger);
+    }
+    
+    .loading {
+      text-align: center; padding: 20px;
+      color: var(--muted); font-size: 14px;
+    }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <button class="back-btn" onclick="location.href='/'">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <button class="back-btn" onclick="history.back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
-    <h1 style="font-size:16px;font-weight:700;">Withdraw</h1>
+    <h1 style="font-size: 16px; font-weight: 700;">Withdraw</h1>
   </div>
+
   <div class="container">
+    <!-- Balance Display -->
     <div class="card">
-      <h2>Withdraw</h2>
-      <p>This section is under development. Use the Home page for full functionality.</p>
-      <a href="/" class="btn">Go to Home</a>
+      <div class="balance-display">
+        <div class="balance-item">
+          <div class="value" id="dogeBalance">0.00</div>
+          <div class="label">DOGE</div>
+        </div>
+        <div class="balance-item">
+          <div class="value" id="cnxBalance">0.00</div>
+          <div class="label">CNX</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="card">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="withdraw">Withdraw</button>
+        <button class="tab-btn" data-tab="history">History</button>
+      </div>
+
+      <!-- Withdraw Tab -->
+      <div id="withdraw" class="tab-content active">
+        <div id="withdrawAlert"></div>
+        
+        <form id="withdrawForm" onsubmit="handleWithdraw(event)">
+          <div class="form-group">
+            <label>Currency</label>
+            <select id="currency" required>
+              <option value="doge">Dogecoin (DOGE)</option>
+              <option value="faucetpay">FaucetPay</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Amount (Minimum: 0.10)</label>
+            <input type="number" id="amount" step="0.01" min="0.10" placeholder="0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label>FaucetPay / Wallet Address</label>
+            <input type="text" id="address" placeholder="Enter your FaucetPay username or wallet address" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="withdrawBtn">
+            <span id="withdrawBtnText">Withdraw</span>
+          </button>
+        </form>
+
+        <div style="margin-top: 16px; padding: 12px; background: var(--bg); border-radius: 8px;">
+          <p style="font-size: 12px; color: var(--muted);">
+            ⓘ <strong>Withdrawal Info</strong><br>
+            • Earn CNX from faucet/ads<br>
+            • Swap CNX → DOGE when ready<br>
+            • Withdraw DOGE via FaucetPay<br>
+            • Minimum: 0.10 DOGE<br>
+            • Status: Pending → Paid
+          </p>
+        </div>
+      </div>
+
+      <!-- History Tab -->
+      <div id="history" class="tab-content">
+        <div id="historyAlert"></div>
+        <div class="history-list" id="historyList">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
     </div>
   </div>
+
+  <script>
+    let userId = null;
+    let userBalance = { doge_balance: 0, balance: 0 };
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(tab).classList.add('active');
+        if (tab === 'history') loadHistory();
+      });
+    });
+
+    // Initialize
+    async function init() {
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) return alert('Telegram data not available');
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData })
+        });
+        const data = await res.json();
+        if (!data.success) return alert('Auth failed');
+        userId = data.user_id;
+        loadBalance();
+      } catch (err) {
+        console.error(err);
+        alert('Initialization failed');
+      }
+    }
+
+    async function loadBalance() {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/balance/${userId}`);
+        const data = await res.json();
+        userBalance = data;
+        document.getElementById('dogeBalance').textContent = data.doge_balance.toFixed(2);
+        document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function handleWithdraw(e) {
+      e.preventDefault();
+      if (!userId) return;
+
+      const currency = document.getElementById('currency').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const address = document.getElementById('address').value.trim();
+
+      const alertDiv = document.getElementById('withdrawAlert');
+
+      if (!amount || amount < 0.10) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Minimum withdrawal is 0.10</div>';
+        return;
+      }
+
+      const balance = currency === 'doge' ? userBalance.doge_balance : userBalance.balance;
+      if (balance < amount) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Insufficient balance</div>';
+        return;
+      }
+
+      if (!address) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Address required</div>';
+        return;
+      }
+
+      const btn = document.getElementById('withdrawBtn');
+      btn.disabled = true;
+      document.getElementById('withdrawBtnText').innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const res = await fetch('/api/withdraw', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, amount, address, currency })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          alertDiv.innerHTML = '<div class="alert alert-success">✓ Withdrawal request submitted!<br>Status will update soon</div>';
+          document.getElementById('withdrawForm').reset();
+          setTimeout(loadBalance, 1000);
+        } else {
+          alertDiv.innerHTML = `<div class="alert alert-error">❌ ${result.error || 'Withdrawal failed'}</div>`;
+        }
+      } catch (err) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Network error</div>';
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        document.getElementById('withdrawBtnText').textContent = 'Withdraw';
+      }
+    }
+
+    async function loadHistory() {
+      if (!userId) return;
+      const historyList = document.getElementById('historyList');
+
+      try {
+        const res = await fetch(`/api/withdrawals/${userId}`);
+        const withdrawals = await res.json();
+
+        if (!withdrawals.length) {
+          historyList.innerHTML = '<p style="text-align: center; color: var(--muted); padding: 20px;">No withdrawals yet</p>';
+          return;
+        }
+
+        historyList.innerHTML = withdrawals.map(w => {
+          const date = new Date(w.timestamp).toLocaleDateString();
+          const statusClass = `status-${w.status}`;
+          return `
+            <div class="history-item">
+              <div class="history-left">
+                <div class="history-amount">${w.amount.toFixed(2)} ${w.currency.toUpperCase()}</div>
+                <div class="history-date">${date}</div>
+              </div>
+              <div class="history-status ${statusClass}">${w.status}</div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        historyList.innerHTML = '<p style="color: var(--danger);">Failed to load history</p>';
+        console.error(err);
+      }
+    }
+
+    // Start
+    window.addEventListener('load', init);
+  </script>
 </body>
 </html>

@@ -3,35 +3,369 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="aoycoin-verification" content="ca1c0822-9ad3-4ea9-8482-1e0db06a69fc">
   <title>Swap - COINIX</title>
   <style>
-    :root { --bg: #f0f2f5; --card: #fff; --text: #222; --muted: #6b7280; --accent: #fbbf24; --border: #e5e7eb; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --border: #334155; } .topbar { background: #1e293b !important; border-color: #334155 !important; } }
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #fbbf24;
+      --accent-dark: #d97706;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --border: #334155;
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+      }
+      .topbar { background: #ffffff !important; border-color: #e2e8f0 !important; }
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-    .topbar { display: flex; align-items: center; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border); gap: 12px; }
-    .back-btn { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: none; background: none; cursor: pointer; }
-    .back-btn:hover { background: #f3f4f6; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    .topbar {
+      display: flex; align-items: center; padding: 12px 16px;
+      background: var(--card); border-bottom: 1px solid var(--border);
+      gap: 12px; position: sticky; top: 0; z-index: 10;
+    }
+    .back-btn {
+      width: 38px; height: 38px; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 8px; border: none; background: none; cursor: pointer;
+      color: var(--text); transition: background 0.2s;
+    }
+    .back-btn:hover { background: var(--border); }
     .container { max-width: 540px; margin: 0 auto; padding: 16px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 16px; text-align: center; }
-    .card h2 { font-size: 18px; margin-bottom: 8px; }
-    .card p { color: var(--muted); font-size: 14px; }
-    .btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--accent); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px; margin-bottom: 16px;
+    }
+    
+    .balance-display {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;
+    }
+    .balance-item {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; text-align: center;
+    }
+    .balance-item .value {
+      font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 4px;
+    }
+    .balance-item .label {
+      font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    
+    .swap-container {
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .swap-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .swap-box label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--muted); margin-bottom: 8px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .swap-box input {
+      width: 100%; padding: 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: var(--card); color: var(--text);
+      font-size: 14px; font-weight: 600;
+    }
+    .swap-box input:focus {
+      outline: none; border-color: var(--accent);
+    }
+    
+    .swap-icon {
+      display: flex; justify-content: center; align-items: center;
+      margin: 4px 0;
+    }
+    .swap-icon button {
+      width: 44px; height: 44px;
+      border-radius: 50%; border: 2px solid var(--border);
+      background: var(--card); color: var(--accent);
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .swap-icon button:hover {
+      border-color: var(--accent); transform: rotate(180deg);
+    }
+    
+    .exchange-rate {
+      text-align: center; padding: 12px;
+      background: var(--bg); border-radius: 8px;
+      font-size: 12px; color: var(--muted);
+      margin-top: 12px;
+    }
+    
+    .btn {
+      width: 100%; padding: 12px 16px;
+      border: none; border-radius: 8px; font-size: 14px;
+      font-weight: 600; cursor: pointer;
+      transition: all 0.2s; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-top: 12px;
+    }
+    .btn-primary {
+      background: var(--accent); color: #000;
+    }
+    .btn-primary:hover {
+      background: var(--accent-dark); transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(251, 191, 36, 0.3);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5; cursor: not-allowed; transform: none;
+    }
+    
+    .alert {
+      padding: 12px 14px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 16px; border: 1px solid;
+    }
+    .alert-info {
+      background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: #3b82f6;
+    }
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444;
+    }
+    .alert-success {
+      background: rgba(34, 197, 94, 0.1); color: #22c55e; border-color: #22c55e;
+    }
+    
+    .loading {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .info-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px;
+      font-size: 12px; color: var(--muted); margin-top: 16px;
+    }
   </style>
 </head>
 <body>
   <div class="topbar">
-    <button class="back-btn" onclick="location.href='/'">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    <button class="back-btn" onclick="history.back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
-    <h1 style="font-size:16px;font-weight:700;">Swap</h1>
+    <h1 style="font-size: 16px; font-weight: 700;">Swap</h1>
   </div>
+
   <div class="container">
+    <!-- Balances -->
     <div class="card">
-      <h2>Swap</h2>
-      <p>This section is under development. Use the Home page for full functionality.</p>
-      <a href="/" class="btn">Go to Home</a>
+      <div class="balance-display">
+        <div class="balance-item">
+          <div class="value" id="dogeBalance">0.00</div>
+          <div class="label">DOGE</div>
+        </div>
+        <div class="balance-item">
+          <div class="value" id="cnxBalance">0.00</div>
+          <div class="label">CNX</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swap Form -->
+    <div class="card">
+      <div id="alertDiv"></div>
+
+      <form id="swapForm" onsubmit="handleSwap(event)">
+        <div class="swap-container">
+          <!-- From -->
+          <div>
+            <div class="swap-box">
+              <label>From</label>
+              <select id="fromCurrency" onchange="updateAvailableBalance()">
+                <option value="cnx">CNX Coins</option>
+                <option value="doge">Dogecoin</option>
+              </select>
+              <input type="number" id="fromAmount" placeholder="0.00" step="0.01" min="0" required onchange="updateToAmount()">
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                Available: <span id="fromAvailable">0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Swap Icon -->
+          <div class="swap-icon">
+            <button type="button" onclick="swapCurrencies()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- To -->
+          <div>
+            <div class="swap-box">
+              <label>To</label>
+              <select id="toCurrency" disabled>
+                <option id="toOption" value="doge">Dogecoin</option>
+              </select>
+              <input type="text" id="toAmount" placeholder="0.00" disabled>
+              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;">
+                You will receive: <span id="toReceive">0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exchange-rate">
+          Exchange Rate: 1:1 (1 CNX = 1 DOGE)
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="swapBtn">
+          <span id="swapBtnText">Swap Now</span>
+        </button>
+      </form>
+
+      <div class="info-box">
+        <strong>ℹ️ How to Withdraw</strong><br>
+        1. Earn CNX from faucet/ads<br>
+        2. Swap CNX → DOGE here<br>
+        3. Go to Withdraw<br>
+        4. Enter DOGE amount<br>
+        5. Withdraw via FaucetPay<br>
+        • Exchange rate: 1:1<br>
+        • No fees
+      </div>
     </div>
   </div>
+
+  <script>
+    let userId = null;
+    let userBalance = { cnx: 0, doge_balance: 0 };
+
+    async function init() {
+      const initData = window.Telegram?.WebApp?.initData;
+      if (!initData) return alert('Telegram data not available');
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData })
+        });
+        const data = await res.json();
+        if (!data.success) return alert('Auth failed');
+        userId = data.user_id;
+        loadBalance();
+      } catch (err) {
+        console.error(err);
+        alert('Initialization failed');
+      }
+    }
+
+    async function loadBalance() {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/balance/${userId}`);
+        const data = await res.json();
+        userBalance = { cnx: data.balance, doge_balance: data.doge_balance };
+        document.getElementById('dogeBalance').textContent = data.doge_balance.toFixed(2);
+        document.getElementById('cnxBalance').textContent = data.balance.toFixed(2);
+        updateAvailableBalance();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function swapCurrencies() {
+      const from = document.getElementById('fromCurrency').value;
+      const to = document.getElementById('toCurrency').value;
+      document.getElementById('fromCurrency').value = to;
+      document.getElementById('toCurrency').value = from;
+      document.getElementById('toOption').textContent = from === 'cnx' ? 'Dogecoin' : 'CNX Coins';
+      document.getElementById('toOption').value = from;
+      updateAvailableBalance();
+      updateToAmount();
+    }
+
+    function updateAvailableBalance() {
+      const from = document.getElementById('fromCurrency').value;
+      const available = from === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
+      document.getElementById('fromAvailable').textContent = available.toFixed(2);
+    }
+
+    function updateToAmount() {
+      const fromAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+      document.getElementById('toAmount').value = fromAmount.toFixed(2);
+      document.getElementById('toReceive').textContent = fromAmount.toFixed(2);
+    }
+
+    async function handleSwap(e) {
+      e.preventDefault();
+      if (!userId) return;
+
+      const fromCurrency = document.getElementById('fromCurrency').value;
+      const toCurrency = document.getElementById('toCurrency').value;
+      const amount = parseFloat(document.getElementById('fromAmount').value);
+      const alertDiv = document.getElementById('alertDiv');
+
+      if (!amount || amount <= 0) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Invalid amount</div>';
+        return;
+      }
+
+      const available = fromCurrency === 'cnx' ? userBalance.cnx : userBalance.doge_balance;
+      if (available < amount) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Insufficient balance</div>';
+        return;
+      }
+
+      const btn = document.getElementById('swapBtn');
+      btn.disabled = true;
+      document.getElementById('swapBtnText').innerHTML = '<span class="loading"></span> Processing...';
+
+      try {
+        const res = await fetch('/api/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            from_currency: fromCurrency,
+            to_currency: toCurrency,
+            amount
+          })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          alertDiv.innerHTML = `<div class="alert alert-success">✓ Swapped ${amount.toFixed(2)} ${fromCurrency.toUpperCase()} for ${result.swapped_amount.toFixed(2)} ${toCurrency.toUpperCase()}!</div>`;
+          document.getElementById('swapForm').reset();
+          setTimeout(() => {
+            loadBalance();
+            alertDiv.innerHTML = '';
+          }, 1500);
+        } else {
+          alertDiv.innerHTML = `<div class="alert alert-error">❌ ${result.error || 'Swap failed'}</div>`;
+        }
+      } catch (err) {
+        alertDiv.innerHTML = '<div class="alert alert-error">❌ Network error</div>';
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        document.getElementById('swapBtnText').textContent = 'Swap Now';
+      }
+    }
+
+    window.addEventListener('load', init);
+  </script>
 </body>
 </html>
