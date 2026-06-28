@@ -163,6 +163,7 @@ body {
 
 /* CONTENT */
 .content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow-y:auto;overflow-x:hidden;min-height:0}
+@media(max-width:900px){.content{max-width:100% !important;margin:0 !important;padding:12px !important}}
 
 /* PAGE SECTIONS */
 .page-section{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1);min-height:0}
@@ -181,10 +182,12 @@ body {
 .stat-card-ic.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border-color:rgba(74,158,255,0.3)}
 .stat-card-ic.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border-color:rgba(0,208,132,0.3)}
 .stat-card-ic.purple{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);border-color:rgba(139,92,246,0.3)}
-.stat-card-lbl{font-size:12px;color:var(--text-dim);margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.stat-card-lbl svg{width:14px;height:14px;vertical-align:middle}
-.stat-card-val{font-family:'Space Grotesk';font-size:26px;font-weight:700;color:var(--text);line-height:1.1;display:flex;align-items:center;gap:8px}
-.stat-card-val svg{width:22px;height:22px;vertical-align:middle}
+.stat-card-lbl{font-size:13px;color:var(--text-dim);margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.stat-card-lbl svg{width:18px;height:18px;vertical-align:middle}
+.stat-card-lbl img{width:16px;height:16px;vertical-align:middle}
+.stat-card-val{font-family:'Space Grotesk';font-size:28px;font-weight:700;color:var(--text);line-height:1.1;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stat-card-val svg{width:28px;height:28px;vertical-align:middle}
+.stat-card-val img{width:24px;height:24px;vertical-align:middle}
 .stat-card-val.gold{color:var(--gold)}
 .stat-card-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
 .stat-card-chg{font-size:11px;color:var(--success);margin-top:6px;display:flex;align-items:center;gap:4px}
@@ -399,6 +402,20 @@ body {
 </style>
 </head>
 <body>
+<div id="loadingScreen" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s">
+  <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;box-shadow:0 0 60px rgba(255,215,0,0.3);animation:loadPulse 1.5s ease-in-out infinite">
+    <img src="/images/cnx.png" alt="COINIX" style="width:50px;height:50px;object-fit:contain;animation:loadSpin 1.5s linear infinite" onerror="this.style.display='none';this.parentElement.innerHTML='C'">
+  </div>
+  <div style="font-family:'Space Grotesk';font-weight:700;font-size:18px;color:var(--gold);letter-spacing:2px">Loading...</div>
+  <div style="width:120px;height:3px;background:var(--bg-3);border-radius:3px;overflow:hidden">
+    <div style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold-2));border-radius:3px;animation:loadBar 1.5s ease-in-out infinite"></div>
+  </div>
+</div>
+<style>
+@keyframes loadPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes loadSpin{to{transform:rotate(360deg)}}
+@keyframes loadBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
+</style>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
@@ -1439,8 +1456,16 @@ setInterval(() => {
   fetchDogePrice();
 }, 30000);
 
+function hideLoading(){
+  const ls = document.getElementById('loadingScreen');
+  if(ls){ ls.style.opacity='0'; setTimeout(()=>ls.remove(),500); }
+}
 document.addEventListener('DOMContentLoaded', () => {
-  init();
+  init().then(() => {
+    setTimeout(hideLoading, 800);
+  }).catch(() => {
+    setTimeout(hideLoading, 1500);
+  });
 });
 
 </script>
