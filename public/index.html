@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#05060f">
 <title>COINIX Faucet · Earn CNX & DOGE</title>
-<link rel="icon" type="image/png" href="/images/coinix.png">
+<link rel="icon" type="image/png" href="/images/cnx.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -364,7 +364,7 @@ body {
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand" onclick="navigate('/')">
-    <div class="sidebar-brand-img"><img src="/images/coinix.png" alt="COINIX" onerror="this.style.display='none';this.parentElement.innerHTML='C'"></div>
+    <div class="sidebar-brand-img"><img src="/images/cnx.png" alt="COINIX" onerror="this.style.display='none';this.parentElement.innerHTML='C'"></div>
     <div class="sidebar-brand-txt">
       <span class="sidebar-brand-name">COINIX</span>
       <span class="sidebar-brand-sub">CNX Faucet</span>
@@ -402,7 +402,7 @@ body {
       <div class="sidebar-user-info">
         <div class="sidebar-user-name" id="sidebarName">Loading...</div>
         <div class="sidebar-user-bal" id="sidebarBal">
-          <img src="/images/coinix.png" alt="CNX"> 0 CNX
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:10px;height:10px;vertical-align:middle;margin-left:1px"> 0 CNX
         </div>
       </div>
     </div>
@@ -419,8 +419,9 @@ body {
     <div class="header-spacer"></div>
 
     <div class="header-balance" onclick="navigate('/withdraw')">
-      <img src="/images/coinix.png" alt="CNX">
-      <div>
+      <img src="/images/cnx.png" alt="CNX">
+      <div style="display:flex;align-items:center;gap:4px">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle">
         <span class="val" id="hdrBalCnx">0</span>
         <span class="text-dim" style="font-size:10px"> CNX</span>
         <div class="header-usd">
@@ -428,8 +429,9 @@ body {
         </div>
       </div>
       <span class="header-balance-sep"></span>
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px">
-      <div>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg>
+      <div style="display:flex;align-items:center;gap:4px">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle">
         <span class="val doge" id="hdrBalDoge">0</span>
         <span class="text-dim" style="font-size:10px"> DOGE</span>
         <div class="header-usd">
@@ -454,20 +456,20 @@ body {
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:22px;height:22px;vertical-align:middle;margin-left:3px"><span id="dashCnx">0.00</span></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> CNX Balance</div>
+          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="dashCnx">0.00</span></div>
           <div class="stat-card-sub">≈ $<span id="dashCnxUSD">0.0000</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px"></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:3px"><span id="dashDoge">0.00</span></div>
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="dashDoge">0.00</span></div>
           <div class="stat-card-sub">≈ $<span id="dashDogeUSD">0.0000</span></div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic green"><i class="fa-solid fa-chart-line"></i></div>
           <div class="stat-card-lbl">Today's Earnings</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:22px;height:22px;vertical-align:middle;margin-left:3px"><span id="dashToday">0.00</span></div>
+          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="dashToday">0.00</span></div>
           <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> Active</div>
         </div>
       </div>
@@ -475,26 +477,26 @@ body {
       <div class="stats-grid" style="margin-bottom:24px">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-droplet"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> Faucet</div>
-          <div class="stat-card-val gold" id="dashFaucet">0 CNX</div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> Faucet</div>
+          <div class="stat-card-val gold" id="dashFaucet"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:16px;height:16px;vertical-align:middle;margin-left:2px">0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-clock"></i> Every 3 min</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> Offerwall</div>
-          <div class="stat-card-val" id="dashPtc">0 CNX</div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> Offerwall</div>
+          <div class="stat-card-val" id="dashPtc"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:16px;height:16px;vertical-align:middle;margin-left:2px">0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-bolt"></i> Instant</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> Referrals</div>
-          <div class="stat-card-val gold" id="dashRef">0 CNX</div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> Referrals</div>
+          <div class="stat-card-val gold" id="dashRef"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:16px;height:16px;vertical-align:middle;margin-left:2px">0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-coins"></i> <span id="dashRefCount">0</span> referrals</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-solid fa-paper-plane"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> Withdrawals</div>
-          <div class="stat-card-val" style="color:#c2a633" id="dashWd">0 DOGE</div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> Withdrawals</div>
+          <div class="stat-card-val" style="color:#c2a633" id="dashWd"><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:2px">0 DOGE</div>
           <div class="stat-card-chg"><i class="fa-solid fa-check"></i> 0 successful</div>
         </div>
       </div>
@@ -548,13 +550,13 @@ body {
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:22px;height:22px;vertical-align:middle;margin-left:3px"><span id="faucetCnx">0.00</span></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> CNX Balance</div>
+          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="faucetCnx">0.00</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px"></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:3px"><span id="faucetDoge">0.00</span></div>
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="faucetDoge">0.00</span></div>
         </div>
       </div>
 
@@ -590,11 +592,11 @@ body {
           </div>
           <div class="stat-card">
             <div class="stat-card-lbl"><i class="fa-solid fa-coins"></i> Earned</div>
-            <div class="stat-card-val gold" id="statEarned">0</div>
+            <div class="stat-card-val gold" id="statEarned"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:16px;height:16px;vertical-align:middle;margin-left:2px">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px"> DOGE</div>
-            <div class="stat-card-val" style="color:#c2a633" id="statDoge">0</div>
+            <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE</div>
+            <div class="stat-card-val" style="color:#c2a633" id="statDoge"><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:2px">0</div>
           </div>
         </div>
       </div>
@@ -610,8 +612,8 @@ body {
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> Total Earned</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:22px;height:22px;vertical-align:middle;margin-left:3px"><span id="owTotalEarned">0.00</span></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> Total Earned</div>
+          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="owTotalEarned">0.00</span></div>
           <div class="stat-card-sub">From all tasks</div>
         </div>
       </div>
@@ -655,13 +657,13 @@ body {
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:22px;height:22px;vertical-align:middle;margin-left:3px"><span id="swapCnx">0.00</span></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> CNX Balance</div>
+          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="swapCnx">0.00</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px"></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:3px"><span id="swapDoge">0.00</span></div>
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="swapDoge">0.00</span></div>
         </div>
       </div>
 
@@ -674,7 +676,7 @@ body {
           <div style="display:flex;align-items:center;gap:10px">
             <input type="number" class="form-input" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="calcSwap()" style="flex:1">
             <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:var(--gold-soft);border:1px solid rgba(255,215,0,0.25);color:var(--gold);font-weight:600;font-size:13px;flex-shrink:0">
-              <img src="/images/coinix.png" alt="" style="width:18px;height:18px" onerror="this.style.display='none'">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:1px">
               <span id="swapFromCur">CNX</span>
             </div>
           </div>
@@ -697,7 +699,7 @@ body {
           <div style="display:flex;align-items:center;gap:10px">
             <input type="number" class="form-input" id="swapTo" placeholder="0.00" readonly style="flex:1">
             <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:rgba(194,166,51,0.1);border:1px solid rgba(194,166,51,0.25);color:#c2a633;font-weight:600;font-size:13px;flex-shrink:0">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:14px;height:14px;vertical-align:middle;margin-left:3px">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:14px;height:14px;vertical-align:middle;margin-left:1px">
               <span id="swapToCur">DOGE</span>
             </div>
           </div>
@@ -723,15 +725,15 @@ body {
 
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px"></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:3px"><span id="wdDoge">0.00</span></div>
+          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="wdDoge">0.00</span></div>
           <div class="stat-card-sub">Ready to withdraw</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:14px;height:14px;vertical-align:middle;margin-left:3px"> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:22px;height:22px;vertical-align:middle;margin-left:3px"><span id="wdCnx">0.00</span></div>
+          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:1px"> CNX Balance</div>
+          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/cnx.png" alt="CNX" style="width:18px;height:18px;vertical-align:middle;margin-left:2px"><span id="wdCnx">0.00</span></div>
           <div class="stat-card-sub" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE →</div>
         </div>
       </div>
@@ -754,9 +756,9 @@ body {
 
         <div class="card mt-2">
           <div class="form-group">
-            <label class="form-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> Currency</label>
+            <label class="form-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> Currency</label>
             <div class="form-input" style="display:flex;align-items:center;gap:8px;padding:12px 14px">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:3px">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><img src="/images/dogecoin.png" alt="DOGE" style="width:16px;height:16px;vertical-align:middle;margin-left:1px">
               DOGE (via FaucetPay)
             </div>
           </div>
@@ -959,7 +961,7 @@ async function loadUser(){
       const name = USER.username || USER.first_name || 'User';
       const initial = name.charAt(0).toUpperCase();
       document.getElementById('sidebarName').textContent = name;
-      document.getElementById('sidebarBal').innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><img src="/images/coinix.png" alt="CNX" style="width:12px;height:12px;vertical-align:middle;margin-left:3px"> ' + fmt(USER.balance) + ' CNX';
+      document.getElementById('sidebarBal').innerHTML = '<img src="/images/cnx.png" alt="CNX" style="width:12px;height:12px"> ' + fmt(USER.balance) + ' CNX';
       document.getElementById('hdrBalCnx').textContent = fmt(USER.balance);
       document.getElementById('hdrBalDoge').textContent = fmt(USER.doge_balance);
 
