@@ -10,7 +10,7 @@ const helmet = require('helmet');
 const admin = require('firebase-admin');
 
 // ============================================
-// FIREBASE INIT - Keep serviceAccountKey.json as fallback
+// FIREBASE INIT
 // ============================================
 let serviceAccount = null;
 let firebaseInitialized = false;
@@ -71,29 +71,26 @@ const logger = {
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'your_bot';
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
-const ADMIN_SECRET = process.env.ADMIN_ID;
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY;
-const OFFERWALL_API_KEY = process.env.OFFERWALL_APP_ID;
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || (process.env.JWT_SECRET || 'change-me-in-production');
+const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
 const APP_URL = process.env.APP_URL || 'https://coinix-faucet.vercel.app';
 const PORT = process.env.PORT || 3000;
 
 // ============================================
-// FAUCET CONFIG
+// FAUCET / PROMO CONFIG
 // ============================================
 const FAUCET_COOLDOWN = 180000; // 3 minutes
 const FAUCET_REWARD = 1.0; // 1 CNX
-
-// ============================================
-// BONUS CONFIG
-// ============================================
+const REFERRAL_SIGNUP_BONUS = 50;
+const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'shortlinks', 'game', 'games', 'visit', 'visits'];
 
 // ============================================
-// SECURITY (Helmet) - CSP Updated
+// SECURITY (Helmet)
 // ============================================
 function setupSecurity(app) {
   app.use(helmet({
@@ -118,10 +115,11 @@ function setupSecurity(app) {
 // ============================================
 // RATE LIMITERS
 // ============================================
-const generalLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, message: { error: 'Too many requests' }, standardHeaders: true, legacyHeaders: false });
-const authLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 10, message: { error: 'Too many auth attempts' }, standardHeaders: true, legacyHeaders: false });
+const generalLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, message: { error: 'Too many requests' }, standardHeaders: true, legacyHeaders: false });
+const authLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20, message: { error: 'Too many auth attempts' }, standardHeaders: true, legacyHeaders: false });
 const claimLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, message: { error: 'Too many claims' }, standardHeaders: true, legacyHeaders: false });
 const withdrawLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: { error: 'Too many withdrawals' }, standardHeaders: true, legacyHeaders: false });
+const promoLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: { error: 'Too many promo attempts' }, standardHeaders: true, legacyHeaders: false });
 
 // ============================================
 // AUTH MIDDLEWARE
@@ -152,7 +150,7 @@ function jwtAuth(req, res, next) {
 
 function adminAuth(req, res, next) {
   const key = req.query.admin_key || req.headers['x-admin-key'];
-  if (!ADMIN_SECRET || key !== ADMIN_SECRET) return res.status(403).json({ error: 'Forbidden' });
+  if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) return res.status(403).json({ error: 'Forbidden' });
   next();
 }
 
@@ -171,8 +169,10 @@ async function logAction(action, userId, details = {}) {
   if (!db) return;
   try {
     await db.collection('logs').add({
-      action, user_id: userId || null, details,
-      ip: details.ip || req?.headers?.['x-forwarded-for'] || null,
+      action,
+      user_id: userId || null,
+      details: details || {},
+      ip: details.ip || null,
       timestamp: serverTimestamp()
     });
   } catch (e) { logger.error('Log error', { error: e.message }); }
@@ -180,6 +180,19 @@ async function logAction(action, userId, details = {}) {
 
 function getClientIP(req) {
   return (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '0.0.0.0').split(',')[0].trim();
+}
+
+function startOfTodayTs() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return Timestamp ? Timestamp.fromDate(d) : d;
+}
+
+function startOfDayMinus(days) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - days);
+  return Timestamp ? Timestamp.fromDate(d) : d;
 }
 
 // ============================================
@@ -211,19 +224,17 @@ async function fetchDogePrice() {
     return dogePriceCache;
   }
 }
-
 setInterval(fetchDogePrice, 120000);
 fetchDogePrice();
 
 // ============================================
 // OFFERWALL.ME INTEGRATION
 // ============================================
-
 async function getOfferwallUrl(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
-    const url = `https://offerwall.me/offerwall/${OFFERWALL_API_KEY}/${userId}`;
+    const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
     logger.info('Offerwall URL generated', { userId });
     res.json({ success: true, url, user_id: userId });
   } catch (err) {
@@ -243,7 +254,7 @@ async function getPTCAds(req, res) {
       return res.json({ success: true, ads: [], total: 0, message: 'API token not configured' });
     }
 
-    const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_API_KEY}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
+    const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
     logger.debug('Fetching PTC ads', { userId });
 
     const controller = new AbortController();
@@ -296,7 +307,7 @@ async function getShortlinks(req, res) {
       return res.json({ success: true, shortlinks: [], total: 0, message: 'API token not configured' });
     }
 
-    const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_API_KEY}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
+    const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
     logger.debug('Fetching shortlinks', { userId });
 
     const controller = new AbortController();
@@ -339,7 +350,7 @@ async function getGames(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
-    const url = `https://offerwall.me/offerwall/${OFFERWALL_API_KEY}/${userId}`;
+    const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
     logger.info('Games offerwall URL generated', { userId });
     res.json({ success: true, url, message: 'Games are available through the offerwall iframe' });
   } catch (err) {
@@ -349,7 +360,7 @@ async function getGames(req, res) {
 }
 
 // ============================================
-// POSTBACK - SECURE & WITH BONUS
+// POSTBACK (secure, with bonus + referral commission)
 // ============================================
 const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
 
@@ -390,8 +401,6 @@ async function postback(req, res) {
       return res.status(403).send('ERROR: Signature does not match');
     }
 
-    logger.info('Postback signature validated', { transId, subId });
-
     const userRef = db.collection('users').doc(subId);
     const doc = await userRef.get();
     if (!doc.exists) {
@@ -420,12 +429,10 @@ async function postback(req, res) {
       return res.status(400).send('ERROR: Invalid reward');
     }
 
-    // Determine task type
     const taskType = String(offer_type || 'offer').toLowerCase();
     const isBonusEligible = BONUS_TYPES.some(t => taskType.includes(t));
     const bonusAmt = isBonusEligible ? Math.round(baseAmt * BONUS_PERCENT) / 100 : 0;
     const totalAmt = Math.round((baseAmt + bonusAmt) * 100) / 100;
-
     const numericStatus = parseInt(status) || 1;
 
     await db.runTransaction(async (t) => {
@@ -473,7 +480,6 @@ async function postback(req, res) {
       });
     });
 
-    // Give referral bonus on BASE amount (not including the 20% bonus)
     if (numericStatus === 1) {
       await giveReferralBonus(subId, baseAmt, taskType);
     }
@@ -488,7 +494,7 @@ async function postback(req, res) {
 }
 
 // ============================================
-// AUTH CONTROLLERS
+// AUTH
 // ============================================
 async function auth(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
@@ -522,13 +528,17 @@ async function auth(req, res) {
         total_earned: 0,
         total_doge_earned: 0,
         total_offerwall_earned: 0,
+        total_promo_earned: 0,
         total_claims: 0,
         total_withdrawals: 0,
         referrals: 0,
         referral_earnings: 0,
         referral_balance: 0,
+        promo_earnings: 0,
+        promo_used_count: 0,
         referred_by: ref || null,
         banned: false,
+        is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
         last_claim: null,
         created_at: serverTimestamp()
       };
@@ -538,7 +548,6 @@ async function auth(req, res) {
         const refRef = db.collection('users').doc(String(ref));
         const refDoc = await refRef.get();
         if (refDoc.exists && !refDoc.data().banned) {
-          const REFERRAL_SIGNUP_BONUS = 50;
           await refRef.update({
             referrals: increment(1),
             referral_balance: increment(REFERRAL_SIGNUP_BONUS),
@@ -575,9 +584,18 @@ async function auth(req, res) {
 async function getMe(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
-    const doc = await db.collection('users').doc(String(req.user.userId)).get();
+    const userId = String(req.user.userId);
+    const [doc, todayClaims, todayBonus, todayClaimCnx] = await Promise.all([
+      db.collection('users').doc(userId).get(),
+      db.collection('logs').where('user_id', '==', userId).where('action', '==', 'faucet_claim').where('timestamp', '>=', startOfTodayTs()).get().catch(() => null),
+      db.collection('promo_uses').where('user_id', '==', userId).where('timestamp', '>=', startOfTodayTs()).get().catch(() => null),
+      db.collection('logs').where('user_id', '==', userId).where('action', '==', 'faucet_claim').where('timestamp', '>=', startOfTodayTs()).get().catch(() => null)
+    ]);
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
     const d = doc.data();
+    const tc = todayClaims ? todayClaims.size : 0;
+    const tcc = todayClaimCnx ? todayClaimCnx.docs.reduce((s, x) => s + (x.data().amount || 0), 0) : 0;
+
     res.json({
       telegram_id: d.telegram_id,
       username: d.username,
@@ -588,15 +606,47 @@ async function getMe(req, res) {
       total_earned: d.total_earned || 0,
       total_claims: d.total_claims || 0,
       total_withdrawals: d.total_withdrawals || 0,
+      total_offerwall_earned: d.total_offerwall_earned || 0,
       referrals: d.referrals || 0,
       referral_earnings: d.referral_earnings || 0,
       referral_balance: d.referral_balance || 0,
-      total_offerwall_earned: d.total_offerwall_earned || 0,
+      promo_earnings: d.promo_earnings || d.total_promo_earned || 0,
+      promo_used_count: d.promo_used_count || 0,
+      today_claims: tc,
+      today_claim_cnx: tcc,
       last_claim: d.last_claim ? d.last_claim.toMillis() : null,
-      banned: d.banned || false
+      banned: d.banned || false,
+      is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID)
     });
   } catch (err) {
     logger.error('GetMe error', { error: err.message });
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+async function getMeDashboard(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const userId = String(req.user.userId);
+    const doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    res.json({
+      balance: d.balance || 0,
+      doge_balance: d.doge_balance || 0,
+      referral_balance: d.referral_balance || 0,
+      total_earned: d.total_earned || 0,
+      total_offerwall_earned: d.total_offerwall_earned || 0,
+      promo_earnings: d.promo_earnings || d.total_promo_earned || 0,
+      promo_used_count: d.promo_used_count || 0,
+      referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings || 0,
+      total_claims: d.total_claims || 0,
+      total_withdrawals: d.total_withdrawals || 0,
+      last_claim: d.last_claim ? d.last_claim.toMillis() : null
+    });
+  } catch (err) {
+    logger.error('getMeDashboard error', { error: err.message });
     res.status(500).json({ error: 'Server error' });
   }
 }
@@ -657,8 +707,7 @@ async function giveReferralBonus(userId, amount, type) {
     if (!userData.referred_by) return;
 
     const referrerId = userData.referred_by;
-    const bonusPercent = 20; // Fixed 20% referral commission
-    const bonusAmount = Math.round(amount * (bonusPercent / 100) * 100) / 100;
+    const bonusAmount = Math.round(amount * (REFERRAL_COMMISSION_PERCENT / 100) * 100) / 100;
     if (bonusAmount <= 0) return;
 
     const referrerRef = db.collection('users').doc(referrerId);
@@ -713,8 +762,41 @@ async function collectReferralBonus(req, res) {
   }
 }
 
+async function getReferralStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const userId = String(req.user.userId);
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
+    const userData = userDoc.data();
+
+    const referralsSnap = await db.collection('referrals').where('referrer_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
+    const referrals = referralsSnap.docs.map(d => ({
+      ...d.data(),
+      timestamp: d.data().timestamp?.toMillis()
+    }));
+
+    res.json({
+      totalEarned: userData.referral_earnings || 0,
+      referral_balance: userData.referral_balance || 0,
+      breakdown: {
+        faucet: userData.referral_bonus_faucet || 0,
+        ptc: userData.referral_bonus_ptc || 0,
+        shortlink: userData.referral_bonus_shortlink || 0,
+        offerwall: userData.referral_bonus_offerwall || 0,
+        game: userData.referral_bonus_game || 0
+      },
+      referralCount: userData.referrals || 0,
+      referrals
+    });
+  } catch (e) {
+    logger.error('Referral stats error', { error: e.message });
+    res.status(500).json({ error: 'Failed to get referral stats' });
+  }
+}
+
 // ============================================
-// FAUCET CONTROLLER (Transaction Safe)
+// FAUCET CLAIM
 // ============================================
 async function claim(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
@@ -733,7 +815,6 @@ async function claim(req, res) {
   try {
     const now = Date.now();
     let newBalance = 0;
-    let newClaims = 0;
 
     await db.runTransaction(async (t) => {
       const doc = await t.get(userRef);
@@ -745,7 +826,6 @@ async function claim(req, res) {
         throw new Error(`Cooldown active|${FAUCET_COOLDOWN - (now - lastClaim)}`);
       }
       newBalance = (d.balance || 0) + FAUCET_REWARD;
-      newClaims = (d.total_claims || 0) + 1;
       t.update(userRef, {
         balance: increment(FAUCET_REWARD),
         total_earned: increment(FAUCET_REWARD),
@@ -754,7 +834,6 @@ async function claim(req, res) {
       });
     });
 
-    // Referral bonus for faucet claim
     await giveReferralBonus(userId, FAUCET_REWARD, 'faucet');
     await logAction('faucet_claim', userId, { amount: FAUCET_REWARD });
 
@@ -773,7 +852,7 @@ async function claim(req, res) {
 }
 
 // ============================================
-// SWAP CONTROLLER (Transaction Safe)
+// SWAP
 // ============================================
 async function swap(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
@@ -810,7 +889,7 @@ async function swap(req, res) {
 }
 
 // ============================================
-// WITHDRAW CONTROLLERS (Transaction Safe)
+// WITHDRAW
 // ============================================
 async function withdraw(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
@@ -831,10 +910,10 @@ async function withdraw(req, res) {
       if (amt < 0.1) throw new Error('Minimum 0.10 DOGE');
       t.update(userRef, { doge_balance: increment(-amt), total_withdrawals: increment(1) });
     });
-    await db.collection('withdrawals').add({
+    const ref = await db.collection('withdrawals').add({
       user_id: userId, faucetpay_email, amount: amt, status: 'pending', timestamp: serverTimestamp()
     });
-    res.json({ success: true, message: 'Withdrawal submitted' });
+    res.json({ success: true, id: ref.id, message: 'Withdrawal submitted' });
   } catch (err) {
     if (err.message === 'User not found') return res.status(404).json({ error: 'User not found' });
     if (err.message === 'User banned') return res.status(403).json({ error: 'User banned' });
@@ -867,23 +946,6 @@ async function getRecentWithdrawals(req, res) {
   }
 }
 
-async function getWithdrawStats(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayTs = Timestamp?.fromDate(today) || today;
-    const snapshot = await db.collection('withdrawals').where('timestamp', '>=', todayTs).get();
-    const total = snapshot.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-    const allSnap = await db.collection('withdrawals').get();
-    const allTime = allSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-    res.json({ today: total, allTime });
-  } catch (err) {
-    logger.error('Withdraw stats error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
 // ============================================
 // DOGE PRICE ENDPOINT
 // ============================================
@@ -904,263 +966,12 @@ async function getDogePrice(req, res) {
 }
 
 // ============================================
-// OFFERWALL STATS
-// ============================================
-async function getOfferwallStats(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const userId = String(req.user.userId);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayTs = Timestamp?.fromDate(today) || today;
-
-    const todaySnap = await db.collection('offerwall_completions')
-      .where('user_id', '==', userId)
-      .where('status', '==', 'completed')
-      .where('timestamp', '>=', todayTs)
-      .get();
-    const allSnap = await db.collection('offerwall_completions')
-      .where('user_id', '==', userId)
-      .where('status', '==', 'completed')
-      .get();
-
-    const ptcCount = allSnap.docs.filter(d => String(d.data().task_type).includes('ptc')).length;
-    const shortlinkCount = allSnap.docs.filter(d => String(d.data().task_type).includes('shortlink')).length;
-    const gameCount = allSnap.docs.filter(d => String(d.data().task_type).includes('game')).length;
-    const todayEarnings = todaySnap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
-    const totalEarnings = allSnap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
-
-    res.json({
-      success: true,
-      today: { count: todaySnap.size, earnings: todayEarnings },
-      total: {
-        count: allSnap.size, earnings: totalEarnings,
-        ptc: ptcCount, shortlinks: shortlinkCount, games: gameCount
-      }
-    });
-  } catch (err) {
-    logger.error('Get offerwall stats error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-// ============================================
-// STATS CONTROLLERS
-// ============================================
-async function getGlobalStats(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const usersSnap = await db.collection('users').get();
-    const totalUsers = usersSnap.size;
-    const activeToday = usersSnap.docs.filter(d => {
-      const lc = d.data().last_claim;
-      return lc && (Date.now() - lc.toMillis() < 86400000);
-    }).length;
-    const wdSnap = await db.collection('withdrawals').get();
-    const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-    res.json({ totalUsers, activeToday, totalPaid });
-  } catch (err) {
-    logger.error('Global stats error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function getUserStats(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const userId = String(req.params.userId);
-    if (req.user.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
-    const doc = await db.collection('users').doc(userId).get();
-    if (!doc.exists) return res.status(404).json({ error: 'Not found' });
-    const d = doc.data();
-    res.json({
-      balance: d.balance || 0,
-      doge_balance: d.doge_balance || 0,
-      referral_balance: d.referral_balance || 0,
-      total_earned: d.total_earned || 0,
-      total_claims: d.total_claims || 0,
-      total_withdrawals: d.total_withdrawals || 0,
-      referrals: d.referrals || 0
-    });
-  } catch (err) {
-    logger.error('User stats error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-// ============================================
-// ADMIN CONTROLLERS
-// ============================================
-async function getUsers(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const snap = await db.collection('users').orderBy('created_at', 'desc').limit(100).get();
-    res.json(snap.docs.map(d => ({
-      id: d.id, ...d.data(),
-      created_at: d.data().created_at?.toMillis()
-    })));
-  } catch (err) {
-    logger.error('Admin users error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function getAdminWithdrawals(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const snap = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(100).get();
-    res.json(snap.docs.map(d => ({
-      id: d.id, ...d.data(),
-      timestamp: d.data().timestamp?.toMillis()
-    })));
-  } catch (err) {
-    logger.error('Admin withdrawals error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function approveWithdrawal(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    await db.collection('withdrawals').doc(req.body.id).update({
-      status: 'approved', approved_at: serverTimestamp()
-    });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Approve error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function addBalance(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const { userId, amount, currency } = req.body;
-    const field = currency === 'doge' ? 'doge_balance' : 'balance';
-    await db.collection('users').doc(String(userId)).update({
-      [field]: increment(Number(amount))
-    });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Add balance error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function banUser(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    await db.collection('users').doc(String(req.body.userId)).update({ banned: true });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Ban error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function unbanUser(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    await db.collection('users').doc(String(req.body.userId)).update({ banned: false });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Unban error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function deleteUser(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    await db.collection('users').doc(String(req.body.userId)).delete();
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Delete error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function getLogs(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
-    res.json(snap.docs.map(d => ({
-      id: d.id, ...d.data(),
-      timestamp: d.data().timestamp?.toMillis()
-    })));
-  } catch (err) {
-    logger.error('Logs error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function getSettings(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const doc = await db.collection('settings').doc('global').get();
-    res.json(doc.exists ? doc.data() : {});
-  } catch (err) {
-    logger.error('Settings get error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function updateSettings(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    await db.collection('settings').doc('global').set(req.body, { merge: true });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Settings update error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function broadcast(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    await db.collection('broadcasts').add({
-      message: req.body.message, timestamp: serverTimestamp()
-    });
-    res.json({ success: true });
-  } catch (err) {
-    logger.error('Broadcast error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function getAdminStats(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const usersSnap = await db.collection('users').get();
-    const wdSnap = await db.collection('withdrawals').get();
-    const offerSnap = await db.collection('offerwall_completions').get();
-    const claimsSnap = await db.collection('logs').where('action', '==', 'faucet_claim').get();
-
-    const totalUsers = usersSnap.size;
-    const totalWithdrawals = wdSnap.size;
-    const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-    const totalOfferwall = offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-    const totalClaims = claimsSnap.size;
-    const bannedUsers = usersSnap.docs.filter(d => d.data().banned).length;
-
-    res.json({
-      totalUsers, totalWithdrawals, totalPaid, totalOfferwall, totalClaims, bannedUsers
-    });
-  } catch (err) {
-    logger.error('Admin stats error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-// ============================================
-// CAPTCHA SYSTEM - Server-side verification
+// CAPTCHA
 // ============================================
 const activeCaptchas = new Map();
 const MAX_CAPTCHAS = 5000;
 
 function generateMathCaptcha(userId) {
-  // Cleanup if too many
   if (activeCaptchas.size > MAX_CAPTCHAS) {
     const firstKey = activeCaptchas.keys().next().value;
     activeCaptchas.delete(firstKey);
@@ -1220,170 +1031,550 @@ async function verifyCaptchaEndpoint(req, res) {
 }
 
 // ============================================
-// PROMO CODE SYSTEM (Fixed to use balance, not balance_cnx)
+// PROMO CODES (FULL)
 // ============================================
-async function createPromo(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const { code, reward, maxUses, expiresAt } = req.body;
-    if (!code || !reward || reward <= 0) return res.status(400).json({ error: 'Code and reward required' });
-    const promoRef = db.collection('promoCodes').doc(code.toUpperCase());
-    if ((await promoRef.get()).exists) return res.status(400).json({ error: 'Code already exists' });
-    await promoRef.set({
-      code: code.toUpperCase(),
-      reward: parseFloat(reward),
-      maxUses: parseInt(maxUses) || 100,
-      usedCount: 0,
-      usedBy: [],
-      createdAt: serverTimestamp(),
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-      createdBy: req.user.userId
-    });
-    res.json({ success: true, code: code.toUpperCase(), reward });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+function validatePromoCode(code) {
+  if (!code) return null;
+  const trimmed = String(code).trim().toUpperCase();
+  if (trimmed.length < 3 || trimmed.length > 32) return null;
+  if (!/^[A-Z0-9_-]+$/.test(trimmed)) return null;
+  return trimmed;
 }
 
-async function getPromos(req, res) {
+async function adminListPromos(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const snap = await db.collection('promoCodes').orderBy('createdAt', 'desc').get();
-    res.json({ promos: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const list = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        code: d.id,
+        coin: data.coin || 'CNX',
+        reward: data.reward || 0,
+        usageLimit: data.usageLimit || data.maxUses || 0,
+        usedCount: data.usedCount || 0,
+        enabled: data.enabled !== false,
+        createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : null,
+        expiresAt: data.expiresAt?.toMillis ? data.expiresAt.toMillis() : (data.expiresAt ? new Date(data.expiresAt).getTime() : null)
+      };
+    });
+    res.json(list);
+  } catch (err) {
+    logger.error('admin list promos error', { error: err.message });
+    res.status(500).json({ error: err.message });
   }
 }
 
-async function deletePromo(req, res) {
+async function adminCreatePromo(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
-    await db.collection('promoCodes').doc(req.params.code.toUpperCase()).delete();
+    const code = validatePromoCode(req.body.code);
+    const { coin = 'CNX' } = req.body;
+    const reward = Number(req.body.reward);
+    const usageLimit = req.body.usageLimit ? parseInt(req.body.usageLimit) : (req.body.maxUses ? parseInt(req.body.maxUses) : 100);
+    const expiresAt = req.body.expiresAt || null;
+    if (!code) return res.status(400).json({ error: 'Invalid code (3-32 chars, A-Z 0-9 _ -)' });
+    if (!reward || reward <= 0 || isNaN(reward)) return res.status(400).json({ error: 'Invalid reward' });
+    if (!['CNX', 'DOGE'].includes(coin)) return res.status(400).json({ error: 'Coin must be CNX or DOGE' });
+
+    const promoRef = db.collection('promoCodes').doc(code);
+    if ((await promoRef.get()).exists) return res.status(400).json({ error: 'Code already exists' });
+
+    await promoRef.set({
+      code,
+      coin,
+      reward,
+      usageLimit,
+      usedCount: 0,
+      usedBy: [],
+      enabled: true,
+      createdBy: req.user.userId,
+      createdAt: serverTimestamp(),
+      expiresAt: expiresAt ? new Date(expiresAt) : null
+    });
+
+    await logAction('promo_create', req.user.userId, { code, coin, reward, usageLimit });
+    res.json({ success: true, code, coin, reward, usageLimit });
+  } catch (err) {
+    logger.error('admin create promo error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function adminTogglePromo(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const code = validatePromoCode(req.body.code);
+    const enabled = !!req.body.enabled;
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
+    await db.collection('promoCodes').doc(code).update({ enabled });
     res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  } catch (err) {
+    logger.error('admin toggle promo error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function adminDeletePromo(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const code = validatePromoCode(req.body.code);
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
+    await db.collection('promoCodes').doc(code).delete();
+    await logAction('promo_delete', req.user.userId, { code });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('admin delete promo error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function adminPromoUsage(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const snap = await db.collection('promo_uses').orderBy('timestamp', 'desc').limit(200).get();
+    const usage = [];
+    for (const d of snap.docs) {
+      const data = d.data();
+      let username = null;
+      if (data.user_id) {
+        try {
+          const u = await db.collection('users').doc(String(data.user_id)).get();
+          if (u.exists) username = u.data().username || u.data().first_name || null;
+        } catch (e) { /* ignore */ }
+      }
+      usage.push({
+        userId: data.user_id,
+        username,
+        code: data.code,
+        reward: data.reward,
+        coin: data.coin,
+        usedAt: data.timestamp?.toMillis ? data.timestamp.toMillis() : null
+      });
+    }
+    res.json({ usage });
+  } catch (err) {
+    logger.error('admin promo usage error', { error: err.message });
+    res.status(500).json({ error: err.message });
   }
 }
 
 async function redeemPromo(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
-    const { code } = req.body;
-    if (!code) return res.status(400).json({ error: 'Code required' });
+    const code = validatePromoCode(req.body.code);
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
     const userId = String(req.user.userId);
-    const promoRef = db.collection('promoCodes').doc(code.toUpperCase());
+
+    const promoRef = db.collection('promoCodes').doc(code);
     const promoDoc = await promoRef.get();
     if (!promoDoc.exists) return res.status(400).json({ error: 'Invalid code' });
     const promo = promoDoc.data();
-    if (promo.expiresAt && promo.expiresAt.toDate() < new Date()) return res.status(400).json({ error: 'Expired' });
-    if (promo.usedCount >= promo.maxUses) return res.status(400).json({ error: 'Fully used' });
-    if (promo.usedBy && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'Already used' });
+    if (promo.enabled === false) return res.status(400).json({ error: 'Code disabled' });
+    if (promo.expiresAt) {
+      const expTs = promo.expiresAt.toDate ? promo.expiresAt.toDate() : new Date(promo.expiresAt);
+      if (expTs < new Date()) return res.status(400).json({ error: 'Code expired' });
+    }
+    if ((promo.usedCount || 0) >= (promo.usageLimit || promo.maxUses || 0)) {
+      return res.status(400).json({ error: 'Code usage limit reached' });
+    }
+    if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) {
+      return res.status(400).json({ error: 'You already used this code' });
+    }
 
     const userRef = db.collection('users').doc(userId);
+    const field = (promo.coin === 'DOGE') ? 'doge_balance' : 'balance';
+    const totalField = (promo.coin === 'DOGE') ? 'total_doge_earned' : 'total_earned';
+    const reward = Number(promo.reward);
+
     await db.runTransaction(async (t) => {
-      const u = (await t.get(userRef)).data();
+      const u = await t.get(userRef);
+      if (!u.exists) throw new Error('User not found');
+      const ud = u.data();
+      if (ud.banned) throw new Error('User banned');
+      // Double-check inside transaction (race-safe)
+      const freshPromo = await t.get(promoRef);
+      const fp = freshPromo.data();
+      if (fp.enabled === false) throw new Error('Code disabled');
+      if (fp.expiresAt) {
+        const expTs = fp.expiresAt.toDate ? fp.expiresAt.toDate() : new Date(fp.expiresAt);
+        if (expTs < new Date()) throw new Error('Code expired');
+      }
+      if ((fp.usedCount || 0) >= (fp.usageLimit || fp.maxUses || 0)) throw new Error('Code usage limit reached');
+      if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('You already used this code');
+
       t.update(userRef, {
-        balance: (u.balance || 0) + promo.reward,
-        total_promo_earned: (u.total_promo_earned || 0) + promo.reward
+        [field]: increment(reward),
+        [totalField]: increment(reward),
+        promo_earnings: increment((promo.coin === 'DOGE') ? 0 : reward),
+        total_promo_earned: increment((promo.coin === 'DOGE') ? 0 : reward),
+        promo_used_count: increment(1)
       });
       t.update(promoRef, {
-        usedCount: (promo.usedCount || 0) + 1,
-        usedBy: [...(promo.usedBy || []), userId]
+        usedCount: increment(1),
+        usedBy: FieldValue ? FieldValue.arrayUnion(userId) : [...(fp.usedBy || []), userId]
+      });
+      const useRef = db.collection('promo_uses').doc();
+      t.set(useRef, {
+        user_id: userId,
+        code,
+        reward,
+        coin: promo.coin,
+        timestamp: serverTimestamp()
       });
     });
-    res.json({ success: true, reward: promo.reward, code: promo.code });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+
+    await logAction('promo_redeem', userId, { code, reward, coin: promo.coin });
+    res.json({ success: true, code, reward, coin: promo.coin });
+  } catch (err) {
+    logger.error('Redeem promo error', { error: err.message });
+    const m = err.message || 'Failed to redeem';
+    return res.status(400).json({ error: m });
   }
 }
 
-async function getPromoEarnings(req, res) {
-  if (!db) return res.status(503).json({ error: 'Database not available' });
-  try {
-    const u = (await db.collection('users').doc(String(req.user.userId)).get()).data();
-    res.json({ totalPromoEarned: u.total_promo_earned || 0, balance: u.balance || 0 });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-}
-
-// ============================================
-// STATS ENDPOINTS
-// ============================================
-async function getStats(req, res) {
+async function getPromoHistory(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
-    const u = (await db.collection('users').doc(userId).get()).data();
-    const today = new Date().toISOString().split('T')[0];
-    const month = new Date().toISOString().slice(0, 7);
-    const daily = {
-      faucet: u['daily_' + today + '_faucet'] || 0,
-      offerwall: u['daily_' + today + '_offerwall'] || 0,
-      referral: u['daily_' + today + '_referral'] || 0,
-      total: 0
-    };
-    daily.total = daily.faucet + daily.offerwall + daily.referral;
-    const monthly = {
-      faucet: u['monthly_' + month + '_faucet'] || 0,
-      offerwall: u['monthly_' + month + '_offerwall'] || 0,
-      referral: u['monthly_' + month + '_referral'] || 0,
-      total: 0
-    };
-    monthly.total = monthly.faucet + monthly.offerwall + monthly.referral;
-    const lifetime = {
-      faucet: u.total_faucet_claimed || 0,
-      offerwall: u.total_offerwall_earned || 0,
-      referral: u.total_referral_earned || 0,
-      total: 0
-    };
-    lifetime.total = lifetime.faucet + lifetime.offerwall + lifetime.referral;
-    res.json({ daily, monthly, lifetime });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+    const snap = await db.collection('promo_uses').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
+    const history = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        code: data.code,
+        reward: data.reward,
+        coin: data.coin,
+        usedAt: data.timestamp?.toMillis ? data.timestamp.toMillis() : null
+      };
+    });
+    const totalBonus = history.reduce((s, h) => s + (h.reward || 0), 0);
+    res.json({ history, totalBonus, count: history.length });
+  } catch (err) {
+    logger.error('Promo history error', { error: err.message });
+    res.status(500).json({ error: err.message });
   }
 }
 
 // ============================================
-// REFERRAL STATS
+// ADMIN: REWARDS (free coin bonuses)
 // ============================================
-async function getReferralStats(req, res) {
+async function adminListRewards(req, res) {
   if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
-    const userId = String(req.user.userId);
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
-    const userData = userDoc.data();
-    const totalEarned = userData.total_referral_earned || 0;
-    const faucetBonus = userData.referral_bonus_faucet || 0;
-    const ptcBonus = userData.referral_bonus_ptc || 0;
-    const shortlinkBonus = userData.referral_bonus_shortlink || 0;
-    const offerwallBonus = userData.referral_bonus_offerwall || 0;
-    const gameBonus = userData.referral_bonus_game || 0;
-    const referralCount = userData.referrals || 0;
+    const snap = await db.collection('rewards').orderBy('createdAt', 'desc').get();
+    res.json({ rewards: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+  } catch (err) {
+    logger.error('admin list rewards error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
 
-    const referralsSnap = await db.collection('referrals').where('referrer_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
-    const referrals = referralsSnap.docs.map(d => ({
-      ...d.data(),
+async function adminCreateReward(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { name, coin = 'CNX', amount, dailyLimit = 0 } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name required' });
+    const amt = Number(amount);
+    if (!amt || amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
+    if (!['CNX', 'DOGE'].includes(coin)) return res.status(400).json({ error: 'Invalid coin' });
+    const ref = await db.collection('rewards').add({
+      name, coin, amount: amt, dailyLimit: parseInt(dailyLimit) || 0,
+      enabled: true, createdBy: req.user.userId, createdAt: serverTimestamp()
+    });
+    res.json({ success: true, id: ref.id });
+  } catch (err) {
+    logger.error('admin create reward error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function adminToggleReward(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { id, enabled } = req.body;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await db.collection('rewards').doc(id).update({ enabled: !!enabled });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('admin toggle reward error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function adminDeleteReward(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await db.collection('rewards').doc(id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('admin delete reward error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// ============================================
+// ADMIN: USERS, WITHDRAWALS, LOGS, STATS
+// ============================================
+async function adminGetUsers(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const snap = await db.collection('users').orderBy('created_at', 'desc').limit(200).get();
+    res.json(snap.docs.map(d => ({
+      id: d.id, ...d.data(),
+      created_at: d.data().created_at?.toMillis()
+    })));
+  } catch (err) {
+    logger.error('Admin users error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminGetWithdrawals(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const snap = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(200).get();
+    res.json(snap.docs.map(d => ({
+      id: d.id, ...d.data(),
       timestamp: d.data().timestamp?.toMillis()
-    }));
+    })));
+  } catch (err) {
+    logger.error('Admin withdrawals error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminApproveWithdrawal(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const id = req.body.id;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await db.collection('withdrawals').doc(id).update({
+      status: 'approved', approved_at: serverTimestamp()
+    });
+    await logAction('withdrawal_approved', req.user.userId, { id });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Approve error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminRejectWithdrawal(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const id = req.body.id;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const wdRef = db.collection('withdrawals').doc(id);
+    const wd = await wdRef.get();
+    if (!wd.exists) return res.status(404).json({ error: 'Not found' });
+    const wdData = wd.data();
+    if (wdData.status === 'approved') return res.status(400).json({ error: 'Already approved' });
+
+    // Refund DOGE
+    await db.runTransaction(async (t) => {
+      const u = await t.get(db.collection('users').doc(String(wdData.user_id)));
+      if (u.exists) {
+        t.update(u.ref, { doge_balance: increment(wdData.amount || 0) });
+      }
+      t.update(wdRef, { status: 'rejected', rejected_at: serverTimestamp() });
+    });
+    await logAction('withdrawal_rejected', req.user.userId, { id });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Reject error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminBanUser(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    await db.collection('users').doc(String(userId)).update({ banned: true });
+    await logAction('user_ban', req.user.userId, { bannedUser: String(userId) });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Ban error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminUnbanUser(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    await db.collection('users').doc(String(userId)).update({ banned: false });
+    await logAction('user_unban', req.user.userId, { unbannedUser: String(userId) });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Unban error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminAddBalance(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { userId, amount, currency } = req.body;
+    if (!userId || !amount) return res.status(400).json({ error: 'userId and amount required' });
+    const field = currency === 'doge' ? 'doge_balance' : 'balance';
+    await db.collection('users').doc(String(userId)).update({
+      [field]: increment(Number(amount))
+    });
+    await logAction('admin_add_balance', req.user.userId, { userId: String(userId), amount, currency });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Add balance error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminGetLogs(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
+    res.json(snap.docs.map(d => ({
+      id: d.id, ...d.data(),
+      timestamp: d.data().timestamp?.toMillis()
+    })));
+  } catch (err) {
+    logger.error('Logs error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminGetStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const [usersSnap, wdSnap, offerSnap, claimsSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('withdrawals').get(),
+      db.collection('offerwall_completions').get(),
+      db.collection('logs').where('action', '==', 'faucet_claim').get().catch(() => ({ size: 0, docs: [] }))
+    ]);
+    const totalUsers = usersSnap.size;
+    const totalWithdrawals = wdSnap.size;
+    const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const totalOfferwall = offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const totalClaims = claimsSnap.size;
+    const bannedUsers = usersSnap.docs.filter(d => d.data().banned).length;
 
     res.json({
-      totalEarned,
-      referral_balance: userData.referral_balance || 0,
-      breakdown: {
-        faucet: faucetBonus,
-        ptc: ptcBonus,
-        shortlink: shortlinkBonus,
-        offerwall: offerwallBonus,
-        game: gameBonus
-      },
-      referralCount,
-      referrals
+      totalUsers, totalWithdrawals, totalPaid, totalOfferwall, totalClaims, bannedUsers,
+      totalOfferwall_earnings: totalOfferwall,
+      totalPaid_doge: totalPaid
     });
-  } catch (e) {
-    logger.error('Referral stats error', { error: e.message });
-    res.status(500).json({ error: 'Failed to get referral stats' });
+  } catch (err) {
+    logger.error('Admin stats error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminGetDashboard(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const today = startOfTodayTs();
+    const weekAgo = startOfDayMinus(7);
+
+    const [promoToday, promoCountToday, claimsToday, refBonusToday, offerToday, newUsersWeek, claimsWeek, offerWeek, wdWeek] = await Promise.all([
+      db.collection('promo_uses').where('timestamp', '>=', today).get().catch(() => ({ docs: [] })),
+      db.collection('promo_uses').where('timestamp', '>=', today).get().catch(() => ({ size: 0 })),
+      db.collection('logs').where('action', '==', 'faucet_claim').where('timestamp', '>=', today).get().catch(() => ({ size: 0 })),
+      db.collection('referralBonuses').where('timestamp', '>=', today).get().catch(() => ({ docs: [] })),
+      db.collection('offerwall_completions').where('timestamp', '>=', today).where('status', '==', 'completed').get().catch(() => ({ docs: [] })),
+      db.collection('users').where('created_at', '>=', weekAgo).get().catch(() => ({ size: 0 })),
+      db.collection('logs').where('action', '==', 'faucet_claim').where('timestamp', '>=', weekAgo).get().catch(() => ({ docs: [] })),
+      db.collection('offerwall_completions').where('timestamp', '>=', weekAgo).where('status', '==', 'completed').get().catch(() => ({ docs: [] })),
+      db.collection('withdrawals').where('timestamp', '>=', weekAgo).get().catch(() => ({ docs: [] }))
+    ]);
+
+    const promoRewards = promoToday.docs.reduce((s, d) => s + (d.data().reward || 0), 0);
+    const referralIncome = refBonusToday.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const offerEarnings = offerToday.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const earned7d = claimsWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
+                    + offerWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
+                    + promoToday.docs.reduce((s, d) => s + (d.data().reward || 0), 0);
+    const withdrawals7d = wdWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+
+    res.json({
+      promoRewards,
+      promoCount: promoCountToday.size,
+      todayClaims: claimsToday.size,
+      referralIncome,
+      offerEarnings,
+      newUsers7d: newUsersWeek.size,
+      earned7d,
+      withdrawals7d
+    });
+  } catch (err) {
+    logger.error('Admin dashboard error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function adminGetSettings(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const doc = await db.collection('settings').doc('global').get();
+    res.json(doc.exists ? doc.data() : {});
+  } catch (err) {
+    logger.error('Settings get error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminUpdateSettings(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    await db.collection('settings').doc('global').set(req.body, { merge: true });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Settings update error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminBroadcast(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const { message, target } = req.body;
+    if (!message) return res.status(400).json({ error: 'message required' });
+    await db.collection('broadcasts').add({
+      message,
+      target: target || 'all',
+      sentBy: req.user.userId,
+      timestamp: serverTimestamp()
+    });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Broadcast error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+// ============================================
+// GLOBAL STATS (public)
+// ============================================
+async function getGlobalStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
+  try {
+    const usersSnap = await db.collection('users').get();
+    const totalUsers = usersSnap.size;
+    const activeToday = usersSnap.docs.filter(d => {
+      const lc = d.data().last_claim;
+      return lc && (Date.now() - lc.toMillis() < 86400000);
+    }).length;
+    const wdSnap = await db.collection('withdrawals').get();
+    const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    res.json({ totalUsers, activeToday, totalPaid });
+  } catch (err) {
+    logger.error('Global stats error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
   }
 }
 
@@ -1405,11 +1596,12 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Static (optional, for dev mode)
 if (process.env.NODE_ENV !== 'production') {
-  app.use(express.static(path.join(__dirname, '..', 'public'), {
+  app.use(express.static(path.join(__dirname, 'public'), {
     maxAge: '1d',
-    setHeaders: (res, path) => {
-      if (path.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    setHeaders: (res, p) => {
+      if (p.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
   }));
 }
@@ -1418,76 +1610,99 @@ if (process.env.NODE_ENV !== 'production') {
 // ROUTES
 // ============================================
 app.get('/ping', (req, res) => res.status(200).send('OK'));
+app.get('/api/health', (req, res) => res.json({ ok: true, db: firebaseInitialized, ts: Date.now() }));
+
 app.post('/api/auth', authLimiter, auth);
 app.use('/api', generalLimiter);
+
+// Auth / user
+app.get('/api/me', jwtAuth, getMe);
+app.get('/api/me/dashboard', jwtAuth, getMeDashboard);
+app.get('/api/balance', jwtAuth, getBalance);
 
 // Captcha
 app.get('/api/captcha', jwtAuth, getCaptcha);
 app.post('/api/captcha/verify', jwtAuth, verifyCaptchaEndpoint);
 
-// User
-app.get('/api/me', jwtAuth, getMe);
-app.get('/api/balance', jwtAuth, getBalance);
+// Faucet / actions
 app.post('/api/claim', claimLimiter, jwtAuth, claim);
 app.post('/api/swap', jwtAuth, swap);
 app.post('/api/withdraw', withdrawLimiter, jwtAuth, withdraw);
 app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
 app.get('/api/withdrawals/recent', getRecentWithdrawals);
-app.get('/api/withdrawals/stats', jwtAuth, getWithdrawStats);
+
+// Referral
 app.get('/api/referral', jwtAuth, getReferral);
 app.post('/api/referral/collect', jwtAuth, collectReferralBonus);
 app.get('/api/referral/stats', jwtAuth, getReferralStats);
 
-// Price
+// DOGE price
 app.get('/api/doge-price', getDogePrice);
 
-// Offerwall.me
+// Offerwall
 app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
 app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
 app.get('/api/offerwall/games', jwtAuth, getGames);
-app.get('/api/offerwall/stats', jwtAuth, getOfferwallStats);
 
 // Postback
 app.post('/api/postback', postback);
 app.post('/api/offerwall-postback', postback);
 
-// Stats
-app.get('/api/stats', jwtAuth, getStats);
+// Promo (user)
+app.post('/api/promo/redeem', promoLimiter, jwtAuth, redeemPromo);
+app.get('/api/promo/history', jwtAuth, getPromoHistory);
+
+// Stats (public)
 app.get('/api/stats/global', getGlobalStats);
-app.get('/api/stats/user/:userId', jwtAuth, getUserStats);
 
-// Promo
-app.post('/api/admin/promo', jwtAuth, verifyAdmin, createPromo);
-app.get('/api/admin/promos', jwtAuth, verifyAdmin, getPromos);
-app.delete('/api/admin/promo/:code', jwtAuth, verifyAdmin, deletePromo);
-app.post('/api/promo/redeem', jwtAuth, redeemPromo);
-app.get('/api/promo/earnings', jwtAuth, getPromoEarnings);
+// Admin (key-based)
+app.get('/api/admin/stats', adminAuth, adminGetStats);
+app.get('/api/admin/dashboard', adminAuth, adminGetDashboard);
+app.get('/api/admin/users', adminAuth, adminGetUsers);
+app.get('/api/admin/withdrawals', adminAuth, adminGetWithdrawals);
+app.post('/api/admin/approve-withdrawal', adminAuth, adminApproveWithdrawal);
+app.post('/api/admin/reject-withdrawal', adminAuth, adminRejectWithdrawal);
+app.post('/api/admin/add-balance', adminAuth, adminAddBalance);
+app.post('/api/admin/ban-user', adminAuth, adminBanUser);
+app.post('/api/admin/unban-user', adminAuth, adminUnbanUser);
+app.get('/api/admin/logs', adminAuth, adminGetLogs);
+app.get('/api/admin/settings', adminAuth, adminGetSettings);
+app.post('/api/admin/settings', adminAuth, adminUpdateSettings);
+app.post('/api/admin/broadcast', adminAuth, adminBroadcast);
 
-// Admin
-app.get('/api/admin/users', adminAuth, getUsers);
-app.get('/api/admin/withdrawals', adminAuth, getAdminWithdrawals);
-app.post('/api/admin/approve-withdrawal', adminAuth, approveWithdrawal);
-app.post('/api/admin/add-balance', adminAuth, addBalance);
-app.post('/api/admin/ban-user', adminAuth, banUser);
-app.post('/api/admin/unban-user', adminAuth, unbanUser);
-app.post('/api/admin/delete-user', adminAuth, deleteUser);
-app.get('/api/admin/logs', adminAuth, getLogs);
-app.get('/api/admin/settings', adminAuth, getSettings);
-app.post('/api/admin/settings', adminAuth, updateSettings);
-app.post('/api/admin/broadcast', adminAuth, broadcast);
-app.get('/api/admin/stats', adminAuth, getAdminStats);
+// Admin promo
+app.get('/api/admin/promo/list', adminAuth, adminListPromos);
+app.post('/api/admin/promo/create', adminAuth, adminCreatePromo);
+app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
+app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
+app.get('/api/admin/promo/usage', adminAuth, adminPromoUsage);
 
-// SPA Fallback
+// Admin rewards
+app.get('/api/admin/rewards', adminAuth, adminListRewards);
+app.post('/api/admin/rewards/create', adminAuth, adminCreateReward);
+app.post('/api/admin/rewards/toggle', adminAuth, adminToggleReward);
+app.post('/api/admin/rewards/delete', adminAuth, adminDeleteReward);
+
+// SPA fallback
 app.get('/api/*', (req, res, next) => { next(); });
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) res.status(404).send('Not found');
+  });
 });
 
-// Global error handler
+// Error handler
 app.use((err, req, res, next) => {
   logger.error('Express error', { error: err.message, path: req.path, method: req.method });
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
 module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    logger.info(`Coinix backend listening on port ${PORT}`);
+  });
+}
