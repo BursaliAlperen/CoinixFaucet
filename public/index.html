@@ -1,3 +1,4 @@
+Arayüz niye birbirine giriyor tma da ve websitede düzelt. Bozmadan.
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -490,6 +491,8 @@ body {
 </style>
 </head>
 <body>
+<div id="menuOverlay" onclick="toggleMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;backdrop-filter:blur(2px)"></div>
+<script>function hideLoading(){var ls=document.getElementById("loadingScreen");if(!ls)return;ls.style.display="none";ls.style.visibility="hidden";ls.style.opacity="0";try{ls.remove();}catch(e){}}setTimeout(function(){hideLoading();console.log("Loading screen force-closed");},3000);document.addEventListener("DOMContentLoaded",function(){try{if(typeof window.init==="function"){var result=window.init();if(result&&typeof result.then==="function"){result.then(function(){hideLoading();}).catch(function(e){console.warn("init error:",e);hideLoading();});}else{hideLoading();}}else{console.warn("init() not found");hideLoading();}}catch(e){console.warn("init exception:",e);hideLoading();}});</script>
 <div id="loadingScreen" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
   <div style="width:80px;height:80px;position:relative">
     <svg viewBox="0 0 64 64" width="80" height="80" style="animation:loadSpin 1.2s linear infinite">
