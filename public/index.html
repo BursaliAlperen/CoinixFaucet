@@ -1,4 +1,3 @@
-Arayüz niye birbirine giriyor tma da ve websitede düzelt. Bozmadan.
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -491,7 +490,7 @@ body {
 </style>
 </head>
 <body>
-<div id="loadingScreen" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .6s ease">
+<div id="loadingScreen" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
   <div style="width:80px;height:80px;position:relative">
     <svg viewBox="0 0 64 64" width="80" height="80" style="animation:loadSpin 1.2s linear infinite">
       <defs><linearGradient id="ldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#F5A623"/><stop offset="100%" style="stop-color:#B8860B"/></linearGradient></defs>
@@ -2083,26 +2082,28 @@ function hideLoading(){
   if(!ls) return;
   ls.style.opacity='0';
   ls.style.pointerEvents='none';
-  setTimeout(()=>{ if(ls.parentNode) ls.remove(); }, 600);
+  setTimeout(()=>{ if(ls && ls.parentNode) ls.remove(); }, 600);
 }
 
-// Zorla kapatma - init() ne olursa olsun 3 saniye sonra kapanır
-let loadingForceTimer = setTimeout(hideLoading, 3000);
+// ZORLA KAPATMA - init() ne olursa olsun 2 saniye sonra kapanır
+setTimeout(hideLoading, 2000);
 
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    init().then(() => {
-      clearTimeout(loadingForceTimer);
-      setTimeout(hideLoading, 400);
-    }).catch((err) => {
-      console.warn('Init error:', err);
-      clearTimeout(loadingForceTimer);
-      setTimeout(hideLoading, 600);
-    });
+    if(typeof init === 'function') {
+      init().then(() => {
+        hideLoading();
+      }).catch((err) => {
+        console.warn('Init error:', err);
+        hideLoading();
+      });
+    } else {
+      console.warn('init() function not found');
+      hideLoading();
+    }
   } catch(err) {
     console.warn('Init exception:', err);
-    clearTimeout(loadingForceTimer);
-    setTimeout(hideLoading, 600);
+    hideLoading();
   }
 });
 
