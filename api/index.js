@@ -14,61 +14,49 @@ const admin = require('firebase-admin');
 // FIREBASE - serviceAccountKey.json YERINE ENV VAR
 // Vercel'de secret files yok, direkt JSON string env var kullan
 // ============================================
-let serviceAccount;
+let serviceAccount = null;
 let firebaseInitialized = false;
+let db = null;
+let serverTimestamp = () => new Date();
+let increment = (n) => n;
 
 try {
+  if (!admin) {
+    throw new Error('firebase-admin module not loaded');
+  }
+
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    // Direkt JSON string olarak env var'dan oku (base64 gerekmez!)
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-    logger.info('Firebase: Using FIREBASE_SERVICE_ACCOUNT_JSON env var');
+    console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_JSON env var');
   } else if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    // Eski base64 yöntemi (geriye uyumluluk)
     const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
     serviceAccount = JSON.parse(decoded);
-    logger.info('Firebase: Using FIREBASE_SERVICE_ACCOUNT_BASE64 env var');
+    console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_BASE64 env var');
   } else {
-    // Fallback: local geliştirme için serviceAccountKey.json
     try {
       serviceAccount = require('./serviceAccountKey.json');
-      logger.info('Firebase: Using serviceAccountKey.json (local dev)');
+      console.log('Firebase: Using serviceAccountKey.json (local dev)');
     } catch (e) {
-      logger.error('Firebase init failed: No Firebase credentials found');
-      logger.error('Set FIREBASE_SERVICE_ACCOUNT_JSON env var');
+      console.error('Firebase: No credentials found. Set FIREBASE_SERVICE_ACCOUNT_JSON env var');
     }
   }
 
   if (serviceAccount) {
     admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-    firebaseInitialized = true;
-    logger.info('Firebase initialized successfully');
-  }
-} catch (e) {
-  logger.error('Firebase init error', { error: e.message, stack: e.stack });
-  firebaseInitialized = false;
-}
-let db;
-let serverTimestamp;
-let increment;
-
-try {
-  if (firebaseInitialized) {
     db = admin.firestore();
     serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
     increment = (n) => admin.firestore.FieldValue.increment(n);
+    firebaseInitialized = true;
+    console.log('Firebase initialized successfully');
   } else {
-    // Dummy fonksiyonlar (Vercel'de env var eksikse)
-    db = null;
-    serverTimestamp = () => new Date();
-    increment = (n) => n;
-    logger.warn('Firebase not initialized, using dummy DB');
+    console.warn('Firebase: Running WITHOUT database (dummy mode)');
   }
 } catch (e) {
-  logger.error('Firestore init error', { error: e.message });
+  console.error('Firebase init error:', e.message);
+  firebaseInitialized = false;
   db = null;
-  serverTimestamp = () => new Date();
-  increment = (n) => n;
 }
+// db, serverTimestamp, increment yukarıda tanımlandı
 
 // ============================================
 // LOGGER
@@ -1044,4 +1032,10 @@ app.use((err, req, res, next) => {
 });
 
 // Vercel serverless - app.listen kaldırıldı
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Express error:', err.message, err.stack);
+  res.status(500).json({ error: 'Internal server error', message: err.message });
+});
+
 module.exports = app;
