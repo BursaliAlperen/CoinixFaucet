@@ -12,32 +12,63 @@ const admin = require('firebase-admin');
 
 // ============================================
 // FIREBASE - serviceAccountKey.json YERINE ENV VAR
-// Vercel'de secret files yok, base64 encoded env var kullan
+// Vercel'de secret files yok, direkt JSON string env var kullan
 // ============================================
 let serviceAccount;
-if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-  try {
+let firebaseInitialized = false;
+
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    // Direkt JSON string olarak env var'dan oku (base64 gerekmez!)
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    logger.info('Firebase: Using FIREBASE_SERVICE_ACCOUNT_JSON env var');
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    // Eski base64 yöntemi (geriye uyumluluk)
     const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
     serviceAccount = JSON.parse(decoded);
-    logger.info('Firebase initialized from FIREBASE_SERVICE_ACCOUNT_BASE64 env var');
-  } catch (e) {
-    logger.error('Failed to decode FIREBASE_SERVICE_ACCOUNT_BASE64', { error: e.message });
-    throw new Error('Invalid FIREBASE_SERVICE_ACCOUNT_BASE64. Run: base64 serviceAccountKey.json');
+    logger.info('Firebase: Using FIREBASE_SERVICE_ACCOUNT_BASE64 env var');
+  } else {
+    // Fallback: local geliştirme için serviceAccountKey.json
+    try {
+      serviceAccount = require('./serviceAccountKey.json');
+      logger.info('Firebase: Using serviceAccountKey.json (local dev)');
+    } catch (e) {
+      logger.error('Firebase init failed: No Firebase credentials found');
+      logger.error('Set FIREBASE_SERVICE_ACCOUNT_JSON env var');
+    }
   }
-} else {
-  // Fallback: local geliştirme için serviceAccountKey.json
-  try {
-    serviceAccount = require('./serviceAccountKey.json');
-    logger.info('Firebase initialized from serviceAccountKey.json (local dev)');
-  } catch (e) {
-    logger.error('Firebase init failed: No FIREBASE_SERVICE_ACCOUNT_BASE64 env var and no serviceAccountKey.json');
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 env var required. See .env file');
+
+  if (serviceAccount) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    firebaseInitialized = true;
+    logger.info('Firebase initialized successfully');
   }
+} catch (e) {
+  logger.error('Firebase init error', { error: e.message, stack: e.stack });
+  firebaseInitialized = false;
 }
-admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-const db = admin.firestore();
-const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
-const increment = (n) => admin.firestore.FieldValue.increment(n);
+let db;
+let serverTimestamp;
+let increment;
+
+try {
+  if (firebaseInitialized) {
+    db = admin.firestore();
+    serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
+    increment = (n) => admin.firestore.FieldValue.increment(n);
+  } else {
+    // Dummy fonksiyonlar (Vercel'de env var eksikse)
+    db = null;
+    serverTimestamp = () => new Date();
+    increment = (n) => n;
+    logger.warn('Firebase not initialized, using dummy DB');
+  }
+} catch (e) {
+  logger.error('Firestore init error', { error: e.message });
+  db = null;
+  serverTimestamp = () => new Date();
+  increment = (n) => n;
+}
 
 // ============================================
 // LOGGER
@@ -61,7 +92,7 @@ const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY;
 const OFFERWALL_API_KEY = process.env.OFFERWALL_APP_ID; // env var ismi aynı kalıyor, değer API_KEY olmalı
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || ''; // PTC/Shortlink API için token
-const APP_URL = process.env.APP_URL || 'https://yourdomain.com';
+const APP_URL = process.env.APP_URL || 'https://coinix-faucet.vercel.app';
 const PORT = process.env.PORT || 3000;
 
 // ============================================
@@ -138,6 +169,7 @@ function adminAuth(req, res, next) {
 // UTILS
 // ============================================
 async function logAction(action, userId, details = {}) {
+  if (!db) return;
   try {
     await db.collection('logs').add({ action, user_id: userId || null, details, ip: details.ip || null, timestamp: serverTimestamp() });
   } catch (e) { logger.error('Log error', { error: e.message }); }
@@ -187,6 +219,7 @@ fetchDogePrice();
 
 // OFFERWALL URL - Dokümana uygun: /offerwall/{API_KEY}/{USER_ID}
 async function getOfferwallUrl(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     // Doküman: https://offerwall.me/offerwall/[API_KEY]/[USER_ID]
@@ -203,6 +236,7 @@ async function getOfferwallUrl(req, res) {
 
 // PTC API - Dokümana uygun: api.php?api={API_KEY}&id={USER_ID}&ip={IP}&token={TOKEN}&country={COUNTRY}
 async function getPTCAds(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     const userIp = (req.headers['x-forwarded-for'] || req.ip || '0.0.0.0').split(',')[0].trim();
@@ -260,6 +294,7 @@ async function getPTCAds(req, res) {
 
 // SHORTLINK API - Dokümana uygun: slapi.php?api={API_KEY}&id={USER_ID}&ip={IP}&token={TOKEN}&country={COUNTRY}
 async function getShortlinks(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     const userIp = (req.headers['x-forwarded-for'] || req.ip || '0.0.0.0').split(',')[0].trim();
@@ -315,6 +350,7 @@ async function getShortlinks(req, res) {
 // GAMES - Offerwall.me iframe içinde gösterildiği için ayrı API yok
 // Kullanıcı iframe'e yönlendirilir
 async function getGames(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     // Games Offerwall iframe içinde gösterilir - ayrı API endpoint'i yok
@@ -347,6 +383,7 @@ function isOfferwallIP(ip) {
 
 async function postback(req, res) {
   try {
+    logger.info('Postback received', { url: req.originalUrl, method: req.method, ip: req.headers['x-forwarded-for'] || req.ip });
     // IP kontrolü
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '0.0.0.0';
     if (!isOfferwallIP(clientIp)) {
@@ -503,6 +540,7 @@ async function postback(req, res) {
 // AUTH CONTROLLERS (Değişmedi)
 // ============================================
 async function auth(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   const { initData, ref } = req.body;
   if (!initData) return res.status(400).json({ error: 'Missing initData' });
   if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid Telegram data signature' });
@@ -551,6 +589,7 @@ async function auth(req, res) {
 }
 
 async function getMe(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const doc = await db.collection('users').doc(String(req.user.userId)).get();
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
@@ -567,6 +606,7 @@ async function getMe(req, res) {
 }
 
 async function getBalance(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const doc = await db.collection('users').doc(String(req.user.userId)).get();
     if (!doc.exists) return res.json({ balance: 0, doge_balance: 0 });
@@ -576,6 +616,7 @@ async function getBalance(req, res) {
 }
 
 async function getReferral(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     const doc = await db.collection('users').doc(userId).get();
@@ -590,6 +631,7 @@ async function getReferral(req, res) {
 // FAUCET CONTROLLER (3 DAKIKA COOLDOWN)
 // ============================================
 async function claim(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   const userId = String(req.user.userId);
   const { captchaAnswer } = req.body;
 
@@ -624,6 +666,7 @@ async function claim(req, res) {
 // SWAP CONTROLLER
 // ============================================
 async function swap(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   const userId = String(req.user.userId);
   const { amount, direction } = req.body;
   const amt = Number(amount);
@@ -651,6 +694,7 @@ async function swap(req, res) {
 // WITHDRAW CONTROLLERS
 // ============================================
 async function withdraw(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   const userId = String(req.user.userId);
   const { faucetpay_email, amount } = req.body;
   const amt = Number(amount);
@@ -671,6 +715,7 @@ async function withdraw(req, res) {
 }
 
 async function getWithdrawHistory(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     const snapshot = await db.collection('withdrawals').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
@@ -679,6 +724,7 @@ async function getWithdrawHistory(req, res) {
 }
 
 async function getRecentWithdrawals(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const snapshot = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(25).get();
     res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
@@ -686,6 +732,7 @@ async function getRecentWithdrawals(req, res) {
 }
 
 async function getWithdrawStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const snapshot = await db.collection('withdrawals').where('timestamp', '>=', admin.firestore.Timestamp.fromDate(today)).get();
@@ -719,6 +766,7 @@ async function getDogePrice(req, res) {
 // OFFERWALL STATS
 // ============================================
 async function getOfferwallStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.user.userId);
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -755,6 +803,7 @@ async function getOfferwallStats(req, res) {
 // STATS CONTROLLERS
 // ============================================
 async function getGlobalStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const usersSnap = await db.collection('users').get();
     const totalUsers = usersSnap.size;
@@ -766,6 +815,7 @@ async function getGlobalStats(req, res) {
 }
 
 async function getUserStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const userId = String(req.params.userId);
     if (req.user.userId !== userId) return res.status(403).json({ error: 'Forbidden' });
@@ -780,6 +830,7 @@ async function getUserStats(req, res) {
 // ADMIN CONTROLLERS
 // ============================================
 async function getUsers(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const snap = await db.collection('users').orderBy('created_at', 'desc').limit(100).get();
     res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), created_at: d.data().created_at?.toMillis() })));
@@ -787,6 +838,7 @@ async function getUsers(req, res) {
 }
 
 async function getAdminWithdrawals(req, res) {
+  if (!db) return res.status(503).json({ error: 'Database not available' });
   try {
     const snap = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(100).get();
     res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
