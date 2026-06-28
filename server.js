@@ -132,11 +132,15 @@ async function fetchDogePrice() {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd&include_24hr_change=true');
     const data = await response.json();
-    dogePriceCache = {
-      price: data.dogecoin.usd || 0,
-      change: data.dogecoin.usd_24h_change || 0,
-      lastUpdate: Date.now()
-    };
+    if (data && data.dogecoin) {
+      dogePriceCache = {
+        price: data.dogecoin.usd || 0,
+        change: data.dogecoin.usd_24h_change || 0,
+        lastUpdate: Date.now()
+      };
+    } else {
+      logger.warn('Doge price unexpected response', { data });
+    }
     return dogePriceCache;
   } catch (err) {
     logger.error('Doge price fetch error', { error: err.message });
@@ -171,7 +175,7 @@ async function getOfferwallUrl(req, res) {
 async function getPTCAds(req, res) {
   try {
     const userId = String(req.user.userId);
-    const userIp = req.ip || req.headers['x-forwarded-for'] || '0.0.0.0';
+    const userIp = (req.headers['x-forwarded-for'] || req.ip || '0.0.0.0').split(',')[0].trim();
     const country = req.headers['cf-ipcountry'] || 'US';
 
     if (!OFFERWALL_API_TOKEN) {
@@ -228,7 +232,7 @@ async function getPTCAds(req, res) {
 async function getShortlinks(req, res) {
   try {
     const userId = String(req.user.userId);
-    const userIp = req.ip || req.headers['x-forwarded-for'] || '0.0.0.0';
+    const userIp = (req.headers['x-forwarded-for'] || req.ip || '0.0.0.0').split(',')[0].trim();
     const country = req.headers['cf-ipcountry'] || 'US';
 
     if (!OFFERWALL_API_TOKEN) {
@@ -557,6 +561,17 @@ async function getReferral(req, res) {
 // ============================================
 async function claim(req, res) {
   const userId = String(req.user.userId);
+  const { captchaAnswer } = req.body;
+
+  // CAPTCHA VERIFICATION - Server-side only, cannot be bypassed
+  if (!captchaAnswer) {
+    return res.status(400).json({ error: 'Captcha answer required', captchaRequired: true });
+  }
+  const captchaResult = verifyCaptcha(userId, captchaAnswer);
+  if (!captchaResult.valid) {
+    return res.status(403).json({ error: captchaResult.error, captchaRequired: true });
+  }
+
   const userRef = db.collection('users').doc(userId);
   try {
     const doc = await userRef.get();
@@ -814,12 +829,84 @@ app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, path) => { if (path.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); }
 }));
 
+
+// ============================================
+// CAPTCHA SYSTEM - Server-side verification
+// ============================================
+const activeCaptchas = new Map(); // userId -> { answer, expiresAt }
+
+function generateMathCaptcha(userId) {
+  const n1 = Math.floor(Math.random() * 10) + 1;
+  const n2 = Math.floor(Math.random() * 10) + 1;
+  const answer = n1 + n2;
+  activeCaptchas.set(userId, {
+    answer: answer,
+    expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+  });
+  return { n1, n2, question: `${n1} + ${n2} = ?` };
+}
+
+function verifyCaptcha(userId, userAnswer) {
+  const captcha = activeCaptchas.get(userId);
+  if (!captcha) return { valid: false, error: 'No active captcha. Refresh the page.' };
+  if (Date.now() > captcha.expiresAt) {
+    activeCaptchas.delete(userId);
+    return { valid: false, error: 'Captcha expired. Get a new one.' };
+  }
+  if (parseInt(userAnswer) !== captcha.answer) {
+    activeCaptchas.delete(userId);
+    return { valid: false, error: 'Wrong answer. Try a new captcha.' };
+  }
+  activeCaptchas.delete(userId);
+  return { valid: true };
+}
+
+function cleanupExpiredCaptchas() {
+  const now = Date.now();
+  for (const [userId, captcha] of activeCaptchas) {
+    if (now > captcha.expiresAt) activeCaptchas.delete(userId);
+  }
+}
+setInterval(cleanupExpiredCaptchas, 60000); // cleanup every minute
+
+// ============================================
+// CAPTCHA ENDPOINTS
+// ============================================
+
+async function getCaptcha(req, res) {
+  try {
+    const userId = String(req.user.userId);
+    const captcha = generateMathCaptcha(userId);
+    res.json({ success: true, question: captcha.question, n1: captcha.n1, n2: captcha.n2 });
+  } catch (err) {
+    logger.error('Captcha generation error', { error: err.message });
+    res.status(500).json({ error: 'Failed to generate captcha' });
+  }
+}
+
+async function verifyCaptchaEndpoint(req, res) {
+  try {
+    const userId = String(req.user.userId);
+    const { answer } = req.body;
+    if (!answer) return res.status(400).json({ valid: false, error: 'Answer required' });
+    const result = verifyCaptcha(userId, answer);
+    res.json(result);
+  } catch (err) {
+    logger.error('Captcha verification error', { error: err.message });
+    res.status(500).json({ error: 'Verification failed' });
+  }
+}
+
 // ============================================
 // ROUTES
 // ============================================
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 app.post('/api/auth', authLimiter, auth);
 app.use('/api', generalLimiter);
+
+// Captcha endpoints
+app.get('/api/captcha', jwtAuth, getCaptcha);
+app.post('/api/captcha/verify', jwtAuth, verifyCaptchaEndpoint);
 
 // User endpoints
 app.get('/api/me', jwtAuth, getMe);
