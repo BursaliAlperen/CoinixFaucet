@@ -1,1213 +1,2117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#05060f">
-<title>COINIX Faucet · Earn CNX & DOGE</title>
-<link rel="icon" type="image/png" href="/images/coinix.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script type="text/javascript">
-function googleTranslateElementInit(){
-  new google.translate.TranslateElement({
-    pageLanguage:'en',
-    includedLanguages:'en,tr,de,fr,es,it,pt,ru,ar,zh-CN,ja,ko,hi,nl,pl,sv,no,da,fi,el,cs,ro,hu,bg,uk,id,vi,th,ms,fa,he,ur,bn',
-    layout:google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay:false
-  },'google_translate_element');
-}
-</script>
-<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-<style>
-:root{
-  --gold:#FFD700;--gold-2:#F5A623;--gold-3:#B8860B;
-  --gold-soft:rgba(255,215,0,0.1);
-  --blue:#4A9EFF;--blue-soft:rgba(74,158,255,0.1);
-  --purple:#8b5cf6;--purple-soft:rgba(139,92,246,0.1);
-  --bg-0:#05060f;--bg-1:#0b0d1a;--bg-2:#131627;--bg-3:#1c1f35;
-  --text:#f2f4f9;--text-dim:#9aa3b8;--text-muted:#5a6380;
-  --success:#00d084;--danger:#ff4757;--warn:#f59e0b;
-  --glass:rgba(255,255,255,0.035);--glass-brd:rgba(255,255,255,0.07);
-  --radius:18px;--sidebar-w:260px;--header-h:70px;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Inter',sans-serif;background:var(--bg-0);color:var(--text);display:flex;-webkit-font-smoothing:antialiased}
-body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,215,0,0.09),transparent 60%),radial-gradient(ellipse 60% 40% at 100% 100%,rgba(74,158,255,0.06),transparent 60%),linear-gradient(180deg,#05060f 0%,#0b0d1a 100%)}
-body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.02) 1px,transparent 0);background-size:44px 44px;opacity:.5}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0e1a">
+    <title>COINIX Faucet · Earn CNX & DOGE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2332;
+            --bg-card-hover: #1f2a3d;
+            --border: #2a3548;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gold: #fbbf24;
+            --doge: #c2a633;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
+        }
 
-/* Google Translate - Bottom Right */
-.goog-te-banner-frame.skiptranslate{display:none!important}
-body{top:0!important;position:static!important}
-#google_translate_element{position:fixed;bottom:20px;right:20px;z-index:10002}
-.goog-te-gadget{font-size:0!important}
-.goog-te-gadget-simple{background:rgba(11,13,26,0.95)!important;border:1px solid var(--glass-brd)!important;border-radius:30px!important;padding:10px 18px!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important}
-.goog-te-gadget-simple span{color:var(--text)!important;font-size:13px!important}
-.goog-te-gadget-simple img{width:18px!important;height:18px!important}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:var(--gold-3)}
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
 
-/* SIDEBAR */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;height:100vh;background:linear-gradient(180deg,rgba(11,13,26,0.98) 0%,rgba(5,6,15,0.99) 100%);backdrop-filter:blur(24px) saturate(180%);border-right:1px solid var(--glass-brd);display:flex;flex-direction:column;overflow:hidden;position:fixed;left:0;top:0;z-index:1000;transition:transform .3s}
-.sidebar.closed{transform:translateX(-100%)}
-.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s}
-.sidebar-overlay.active{opacity:1;pointer-events:all}
-.sidebar-brand{padding:20px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--glass-brd);cursor:pointer;flex-shrink:0}
-.sidebar-brand-img{width:42px;height:42px;border-radius:12px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;overflow:hidden;box-shadow:0 10px 40px rgba(255,215,0,0.22)}
-.sidebar-brand-img img{width:100%;height:100%;object-fit:cover}
-.sidebar-brand-txt{display:flex;flex-direction:column;line-height:1.15}
-.sidebar-brand-name{font-family:'Space Grotesk';font-weight:700;font-size:17px}
-.sidebar-brand-sub{font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase}
-.sidebar-nav{flex:1;padding:16px 10px;overflow-y:auto}
-.sidebar-section{margin-bottom:16px}
-.sidebar-section-title{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;padding:8px 14px}
-.sidebar-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;transition:all .25s;margin-bottom:3px;position:relative;border:1px solid transparent;z-index:2}
-.sidebar-item i{font-size:16px;width:20px;text-align:center;flex-shrink:0}
-.sidebar-item .label{flex:1}
-.sidebar-item .badge{background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.sidebar-item:hover{color:var(--text);background:var(--glass);border-color:var(--glass-brd)}
-.sidebar-item.active{background:linear-gradient(90deg,var(--gold-soft),transparent);color:var(--gold);border-color:rgba(255,215,0,0.2);box-shadow:inset 3px 0 0 var(--gold)}
-.sidebar-item.active i{color:var(--gold)}
-.sidebar-footer{padding:14px;border-top:1px solid var(--glass-brd);flex-shrink:0}
-.sidebar-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-brd);cursor:pointer}
-.sidebar-user:hover{border-color:rgba(255,215,0,0.3)}
-.sidebar-user-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:13px;overflow:hidden}
-.sidebar-user-avatar img{width:100%;height:100%;object-fit:cover}
-.sidebar-user-info{flex:1;overflow:hidden}
-.sidebar-user-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sidebar-user-bal{font-size:11px;color:var(--gold);font-family:'JetBrains Mono';display:flex;align-items:center;gap:4px}
-.sidebar-user-bal img{width:12px;height:12px}
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-/* MAIN */
-.main{flex:1;height:100vh;margin-left:var(--sidebar-w);transition:margin-left .3s;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1}
-.main.expanded{margin-left:0}
-.header{height:var(--header-h);flex-shrink:0;background:rgba(5,6,15,0.72);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--glass-brd);display:flex;align-items:center;padding:0 24px;gap:16px;position:relative;z-index:100}
-.header-menu-btn{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:8px;border-radius:8px}
-.header-menu-btn:hover{background:var(--glass)}
-.header-title{font-family:'Space Grotesk';font-weight:700;font-size:20px;display:flex;align-items:center;gap:10px}
-.header-title i{color:var(--gold);font-size:18px}
-.header-spacer{flex:1}
-.header-balance{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;background:var(--glass);border:1px solid var(--glass-brd);font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;flex-wrap:wrap}
-.header-balance:hover{border-color:rgba(255,215,0,0.3)}
-.header-balance img{width:20px;height:20px}
-.header-balance .val{font-family:'JetBrains Mono';color:var(--gold)}
-.header-balance .doge{color:#c2a633}
-.header-balance-sep{width:1px;height:20px;background:var(--glass-brd);margin:0 4px}
-.header-usd{display:flex;flex-direction:column;align-items:flex-start;font-size:10px;line-height:1.2}
-.header-usd .usd-val{font-family:'JetBrains Mono';color:var(--text-dim);font-size:11px}
-.price-change{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:4px;display:inline-block}
-.price-up{color:var(--success);background:rgba(0,208,132,0.1)}
-.price-down{color:var(--danger);background:rgba(255,71,87,0.1)}
-.header-avatar{width:40px;height:40px;border-radius:50%;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:14px;overflow:hidden}
-.header-avatar img{width:100%;height:100%;object-fit:cover}
+        /* Responsive Container */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
 
-/* CONTENT */
-.content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow-y:auto;overflow-x:hidden}
+        @media (min-width: 768px) {
+            .container { padding: 0 24px; }
+        }
 
-/* PAGE SECTIONS */
-.page-section{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1)}
-.page-section.active{display:block}
-@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.page-head{margin-bottom:24px}
-.page-title{font-family:'Space Grotesk';font-weight:700;font-size:32px;line-height:1.2;display:flex;align-items:center;gap:12px;margin-bottom:6px;background:linear-gradient(135deg,#fff 0%,var(--gold) 50%,var(--gold-2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
-.page-title i{color:var(--gold);font-size:26px}
-.page-sub{color:var(--text-dim);font-size:14px}
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
 
-/* STATS GRID */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{padding:22px;border-radius:var(--radius);background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);backdrop-filter:blur(10px);transition:all .3s;position:relative;overflow:hidden}
-.stat-card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.2)}
-.stat-card-ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));color:var(--gold);display:grid;place-items:center;font-size:18px;border:1px solid rgba(255,215,0,0.2);margin-bottom:12px}
-.stat-card-ic.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border-color:rgba(74,158,255,0.3)}
-.stat-card-ic.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border-color:rgba(0,208,132,0.3)}
-.stat-card-ic.purple{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);border-color:rgba(139,92,246,0.3)}
-.stat-card-lbl{font-size:12px;color:var(--text-dim);margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.stat-card-lbl img{width:14px;height:14px}
-.stat-card-val{font-family:'Space Grotesk';font-size:26px;font-weight:700;color:var(--text);line-height:1.1;display:flex;align-items:center;gap:8px}
-.stat-card-val img{width:22px;height:22px}
-.stat-card-val.gold{color:var(--gold)}
-.stat-card-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
-.stat-card-chg{font-size:11px;color:var(--success);margin-top:6px;display:flex;align-items:center;gap:4px}
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: nowrap;
+        }
 
-/* CARDS */
-.grid{display:grid;gap:20px}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.card{position:relative;background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);border-radius:var(--radius);padding:22px;backdrop-filter:blur(10px);transition:all .3s;overflow:hidden}
-.card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.15)}
-.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
-.card-title{font-family:'Space Grotesk';font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
-.card-title i{color:var(--gold)}
-.card-sub{color:var(--text-dim);font-size:13px}
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
 
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;border:none;cursor:pointer;font-family:'Inter';font-size:14px;font-weight:600;transition:all .25s;user-select:none;position:relative;overflow:hidden;z-index:2}
-.btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,0.4) 0%,transparent 60%);opacity:0;transition:opacity .3s}
-.btn:active::after{opacity:1}
-.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#0a0a14;box-shadow:0 8px 24px rgba(255,215,0,0.25)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(255,215,0,0.4)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn-secondary{background:var(--glass);color:var(--text);border:1px solid var(--glass-brd)}
-.btn-secondary:hover{border-color:rgba(255,215,0,0.3);color:var(--gold)}
-.btn-ghost{background:transparent;color:var(--text-dim)}
-.btn-ghost:hover{color:var(--gold);background:var(--glass)}
-.btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
-.btn-lg{padding:14px 26px;font-size:15px}
-.btn-block{width:100%}
+        .logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
 
-/* FORMS */
-.form-group{margin-bottom:16px}
-.form-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
-.form-label i{color:var(--gold);font-size:12px}
-.form-input,.form-select,.form-textarea{width:100%;padding:13px 16px;border-radius:12px;background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);color:var(--text);font-family:'Inter';font-size:14px;transition:all .25s}
-.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:rgba(255,215,0,0.4);background:rgba(0,0,0,0.5);box-shadow:0 0 0 3px rgba(255,215,0,0.08)}
-.form-hint{font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:6px}
-.form-hint i{color:var(--gold);font-size:10px}
+        @media (min-width: 768px) {
+            .logo img { width: 40px; height: 40px; }
+        }
 
-/* TABS */
-.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;padding:4px;background:var(--glass);border:1px solid var(--glass-brd);border-radius:14px;width:fit-content}
-.tab{padding:9px 16px;border-radius:10px;color:var(--text-dim);font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:6px;border:1px solid transparent}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--gold);background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.15)}
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold), var(--doge));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-/* TABLES */
-.table-wrap{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);overflow:hidden}
-.table-scroll{overflow-x:auto;max-height:500px;overflow-y:auto}
-.table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
-.table th{padding:14px 16px;text-align:left;background:rgba(0,0,0,0.4);color:var(--text-dim);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--glass-brd);position:sticky;top:0;z-index:2}
-.table td{padding:14px 16px;border-bottom:1px solid var(--glass-brd);color:var(--text)}
-.table tbody tr:last-child td{border-bottom:none}
-.table tbody tr{transition:background .2s}
-.table tbody tr:hover td{background:rgba(255,255,255,0.02)}
-.table .mono{font-family:'JetBrains Mono';font-weight:600;font-size:12px}
-.table .gold{color:var(--gold)}
-.table .success{color:var(--success)}
-.table .danger{color:var(--danger)}
-.table .warn{color:var(--warn)}
+        @media (min-width: 768px) {
+            .logo-text { font-size: 1.3rem; }
+        }
 
-/* FAQ */
-.faq-item{background:var(--glass);border:1px solid var(--glass-brd);border-radius:12px;margin-bottom:10px;overflow:hidden}
-.faq-q{padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:14px}
-.faq-q i{color:var(--gold);transition:transform .3s}
-.faq-item.open .faq-q i{transform:rotate(180deg)}
-.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;padding:0 20px;color:var(--text-dim);font-size:13px}
-.faq-item.open .faq-a{max-height:400px;padding:0 20px 16px}
-.faq-a a{color:var(--gold);text-decoration:none}
-.faq-a ul,.faq-a ol{margin:8px 0 8px 20px}
-.faq-a li{margin-bottom:4px}
+        .balance-display {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
 
-/* TOAST */
-.toast{position:fixed;bottom:90px;right:24px;z-index:10000;padding:14px 20px;border-radius:14px;background:rgba(11,13,26,0.95);border:1px solid var(--glass-brd);backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.6);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;transform:translateY(100px);opacity:0;transition:all .35s;max-width:360px}
-.toast.show{transform:translateY(0);opacity:1}
-.toast-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:14px}
-.toast.success{border-color:var(--success)}
-.toast.success .toast-icon{background:rgba(0,208,132,0.15);color:var(--success)}
-.toast.error{border-color:var(--danger)}
-.toast.error .toast-icon{background:rgba(255,71,87,0.15);color:var(--danger)}
-.toast.info{border-color:var(--blue)}
-.toast.info .toast-icon{background:rgba(74,158,255,0.15);color:var(--blue)}
+        .balance-display::-webkit-scrollbar { display: none; }
 
-/* SPINNER */
-.spinner{width:36px;height:36px;background:url('/images/loading.png') center/contain no-repeat;animation:spin 1s linear infinite}
-.spinner-sm{width:18px;height:18px;background-size:contain}
-@keyframes spin{to{transform:rotate(360deg)}}
+        .balance-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-card);
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
 
-/* TASK CARDS - Offerwall */
-.tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.task-card{background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;transition:all .3s}
-.task-card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.2)}
-.task-icon{width:56px;height:56px;border-radius:12px;background:var(--glass);display:grid;place-items:center;font-size:24px;color:var(--gold);overflow:hidden;flex-shrink:0;border:1px solid var(--glass-brd)}
-.task-icon img{width:100%;height:100%;object-fit:cover}
-.task-info{flex:1;min-width:0}
-.task-title{font-family:'Space Grotesk';font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.task-meta{display:flex;gap:10px;font-size:11px;color:var(--text-dim)}
-.task-reward{color:var(--gold);font-weight:600;font-family:'JetBrains Mono'}
-.task-time{display:flex;align-items:center;gap:3px}
-.empty-tasks{text-align:center;padding:60px 20px;color:var(--text-dim);grid-column:1/-1}
-.empty-tasks i{font-size:48px;opacity:.3;margin-bottom:16px}
+        @media (min-width: 768px) {
+            .balance-chip { padding: 8px 14px; font-size: 0.9rem; gap: 6px; }
+        }
 
-/* FAUCET COOLDOWN */
-.cooldown-display{font-family:'JetBrains Mono';font-size:18px;color:var(--gold);margin-top:14px;font-weight:600}
-.cooldown-display.ready{color:var(--success)}
+        .balance-chip img {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
 
-/* UTILITIES */
-.text-gold{color:var(--gold)}
-.text-dim{color:var(--text-dim)}
-.text-success{color:var(--success)}
-.text-blue{color:var(--blue)}
-.mt-2{margin-top:16px}.mt-3{margin-top:24px}.mb-2{margin-bottom:16px}
-.flex-between{display:flex;justify-content:space-between;align-items:center}
+        @media (min-width: 768px) {
+            .balance-chip img { width: 20px; height: 20px; }
+        }
 
-@media(max-width:900px){
-.sidebar{transform:translateX(-100%)}
-.sidebar.open{transform:translateX(0)}
-.main{margin-left:0}
-.content{padding:16px}
-.page-title{font-size:24px}
-.stats-grid{grid-template-columns:1fr 1fr}
-.grid-4{grid-template-columns:1fr 1fr}
-.header-balance{font-size:11px;padding:6px 10px}
-#google_translate_element{bottom:15px;right:10px}
-.toast{bottom:80px;right:10px;left:10px;max-width:none}
-.tasks-grid{grid-template-columns:1fr}
-}
-@media(max-width:500px){
-.stats-grid{grid-template-columns:1fr}
-.grid-4{grid-template-columns:1fr}
-.page-title{font-size:20px}
-}
-</style>
+        .balance-chip .usd {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            margin-left: 2px;
+        }
+
+        .balance-chip .change {
+            font-size: 0.7rem;
+            margin-left: 2px;
+        }
+
+        .change.positive { color: var(--success); }
+        .change.negative { color: var(--danger); }
+
+        /* Navigation */
+        .nav {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav::-webkit-scrollbar { display: none; }
+
+        .nav-content {
+            display: flex;
+            gap: 4px;
+            padding: 8px 16px;
+            min-width: min-content;
+        }
+
+        @media (min-width: 768px) {
+            .nav-content { 
+                gap: 8px; 
+                padding: 12px 24px; 
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        .nav-btn {
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .nav-btn { padding: 10px 18px; font-size: 0.9rem; }
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Main Content */
+        .main {
+            padding: 20px 0;
+            min-height: calc(100vh - 140px);
+            min-height: calc(100dvh - 140px);
+        }
+
+        @media (min-width: 768px) {
+            .main { padding: 30px 0; }
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        @media (min-width: 768px) {
+            .card { padding: 24px; margin-bottom: 20px; }
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (min-width: 768px) {
+            .card-title { font-size: 1.25rem; margin-bottom: 20px; }
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 480px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        @media (min-width: 768px) {
+            .stat-card { padding: 20px; }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        @media (min-width: 768px) {
+            .stat-icon { width: 48px; height: 48px; font-size: 1.5rem; }
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        @media (min-width: 768px) {
+            .stat-value { font-size: 1.75rem; }
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        @media (min-width: 768px) {
+            .stat-label { font-size: 0.85rem; }
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            white-space: nowrap;
+            min-height: 44px;
+        }
+
+        @media (min-width: 768px) {
+            .btn { padding: 14px 24px; font-size: 1rem; }
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .form-group { margin-bottom: 20px; }
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        @media (min-width: 768px) {
+            .form-label { font-size: 0.9rem; margin-bottom: 8px; }
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+
+        @media (min-width: 768px) {
+            .form-input { padding: 14px 16px; font-size: 1rem; }
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Offerwall */
+        .offerwall-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+        }
+
+        .offerwall-tabs::-webkit-scrollbar { display: none; }
+
+        .offerwall-tab {
+            padding: 10px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @media (min-width: 768px) {
+            .offerwall-tab { padding: 12px 20px; font-size: 0.9rem; }
+        }
+
+        .offerwall-tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .offerwall-content {
+            min-height: 300px;
+        }
+
+        .offerwall-iframe-container {
+            width: 100%;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            position: relative;
+        }
+
+        .offerwall-iframe-container iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .offerwall-iframe-container iframe { height: 800px; }
+        }
+
+        @media (min-width: 1024px) {
+            .offerwall-iframe-container iframe { height: 900px; }
+        }
+
+        .offerwall-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Task Cards */
+        .task-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .task-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (min-width: 1024px) {
+            .task-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+            .task-card { padding: 20px; }
+        }
+
+        .task-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .task-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        @media (min-width: 768px) {
+            .task-icon { width: 48px; height: 48px; font-size: 1.4rem; }
+        }
+
+        .task-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        @media (min-width: 768px) {
+            .task-title { font-size: 1rem; }
+        }
+
+        .task-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .task-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .task-reward {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        @media (min-width: 768px) {
+            .task-reward { font-size: 1.1rem; }
+        }
+
+        .task-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: calc(100vw - 40px);
+        }
+
+        @media (max-width: 480px) {
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.warning { border-left: 4px solid var(--warning); }
+
+        /* Withdrawal History */
+        .history-table {
+            width: 100%;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .history-table table {
+            width: 100%;
+            min-width: 500px;
+            border-collapse: collapse;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        @media (min-width: 768px) {
+            .history-table th,
+            .history-table td { padding: 14px; font-size: 0.9rem; }
+        }
+
+        .history-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-approved { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+        /* Live Withdrawals */
+        .live-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .live-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .live-item:last-child { border-bottom: none; }
+
+        .live-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .live-amount {
+            font-weight: 700;
+            color: var(--success);
+            white-space: nowrap;
+        }
+
+        /* Swap Section */
+        .swap-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .swap-container { flex-direction: row; align-items: flex-end; gap: 20px; }
+            .swap-container .form-group { flex: 1; margin-bottom: 0; }
+        }
+
+        .swap-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--bg-secondary);
+            border-radius: 50%;
+            margin: 0 auto;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        @media (min-width: 768px) {
+            .swap-arrow { margin: 0; }
+        }
+
+        .swap-arrow:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .percentage-btns {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pct-btn {
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 36px;
+        }
+
+        .pct-btn:hover, .pct-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* FAQ */
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 56px;
+        }
+
+        .faq-answer {
+            padding: 0 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .faq-item.open .faq-answer {
+            padding: 0 16px 16px;
+            max-height: 500px;
+        }
+
+        .faq-item.open .faq-arrow {
+            transform: rotate(180deg);
+        }
+
+        .faq-arrow {
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 14, 26, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden { display: none; }
+
+        /* SVG Icon Placeholder */
+        .icon-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .icon-placeholder { width: 48px; height: 48px; }
+        }
+
+        /* Responsive Utilities */
+        @media (max-width: 480px) {
+            .hide-mobile { display: none !important; }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .hide-tablet { display: none !important; }
+        }
+
+        @media (min-width: 769px) {
+            .hide-desktop { display: none !important; }
+        }
+
+        /* Safe area for iOS */
+        @supports (padding: max(0px)) {
+            .header { padding-top: max(12px, env(safe-area-inset-top)); }
+            .main { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        }
+
+        /* Print */
+        @media print {
+            .header, .nav, .btn { display: none; }
+            body { background: white; color: black; }
+        }
+    </style>
 </head>
 <body>
-
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand" onclick="navigate('/')">
-    <div class="sidebar-brand-img"><img src="/images/coinix.png" alt="COINIX" onerror="this.style.display='none';this.parentElement.innerHTML='C'"></div>
-    <div class="sidebar-brand-txt">
-      <span class="sidebar-brand-name">COINIX</span>
-      <span class="sidebar-brand-sub">CNX Faucet</span>
-    </div>
-  </div>
-
-  <nav class="sidebar-nav">
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Main</div>
-      <a class="sidebar-item active" data-route="/" onclick="navigate('/')"><i class="fa-solid fa-chart-pie"></i><span class="label">Dashboard</span></a>
-      <a class="sidebar-item" data-route="/faucet" onclick="navigate('/faucet')"><i class="fa-solid fa-droplet"></i><span class="label">Faucet</span><span class="badge">FREE</span></a>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Earn</div>
-      <a class="sidebar-item" data-route="/offerwall" onclick="navigate('/offerwall')"><i class="fa-solid fa-gift"></i><span class="label">Offerwall</span></a>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Actions</div>
-      <a class="sidebar-item" data-route="/swap" onclick="navigate('/swap')"><i class="fa-solid fa-right-left"></i><span class="label">Swap</span></a>
-      <a class="sidebar-item" data-route="/withdraw" onclick="navigate('/withdraw')"><i class="fa-solid fa-paper-plane"></i><span class="label">Withdraw</span></a>
-    </div>
-    <div class="sidebar-section" id="adminSection" style="display:none">
-      <div class="sidebar-section-title">System</div>
-      <a class="sidebar-item" data-route="/admin" onclick="navigate('/admin')"><i class="fa-solid fa-shield-halved"></i><span class="label">Admin</span></a>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-title">Info</div>
-      <a class="sidebar-item" data-route="/faq" onclick="navigate('/faq')"><i class="fa-solid fa-circle-question"></i><span class="label">FAQ</span></a>
-    </div>
-  </nav>
-
-  <div class="sidebar-footer">
-    <div class="sidebar-user" onclick="navigate('/withdraw')">
-      <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
-      <div class="sidebar-user-info">
-        <div class="sidebar-user-name" id="sidebarName">Loading...</div>
-        <div class="sidebar-user-bal" id="sidebarBal">
-          <img src="/images/coinix.png" alt="CNX"> 0 CNX
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div style="text-align: center;">
+            <div class="spinner"></div>
+            <div style="color: var(--text-secondary);">Yükleniyor...</div>
         </div>
-      </div>
-    </div>
-  </div>
-</aside>
-
-<div class="main" id="main">
-  <header class="header">
-    <button class="header-menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-    <div class="header-title">
-      <i class="fa-solid fa-circle-dot"></i>
-      <span id="headerTitle">Dashboard</span>
-    </div>
-    <div class="header-spacer"></div>
-
-    <div class="header-balance" onclick="navigate('/withdraw')">
-      <img src="/images/coinix.png" alt="CNX">
-      <div>
-        <span class="val" id="hdrBalCnx">0</span>
-        <span class="text-dim" style="font-size:10px"> CNX</span>
-        <div class="header-usd">
-          <span class="usd-val" id="hdrCnxUSD">$0.0000</span>
-        </div>
-      </div>
-      <span class="header-balance-sep"></span>
-      <img src="/images/dogecoin.png" alt="DOGE">
-      <div>
-        <span class="val doge" id="hdrBalDoge">0</span>
-        <span class="text-dim" style="font-size:10px"> DOGE</span>
-        <div class="header-usd">
-          <span class="usd-val" id="hdrDogeUSD">$0.0000</span>
-          <span class="price-change" id="hdrPriceChange">0.00%</span>
-        </div>
-      </div>
     </div>
 
-    <div class="header-avatar" id="headerAvatar" onclick="navigate('/withdraw')">?</div>
-  </header>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-  <main class="content">
-
-    <!-- DASHBOARD -->
-    <section class="page-section active" id="page-home">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
-        <p class="page-sub">Overview of your COINIX earnings and activity</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
-          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="dashCnx">0.00</span></div>
-          <div class="stat-card-sub">≈ $<span id="dashCnxUSD">0.0000</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
-          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="dashDoge">0.00</span></div>
-          <div class="stat-card-sub">≈ $<span id="dashDogeUSD">0.0000</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic green"><i class="fa-solid fa-chart-line"></i></div>
-          <div class="stat-card-lbl">Today's Earnings</div>
-          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="dashToday">0.00</span></div>
-          <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> Active</div>
-        </div>
-      </div>
-
-      <div class="stats-grid" style="margin-bottom:24px">
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-droplet"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Faucet</div>
-          <div class="stat-card-val gold" id="dashFaucet">0 CNX</div>
-          <div class="stat-card-chg"><i class="fa-solid fa-clock"></i> Every 3 min</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Offerwall</div>
-          <div class="stat-card-val" id="dashPtc">0 CNX</div>
-          <div class="stat-card-chg"><i class="fa-solid fa-bolt"></i> Instant</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Referrals</div>
-          <div class="stat-card-val gold" id="dashRef">0 CNX</div>
-          <div class="stat-card-chg"><i class="fa-solid fa-coins"></i> <span id="dashRefCount">0</span> referrals</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-solid fa-paper-plane"></i></div>
-          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> Withdrawals</div>
-          <div class="stat-card-val" style="color:#c2a633" id="dashWd">0 DOGE</div>
-          <div class="stat-card-chg"><i class="fa-solid fa-check"></i> 0 successful</div>
-        </div>
-      </div>
-
-      <div class="card mb-2">
-        <div class="card-hd">
-          <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
-        </div>
-        <div class="grid grid-4">
-          <div class="card" onclick="navigate('/faucet')" style="cursor:pointer;padding:16px">
-            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));color:var(--gold);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-droplet"></i></div>
-            <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Faucet</div>
-            <div style="font-size:12px;color:var(--text-dim)">Claim 0.20 CNX every 3 min</div>
-          </div>
-          <div class="card" onclick="navigate('/offerwall')" style="cursor:pointer;padding:16px">
-            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-gift"></i></div>
-            <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Offerwall</div>
-            <div style="font-size:12px;color:var(--text-dim)">PTC, Games & More</div>
-          </div>
-          <div class="card" onclick="navigate('/swap')" style="cursor:pointer;padding:16px">
-            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-right-left"></i></div>
-            <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Swap</div>
-            <div style="font-size:12px;color:var(--text-dim)">CNX → DOGE</div>
-          </div>
-          <div class="card" onclick="navigate('/withdraw')" style="cursor:pointer;padding:16px">
-            <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-paper-plane"></i></div>
-            <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Withdraw</div>
-            <div style="font-size:12px;color:var(--text-dim)">DOGE → FaucetPay</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card mt-3">
-        <div class="card-hd">
-          <div class="card-title"><i class="fa-solid fa-signal"></i> Live Withdrawals</div>
-          <span class="text-success" style="font-size:11px;font-weight:600"><i class="fa-solid fa-circle" style="font-size:6px"></i> LIVE</span>
-        </div>
-        <div id="liveList" style="max-height:300px;overflow-y:auto">
-          <div style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAUCET -->
-    <section class="page-section" id="page-faucet">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-droplet"></i> Free Faucet</h1>
-        <p class="page-sub">Claim 0.20 CNX every 3 minutes — unlimited</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
-          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="faucetCnx">0.00</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
-          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="faucetDoge">0.00</span></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="text-align:center;padding:40px">
-          <div style="font-size:48px;font-weight:700;color:var(--gold);margin-bottom:16px">0.20 CNX</div>
-          <div style="color:var(--text-dim);margin-bottom:20px">You can claim once every <strong style="color:var(--gold)">3 minutes</strong>. Reward: <strong style="color:var(--gold)">0.20 CNX</strong> per claim.</div>
-          <button class="btn btn-primary btn-lg" id="claimBtn" onclick="doClaim()" style="padding:14px 32px;font-size:15px">
-            <i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX
-          </button>
-          <div id="claimStatus" class="cooldown-display ready">
-            <i class="fa-solid fa-circle-check"></i> Ready to claim!
-          </div>
-        </div>
-
-        <div class="stats-grid" style="margin-top:20px">
-          <div class="stat-card">
-            <div class="stat-card-lbl"><i class="fa-solid fa-hand-holding-dollar"></i> Total Claims</div>
-            <div class="stat-card-val gold" id="statClaims">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-lbl"><i class="fa-solid fa-coins"></i> Earned</div>
-            <div class="stat-card-val gold" id="statEarned">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-card-lbl"><i class="fa-brands fa-dogecoin"></i> DOGE</div>
-            <div class="stat-card-val" style="color:#c2a633" id="statDoge">0</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- OFFERWALL - 4 TABS -->
-    <section class="page-section" id="page-offerwall">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-gift"></i> Earn Tasks</h1>
-        <p class="page-sub">Complete tasks and earn CNX instantly via Offerwall.me</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> Total Earned</div>
-          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="owTotalEarned">0.00</span></div>
-          <div class="stat-card-sub">From all tasks</div>
-        </div>
-      </div>
-
-      <div class="tabs">
-        <div class="tab active" onclick="setOfferwallTab(this,'ptc')"><i class="fa-solid fa-gift"></i> PTC</div>
-        <div class="tab" onclick="setOfferwallTab(this,'visits')"><i class="fa-solid fa-globe"></i> Website Visits</div>
-        <div class="tab" onclick="setOfferwallTab(this,'games')"><i class="fa-solid fa-gamepad"></i> Games</div>
-        <div class="tab" onclick="setOfferwallTab(this,'shortlinks')"><i class="fa-solid fa-link"></i> Shortlinks</div>
-      </div>
-
-      <div id="tab-ptc" class="offerwall-tab">
-        <div id="ptcContainer" class="tasks-grid">
-          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading PTC ads...</div></div>
-        </div>
-      </div>
-      <div id="tab-visits" class="offerwall-tab" style="display:none">
-        <div id="visitsContainer" class="tasks-grid">
-          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading website visits...</div></div>
-        </div>
-      </div>
-      <div id="tab-games" class="offerwall-tab" style="display:none">
-        <div id="gamesContainer" class="tasks-grid">
-          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading games...</div></div>
-        </div>
-      </div>
-      <div id="tab-shortlinks" class="offerwall-tab" style="display:none">
-        <div id="shortlinksContainer" class="tasks-grid">
-          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading shortlinks...</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SWAP -->
-    <section class="page-section" id="page-swap">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-right-left"></i> Swap CNX ↔ DOGE</h1>
-        <p class="page-sub">Convert instantly at 1:1 rate — zero fees</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
-          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="swapCnx">0.00</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
-          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="swapDoge">0.00</span></div>
-        </div>
-      </div>
-
-      <div class="card" style="max-width:500px;margin:0 auto">
-        <div class="form-group">
-          <div class="flex-between" style="margin-bottom:8px">
-            <span style="font-size:12px;color:var(--text-dim)">From</span>
-            <span style="font-size:11px;color:var(--gold);cursor:pointer" onclick="setSwapMax()">Available: <span id="swapAvail">0.00</span></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="number" class="form-input" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="calcSwap()" style="flex:1">
-            <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:var(--gold-soft);border:1px solid rgba(255,215,0,0.25);color:var(--gold);font-weight:600;font-size:13px;flex-shrink:0">
-              <img src="/images/coinix.png" alt="" style="width:18px;height:18px" onerror="this.style.display='none'">
-              <span id="swapFromCur">CNX</span>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/images/coinix.png" alt="COINIX" onerror="this.style.display='none'">
+                    <span class="logo-text">COINIX</span>
+                </div>
+                <div class="balance-display">
+                    <div class="balance-chip">
+                        <img src="/images/coinix.png" alt="CNX" onerror="this.style.display='none'">
+                        <span id="headerCnx">0</span>
+                        <span class="usd" id="headerCnxUsd">$0.00</span>
+                    </div>
+                    <div class="balance-chip">
+                        <img src="/images/dogecoin.png" alt="DOGE" onerror="this.style.display='none'">
+                        <span id="headerDoge">0</span>
+                        <span class="usd" id="headerDogeUsd">$0.00</span>
+                        <span class="change" id="headerDogeChange">0.00%</span>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.25)">25%</button>
-            <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.5)">50%</button>
-            <button class="btn btn-ghost btn-sm" onclick="setSwapPct(0.75)">75%</button>
-            <button class="btn btn-ghost btn-sm" onclick="setSwapMax()">MAX</button>
-          </div>
         </div>
+    </header>
 
-        <div style="text-align:center;margin:14px 0">
-          <button class="btn btn-ghost" onclick="flipSwap()" style="width:42px;height:42px;border-radius:50%;padding:0">
-            <i class="fa-solid fa-arrow-down-arrow-up"></i>
-          </button>
-        </div>
-
-        <div class="form-group">
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">To (estimated)</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="number" class="form-input" id="swapTo" placeholder="0.00" readonly style="flex:1">
-            <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:rgba(194,166,51,0.1);border:1px solid rgba(194,166,51,0.25);color:#c2a633;font-weight:600;font-size:13px;flex-shrink:0">
-              <img src="/images/dogecoin.png" alt="" style="width:18px;height:18px" onerror="this.style.display='none'">
-              <span id="swapToCur">DOGE</span>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-content">
+                <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+                <button class="nav-btn" data-page="faucet">🚰 Faucet</button>
+                <button class="nav-btn" data-page="offerwall">🎁 Offerwall</button>
+                <button class="nav-btn" data-page="swap">🔄 Swap</button>
+                <button class="nav-btn" data-page="withdraw">💸 Withdraw</button>
+                <button class="nav-btn" data-page="referral">👥 Referrals</button>
+                <button class="nav-btn" data-page="faq">❓ FAQ</button>
             </div>
-          </div>
         </div>
+    </nav>
 
-        <div class="flex-between" style="padding:14px 0;border-top:1px solid var(--glass-brd);margin-top:10px;font-size:13px">
-          <span class="text-dim">You will receive: <span class="text-gold" id="swapReceive">0.00</span></span>
-          <span class="text-dim">Rate: 1:1 · No fees</span>
-        </div>
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Dashboard Page -->
+            <div class="page active" id="page-dashboard">
+                <div class="card">
+                    <h2 class="card-title">📊 Dashboard</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">COINIX kazançlarınızın ve aktivitelerinizin genel bakışı</p>
+                    
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2); color: var(--gold);">💰</div>
+                            <div class="stat-value" id="dashCnx">0.00</div>
+                            <div class="stat-label">CNX Balance</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(194, 166, 51, 0.2); color: var(--doge);">🪙</div>
+                            <div class="stat-value" id="dashDoge">0.00</div>
+                            <div class="stat-label">DOGE Balance</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">📈</div>
+                            <div class="stat-value" id="dashEarned">0.00</div>
+                            <div class="stat-label">Today's Earnings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--accent);">🚰</div>
+                            <div class="stat-value">0.20</div>
+                            <div class="stat-label">Faucet / 3 min</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">🎁</div>
+                            <div class="stat-value" id="dashOfferwall">0.00</div>
+                            <div class="stat-label">Offerwall Earned</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">👥</div>
+                            <div class="stat-value" id="dashReferrals">0</div>
+                            <div class="stat-label">Referrals</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(236, 72, 153, 0.2); color: #ec4899;">💸</div>
+                            <div class="stat-value" id="dashWithdrawals">0</div>
+                            <div class="stat-label">Withdrawals</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(20, 184, 166, 0.2); color: #14b8a6;">🖱️</div>
+                            <div class="stat-value" id="dashClaims">0</div>
+                            <div class="stat-label">Total Claims</div>
+                        </div>
+                    </div>
+                </div>
 
-        <button class="btn btn-primary btn-block btn-lg mt-2" id="swapBtn" onclick="doSwap()">
-          <i class="fa-solid fa-right-left"></i> Swap Now
-        </button>
-      </div>
-    </section>
+                <!-- Quick Actions -->
+                <div class="card">
+                    <h2 class="card-title">⚡ Quick Actions</h2>
+                    <div class="dashboard-grid">
+                        <button class="btn btn-primary btn-block" onclick="navigateTo('faucet')">🚰 Claim Faucet</button>
+                        <button class="btn btn-primary btn-block" onclick="navigateTo('offerwall')">🎁 Offerwall</button>
+                        <button class="btn btn-primary btn-block" onclick="navigateTo('swap')">🔄 Swap CNX → DOGE</button>
+                        <button class="btn btn-primary btn-block" onclick="navigateTo('withdraw')">💸 Withdraw DOGE</button>
+                    </div>
+                </div>
 
-    <!-- WITHDRAW -->
-    <section class="page-section" id="page-withdraw">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-paper-plane"></i> Withdraw DOGE</h1>
-        <p class="page-sub">Send DOGE to your FaucetPay email</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-brands fa-dogecoin"></i></div>
-          <div class="stat-card-lbl"><img src="/images/dogecoin.png" alt=""> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><img src="/images/dogecoin.png" alt=""><span id="wdDoge">0.00</span></div>
-          <div class="stat-card-sub">Ready to withdraw</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><img src="/images/coinix.png" alt=""> CNX Balance</div>
-          <div class="stat-card-val gold"><img src="/images/coinix.png" alt=""><span id="wdCnx">0.00</span></div>
-          <div class="stat-card-sub" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE →</div>
-        </div>
-      </div>
-
-      <div class="tabs">
-        <div class="tab active" onclick="setWdTab(this,'form')"><i class="fa-solid fa-paper-plane"></i> Withdraw</div>
-        <div class="tab" onclick="setWdTab(this,'history')"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
-      </div>
-
-      <div id="wdTabForm">
-        <div class="card mb-2" style="border-color:rgba(74,158,255,0.2);background:linear-gradient(135deg,rgba(74,158,255,0.06),rgba(74,158,255,0.02))">
-          <div style="display:flex;align-items:flex-start;gap:10px">
-            <i class="fa-solid fa-circle-info" style="color:var(--blue);font-size:18px;margin-top:2px"></i>
-            <div>
-              <div style="font-weight:600;margin-bottom:4px;font-size:14px">FaucetPay Only</div>
-              <div style="font-size:13px;color:var(--text-dim)">Withdrawals are sent to your <strong class="text-gold">FaucetPay email</strong>. Minimum: <strong class="text-gold">0.10 DOGE</strong> · Rate: 1:1 (no fees)</div>
+                <!-- Live Withdrawals -->
+                <div class="card">
+                    <h2 class="card-title">🔴 Live Withdrawals</h2>
+                    <div class="live-list" id="liveWithdrawals">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💸</div>
+                            <div class="empty-state-text">Henüz withdrawal yok</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
 
-        <div class="card mt-2">
-          <div class="form-group">
-            <label class="form-label"><i class="fa-solid fa-coins"></i> Currency</label>
-            <div class="form-input" style="display:flex;align-items:center;gap:8px;padding:12px 14px">
-              <img src="/images/dogecoin.png" alt="" style="width:20px;height:20px" onerror="this.style.display='none'">
-              DOGE (via FaucetPay)
+            <!-- Faucet Page -->
+            <div class="page" id="page-faucet">
+                <div class="card">
+                    <h2 class="card-title">🚰 Free Faucet</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Her 3 dakikada bir 0.20 CNX kazan — sınırsız!</p>
+                    
+                    <div class="dashboard-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2); color: var(--gold);">💰</div>
+                            <div class="stat-value" id="faucetCnx">0.00</div>
+                            <div class="stat-label">CNX Balance</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(194, 166, 51, 0.2); color: var(--doge);">🪙</div>
+                            <div class="stat-value" id="faucetDoge">0.00</div>
+                            <div class="stat-label">DOGE Balance</div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; padding: 30px 0;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">🎁</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--gold); margin-bottom: 8px;">0.20 CNX</div>
+                        <div style="color: var(--text-secondary); margin-bottom: 20px;" id="faucetStatus">Her 3 dakikada bir claim edebilirsiniz</div>
+                        
+                        <button class="btn btn-success btn-block" id="claimBtn" onclick="claimFaucet()" style="max-width: 400px; margin: 0 auto; font-size: 1.1rem; padding: 16px 32px;">
+                            🎁 CLAIM CNX
+                        </button>
+                        
+                        <div style="margin-top: 20px; color: var(--text-muted); font-size: 0.85rem;">
+                            <div>Total Claims: <strong id="faucetTotalClaims">0</strong></div>
+                            <div>Total Earned: <strong id="faucetTotalEarned">0.00</strong> CNX</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label"><i class="fa-solid fa-hashtag"></i> Amount (DOGE)</label>
-            <input type="number" class="form-input" id="wdAmount" placeholder="0.00" step="0.01" min="0.1">
-            <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(0.5)">0.5</button>
-              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(1)">1</button>
-              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(5)">5</button>
-              <button class="btn btn-ghost btn-sm" onclick="setWdAmt(10)">10</button>
-              <button class="btn btn-ghost btn-sm" onclick="setWdAmt('max')">MAX</button>
+
+            <!-- Offerwall Page -->
+            <div class="page" id="page-offerwall">
+                <div class="card">
+                    <h2 class="card-title">🎁 Earn Tasks</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Görevleri tamamlayın ve anında CNX kazanın</p>
+                    
+                    <div class="info-box">
+                        <span class="info-box-icon">ℹ️</span>
+                        <div>
+                            <strong>Offerwall</strong> iframe ile entegre edilmiştir. Görevler aşağıdaki pencerede yüklenir. 
+                            PTC ve Shortlink görevleri ayrıca API üzerinden de listelenir.
+                        </div>
+                    </div>
+
+                    <div class="offerwall-tabs">
+                        <button class="offerwall-tab active" data-tab="iframe">🌐 Offerwall</button>
+                        <button class="offerwall-tab" data-tab="ptc">🖱️ PTC Ads</button>
+                        <button class="offerwall-tab" data-tab="shortlinks">🔗 Shortlinks</button>
+                        <button class="offerwall-tab" data-tab="games">🎮 Games</button>
+                        <button class="offerwall-tab" data-tab="visits">🌍 Visits</button>
+                    </div>
+
+                    <div class="offerwall-content">
+                        <!-- Iframe Tab -->
+                        <div class="tab-content active" id="tab-iframe">
+                            <div class="offerwall-iframe-container">
+                                <div class="offerwall-loading" id="offerwallLoading">
+                                    <div class="spinner"></div>
+                                    <div>Offerwall yükleniyor...</div>
+                                </div>
+                                <iframe id="offerwallIframe" scrolling="yes" frameborder="0" style="width:100%;height:600px;border:0;padding:0;margin:0;" src="" onload="document.getElementById('offerwallLoading').style.display='none'"></iframe>
+                            </div>
+                        </div>
+
+                        <!-- PTC Tab -->
+                        <div class="tab-content" id="tab-ptc" style="display: none;">
+                            <div id="ptcContainer">
+                                <div class="offerwall-loading">
+                                    <div class="spinner"></div>
+                                    <div>PTC ads yükleniyor...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shortlinks Tab -->
+                        <div class="tab-content" id="tab-shortlinks" style="display: none;">
+                            <div id="shortlinksContainer">
+                                <div class="offerwall-loading">
+                                    <div class="spinner"></div>
+                                    <div>Shortlinks yükleniyor...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Games Tab -->
+                        <div class="tab-content" id="tab-games" style="display: none;">
+                            <div class="offerwall-iframe-container">
+                                <div class="offerwall-loading" id="gamesLoading">
+                                    <div class="spinner"></div>
+                                    <div>Games yükleniyor...</div>
+                                </div>
+                                <iframe id="gamesIframe" scrolling="yes" frameborder="0" style="width:100%;height:600px;border:0;padding:0;margin:0;" src="" onload="document.getElementById('gamesLoading').style.display='none'"></iframe>
+                            </div>
+                        </div>
+
+                        <!-- Visits Tab -->
+                        <div class="tab-content" id="tab-visits" style="display: none;">
+                            <div class="offerwall-iframe-container">
+                                <div class="offerwall-loading" id="visitsLoading">
+                                    <div class="spinner"></div>
+                                    <div>Website visits yükleniyor...</div>
+                                </div>
+                                <iframe id="visitsIframe" scrolling="yes" frameborder="0" style="width:100%;height:600px;border:0;padding:0;margin:0;" src="" onload="document.getElementById('visitsLoading').style.display='none'"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Offerwall Stats -->
+                <div class="card">
+                    <h2 class="card-title">📊 Offerwall Stats</h2>
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="owTodayCount">0</div>
+                            <div class="stat-label">Today Tasks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="owTodayEarnings">0.00</div>
+                            <div class="stat-label">Today Earnings</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="owTotalCount">0</div>
+                            <div class="stat-label">Total Tasks</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="owTotalEarnings">0.00</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Minimum withdrawal: <strong class="text-gold">0.10 DOGE</strong></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label"><i class="fa-solid fa-envelope"></i> FaucetPay Email</label>
-            <input type="email" class="form-input" id="wdEmail" placeholder="your@faucetpay.email">
-            <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Only your FaucetPay email is accepted.</div>
-          </div>
 
-          <button class="btn btn-primary btn-block btn-lg mt-2" id="wdBtn" onclick="doWithdraw()">
-            <i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay
-          </button>
-        </div>
-      </div>
+            <!-- Swap Page -->
+            <div class="page" id="page-swap">
+                <div class="card">
+                    <h2 class="card-title">🔄 Swap CNX ↔ DOGE</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Anında dönüştürün — 1:1 oran, sıfır komisyon</p>
+                    
+                    <div class="dashboard-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2); color: var(--gold);">💰</div>
+                            <div class="stat-value" id="swapCnx">0.00</div>
+                            <div class="stat-label">CNX Balance</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(194, 166, 51, 0.2); color: var(--doge);">🪙</div>
+                            <div class="stat-value" id="swapDoge">0.00</div>
+                            <div class="stat-label">DOGE Balance</div>
+                        </div>
+                    </div>
 
-      <div id="wdTabHistory" style="display:none">
-        <div class="card">
-          <div class="card-title mb-2"><i class="fa-solid fa-clock-rotate-left"></i> Withdrawal History</div>
-          <div class="table-wrap">
-            <div class="table-scroll">
-              <table class="table" id="wdHistoryTable">
-                <thead><tr><th>ID</th><th>Amount</th><th>Email</th><th>Status</th><th>Time</th></tr></thead>
-                <tbody><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
-              </table>
+                    <div class="swap-container">
+                        <div class="form-group">
+                            <label class="form-label">From</label>
+                            <input type="number" class="form-input" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="updateSwapTo()">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Available: <strong id="swapFromAvailable">0.00</strong> <span id="swapFromCurrency">CNX</span></span>
+                            </div>
+                            <div class="percentage-btns">
+                                <button class="pct-btn" onclick="setSwapPercentage(25)">25%</button>
+                                <button class="pct-btn" onclick="setSwapPercentage(50)">50%</button>
+                                <button class="pct-btn" onclick="setSwapPercentage(75)">75%</button>
+                                <button class="pct-btn" onclick="setSwapPercentage(100)">MAX</button>
+                            </div>
+                        </div>
+
+                        <div class="swap-arrow" onclick="toggleSwapDirection()">⇄</div>
+
+                        <div class="form-group">
+                            <label class="form-label">To (estimated)</label>
+                            <input type="number" class="form-input" id="swapTo" placeholder="0.00" readonly style="background: var(--bg-card);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">You will receive: <strong id="swapToAmount">0.00</strong> <span id="swapToCurrency">DOGE</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin: 20px 0; color: var(--text-muted); font-size: 0.85rem;">
+                        Rate: 1:1 · No fees
+                    </div>
+
+                    <button class="btn btn-primary btn-block" onclick="executeSwap()" style="font-size: 1rem; padding: 16px;">
+                        🔄 Swap Now
+                    </button>
+                </div>
             </div>
-          </div>
+
+            <!-- Withdraw Page -->
+            <div class="page" id="page-withdraw">
+                <div class="card">
+                    <h2 class="card-title">💸 Withdraw DOGE</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">DOGE'yi FaucetPay e-postanıza gönderin</p>
+                    
+                    <div class="dashboard-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(194, 166, 51, 0.2); color: var(--doge);">🪙</div>
+                            <div class="stat-value" id="wdDoge">0.00</div>
+                            <div class="stat-label">DOGE Balance</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2); color: var(--gold);">💰</div>
+                            <div class="stat-value" id="wdCnx">0.00</div>
+                            <div class="stat-label">CNX Balance</div>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-box-icon">ℹ️</span>
+                        <div>
+                            <strong>FaucetPay Only</strong><br>
+                            Minimum withdrawal: 0.10 DOGE · Rate: 1:1 (no fees)<br>
+                            Sadece FaucetPay e-posta adresiniz kabul edilir.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Currency</label>
+                        <select class="form-input" id="wdCurrency" disabled>
+                            <option value="doge">🪙 DOGE (via FaucetPay)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Amount (DOGE)</label>
+                        <input type="number" class="form-input" id="wdAmount" placeholder="0.10" step="0.01" min="0.10">
+                        <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Minimum: 0.10 DOGE</span>
+                            <button class="pct-btn" onclick="document.getElementById('wdAmount').value = document.getElementById('wdDoge').textContent">MAX</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">FaucetPay Email</label>
+                        <input type="email" class="form-input" id="wdEmail" placeholder="your@email.com">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">Only your FaucetPay email is accepted.</div>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" onclick="executeWithdraw()" style="font-size: 1rem; padding: 16px;">
+                        💸 Withdraw to FaucetPay
+                    </button>
+                </div>
+
+                <!-- Withdrawal History -->
+                <div class="card">
+                    <h2 class="card-title">📜 Withdrawal History</h2>
+                    <div class="history-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Amount</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawHistory">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                        Henüz withdrawal yok
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral Page -->
+            <div class="page" id="page-referral">
+                <div class="card">
+                    <h2 class="card-title">👥 Referral Program</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Arkadaşlarınızı davet edin ve her kayıt için <strong style="color: var(--gold);">+50 CNX</strong> kazanın!</p>
+                    
+                    <div class="dashboard-grid" style="margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">👥</div>
+                            <div class="stat-value" id="refCount">0</div>
+                            <div class="stat-label">Referrals</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2); color: var(--gold);">💰</div>
+                            <div class="stat-value" id="refEarnings">0</div>
+                            <div class="stat-label">Earnings (CNX)</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Referral Link</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" class="form-input" id="refLink" readonly style="font-size: 0.85rem;">
+                            <button class="btn btn-primary" onclick="copyRefLink()" style="flex-shrink: 0;">📋 Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <span class="info-box-icon">💡</span>
+                        <div>
+                            Her arkadaşınız kayıt olduğunda <strong>50 CNX</strong> kazanırsınız. 
+                            Linkinizi Telegram, WhatsApp veya sosyal medyada paylaşın!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Page -->
+            <div class="page" id="page-faq">
+                <div class="card">
+                    <h2 class="card-title">❓ Frequently Asked Questions</h2>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I earn CNX?</span>
+                            <span class="faq-arrow">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <ul style="padding-left: 20px; margin-top: 10px;">
+                                <li>Claiming the faucet every 3 minutes (0.20 CNX)</li>
+                                <li>Completing Offerwall tasks - PTC ads, games, website visits, shortlinks</li>
+                                <li>Referral program — invite friends and earn +50 CNX per signup</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I withdraw?</span>
+                            <span class="faq-arrow">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <ol style="padding-left: 20px; margin-top: 10px;">
+                                <li>Earn CNX from faucet and offers.</li>
+                                <li>Go to Swap and convert CNX → DOGE (1:1, no fees).</li>
+                                <li>Go to Withdraw page.</li>
+                                <li>Enter your FaucetPay email and the DOGE amount.</li>
+                                <li>Minimum withdrawal is 0.10 DOGE.</li>
+                                <li>The admin processes your payout and DOGE arrives on your FaucetPay account.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What is CNX worth in USD?</span>
+                            <span class="faq-arrow">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            CNX is pegged 1:1 to DOGE. The USD value updates in real-time based on the current DOGE price. 
+                            You can see the current USD value and 24h price change percentage next to your balance in the header.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What tasks are available on Offerwall?</span>
+                            <span class="faq-arrow">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            Offerwall.me provides 4 types of tasks:
+                            <ul style="padding-left: 20px; margin-top: 10px;">
+                                <li><strong>PTC (Paid-to-Click)</strong> - Watch ads and click links</li>
+                                <li><strong>Website Visits</strong> - Visit websites for a specified time</li>
+                                <li><strong>Games</strong> - Install and play games to reach certain levels</li>
+                                <li><strong>Shortlinks</strong> - Visit shortened URLs</li>
+                            </ul>
+                            All rewards are credited automatically via secure server-to-server postback.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How long does withdrawal take?</span>
+                            <span class="faq-arrow">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            Most withdrawals are processed within 24 hours. You'll receive your DOGE on your FaucetPay account.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </section>
+    </main>
 
-    <!-- FAQ -->
-    <section class="page-section" id="page-faq">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-circle-question"></i> FAQ</h1>
-        <p class="page-sub">Frequently Asked Questions</p>
-      </div>
+    <script>
+        // ============================================
+        // CONFIG
+        // ============================================
+        const API_BASE = window.location.origin;
+        let token = localStorage.getItem('coinix_token');
+        let userData = null;
+        let dogePrice = 0;
+        let dogeChange = 0;
+        let swapDirection = 'cnx-to-doge';
+        let offerwallUrl = '';
 
-      <div class="card">
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I earn CNX? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ul><li><strong>Claiming the faucet</strong> every 3 minutes (0.20 CNX)</li><li><strong>Completing Offerwall tasks</strong> - PTC ads, games, website visits, shortlinks</li><li><strong>Referral program</strong> — invite friends and earn <strong>+50 CNX</strong> per signup</li></ul></div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I withdraw? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ol><li>Earn <strong>CNX</strong> from faucet and offers.</li><li>Go to <strong>Swap</strong> and convert CNX → DOGE (1:1, no fees).</li><li>Go to <strong>Withdraw</strong> page.</li><li>Enter your <strong>FaucetPay email</strong> and the DOGE amount.</li><li>Minimum withdrawal is <strong>0.10 DOGE</strong>.</li><li>The admin processes your payout and DOGE arrives on your FaucetPay account.</li></ol></div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is CNX worth in USD? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">CNX is pegged 1:1 to DOGE. The USD value updates in real-time based on the current DOGE price. You can see the current USD value and 24h price change percentage next to your balance in the header.</div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What tasks are available on Offerwall? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Offerwall.me provides 4 types of tasks:<ul><li><strong>PTC (Paid-to-Click)</strong> - Watch ads and click links</li><li><strong>Website Visits</strong> - Visit websites for a specified time</li><li><strong>Games</strong> - Install and play games to reach certain levels</li><li><strong>Shortlinks</strong> - Visit shortened URLs</li></ul>All rewards are credited automatically via secure server-to-server postback.</div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How long does withdrawal take? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Most withdrawals are processed within <strong>24 hours</strong>.</div></div>
-      </div>
-    </section>
+        // ============================================
+        // TELEGRAM WEBAPP
+        // ============================================
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.setHeaderColor('#0a0e1a');
+            tg.setBackgroundColor('#0a0e1a');
+        }
 
-    <!-- ADMIN -->
-    <section class="page-section" id="page-admin">
-      <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel</h1>
-        <p class="page-sub">System management dashboard</p>
-      </div>
-      <div class="card">
-        <p>Admin panel content will be loaded here...</p>
-      </div>
-    </section>
+        // ============================================
+        // INIT
+        // ============================================
+        async function init() {
+            try {
+                if (!token) {
+                    await authenticate();
+                } else {
+                    await loadUserData();
+                }
+                await loadDogePrice();
+                await loadLiveWithdrawals();
+                hideLoading();
+            } catch (err) {
+                console.error('Init error:', err);
+                showToast('Initialization failed', 'error');
+                hideLoading();
+            }
+        }
 
-  </main>
-</div>
+        async function authenticate() {
+            const initData = tg?.initData || '';
+            if (!initData) {
+                showToast('Please open via Telegram', 'error');
+                return;
+            }
 
-<div class="toast" id="toast">
-  <div class="toast-icon"><i class="fa-solid fa-circle-check"></i></div>
-  <span id="toastMsg">Success</span>
-</div>
+            try {
+                const res = await fetch(`${API_BASE}/api/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        initData,
+                        ref: new URLSearchParams(window.location.search).get('ref')
+                    })
+                });
 
-<script>
-const API = window.location.origin;
-let TOKEN = localStorage.getItem('coinix_token') || '';
-let USER = null;
-let DOGE_PRICE = 0;
-let DOGE_CHANGE = 0;
-const FAUCET_COOLDOWN = 180000; // 3 dakika
-const FAUCET_REWARD = 0.20;
-const ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID'; // Kendi Telegram ID'niz
+                const data = await res.json();
+                if (data.success) {
+                    token = data.token;
+                    localStorage.setItem('coinix_token', token);
+                    await loadUserData();
+                } else {
+                    showToast(data.error || 'Auth failed', 'error');
+                }
+            } catch (err) {
+                showToast('Authentication error', 'error');
+            }
+        }
 
-if(window.Telegram?.WebApp){
-  try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch(e){}
-}
+        async function loadUserData() {
+            try {
+                const res = await fetch(`${API_BASE}/api/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-let toastTimer;
-function showToast(msg, type='success'){
-  const toast = document.getElementById('toast');
-  const icon = toast.querySelector('.toast-icon i');
-  document.getElementById('toastMsg').textContent = msg;
-  toast.className = 'toast show ' + type;
-  icon.className = 'fa-solid ' + (type==='success'?'fa-circle-check':type==='error'?'fa-circle-xmark':'fa-circle-info');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
-}
+                if (res.status === 401 || res.status === 403) {
+                    localStorage.removeItem('coinix_token');
+                    token = null;
+                    await authenticate();
+                    return;
+                }
 
-function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
+                userData = await res.json();
+                updateUI();
+            } catch (err) {
+                console.error('Load user error:', err);
+            }
+        }
 
-// SIDEBAR
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('active');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('active');
-}
+        function updateUI() {
+            if (!userData) return;
 
-// NAVIGATION
-function navigate(route){
-  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-  
-  const pageMap = {'/':'page-home','/faucet':'page-faucet','/offerwall':'page-offerwall','/swap':'page-swap','/withdraw':'page-withdraw','/faq':'page-faq','/admin':'page-admin'};
-  const titleMap = {'/':'Dashboard','/faucet':'Faucet','/offerwall':'Offerwall','/swap':'Swap','/withdraw':'Withdraw','/faq':'FAQ','/admin':'Admin Panel'};
-  
-  const pageId = pageMap[route] || 'page-home';
-  document.getElementById(pageId).classList.add('active');
-  document.querySelector(`[data-route="${route}"]`)?.classList.add('active');
-  document.getElementById('headerTitle').textContent = titleMap[route] || 'COINIX';
-  
-  closeSidebar();
-  
-  if(route === '/') loadLive();
-  if(route === '/faucet') updateClaimCD();
-  if(route === '/offerwall') loadOfferwallTab('ptc');
-  if(route === '/swap') { document.getElementById('swapAvail').textContent = USER ? fmt(USER.balance) : '0.00'; }
-  if(route === '/withdraw') loadWdHistory();
-  if(route === '/admin') loadAdmin();
-}
+            // Header
+            document.getElementById('headerCnx').textContent = formatNum(userData.balance);
+            document.getElementById('headerDoge').textContent = formatNum(userData.doge_balance);
+            document.getElementById('headerCnxUsd').textContent = '$' + formatNum(userData.balance * dogePrice);
+            document.getElementById('headerDogeUsd').textContent = '$' + formatNum(userData.doge_balance * dogePrice);
+            
+            const changeEl = document.getElementById('headerDogeChange');
+            changeEl.textContent = (dogeChange >= 0 ? '+' : '') + dogeChange.toFixed(2) + '%';
+            changeEl.className = 'change ' + (dogeChange >= 0 ? 'positive' : 'negative');
 
-// DOGE PRICE
-async function fetchDogePrice(){
-  try{
-    const res = await fetch(API + '/api/doge-price');
-    if(res.ok){
-      const data = await res.json();
-      DOGE_PRICE = data.price || 0;
-      DOGE_CHANGE = data.change_24h || 0;
-      updateUSDDisplay();
-    }
-  }catch(e){}
-}
+            // Dashboard
+            document.getElementById('dashCnx').textContent = formatNum(userData.balance);
+            document.getElementById('dashDoge').textContent = formatNum(userData.doge_balance);
+            document.getElementById('dashEarned').textContent = formatNum(userData.total_earned);
+            document.getElementById('dashOfferwall').textContent = formatNum(userData.total_ptc_earnings);
+            document.getElementById('dashReferrals').textContent = userData.referrals;
+            document.getElementById('dashWithdrawals').textContent = userData.total_withdrawals;
+            document.getElementById('dashClaims').textContent = userData.total_claims;
 
-function updateUSDDisplay(){
-  if(!USER) return;
-  
-  const cnxUSD = (USER.balance * DOGE_PRICE).toFixed(4);
-  const dogeUSD = (USER.doge_balance * DOGE_PRICE).toFixed(4);
-  
-  document.getElementById('hdrCnxUSD').textContent = '$' + cnxUSD;
-  document.getElementById('hdrDogeUSD').textContent = '$' + dogeUSD;
-  document.getElementById('dashCnxUSD').textContent = cnxUSD;
-  document.getElementById('dashDogeUSD').textContent = dogeUSD;
-  
-  const changeEl = document.getElementById('hdrPriceChange');
-  if(DOGE_CHANGE >= 0){
-    changeEl.textContent = '+' + DOGE_CHANGE.toFixed(2) + '%';
-    changeEl.className = 'price-change price-up';
-  } else {
-    changeEl.textContent = DOGE_CHANGE.toFixed(2) + '%';
-    changeEl.className = 'price-change price-down';
-  }
-}
+            // Faucet
+            document.getElementById('faucetCnx').textContent = formatNum(userData.balance);
+            document.getElementById('faucetDoge').textContent = formatNum(userData.doge_balance);
+            document.getElementById('faucetTotalClaims').textContent = userData.total_claims;
+            document.getElementById('faucetTotalEarned').textContent = formatNum(userData.total_earned);
+            updateFaucetStatus();
 
-// AUTH & USER
-async function init(){
-  await fetchDogePrice();
-  setInterval(fetchDogePrice, 60000);
-  
-  if(window.Telegram?.WebApp?.initData){
-    try{
-      const res = await fetch(API + '/api/auth', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({initData: Telegram.WebApp.initData})
-      });
-      const d = await res.json();
-      if(d.token){
-        TOKEN = d.token;
-        localStorage.setItem('coinix_token', TOKEN);
-        showToast('✅ User account created!', 'success');
-      }
-    } catch(e){
-      showToast('⚠️ Network error', 'error');
-    }
-  }
-  await loadUser();
-  loadLive();
-}
+            // Swap
+            document.getElementById('swapCnx').textContent = formatNum(userData.balance);
+            document.getElementById('swapDoge').textContent = formatNum(userData.doge_balance);
+            updateSwapAvailable();
 
-async function loadUser(){
-  if(!TOKEN) return;
-  try{
-    const res = await fetch(API + '/api/me', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      USER = await res.json();
-      const name = USER.username || USER.first_name || 'User';
-      const initial = name.charAt(0).toUpperCase();
-      document.getElementById('sidebarName').textContent = name;
-      document.getElementById('sidebarBal').innerHTML = `<img src="/images/coinix.png" alt="CNX"> ${fmt(USER.balance)} CNX`;
-      document.getElementById('hdrBalCnx').textContent = fmt(USER.balance);
-      document.getElementById('hdrBalDoge').textContent = fmt(USER.doge_balance);
-      
-      document.getElementById('dashCnx').textContent = fmt(USER.balance);
-      document.getElementById('dashDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('dashToday').textContent = fmt((USER.total_earned||0) * 0.05);
-      document.getElementById('dashFaucet').textContent = fmt((USER.total_earned||0) - (USER.total_ptc_earnings||0)) + ' CNX';
-      document.getElementById('dashPtc').textContent = fmt(USER.total_ptc_earnings||0) + ' CNX';
-      document.getElementById('dashRef').textContent = fmt(USER.referral_earnings||0) + ' CNX';
-      document.getElementById('dashRefCount').textContent = USER.referrals || 0;
-      document.getElementById('dashWd').textContent = fmt(USER.total_withdrawals||0) + ' DOGE';
-      
-      document.getElementById('faucetCnx').textContent = fmt(USER.balance);
-      document.getElementById('faucetDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('statClaims').textContent = USER.total_claims || 0;
-      document.getElementById('statEarned').textContent = fmt(USER.total_earned || 0);
-      document.getElementById('statDoge').textContent = fmt(USER.doge_balance || 0);
-      
-      document.getElementById('owTotalEarned').textContent = fmt(USER.total_ptc_earnings || 0);
-      
-      document.getElementById('swapCnx').textContent = fmt(USER.balance);
-      document.getElementById('swapDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('swapAvail').textContent = fmt(USER.balance);
-      
-      document.getElementById('wdCnx').textContent = fmt(USER.balance);
-      document.getElementById('wdDoge').textContent = fmt(USER.doge_balance);
-      
-      const av = document.getElementById('headerAvatar');
-      const sav = document.getElementById('sidebarAvatar');
-      if(USER.photo_url){
-        av.innerHTML = `<img src="${USER.photo_url}">`;
-        sav.innerHTML = `<img src="${USER.photo_url}">`;
-      } else {
-        av.textContent = initial;
-        sav.textContent = initial;
-      }
-      
-      const isAdmin = USER.telegram_id === ADMIN_ID;
-      document.getElementById('adminSection').style.display = isAdmin ? 'block' : 'none';
-      
-      updateUSDDisplay();
-      updateClaimCD();
-      showToast('✅ Data loaded', 'success');
-    }
-  }catch(e){}
-}
+            // Withdraw
+            document.getElementById('wdDoge').textContent = formatNum(userData.doge_balance);
+            document.getElementById('wdCnx').textContent = formatNum(userData.balance);
 
-// FAUCET CLAIM
-async function doClaim(){
-  const btn = document.getElementById('claimBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Claiming...';
-  try{
-    const res = await fetch(API + '/api/claim', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: '{}'
-    });
-    const d = await res.json();
-    if(res.ok){
-      showToast('✅ +'+d.amount+' CNX claimed!', 'success');
-      await loadUser();
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Claimed!';
-      setTimeout(() => {
-        btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
-        btn.disabled = false;
-        startCD(FAUCET_COOLDOWN);
-      }, 1500);
-    } else {
-      if(d.wait){ startCD(d.wait); showToast('⏳ Cooldown: '+Math.ceil(d.wait/1000)+'s','info'); }
-      else showToast(d.error || 'Failed','error');
-      btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
-      btn.disabled = false;
-    }
-  } catch(e){
-    showToast('Network error','error');
-    btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
-    btn.disabled = false;
-  }
-}
+            // Referral
+            document.getElementById('refCount').textContent = userData.referrals;
+            document.getElementById('refEarnings').textContent = formatNum(userData.referral_earnings);
+            document.getElementById('refLink').value = `https://t.me/${BOT_USERNAME || 'your_bot'}?startapp=ref_${userData.telegram_id}`;
+        }
 
-function updateClaimCD(){
-  if(!USER || !USER.last_claim) { setCDReady(); return; }
-  const elapsed = Date.now() - USER.last_claim;
-  if(elapsed < FAUCET_COOLDOWN) startCD(FAUCET_COOLDOWN - elapsed);
-  else setCDReady();
-}
+        function formatNum(n) {
+            return Number(n || 0).toFixed(2);
+        }
 
-function startCD(ms){
-  const btn = document.getElementById('claimBtn');
-  const status = document.getElementById('claimStatus');
-  btn.disabled = true;
-  status.classList.remove('ready');
-  
-  const interval = setInterval(() => {
-    ms -= 1000;
-    if(ms <= 0){
-      clearInterval(interval);
-      setCDReady();
-    } else {
-      const mins = Math.floor(ms / 60000);
-      const secs = Math.floor((ms % 60000) / 1000);
-      status.innerHTML = `<i class="fa-solid fa-clock"></i> Next claim in <strong>${mins}:${secs.toString().padStart(2, '0')}</strong>`;
-    }
-  }, 1000);
-}
+        // ============================================
+        // DOGE PRICE
+        // ============================================
+        async function loadDogePrice() {
+            try {
+                const res = await fetch(`${API_BASE}/api/doge-price`);
+                const data = await res.json();
+                dogePrice = data.price || 0;
+                dogeChange = data.change_24h || 0;
+                updateUI();
+            } catch (err) {
+                console.error('Price load error:', err);
+            }
+        }
 
-function setCDReady(){
-  const btn = document.getElementById('claimBtn');
-  const status = document.getElementById('claimStatus');
-  btn.disabled = false;
-  status.classList.add('ready');
-  status.innerHTML = '<i class="fa-solid fa-circle-check"></i> Ready to claim!';
-}
+        // ============================================
+        // NAVIGATION
+        // ============================================
+        function navigateTo(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`page-${page}`).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
 
-// OFFERWALL - 4 TABS
-function setOfferwallTab(el, tab){
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  
-  document.querySelectorAll('.offerwall-tab').forEach(t => t.style.display = 'none');
-  document.getElementById('tab-' + tab).style.display = 'block';
-  
-  loadOfferwallTab(tab);
-}
+            // Load page-specific data
+            if (page === 'offerwall') loadOfferwall();
+            if (page === 'withdraw') loadWithdrawHistory();
+            
+            window.scrollTo(0, 0);
+        }
 
-async function loadOfferwallTab(tab){
-  const container = document.getElementById(tab === 'ptc' ? 'ptcContainer' : 
-                                           tab === 'visits' ? 'visitsContainer' : 
-                                           tab === 'games' ? 'gamesContainer' : 
-                                           'shortlinksContainer');
-  
-  container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading...</div></div>';
-  
-  try{
-    const endpoint = tab === 'ptc' ? '/api/offerwall/ptc' :
-                     tab === 'visits' ? '/api/offerwall/visits' :
-                     tab === 'games' ? '/api/offerwall/games' :
-                     '/api/offerwall/shortlinks';
-    
-    const res = await fetch(API + endpoint, {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(!res.ok) throw new Error('Failed');
-    
-    const data = await res.json();
-    const items = data.ads || data.visits || data.games || data.shortlinks || [];
-    
-    if(!items || items.length === 0){
-      container.innerHTML = `
-        <div class="empty-tasks">
-          <i class="fa-solid fa-inbox"></i>
-          <h3>No tasks available</h3>
-          <p>Check back later for new tasks!</p>
-        </div>
-      `;
-      return;
-    }
-    
-    container.innerHTML = items.map(task => `
-      <div class="task-card">
-        <div class="task-icon">
-          ${task.thumbnail ? `<img src="${task.thumbnail}" alt="">` : '<i class="fa-solid fa-gift"></i>'}
-        </div>
-        <div class="task-info">
-          <div class="task-title">${task.title}</div>
-          <div class="task-meta">
-            <span class="task-reward">${task.reward} CNX</span>
-            ${task.time ? `<span class="task-time"><i class="fa-regular fa-clock"></i> ${task.time}</span>` : ''}
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="startTask('${task.trackingUrl || task.url || ''}')">
-          <i class="fa-solid fa-play"></i> Start
-        </button>
-      </div>
-    `).join('');
-    
-    showToast(`✅ ${items.length} tasks loaded`, 'success');
-  }catch(e){
-    container.innerHTML = `
-      <div class="empty-tasks">
-        <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i>
-        <h3>Failed to load tasks</h3>
-        <p>Please try again later</p>
-      </div>
-    `;
-  }
-}
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => navigateTo(btn.dataset.page));
+        });
 
-function startTask(url){
-  if(!url){
-    showToast('❌ No URL available', 'error');
-    return;
-  }
-  window.open(url, '_blank');
-  showToast('✅ Task opened! Complete it to earn CNX', 'success');
-}
+        // ============================================
+        // FAUCET
+        // ============================================
+        async function claimFaucet() {
+            const btn = document.getElementById('claimBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Claiming...';
 
-// SWAP
-function calcSwap(){
-  const from = parseFloat(document.getElementById('swapFrom').value) || 0;
-  document.getElementById('swapTo').value = from.toFixed(2);
-  document.getElementById('swapReceive').textContent = from.toFixed(2);
-}
-function setSwapPct(p){
-  if(!USER) return;
-  const avail = USER.balance;
-  document.getElementById('swapFrom').value = (avail * p).toFixed(2);
-  calcSwap();
-}
-function setSwapMax(){
-  if(!USER) return;
-  document.getElementById('swapFrom').value = USER.balance;
-  calcSwap();
-}
-function flipSwap(){
-  showToast('Swap direction: CNX → DOGE', 'info');
-}
-async function doSwap(){
-  const amt = parseFloat(document.getElementById('swapFrom').value);
-  if(!amt || amt <= 0){ showToast('Enter valid amount','error'); return; }
-  const btn = document.getElementById('swapBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Swapping...';
-  try{
-    const res = await fetch(API + '/api/swap', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({amount:amt,direction:'cnx-to-doge'})
-    });
-    const d = await res.json();
-    if(res.ok){
-      showToast('✅ Swap completed!','success');
-      await loadUser();
-      document.getElementById('swapFrom').value = '';
-      document.getElementById('swapTo').value = '';
-      document.getElementById('swapReceive').textContent = '0.00';
-    } else showToast(d.error || 'Failed','error');
-  } catch(e){ showToast('Network error','error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Swap Now'; }
-}
+            try {
+                const res = await fetch(`${API_BASE}/api/claim`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-// WITHDRAW
-function setWdTab(el, tab){
-  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('wdTabForm').style.display = tab==='form' ? 'block' : 'none';
-  document.getElementById('wdTabHistory').style.display = tab==='history' ? 'block' : 'none';
-  if(tab==='history') loadWdHistory();
-}
-function setWdAmt(v){
-  document.getElementById('wdAmount').value = v==='max' ? (USER?USER.doge_balance:0) : v;
-}
-async function doWithdraw(){
-  const amt = parseFloat(document.getElementById('wdAmount').value);
-  const email = document.getElementById('wdEmail').value.trim();
-  if(!amt || amt < 0.1){ showToast('Minimum 0.10 DOGE','error'); return; }
-  if(!email || !email.includes('@')){ showToast('Enter valid email','error'); return; }
-  const btn = document.getElementById('wdBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner spinner-sm"></div> Processing...';
-  try{
-    const res = await fetch(API + '/api/withdraw', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({faucetpay_email:email,amount:amt})
-    });
-    const d = await res.json();
-    if(res.ok){
-      showToast('✅ Withdrawal submitted!','success');
-      await loadUser();
-      document.getElementById('wdAmount').value = '';
-      document.getElementById('wdEmail').value = '';
-    } else showToast(d.error||'Failed','error');
-  } catch(e){ showToast('Network error','error'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay'; }
-}
-async function loadWdHistory(){
-  if(!TOKEN) return;
-  const tb = document.getElementById('wdHistoryTable').querySelector('tbody');
-  tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
-  try{
-    const res = await fetch(API + '/api/withdrawals', {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(res.ok){
-      const list = await res.json();
-      if(!list.length){
-        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals yet</td></tr>';
-        return;
-      }
-      tb.innerHTML = list.map(w => `
-        <tr>
-          <td class="mono">${w.id?w.id.substring(0,8)+'...':'-'}</td>
-          <td class="gold mono">${fmt(w.amount)} DOGE</td>
-          <td class="mono">${w.faucetpay_email||'-'}</td>
-          <td><span class="${w.status==='approved'?'success':w.status==='pending'?'warn':'danger'}">${w.status||'pending'}</span></td>
-          <td class="text-dim">${timeAgo(w.timestamp)}</td>
-        </tr>
-      `).join('');
-      showToast('✅ History loaded', 'success');
-    }
-  } catch(e){}
-}
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`+${data.amount} CNX claimed!`, 'success');
+                    await loadUserData();
+                } else if (res.status === 429) {
+                    const waitSec = Math.ceil((data.wait || 0) / 1000);
+                    showToast(`Cooldown: ${waitSec}s remaining`, 'warning');
+                    startFaucetCooldown(data.wait);
+                } else {
+                    showToast(data.error || 'Claim failed', 'error');
+                }
+            } catch (err) {
+                showToast('Claim error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🎁 CLAIM CNX';
+                updateFaucetStatus();
+            }
+        }
 
-function timeAgo(ts){
-  if(!ts) return '';
-  const diff = Date.now() - ts;
-  const m = Math.floor(diff/60000);
-  if(m < 1) return 'just now';
-  if(m < 60) return m + 'm ago';
-  const h = Math.floor(m/60);
-  if(h < 24) return h + 'h ago';
-  return Math.floor(h/24) + 'd ago';
-}
+        function updateFaucetStatus() {
+            if (!userData?.last_claim) {
+                document.getElementById('faucetStatus').textContent = 'Ready to claim!';
+                return;
+            }
 
-async function loadLive(){
-  try{
-    const res = await fetch(API + '/api/withdrawals/recent');
-    if(res.ok){
-      const list = await res.json();
-      const c = document.getElementById('liveList');
-      if(!list.length){
-        c.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals yet</div>';
-        return;
-      }
-      c.innerHTML = list.slice(0,8).map(w => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-brd)">
-          <div style="font-size:12px;color:var(--text-dim)">${w.user_id ? w.user_id.substring(0,8)+'...' : 'User'}</div>
-          <div style="font-family:'JetBrains Mono';font-weight:600;color:var(--gold);font-size:13px">${fmt(w.amount)} DOGE</div>
-        </div>
-      `).join('');
-    }
-  } catch(e){}
-}
+            const elapsed = Date.now() - userData.last_claim;
+            const cooldown = 180000; // 3 min
+            const remaining = cooldown - elapsed;
 
-async function loadAdmin(){
-  if(!USER || USER.telegram_id !== ADMIN_ID){
-    showToast('Admin access denied','error');
-    navigate('/');
-    return;
-  }
-  showToast('✅ Admin panel loaded', 'success');
-}
+            if (remaining <= 0) {
+                document.getElementById('faucetStatus').textContent = '✅ Ready to claim!';
+            } else {
+                startFaucetCooldown(remaining);
+            }
+        }
 
-// Auto-refresh
-setInterval(() => {
-  loadUser();
-  fetchDogePrice();
-}, 30000);
+        function startFaucetCooldown(ms) {
+            const statusEl = document.getElementById('faucetStatus');
+            const btn = document.getElementById('claimBtn');
+            
+            const interval = setInterval(() => {
+                ms -= 1000;
+                if (ms <= 0) {
+                    clearInterval(interval);
+                    statusEl.textContent = '✅ Ready to claim!';
+                    btn.disabled = false;
+                    return;
+                }
+                const sec = Math.ceil(ms / 1000);
+                const min = Math.floor(sec / 60);
+                const s = sec % 60;
+                statusEl.textContent = `⏳ Next claim in ${min}:${s.toString().padStart(2, '0')}`;
+                btn.disabled = true;
+            }, 1000);
+        }
 
-document.addEventListener('DOMContentLoaded', () => {
-  init();
-});
-</script>
+        // ============================================
+        // OFFERWALL
+        // ============================================
+        async function loadOfferwall() {
+            try {
+                // Get iframe URL
+                const res = await fetch(`${API_BASE}/api/offerwall/offerwall`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.url) {
+                    offerwallUrl = data.url;
+                    document.getElementById('offerwallIframe').src = data.url;
+                    document.getElementById('gamesIframe').src = data.url;
+                    document.getElementById('visitsIframe').src = data.url;
+                }
+
+                // Load stats
+                loadOfferwallStats();
+            } catch (err) {
+                console.error('Offerwall load error:', err);
+            }
+        }
+
+        async function loadOfferwallStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/offerwall/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('owTodayCount').textContent = data.today.count;
+                    document.getElementById('owTodayEarnings').textContent = formatNum(data.today.earnings);
+                    document.getElementById('owTotalCount').textContent = data.total.count;
+                    document.getElementById('owTotalEarnings').textContent = formatNum(data.total.earnings);
+                }
+            } catch (err) {
+                console.error('Stats load error:', err);
+            }
+        }
+
+        // Offerwall Tabs
+        document.querySelectorAll('.offerwall-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.offerwall-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                
+                tab.classList.add('active');
+                const tabName = tab.dataset.tab;
+                document.getElementById(`tab-${tabName}`).style.display = 'block';
+
+                // Load tab-specific data
+                if (tabName === 'ptc') loadPTCAds();
+                if (tabName === 'shortlinks') loadShortlinks();
+            });
+        });
+
+        async function loadPTCAds() {
+            const container = document.getElementById('ptcContainer');
+            container.innerHTML = '<div class="offerwall-loading"><div class="spinner"></div><div>PTC ads yükleniyor...</div></div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/offerwall/ptc`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.success && data.ads && data.ads.length > 0) {
+                    container.innerHTML = '<div class="task-grid">' + data.ads.map(ad => `
+                        <div class="task-card">
+                            <div class="task-header">
+                                <div class="task-icon">🖱️</div>
+                                <div class="task-info">
+                                    <div class="task-title">${escapeHtml(ad.title)}</div>
+                                    <div class="task-desc">${escapeHtml(ad.description || '')}</div>
+                                </div>
+                            </div>
+                            <div class="task-footer">
+                                <div class="task-reward">+${ad.reward} CNX</div>
+                                <div class="task-meta">${ad.duration}s · ${ad.maxDisplay}</div>
+                            </div>
+                            <a href="${ad.url}" target="_blank" class="btn btn-primary btn-block" style="margin-top: 12px;">
+                                Start Task
+                            </a>
+                        </div>
+                    `).join('') + '</div>';
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🖱️</div>
+                            <div class="empty-state-text">No PTC ads available</div>
+                            <div class="empty-state-sub">${data.error || 'Please check back later'}</div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-text">Failed to load PTC ads</div>
+                        <div class="empty-state-sub">${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadShortlinks() {
+            const container = document.getElementById('shortlinksContainer');
+            container.innerHTML = '<div class="offerwall-loading"><div class="spinner"></div><div>Shortlinks yükleniyor...</div></div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/offerwall/shortlinks`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.success && data.shortlinks && data.shortlinks.length > 0) {
+                    container.innerHTML = '<div class="task-grid">' + data.shortlinks.map(sl => `
+                        <div class="task-card">
+                            <div class="task-header">
+                                <div class="task-icon">🔗</div>
+                                <div class="task-info">
+                                    <div class="task-title">${escapeHtml(sl.name)}</div>
+                                    <div class="task-desc">${sl.remaining_views} views remaining</div>
+                                </div>
+                            </div>
+                            <div class="task-footer">
+                                <div class="task-reward">+${sl.reward} CNX</div>
+                                <div class="task-meta">${sl.remaining_views}/${sl.daily_limit}</div>
+                            </div>
+                            <a href="${sl.url}" target="_blank" class="btn btn-primary btn-block" style="margin-top: 12px;">
+                                Open Link
+                            </a>
+                        </div>
+                    `).join('') + '</div>';
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <div class="empty-state-text">No shortlinks available</div>
+                            <div class="empty-state-sub">${data.error || 'Please check back later'}</div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-text">Failed to load shortlinks</div>
+                        <div class="empty-state-sub">${err.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================
+        // SWAP
+        // ============================================
+        function updateSwapAvailable() {
+            if (!userData) return;
+            const fromAvail = swapDirection === 'cnx-to-doge' ? userData.balance : userData.doge_balance;
+            document.getElementById('swapFromAvailable').textContent = formatNum(fromAvail);
+            document.getElementById('swapFromCurrency').textContent = swapDirection === 'cnx-to-doge' ? 'CNX' : 'DOGE';
+            document.getElementById('swapToCurrency').textContent = swapDirection === 'cnx-to-doge' ? 'DOGE' : 'CNX';
+        }
+
+        function updateSwapTo() {
+            const from = parseFloat(document.getElementById('swapFrom').value) || 0;
+            document.getElementById('swapTo').value = from.toFixed(2);
+            document.getElementById('swapToAmount').textContent = formatNum(from);
+        }
+
+        function setSwapPercentage(pct) {
+            if (!userData) return;
+            const balance = swapDirection === 'cnx-to-doge' ? userData.balance : userData.doge_balance;
+            const amount = (balance * pct / 100).toFixed(2);
+            document.getElementById('swapFrom').value = amount;
+            updateSwapTo();
+            
+            document.querySelectorAll('.pct-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function toggleSwapDirection() {
+            swapDirection = swapDirection === 'cnx-to-doge' ? 'doge-to-cnx' : 'cnx-to-doge';
+            document.getElementById('swapFrom').value = '';
+            document.getElementById('swapTo').value = '';
+            updateSwapAvailable();
+            updateSwapTo();
+        }
+
+        async function executeSwap() {
+            const amount = parseFloat(document.getElementById('swapFrom').value);
+            if (!amount || amount <= 0) {
+                showToast('Enter a valid amount', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/swap`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ amount, direction: swapDirection })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Swap completed!', 'success');
+                    await loadUserData();
+                    document.getElementById('swapFrom').value = '';
+                    document.getElementById('swapTo').value = '';
+                } else {
+                    showToast(data.error || 'Swap failed', 'error');
+                }
+            } catch (err) {
+                showToast('Swap error', 'error');
+            }
+        }
+
+        // ============================================
+        // WITHDRAW
+        // ============================================
+        async function executeWithdraw() {
+            const amount = parseFloat(document.getElementById('wdAmount').value);
+            const email = document.getElementById('wdEmail').value.trim();
+
+            if (!amount || amount < 0.10) {
+                showToast('Minimum 0.10 DOGE', 'error');
+                return;
+            }
+            if (!email || !email.includes('@')) {
+                showToast('Invalid FaucetPay email', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/withdraw`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ faucetpay_email: email, amount })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Withdrawal submitted!', 'success');
+                    await loadUserData();
+                    await loadWithdrawHistory();
+                    document.getElementById('wdAmount').value = '';
+                    document.getElementById('wdEmail').value = '';
+                } else {
+                    showToast(data.error || 'Withdrawal failed', 'error');
+                }
+            } catch (err) {
+                showToast('Withdrawal error', 'error');
+            }
+        }
+
+        async function loadWithdrawHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/api/withdrawals`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const tbody = document.getElementById('withdrawHistory');
+                if (data && data.length > 0) {
+                    tbody.innerHTML = data.map(w => `
+                        <tr>
+                            <td>${w.id.substring(0, 8)}</td>
+                            <td>${w.amount} DOGE</td>
+                            <td>${escapeHtml(w.faucetpay_email)}</td>
+                            <td><span class="status-badge status-${w.status}">${w.status}</span></td>
+                            <td>${w.timestamp ? new Date(w.timestamp).toLocaleDateString() : '-'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Henüz withdrawal yok</td></tr>';
+                }
+            } catch (err) {
+                console.error('History load error:', err);
+            }
+        }
+
+        async function loadLiveWithdrawals() {
+            try {
+                const res = await fetch(`${API_BASE}/api/withdrawals/recent`);
+                const data = await res.json();
+                
+                const container = document.getElementById('liveWithdrawals');
+                if (data && data.length > 0) {
+                    container.innerHTML = data.slice(0, 10).map(w => `
+                        <div class="live-item">
+                            <div class="live-user">
+                                <span>👤</span>
+                                <span>${escapeHtml(w.faucetpay_email?.split('@')[0] || '***')}@***</span>
+                            </div>
+                            <div class="live-amount">+${w.amount} DOGE</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Live withdrawals error:', err);
+            }
+        }
+
+        // ============================================
+        // REFERRAL
+        // ============================================
+        function copyRefLink() {
+            const input = document.getElementById('refLink');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            
+            try {
+                navigator.clipboard.writeText(input.value);
+                showToast('Link copied!', 'success');
+            } catch (err) {
+                document.execCommand('copy');
+                showToast('Link copied!', 'success');
+            }
+        }
+
+        // ============================================
+        // FAQ
+        // ============================================
+        function toggleFaq(el) {
+            el.parentElement.classList.toggle('open');
+        }
+
+        // ============================================
+        // UTILS
+        // ============================================
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span><span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-refresh price every 2 minutes
+        setInterval(loadDogePrice, 120000);
+
+        // Start app
+        init();
+    </script>
 </body>
 </html>
