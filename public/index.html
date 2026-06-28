@@ -503,26 +503,18 @@ body {
   .detailed-stats{grid-template-columns:1fr}
 }
 
+
+.page{display:none}
+.page.active{display:block}
+
+/* FORCE HIDE PAGES */
+#page-faucet,#page-offerwall,#page-swap,#page-withdraw,#page-faq,#page-admin{display:none !important}
+#page-dashboard{display:block !important}
+
 </style>
 </head>
 <body>
-<script>
-// AGRESIF: Tüm sayfaları hemen gizle, sadece dashboard göster
-(function(){
-  var pages = document.querySelectorAll('.page');
-  for(var i=0;i<pages.length;i++){
-    pages[i].style.display = 'none';
-    pages[i].style.visibility = 'hidden';
-    pages[i].classList.remove('active');
-  }
-  var dash = document.getElementById('page-dashboard');
-  if(dash){
-    dash.style.display = 'block';
-    dash.style.visibility = 'visible';
-    dash.classList.add('active');
-  }
-})();
-</script>
+
 <div id="menuOverlay" onclick="toggleMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;backdrop-filter:blur(2px)"></div>
 <script>function hideLoading(){var ls=document.getElementById("loadingScreen");if(!ls)return;ls.style.display="none";ls.style.visibility="hidden";ls.style.opacity="0";try{ls.remove();}catch(e){}}setTimeout(function(){hideLoading();console.log("Loading screen force-closed");},3000);document.addEventListener("DOMContentLoaded",function(){try{if(typeof window.init==="function"){var result=window.init();if(result&&typeof result.then==="function"){result.then(function(){hideLoading();}).catch(function(e){console.warn("init error:",e);hideLoading();});}else{hideLoading();}}else{console.warn("init() not found");hideLoading();}}catch(e){console.warn("init exception:",e);hideLoading();}});</script>
 <div id="loadingScreen" style="position:fixed;inset:0;z-index:9998;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
@@ -557,6 +549,14 @@ body {
 @media(max-width:479px){
   .detailed-stats{grid-template-columns:1fr}
 }
+
+
+.page{display:none}
+.page.active{display:block}
+
+/* FORCE HIDE PAGES */
+#page-faucet,#page-offerwall,#page-swap,#page-withdraw,#page-faq,#page-admin{display:none !important}
+#page-dashboard{display:block !important}
 
 </style>
 
@@ -727,7 +727,7 @@ body {
   <main class="content">
 
     <!-- DASHBOARD -->
-    <section class="page-section active" id="page-home">
+    <section class="page-section active" id="page-dashboard">
       <div class="page-head">
         <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
         <p class="page-sub">Overview of your COINIX earnings and activity</p>
