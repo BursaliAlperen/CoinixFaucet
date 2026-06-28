@@ -1,30 +1,28 @@
 """
-Coinix Telegram Bot (Python)
-=============================
-Bu bot, Coinix Faucet uygulamasının Telegram tarafıdır.
+Coinix Telegram Bot (aiogram + Firebase)
+=========================================
+Telegram tarafı. Express backend ile aynı Firebase veritabanını kullanır.
 
 Sorumlulukları:
-- /start komutu: Hoşgeldin mesajı + "Open App" butonu + bot hakkında bilgi
-- Referral sistemi: /start ref_<userId> ile davet
-- Inaktif kullanıcı mesajı: 1-3 gün bota girmeyen kullanıcılara
-  "We missed you 💜" mesajı (her kullanıcıya en fazla 1 kez)
-- Admin broadcast: Admin belirli bir komutla tüm kullanıcılara mesaj gönderebilir
+- /start komutu: Hoşgeldin mesajı + WebApp "Open App" butonu + deep link referral
+- /promo komutu: Aktif promosyonları listeleme + admin için /createpromo
+- Referral sistemi: /start ref_<userId> ile davet, kullanıcı bot_users koleksiyonuna kayıt
+- Admin: /createpromo (CNX/DOGE, ödül, limit, expiry), /broadcast, /stats
+- startapp parametresi: Mini App'in açılışında referral veya promo query'si parse
+- "We missed you" inaktif kullanıcı mesajı (background job)
+- Tüm kullanıcı etkileşimleri Firestore'a yazılır (bot_users, logs, promos)
 
-NOT: Bu dosya sadece Telegram bot tarafıdır. Web uygulaması (Express + Firestore)
-ayrı çalışır. Bu bot, kullanıcı etkileşim bilgilerini Firestore'a yazar,
-böylece web uygulamasıyla senkronize çalışır.
-
-Kurulum:
-    pip install aiogram>=3.4 firebase-admin
-    # .env dosyası:
+ENV:
     BOT_TOKEN=123456:ABC...
     BOT_USERNAME=CoinixBot
     APP_URL=https://coinix-faucet.vercel.app
-    FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
     ADMIN_TELEGRAM_ID=123456789
+    FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+    # veya FIREBASE_SERVICE_ACCOUNT_BASE64=... / FIREBASE_SERVICE_ACCOUNT_PATH=serviceAccountKey.json
 """
 
 import asyncio
+import json
 import logging
 import os
 import random
@@ -42,8 +40,8 @@ try:
     from aiogram.types import (
         InlineKeyboardButton,
         InlineKeyboardMarkup,
-        KeyboardButton,
         ReplyKeyboardMarkup,
+        KeyboardButton,
         WebAppInfo,
     )
 except ImportError:
@@ -72,12 +70,14 @@ BOT_USERNAME = os.getenv("BOT_USERNAME", "CoinixBot")
 APP_URL = os.getenv("APP_URL", "https://coinix-faucet.vercel.app")
 ADMIN_TELEGRAM_ID = os.getenv("ADMIN_TELEGRAM_ID", "")
 
-# Inaktif mesaj eşikleri (saniye)
-INACTIVE_THRESHOLD_DAYS = 3  # 3 günden fazla girmezse "miss you" mesajı
-INACTIVE_CHECK_INTERVAL_HOURS = 6  # her 6 saatte bir kontrol
-
-# Günlük inaktif mesaj kotası (rate limit koruması)
+INACTIVE_THRESHOLD_DAYS = 3
+INACTIVE_CHECK_INTERVAL_HOURS = 6
 INACTIVE_DAILY_BATCH = 200
+
+REFERRAL_SIGNUP_BONUS = 50  # CNX - matches backend
+PROMO_DEFAULT_REWARD = 5
+PROMO_DEFAULT_LIMIT = 100
+PROMO_DEFAULT_EXPIRY_DAYS = 30
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN env variable is required")
@@ -102,13 +102,12 @@ _firebase_service_account_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH", "ser
 try:
     if not firebase_admin._apps:
         if _firebase_service_account_json:
-            import json
             sa_info = json.loads(_firebase_service_account_json)
             cred = credentials.Certificate(sa_info)
             firebase_admin.initialize_app(cred)
             logger.info("Firebase initialized from FIREBASE_SERVICE_ACCOUNT_JSON")
         elif _firebase_service_account_base64:
-            import base64, json
+            import base64
             decoded = base64.b64decode(_firebase_service_account_base64).decode("utf-8")
             sa_info = json.loads(decoded)
             cred = credentials.Certificate(sa_info)
@@ -136,10 +135,8 @@ dp = Dispatcher(storage=storage)
 
 
 # ============================================================
-# LOCAL FALLBACK (Firebase yoksa)
+# LOCAL FALLBACK (Firebase yoksa minimal RAM store)
 # ============================================================
-# Firebase bağlanamadığında kullanıcı verilerini RAM'de tutmak için
-# minimal bir fallback. Production'da her zaman Firebase kullan.
 _LOCAL_USERS: dict[int, dict] = {}
 
 
@@ -151,10 +148,29 @@ def _iso(dt: datetime) -> str:
     return dt.replace(microsecond=0).isoformat()
 
 
-async def upsert_user(telegram_user: types.User, referrer_id: Optional[int] = None):
-    """Kullanıcıyı Firestore'a kaydet (veya RAM'de güncelle)."""
+def _is_admin(uid: int) -> bool:
+    return str(uid) == str(ADMIN_TELEGRAM_ID)
+
+
+def _normalize_code(code: str) -> str:
+    return (code or "").strip().upper()
+
+
+def validate_promo_code(code: str) -> Optional[str]:
+    norm = _normalize_code(code)
+    if len(norm) < 3 or len(norm) > 32:
+        return None
+    allowed = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
+    if not all(ch in allowed for ch in norm):
+        return None
+    return norm
+
+
+async def upsert_user(telegram_user: types.User, referrer_id: Optional[int] = None) -> bool:
+    """Kullanıcıyı Firestore'a kaydet (yeni ise True)."""
     uid = telegram_user.id
     now = _now_utc()
+    is_new = False
     payload = {
         "user_id": uid,
         "username": telegram_user.username or "",
@@ -164,7 +180,6 @@ async def upsert_user(telegram_user: types.User, referrer_id: Optional[int] = No
         "is_bot": telegram_user.is_bot,
         "last_seen": now,
         "last_seen_iso": _iso(now),
-        "last_miss_you_sent": None,
         "updated_at": now,
     }
 
@@ -173,30 +188,24 @@ async def upsert_user(telegram_user: types.User, referrer_id: Optional[int] = No
             user_ref = db.collection("bot_users").document(str(uid))
             snap = user_ref.get()
             is_new = not snap.exists
-            if is_new:
-                payload.update({
-                    "created_at": now,
-                    "joined_via": "telegram_bot",
-                    "referrer_id": referrer_id,
-                    "is_admin": (str(uid) == str(ADMIN_TELEGRAM_ID)),
-                })
-            else:
-                existing = snap.to_dict() or {}
-                payload["created_at"] = existing.get("created_at", now)
-                payload["joined_via"] = existing.get("joined_via", "telegram_bot")
-                payload["referrer_id"] = existing.get("referrer_id", referrer_id)
-                payload["is_admin"] = (str(uid) == str(ADMIN_TELEGRAM_ID))
-                payload["miss_you_sent_count"] = existing.get("miss_you_sent_count", 0)
-
-            # increment_start_count
-            updates = dict(payload)
-            updates["start_count"] = firestore.Increment(1) if is_new else firestore.Increment(1)
-            user_ref.set(updates, merge=True)
+            existing = snap.to_dict() if snap.exists else {}
+            data = {
+                **payload,
+                "created_at": existing.get("created_at", now) if snap.exists else now,
+                "joined_via": existing.get("joined_via", "telegram_bot") if snap.exists else "telegram_bot",
+                "referrer_id": existing.get("referrer_id", referrer_id) if snap.exists else referrer_id,
+                "is_admin": _is_admin(uid),
+                "start_count": firestore.Increment(1),
+                "last_miss_you_sent": existing.get("last_miss_you_sent"),
+                "miss_you_sent_count": firestore.Increment(0),  # placeholder
+            }
+            # Simpler update: just merge with explicit values
+            user_ref.set(data, merge=True)
             return is_new
         except Exception as e:
             logger.error(f"Firebase upsert_user error: {e}")
 
-    # Fallback: RAM
+    # Local fallback
     is_new = uid not in _LOCAL_USERS
     if is_new:
         _LOCAL_USERS[uid] = {
@@ -204,7 +213,7 @@ async def upsert_user(telegram_user: types.User, referrer_id: Optional[int] = No
             "created_at": now,
             "joined_via": "telegram_bot",
             "referrer_id": referrer_id,
-            "is_admin": (str(uid) == str(ADMIN_TELEGRAM_ID)),
+            "is_admin": _is_admin(uid),
             "start_count": 1,
             "miss_you_sent_count": 0,
         }
@@ -214,8 +223,7 @@ async def upsert_user(telegram_user: types.User, referrer_id: Optional[int] = No
     return is_new
 
 
-async def mark_active(telegram_id: int):
-    """Kullanıcının last_seen alanını şimdi olarak güncelle."""
+async def mark_active(telegram_id: int) -> None:
     now = _now_utc()
     if firestore_available and db:
         try:
@@ -232,16 +240,18 @@ async def mark_active(telegram_id: int):
         _LOCAL_USERS[telegram_id]["last_seen_iso"] = _iso(now)
 
 
-async def mark_miss_you_sent(telegram_id: int):
-    """Kullanıcıya miss-you mesajı gönderildi olarak işaretle."""
+async def mark_miss_you_sent(telegram_id: int) -> None:
     now = _now_utc()
     if firestore_available and db:
         try:
             db.collection("bot_users").document(str(telegram_id)).set({
                 "last_miss_you_sent": now,
-                "miss_you_sent_count": firestore.Increment(1),
                 "updated_at": now,
             }, merge=True)
+            # Increment separately
+            db.collection("bot_users").document(str(telegram_id)).update({
+                "miss_you_sent_count": firestore.Increment(1)
+            })
             return
         except Exception as e:
             logger.error(f"Firebase mark_miss_you error: {e}")
@@ -250,28 +260,17 @@ async def mark_miss_you_sent(telegram_id: int):
         _LOCAL_USERS[telegram_id]["miss_you_sent_count"] = _LOCAL_USERS[telegram_id].get("miss_you_sent_count", 0) + 1
 
 
-async def fetch_inactive_users(days_threshold: int, limit: int):
-    """
-    Son N gün içinde aktif olmayan kullanıcıları getir.
-    last_miss_you_sent alanı boş olanları tercih eder (tek seferlik).
-    """
+async def fetch_inactive_users(days_threshold: int, limit: int) -> list:
     if not firestore_available or not db:
         return []
-
     cutoff = _now_utc() - timedelta(days=days_threshold)
-    sent_cutoff = _now_utc() - timedelta(days=days_threshold)  # aynı eşik
-
     results = []
     try:
         users_ref = db.collection("bot_users")
-        # last_seen < cutoff
         query = users_ref.where("last_seen", "<", cutoff).limit(limit)
-        docs = query.stream()
-        for doc in docs:
+        for doc in query.stream():
             data = doc.to_dict() or {}
             data["_id"] = doc.id
-            # Eğer daha önce miss_you gönderdiyse ve aradan yeterli süre geçtiyse
-            # burada basitçe "daha önce hiç gönderilmemiş" olanları alalım
             if not data.get("last_miss_you_sent"):
                 results.append(data)
         return results
@@ -280,18 +279,28 @@ async def fetch_inactive_users(days_threshold: int, limit: int):
         return []
 
 
+async def log_event(action: str, user_id: Optional[int], details: dict = None) -> None:
+    """Bot tarafından üretilen olayları logs koleksiyonuna yaz."""
+    if not firestore_available or not db:
+        return
+    try:
+        db.collection("logs").add({
+            "action": action,
+            "user_id": str(user_id) if user_id else None,
+            "details": details or {},
+            "source": "telegram_bot",
+            "timestamp": firestore.SERVER_TIMESTAMP,
+        })
+    except Exception as e:
+        logger.error(f"log_event error: {e}")
+
+
 # ============================================================
 # KEYBOARDS
 # ============================================================
 def main_menu_keyboard() -> InlineKeyboardMarkup:
-    """Start sonrası gösterilen ana butonlar."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(
-                text="🚀 Open App",
-                web_app=WebAppInfo(url=APP_URL),
-            )
-        ],
+        [InlineKeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=APP_URL))],
         [
             InlineKeyboardButton(text="ℹ️ About Bot", callback_data="about_bot"),
             InlineKeyboardButton(text="👥 Community", url="https://t.me/CoinixCommunity"),
@@ -314,7 +323,6 @@ def back_keyboard() -> InlineKeyboardMarkup:
 
 
 def goto_app_keyboard() -> InlineKeyboardMarkup:
-    """Tek başına Open App butonu."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🚀 Go to App", web_app=WebAppInfo(url=APP_URL))]
     ])
@@ -381,7 +389,7 @@ HELP_TEXT = (
     "/start – Open main menu\n"
     "/app – Launch the mini app\n"
     "/balance – Quick balance shortcut\n"
-    "/promo – How to use promo codes\n"
+    "/promo – How to use promo codes (and list active ones)\n"
     "/referral – Get your referral link\n"
     "/help – Show this help\n"
     "/about – About this bot"
@@ -441,6 +449,114 @@ MISS_YOU_MESSAGES = [
 
 
 # ============================================================
+# PROMO HELPERS (used by /promo list + /createpromo admin)
+# ============================================================
+async def list_active_promos(limit: int = 10) -> list:
+    """Aktif ve süresi dolmamış promosyonları getir (admin tarafından oluşturulanlar)."""
+    if not firestore_available or not db:
+        return []
+    try:
+        snap = db.collection("promoCodes").where("enabled", "==", True).limit(limit * 2).stream()
+        items = []
+        now = datetime.now(timezone.utc)
+        for doc in snap:
+            data = doc.to_dict() or {}
+            exp = data.get("expiresAt")
+            if exp:
+                if hasattr(exp, "to_datetime"):
+                    exp_dt = exp.to_datetime()
+                elif isinstance(exp, datetime):
+                    exp_dt = exp if exp.tzinfo else exp.replace(tzinfo=timezone.utc)
+                else:
+                    exp_dt = None
+                if exp_dt and exp_dt < now:
+                    continue
+            used = data.get("usedCount", 0) or 0
+            limit_v = data.get("usageLimit", data.get("maxUses", 0)) or 0
+            if limit_v > 0 and used >= limit_v:
+                continue
+            items.append({
+                "code": doc.id,
+                "coin": data.get("coin", "CNX"),
+                "reward": data.get("reward", 0),
+                "limit": limit_v,
+                "used": used,
+            })
+            if len(items) >= limit:
+                break
+        return items
+    except Exception as e:
+        logger.error(f"list_active_promos error: {e}")
+        return []
+
+
+def format_promo_list(promos: list) -> str:
+    if not promos:
+        return (
+            "🎁 <b>Active Promo Codes</b>\n\n"
+            "😔 No active promo codes right now. Stay tuned — we drop new ones regularly.\n"
+            "Join <a href=\"https://t.me/CoinixCommunity\">@CoinixCommunity</a> to be the first to know!"
+        )
+    lines = ["🎁 <b>Active Promo Codes</b>\n"]
+    for p in promos:
+        coin_icon = "🪙" if p["coin"] == "CNX" else "🐶"
+        remain = (p["limit"] - p["used"]) if p["limit"] else "∞"
+        lines.append(
+            f"🎫 <code>{p['code']}</code> — <b>+{p['reward']} {p['coin']}</b> "
+            f"{coin_icon}\n   <i>Remaining: {remain}</i>"
+        )
+    lines.append("\n📲 Open the app and go to <b>Promo Codes</b> to redeem!")
+    return "\n\n".join(lines)
+
+
+async def create_promo_in_firestore(code: str, coin: str, reward: float, usage_limit: int, expires_at: Optional[datetime]) -> tuple[bool, str]:
+    if not firestore_available or not db:
+        return False, "❌ Firebase unavailable, can't create promo."
+    norm = validate_promo_code(code)
+    if not norm:
+        return False, "❌ Invalid code. Use 3-32 chars, A-Z 0-9 _ -"
+    if coin not in ("CNX", "DOGE"):
+        return False, "❌ Coin must be CNX or DOGE."
+    if reward <= 0:
+        return False, "❌ Reward must be > 0."
+    try:
+        ref = db.collection("promoCodes").document(norm)
+        if ref.get().exists:
+            return False, f"❌ Code <code>{norm}</code> already exists."
+        ref.set({
+            "code": norm,
+            "coin": coin,
+            "reward": float(reward),
+            "usageLimit": int(usage_limit) if usage_limit > 0 else PROMO_DEFAULT_LIMIT,
+            "usedCount": 0,
+            "usedBy": [],
+            "enabled": True,
+            "createdBy": str(ADMIN_TELEGRAM_ID),
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "expiresAt": expires_at,
+            "source": "telegram_bot",
+        })
+        await log_event("promo_create_bot", None, {
+            "code": norm, "coin": coin, "reward": reward, "usageLimit": usage_limit
+        })
+        return True, norm
+    except Exception as e:
+        logger.error(f"create_promo error: {e}")
+        return False, f"❌ Failed: {e}"
+
+
+# ============================================================
+# FSM (admin promo creation wizard)
+# ============================================================
+class CreatePromoFSM(StatesGroup):
+    waiting_code = State()
+    waiting_coin = State()
+    waiting_reward = State()
+    waiting_limit = State()
+    waiting_expiry = State()
+
+
+# ============================================================
 # HANDLERS
 # ============================================================
 
@@ -452,25 +568,33 @@ async def cmd_start(message: types.Message, command: CommandObject):
     if not user:
         return
 
-    # Referral parse: /start ref_<referrer_id>
+    # Parse referral / promo params from /start <arg>
+    # Supports: ref_<userId>, promo_<CODE>, app
     referrer_id: Optional[int] = None
-    if command.args and command.args.startswith("ref_"):
-        try:
-            referrer_id = int(command.args.replace("ref_", "").strip())
-            if referrer_id == user.id:
-                referrer_id = None  # self-referral engeli
-        except ValueError:
-            referrer_id = None
+    promo_code: Optional[str] = None
+    args_raw = command.args or ""
+
+    if args_raw:
+        if args_raw.startswith("ref_"):
+            try:
+                referrer_id = int(args_raw.replace("ref_", "").strip())
+                if referrer_id == user.id:
+                    referrer_id = None
+            except ValueError:
+                referrer_id = None
+        elif args_raw.startswith("promo_"):
+            promo_code = validate_promo_code(args_raw.replace("promo_", "", 1))
 
     is_new = await upsert_user(user, referrer_id=referrer_id)
 
     text = (WELCOME_NEW if is_new else WELCOME_BACK)
     if referrer_id:
         text += REFERRAL_BONUS_NOTE
+    if promo_code:
+        text += f"\n\n🎫 <b>Promo code activated:</b> <code>{promo_code}</code>\nOpen the app to redeem it!"
 
     await message.answer(text, reply_markup=main_menu_keyboard())
 
-    # Admin log
     if firestore_available and db:
         try:
             db.collection("logs").add({
@@ -479,6 +603,8 @@ async def cmd_start(message: types.Message, command: CommandObject):
                 "username": user.username or "",
                 "is_new": is_new,
                 "referrer_id": referrer_id,
+                "promo_code": promo_code,
+                "source": "telegram_bot",
                 "timestamp": firestore.SERVER_TIMESTAMP,
             })
         except Exception as e:
@@ -487,7 +613,6 @@ async def cmd_start(message: types.Message, command: CommandObject):
 
 @dp.message(Command("app"))
 async def cmd_app(message: types.Message):
-    """/app — direkt mini app'i aç."""
     await mark_active(message.from_user.id)
     await message.answer(
         "🚀 <b>Launching Coinix App...</b>",
@@ -497,7 +622,6 @@ async def cmd_app(message: types.Message):
 
 @dp.message(Command("balance"))
 async def cmd_balance(message: types.Message):
-    """/balance — hızlı bakiye (kullanıcı app'i açmalı)."""
     await mark_active(message.from_user.id)
     await message.answer(
         "💰 <b>Your Balance</b>\n\n"
@@ -509,8 +633,239 @@ async def cmd_balance(message: types.Message):
 
 @dp.message(Command("promo"))
 async def cmd_promo(message: types.Message):
+    """/promo — Aktif promosyonları listele."""
     await mark_active(message.from_user.id)
-    await message.answer(PROMO_HOWTO, reply_markup=goto_app_keyboard())
+    promos = await list_active_promos(limit=15)
+    text = format_promo_list(promos)
+    await message.answer(text, reply_markup=goto_app_keyboard())
+    await log_event("promo_list_view", message.from_user.id, {"count": len(promos)})
+
+
+@dp.message(Command("createpromo"))
+async def cmd_createpromo(message: types.Message, command: CommandObject, state: FSMContext):
+    """Admin tek satırda promo oluşturabilir: /createpromo CODE COIN REWARD [LIMIT] [DAYS]"""
+    user = message.from_user
+    if not user or not _is_admin(user.id):
+        return
+
+    await mark_active(user.id)
+
+    # Quick inline parse
+    raw = (message.text or "").replace("/createpromo", "", 1).strip()
+    if raw:
+        parts = raw.split()
+        if len(parts) >= 3:
+            code = parts[0]
+            coin = parts[1].upper()
+            try:
+                reward = float(parts[2])
+            except ValueError:
+                await message.answer("❌ Reward must be a number.")
+                return
+            try:
+                limit = int(parts[3]) if len(parts) >= 4 else PROMO_DEFAULT_LIMIT
+            except ValueError:
+                limit = PROMO_DEFAULT_LIMIT
+            try:
+                days = int(parts[4]) if len(parts) >= 5 else PROMO_DEFAULT_EXPIRY_DAYS
+            except ValueError:
+                days = PROMO_DEFAULT_EXPIRY_DAYS
+            expiry = datetime.now(timezone.utc) + timedelta(days=days) if days > 0 else None
+            ok, result = await create_promo_in_firestore(code, coin, reward, limit, expiry)
+            if ok:
+                await message.answer(
+                    f"✅ <b>Promo code created!</b>\n\n"
+                    f"🎫 <code>{result}</code>\n"
+                    f"🪙 Reward: <b>{reward} {coin}</b>\n"
+                    f"👥 Usage limit: <b>{limit}</b>\n"
+                    f"⏰ Expires in: <b>{days} days</b>",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=APP_URL))]
+                    ]),
+                )
+            else:
+                await message.answer(result)
+            return
+
+        await message.answer(
+            "📌 <b>Quick usage:</b>\n"
+            "<code>/createpromo CODE COIN REWARD [LIMIT] [DAYS]</code>\n\n"
+            "<b>Example:</b>\n"
+            "<code>/createpromo WELCOME100 CNX 100 500 30</code>\n\n"
+            "Or start the interactive wizard:",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🧙 Interactive wizard", callback_data="createpromo_wizard")]
+            ]),
+        )
+        return
+
+    # No args: launch wizard
+    await state.set_state(CreatePromoFSM.waiting_code)
+    await message.answer(
+        "🧙 <b>Create Promo Code</b>\n\n"
+        "📌 <b>Step 1/5:</b> Enter the promo code (3-32 chars, A-Z 0-9 _ -)\n\n"
+        "Type <code>cancel</code> to abort.",
+        reply_markup=back_keyboard(),
+    )
+
+
+@dp.callback_query(F.data == "createpromo_wizard")
+async def cb_createpromo_wizard(call: types.CallbackQuery, state: FSMContext):
+    if not _is_admin(call.from_user.id):
+        await call.answer("Admins only.", show_alert=True)
+        return
+    await state.set_state(CreatePromoFSM.waiting_code)
+    await call.message.edit_text(
+        "🧙 <b>Create Promo Code</b>\n\n"
+        "📌 <b>Step 1/5:</b> Enter the promo code (3-32 chars, A-Z 0-9 _ -)\n\n"
+        "Type <code>cancel</code> to abort.",
+    )
+    await call.answer()
+
+
+@dp.message(CreatePromoFSM.waiting_code)
+async def fsm_code(message: types.Message, state: FSMContext):
+    if not _is_admin(message.from_user.id):
+        return
+    if (message.text or "").strip().lower() == "cancel":
+        await state.clear()
+        await message.answer("Cancelled.", reply_markup=back_keyboard())
+        return
+    code = validate_promo_code(message.text or "")
+    if not code:
+        await message.answer("❌ Invalid code. Use 3-32 chars: A-Z 0-9 _ -")
+        return
+    await state.update_data(code=code)
+    await state.set_state(CreatePromoFSM.waiting_coin)
+    await message.answer(
+        f"✅ Code: <code>{code}</code>\n\n"
+        "📌 <b>Step 2/5:</b> Choose coin type",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🪙 CNX", callback_data="coin_CNX"),
+                InlineKeyboardButton(text="🐶 DOGE", callback_data="coin_DOGE"),
+            ]
+        ]),
+    )
+
+
+@dp.callback_query(F.data.startswith("coin_"))
+async def cb_coin(call: types.CallbackQuery, state: FSMContext):
+    if not _is_admin(call.from_user.id):
+        await call.answer("Admins only.", show_alert=True)
+        return
+    coin = call.data.split("_", 1)[1].upper()
+    await state.update_data(coin=coin)
+    await state.set_state(CreatePromoFSM.waiting_reward)
+    await call.message.edit_text(
+        f"✅ Coin: <b>{coin}</b>\n\n"
+        "📌 <b>Step 3/5:</b> Enter reward amount (number > 0)",
+    )
+    await call.answer()
+
+
+@dp.message(CreatePromoFSM.waiting_reward)
+async def fsm_reward(message: types.Message, state: FSMContext):
+    if not _is_admin(message.from_user.id):
+        return
+    try:
+        reward = float((message.text or "").strip())
+    except ValueError:
+        await message.answer("❌ Enter a valid number.")
+        return
+    if reward <= 0:
+        await message.answer("❌ Reward must be > 0.")
+        return
+    await state.update_data(reward=reward)
+    await state.set_state(CreatePromoFSM.waiting_limit)
+    await message.answer(
+        f"✅ Reward: <b>{reward}</b>\n\n"
+        "📌 <b>Step 4/5:</b> Enter usage limit (or 0 for unlimited)",
+    )
+
+
+@dp.message(CreatePromoFSM.waiting_limit)
+async def fsm_limit(message: types.Message, state: FSMContext):
+    if not _is_admin(message.from_user.id):
+        return
+    try:
+        limit = int((message.text or "0").strip())
+    except ValueError:
+        await message.answer("❌ Enter a valid integer (or 0).")
+        return
+    if limit < 0:
+        limit = 0
+    await state.update_data(limit=limit or PROMO_DEFAULT_LIMIT)
+    await state.set_state(CreatePromoFSM.waiting_expiry)
+    await message.answer(
+        f"✅ Limit: <b>{limit or '∞'}</b>\n\n"
+        "📌 <b>Step 5/5:</b> Enter expiry in days (or 0 for no expiry)",
+    )
+
+
+@dp.message(CreatePromoFSM.waiting_expiry)
+async def fsm_expiry(message: types.Message, state: FSMContext):
+    if not _is_admin(message.from_user.id):
+        return
+    try:
+        days = int((message.text or "0").strip())
+    except ValueError:
+        await message.answer("❌ Enter a valid integer.")
+        return
+    if days < 0:
+        days = 0
+
+    data = await state.get_data()
+    code = data.get("code")
+    coin = data.get("coin")
+    reward = data.get("reward")
+    limit = data.get("limit", PROMO_DEFAULT_LIMIT)
+    expiry = datetime.now(timezone.utc) + timedelta(days=days) if days > 0 else None
+    ok, result = await create_promo_in_firestore(code, coin, reward, limit, expiry)
+    await state.clear()
+    if ok:
+        await message.answer(
+            f"✅ <b>Promo code created!</b>\n\n"
+            f"🎫 <code>{result}</code>\n"
+            f"🪙 Reward: <b>{reward} {coin}</b>\n"
+            f"👥 Usage limit: <b>{limit}</b>\n"
+            f"⏰ Expires in: <b>{days or 'never'}</b> days",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="🚀 Open App", web_app=WebAppInfo(url=APP_URL))]
+            ]),
+        )
+    else:
+        await message.answer(result, reply_markup=back_keyboard())
+
+
+@dp.message(Command("deletepromo"))
+async def cmd_deletepromo(message: types.Message, command: CommandObject):
+    """Admin: /deletepromo CODE"""
+    if not _is_admin(message.from_user.id):
+        return
+    await mark_active(message.from_user.id)
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) < 2:
+        await message.answer("Usage: <code>/deletepromo CODE</code>")
+        return
+    code = validate_promo_code(parts[1])
+    if not code:
+        await message.answer("❌ Invalid code format.")
+        return
+    if not firestore_available or not db:
+        await message.answer("❌ Firebase unavailable.")
+        return
+    try:
+        ref = db.collection("promoCodes").document(code)
+        if not ref.get().exists:
+            await message.answer(f"❌ Code <code>{code}</code> not found.")
+            return
+        ref.delete()
+        await log_event("promo_delete_bot", message.from_user.id, {"code": code})
+        await message.answer(f"✅ Code <code>{code}</code> deleted.", reply_markup=back_keyboard())
+    except Exception as e:
+        logger.error(f"deletepromo error: {e}")
+        await message.answer(f"❌ Error: {e}")
 
 
 @dp.message(Command("referral"))
@@ -527,6 +882,7 @@ async def cmd_referral(message: types.Message):
         "• Share your link with friends\n"
         "• They join Coinix through your link\n"
         "• You earn <b>20% lifetime commission</b> on every claim they make\n"
+        f"• Plus <b>{REFERRAL_SIGNUP_BONUS} CNX</b> signup bonus per friend\n"
         "• No limit on referrals\n\n"
         "💎 The more friends, the more you earn!",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
@@ -585,14 +941,15 @@ async def cb_earn(call: types.CallbackQuery):
 @dp.callback_query(F.data == "promo")
 async def cb_promo(call: types.CallbackQuery):
     await mark_active(call.from_user.id)
-    await call.message.edit_text(PROMO_HOWTO, reply_markup=goto_app_keyboard())
+    promos = await list_active_promos(limit=15)
+    text = format_promo_list(promos)
+    await call.message.edit_text(text, reply_markup=goto_app_keyboard())
     await call.answer()
 
 
 @dp.callback_query(F.data == "mystats")
 async def cb_mystats(call: types.CallbackQuery):
     await mark_active(call.from_user.id)
-    # Canlı bakiye için kullanıcıyı app'e yönlendir (orada Firestore'dan çekiliyor)
     await call.message.edit_text(
         "📊 <b>Your Stats</b>\n\n"
         "📈 Detailed stats (balance, today's earnings, claims, referrals) "
@@ -609,22 +966,18 @@ async def cb_mystats(call: types.CallbackQuery):
 @dp.callback_query(F.data == "back_main")
 async def cb_back_main(call: types.CallbackQuery):
     await mark_active(call.from_user.id)
-    await call.message.edit_text(
-        WELCOME_BACK,
-        reply_markup=main_menu_keyboard(),
-    )
+    await call.message.edit_text(WELCOME_BACK, reply_markup=main_menu_keyboard())
     await call.answer()
 
 
-# ---------- Admin: Broadcast ----------
+# ---------- Admin commands ----------
 
 @dp.message(Command("broadcast"))
 async def cmd_broadcast(message: types.Message):
     """Admin tüm kullanıcılara mesaj göndersin."""
     user = message.from_user
-    if not user or str(user.id) != str(ADMIN_TELEGRAM_ID):
+    if not user or not _is_admin(user.id):
         return
-
     text = (message.text or "").replace("/broadcast", "", 1).strip()
     if not text:
         await message.answer(
@@ -632,11 +985,9 @@ async def cmd_broadcast(message: types.Message):
             "<code>/broadcast Your message here</code>",
         )
         return
-
     if not firestore_available or not db:
         await message.answer("❌ Firebase unavailable, can't fetch user list.")
         return
-
     sent = failed = 0
     try:
         users_ref = db.collection("bot_users").stream()
@@ -648,7 +999,7 @@ async def cmd_broadcast(message: types.Message):
             try:
                 await bot.send_message(uid, f"📢 <b>Announcement</b>\n\n{text}")
                 sent += 1
-                await asyncio.sleep(0.05)  # Telegram rate limit koruması
+                await asyncio.sleep(0.05)
             except Exception as e:
                 failed += 1
                 logger.warning(f"broadcast send fail {uid}: {e}")
@@ -656,7 +1007,7 @@ async def cmd_broadcast(message: types.Message):
         logger.error(f"broadcast error: {e}")
         await message.answer(f"❌ Broadcast error: {e}")
         return
-
+    await log_event("broadcast_bot", user.id, {"sent": sent, "failed": failed, "len": len(text)})
     await message.answer(f"✅ Broadcast done.\n📤 Sent: {sent}\n❌ Failed: {failed}")
 
 
@@ -664,33 +1015,45 @@ async def cmd_broadcast(message: types.Message):
 async def cmd_stats(message: types.Message):
     """Admin için kullanıcı sayısı."""
     user = message.from_user
-    if not user or str(user.id) != str(ADMIN_TELEGRAM_ID):
+    if not user or not _is_admin(user.id):
         return
-
+    await mark_active(user.id)
     if not firestore_available or not db:
         count = len(_LOCAL_USERS)
         await message.answer(f"📊 Local users (RAM only): <b>{count}</b>")
         return
-
     try:
         users_count = len(list(db.collection("bot_users").stream()))
-        await message.answer(f"📊 Total bot users: <b>{users_count}</b>")
+        # Active promo codes
+        promo_count = 0
+        try:
+            for d in db.collection("promoCodes").where("enabled", "==", True).stream():
+                promo_count += 1
+        except Exception:
+            pass
+        await message.answer(
+            f"📊 <b>Bot Stats</b>\n\n"
+            f"👥 Total bot users: <b>{users_count}</b>\n"
+            f"🎫 Active promo codes: <b>{promo_count}</b>\n"
+            f"🤖 Firebase: <b>connected</b>",
+            reply_markup=back_keyboard(),
+        )
     except Exception as e:
         await message.answer(f"❌ Stats error: {e}")
 
 
-# ---------- Catch-all (DM'de her şeyi yakala) ----------
+# ---------- Catch-all ----------
 
 @dp.message()
 async def fallback(message: types.Message):
-    """Bota gelen her mesajı yakala: last_seen güncelle, menü göster."""
     user = message.from_user
-    if not user:
+    if not user or user.is_bot:
         return
-    if user.is_bot:
-        return
-    # Bot komutu olmayan metin mesajları için de aktif olarak işaretle
     await mark_active(user.id)
+    # If state is active, ignore fallback (FSM expects reply)
+    current_state = await dp.fsm.get_state(user.id, user.id)
+    if current_state is not None:
+        return
     await message.answer(
         "👋 <b>Hey there!</b>\n\n"
         "Use the menu below or type /help to see what I can do.",
@@ -702,49 +1065,34 @@ async def fallback(message: types.Message):
 # BACKGROUND JOB: INACTIVE USERS
 # ============================================================
 async def miss_you_job():
-    """
-    Her 6 saatte bir çalışır. 1-3 gündür bota gelmeyen kullanıcılara
-    "We missed you" mesajı gönderir. Her kullanıcıya sadece bir kez
-    (last_miss_you_sent boş olanlar) gönderilir.
-    """
     while True:
         try:
             await asyncio.sleep(INACTIVE_CHECK_INTERVAL_HOURS * 3600)
             logger.info("[miss_you_job] Running inactivity check...")
-
             if not firestore_available or not db:
                 logger.warning("[miss_you_job] Firebase not available, skipping.")
                 continue
-
             users = await fetch_inactive_users(
                 days_threshold=INACTIVE_THRESHOLD_DAYS,
                 limit=INACTIVE_DAILY_BATCH,
             )
             logger.info(f"[miss_you_job] Found {len(users)} inactive users.")
-
             for user_data in users:
                 uid = user_data.get("user_id")
                 if not uid:
                     continue
                 try:
                     msg = random.choice(MISS_YOU_MESSAGES)
-                    await bot.send_message(
-                        uid,
-                        msg,
-                        reply_markup=goto_app_keyboard(),
-                    )
+                    await bot.send_message(uid, msg, reply_markup=goto_app_keyboard())
                     await mark_miss_you_sent(uid)
-                    # Telegram rate limit
                     await asyncio.sleep(0.1)
                 except Exception as e:
                     logger.warning(f"[miss_you_job] send fail {uid}: {e}")
-
         except asyncio.CancelledError:
             logger.info("[miss_you_job] cancelled, exiting.")
             raise
         except Exception as e:
             logger.error(f"[miss_you_job] error: {e}", exc_info=True)
-            # Hata olursa 30 dakika sonra tekrar dene
             await asyncio.sleep(1800)
 
 
@@ -754,8 +1102,6 @@ async def miss_you_job():
 async def on_startup():
     me = await bot.get_me()
     logger.info(f"Bot started: @{me.username} ({me.id})")
-
-    # Background job başlat
     asyncio.create_task(miss_you_job())
     logger.info("Background jobs started (miss_you_job).")
 
