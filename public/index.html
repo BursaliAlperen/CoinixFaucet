@@ -4,15 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#05060f">
-<title>COINIX Faucet · Earn CNX & DOGE</title>
+<title>COINIX Faucet - Earn CNX & DOGE</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2730%27 fill=%27%23FFD700%27/%3E%3Ctext x=%2732%27 y=%2742%27 text-anchor=%27middle%27 font-weight=%27900%27 font-size=%2728%27 fill=%27%237a5c00%27%3EC%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<!-- GERÇEK GOOGLE TRANSLATE ELEMENT API -->
 <script>
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({
@@ -24,89 +22,29 @@ function googleTranslateElementInit() {
 }
 </script>
 <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
 <style>
-:root{
-  --gold:#FFD700;--gold-2:#F5A623;--gold-3:#B8860B;
-  --gold-soft:rgba(255,215,0,0.1);
-  --blue:#4A9EFF;--blue-soft:rgba(74,158,255,0.1);
-  --purple:#8b5cf6;--purple-soft:rgba(139,92,246,0.1);
-  --bg-0:#05060f;--bg-1:#0b0d1a;--bg-2:#131627;--bg-3:#1c1f35;
-  --text:#f2f4f9;--text-dim:#9aa3b8;--text-muted:#5a6380;
-  --success:#00d084;--danger:#ff4757;--warn:#f59e0b;
-  --glass:rgba(255,255,255,0.035);--glass-brd:rgba(255,255,255,0.07);
-img,svg{max-width:100%;height:auto}
-  --radius:18px;--sidebar-w:260px;--header-h:70px;
-}
+:root{--gold:#FFD700;--gold-2:#F5A623;--gold-3:#B8860B;--gold-soft:rgba(255,215,0,0.1);--blue:#4A9EFF;--blue-soft:rgba(74,158,255,0.1);--purple:#8b5cf6;--purple-soft:rgba(139,92,246,0.1);--bg-0:#05060f;--bg-1:#0b0d1a;--bg-2:#131627;--bg-3:#1c1f35;--text:#f2f4f9;--text-dim:#9aa3b8;--text-muted:#5a6380;--success:#00d084;--danger:#ff4757;--warn:#f59e0b;--glass:rgba(255,255,255,0.035);--glass-brd:rgba(255,255,255,0.07);--radius:18px;--sidebar-w:260px;--header-h:70px}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100dvh;overflow:hidden}
 body{font-family:'Inter',sans-serif;background:var(--bg-0);color:var(--text);display:flex;-webkit-font-smoothing:antialiased}
 body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,215,0,0.09),transparent 60%),radial-gradient(ellipse 60% 40% at 100% 100%,rgba(74,158,255,0.06),transparent 60%),linear-gradient(180deg,#05060f 0%,#0b0d1a 100%)}
 body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.02) 1px,transparent 0);background-size:44px 44px;opacity:.5}
-
-/* GOOGLE TRANSLATE - Sol Alt Küçük */
-#google_translate_element {
-  position: fixed !important;
-  bottom: 20px !important;
-  left: 20px !important;
-  right: auto !important;
-  z-index: 10002 !important;
-}
-.goog-te-banner-frame {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  overflow: hidden !important;
-}
-body {
-  top: 0 !important;
-  position: static !important;
-  margin-top: 0 !important;
-}
-.goog-te-gadget-simple {
-  background: rgba(11,13,26,0.95) !important;
-  border: 1px solid var(--glass-brd) !important;
-  border-radius: 30px !important;
-  padding: 10px 18px !important;
-  color: var(--text) !important;
-  font-size: 13px !important;
-  font-family: 'Inter', sans-serif !important;
-  cursor: pointer !important;
-  outline: none !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
-}
-.goog-te-gadget-simple .goog-te-menu-value {
-  color: var(--text) !important;
-}
-.goog-te-gadget-simple .goog-te-menu-value span {
-  color: var(--text) !important;
-  border: none !important;
-}
-.goog-te-gadget-icon {
-  display: none !important;
-}
-.goog-te-gadget {
-  margin: 0 !important;
-}
-.goog-tooltip, .goog-tooltip:hover, .goog-text-highlight {
-  display: none !important;
-  box-shadow: none !important;
-  background-color: transparent !important;
-  border: none !important;
-}
-#goog-gt-tt, .goog-te-balloon-frame, #goog-gt-vt, .goog-te-menu-frame {
-  display: none !important;
-}
-.VIpgJd-ZVi9od-ORHb-OEVmcd {
-  display: none !important;
-}
-
+img,svg{max-width:100%;height:auto}
+#google_translate_element{position:fixed!important;bottom:20px!important;left:20px!important;right:auto!important;z-index:10002!important}
+.goog-te-banner-frame{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}
+body{top:0!important;position:static!important;margin-top:0!important}
+.goog-te-gadget-simple{background:rgba(11,13,26,0.95)!important;border:1px solid var(--glass-brd)!important;border-radius:30px!important;padding:10px 18px!important;color:var(--text)!important;font-size:13px!important;font-family:'Inter',sans-serif!important;cursor:pointer!important;outline:none!important;box-shadow:0 8px 32px rgba(0,0,0,0.5)!important}
+.goog-te-gadget-simple .goog-te-menu-value{color:var(--text)!important}
+.goog-te-gadget-simple .goog-te-menu-value span{color:var(--text)!important;border:none!important}
+.goog-te-gadget-icon{display:none!important}
+.goog-te-gadget{margin:0!important}
+.goog-tooltip,.goog-tooltip:hover,.goog-text-highlight{display:none!important;box-shadow:none!important;background-color:transparent!important;border:none!important}
+#goog-gt-tt,.goog-te-balloon-frame,#goog-gt-vt,.goog-te-menu-frame{display:none!important}
+.VIpgJd-ZVi9od-ORHb-OEVmcd{display:none!important}
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:4px}
 ::-webkit-scrollbar-thumb:hover{background:var(--gold-3)}
-
-/* SIDEBAR */
 .sidebar{width:var(--sidebar-w);flex-shrink:0;height:100dvh;background:linear-gradient(180deg,rgba(11,13,26,0.98) 0%,rgba(5,6,15,0.99) 100%);backdrop-filter:blur(24px) saturate(180%);border-right:1px solid var(--glass-brd);display:flex;flex-direction:column;overflow:hidden;position:fixed;left:0;top:0;z-index:1000;transition:transform .3s}
 .sidebar.closed{transform:translateX(-100%)}
 .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:999;opacity:0;pointer-events:none;transition:opacity .3s}
@@ -136,9 +74,6 @@ body {
 .sidebar-user-info{flex:1;overflow:hidden;min-width:0}
 .sidebar-user-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sidebar-user-bal{font-size:11px;color:var(--gold);font-family:'JetBrains Mono';display:flex;align-items:center;gap:4px}
-.sidebar-user-bal img{width:12px;height:12px}
-
-/* MAIN */
 .main{flex:1;height:100dvh;margin-left:var(--sidebar-w);transition:margin-left .3s;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1;min-width:0;width:calc(100% - var(--sidebar-w));box-sizing:border-box}
 .main.sidebar-closed{margin-left:0;width:100%}
 .main.expanded{margin-left:0}
@@ -150,7 +85,6 @@ body {
 .header-spacer{flex:1}
 .header-balance{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;background:var(--glass);border:1px solid var(--glass-brd);font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;flex-wrap:wrap}
 .header-balance:hover{border-color:rgba(255,215,0,0.3)}
-.header-balance svg{width:20px;height:20px}
 .header-balance .val{font-family:'JetBrains Mono';color:var(--gold)}
 .header-balance .doge{color:#c2a633}
 .header-balance-sep{width:1px;height:20px;background:var(--glass-brd);margin:0 4px}
@@ -161,12 +95,7 @@ body {
 .price-down{color:var(--danger);background:rgba(255,71,87,0.1)}
 .header-avatar{width:40px;height:40px;border-radius:50%;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--gold-2));display:grid;place-items:center;color:#0a0a14;font-weight:700;font-size:14px;overflow:hidden}
 .header-avatar img{width:100%;height:100%;object-fit:cover}
-
-/* CONTENT */
 .content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow-y:auto;overflow-x:hidden;min-height:0;box-sizing:border-box}
-}
-
-/* PAGE SECTIONS */
 .page-section{display:none;animation:pageIn .4s cubic-bezier(.4,0,.2,1);min-height:0}
 .page-section.active{display:block}
 @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -174,8 +103,6 @@ body {
 .page-title{font-family:'Space Grotesk';font-weight:700;font-size:32px;line-height:1.2;display:flex;align-items:center;gap:12px;margin-bottom:6px;background:linear-gradient(135deg,#fff 0%,var(--gold) 50%,var(--gold-2) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .page-title i{color:var(--gold);font-size:26px}
 .page-sub{color:var(--text-dim);font-size:14px}
-
-/* STATS GRID */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
 .stat-card{padding:22px;border-radius:var(--radius);background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);backdrop-filter:blur(10px);transition:all .3s;position:relative;overflow:hidden}
 .stat-card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.2)}
@@ -183,17 +110,12 @@ body {
 .stat-card-ic.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border-color:rgba(74,158,255,0.3)}
 .stat-card-ic.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border-color:rgba(0,208,132,0.3)}
 .stat-card-ic.purple{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);border-color:rgba(139,92,246,0.3)}
+.stat-card-ic.doge{background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)}
 .stat-card-lbl{font-size:14px;color:var(--text-dim);margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.stat-card-lbl svg{width:32px;height:32px;vertical-align:middle}
-.stat-card-lbl img{width:28px;height:28px;vertical-align:middle}
 .stat-card-val{font-family:'Space Grotesk';font-size:32px;font-weight:700;color:var(--text);line-height:1.2;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.stat-card-val svg{width:40px;height:40px;vertical-align:middle}
-.stat-card-val img{width:36px;height:36px;vertical-align:middle}
 .stat-card-val.gold{color:var(--gold)}
 .stat-card-sub{font-size:11px;color:var(--text-muted);margin-top:6px}
 .stat-card-chg{font-size:11px;color:var(--success);margin-top:6px;display:flex;align-items:center;gap:4px}
-
-/* CARDS */
 .grid{display:grid;gap:20px}
 .grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .card{position:relative;background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);border-radius:var(--radius);padding:22px;backdrop-filter:blur(10px);transition:all .3s;overflow:hidden}
@@ -202,8 +124,6 @@ body {
 .card-title{font-family:'Space Grotesk';font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px}
 .card-title i{color:var(--gold)}
 .card-sub{color:var(--text-dim);font-size:13px}
-
-/* BUTTONS */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;border:none;cursor:pointer;font-family:'Inter';font-size:14px;font-weight:600;transition:all .25s;user-select:none;position:relative;overflow:hidden;z-index:2}
 .btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(255,255,255,0.4) 0%,transparent 60%);opacity:0;transition:opacity .3s}
 .btn:active::after{opacity:1}
@@ -217,23 +137,16 @@ body {
 .btn-sm{padding:8px 14px;font-size:12px;border-radius:8px}
 .btn-lg{padding:14px 26px;font-size:15px}
 .btn-block{width:100%}
-
-/* FORMS */
 .form-group{margin-bottom:16px}
 .form-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
 .form-label i{color:var(--gold);font-size:12px}
 .form-input,.form-select,.form-textarea{width:100%;padding:13px 16px;border-radius:12px;background:rgba(0,0,0,0.35);border:1px solid var(--glass-brd);color:var(--text);font-family:'Inter';font-size:14px;transition:all .25s}
 .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:rgba(255,215,0,0.4);background:rgba(0,0,0,0.5);box-shadow:0 0 0 3px rgba(255,215,0,0.08)}
 .form-hint{font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:6px}
-.form-hint i{color:var(--gold);font-size:10px}
-
-/* TABS */
 .tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;padding:4px;background:var(--glass);border:1px solid var(--glass-brd);border-radius:14px;width:fit-content}
 .tab{padding:9px 16px;border-radius:10px;color:var(--text-dim);font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:6px;border:1px solid transparent}
 .tab:hover{color:var(--text)}
 .tab.active{color:var(--gold);background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.15)}
-
-/* TABLES */
 .table-wrap{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);overflow:hidden}
 .table-scroll{overflow-x:auto;max-height:500px;overflow-y:auto;min-height:0}
 .table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
@@ -247,8 +160,6 @@ body {
 .table .success{color:var(--success)}
 .table .danger{color:var(--danger)}
 .table .warn{color:var(--warn)}
-
-/* FAQ */
 .faq-item{background:var(--glass);border:1px solid var(--glass-brd);border-radius:12px;margin-bottom:10px;overflow:hidden}
 .faq-q{padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:600;font-size:14px}
 .faq-q i{color:var(--gold);transition:transform .3s}
@@ -258,8 +169,6 @@ body {
 .faq-a a{color:var(--gold);text-decoration:none}
 .faq-a ul,.faq-a ol{margin:8px 0 8px 20px}
 .faq-a li{margin-bottom:4px}
-
-/* TOAST */
 .toast{position:fixed;bottom:90px;right:24px;z-index:10000;padding:14px 20px;border-radius:14px;background:rgba(11,13,26,0.95);border:1px solid var(--glass-brd);backdrop-filter:blur(20px);box-shadow:0 20px 60px rgba(0,0,0,0.6);display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;transform:translateY(100px);opacity:0;transition:all .35s;max-width:360px}
 .toast.show{transform:translateY(0);opacity:1}
 .toast-icon{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:14px}
@@ -269,13 +178,9 @@ body {
 .toast.error .toast-icon{background:rgba(255,71,87,0.15);color:var(--danger)}
 .toast.info{border-color:var(--blue)}
 .toast.info .toast-icon{background:rgba(74,158,255,0.15);color:var(--blue)}
-
-/* SPINNER */
-.spinner{width:36px;height:36px;background:url('/images/loading.png') center/contain no-repeat;animation:spin 1s linear infinite}
-.spinner-sm{width:18px;height:18px;background-size:contain}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,215,0,0.1);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.spinner-sm{width:18px;height:18px;border-width:2px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* TASK CARDS - Offerwall */
 .tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
 .task-card{background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;transition:all .3s}
 .task-card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,0.2)}
@@ -283,213 +188,25 @@ body {
 .task-icon img{width:100%;height:100%;object-fit:cover}
 .task-info{flex:1;min-width:0}
 .task-title{font-family:'Space Grotesk';font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.task-meta{display:flex;gap:10px;font-size:11px;color:var(--text-dim)}
+.task-meta{display:flex;gap:10px;font-size:11px;color:var(--text-dim);flex-wrap:wrap}
 .task-reward{color:var(--gold);font-weight:600;font-family:'JetBrains Mono'}
 .task-time{display:flex;align-items:center;gap:3px}
 .empty-tasks{text-align:center;padding:60px 20px;color:var(--text-dim);grid-column:1/-1}
 .empty-tasks i{font-size:48px;opacity:.3;margin-bottom:16px}
-
-/* FAUCET COOLDOWN */
 .cooldown-display{font-family:'JetBrains Mono';font-size:18px;color:var(--gold);margin-top:14px;font-weight:600}
 .cooldown-display.ready{color:var(--success)}
-
-/* UTILITIES */
 .text-gold{color:var(--gold)}
 .text-dim{color:var(--text-dim)}
 .text-success{color:var(--success)}
 .text-blue{color:var(--blue)}
 .mt-2{margin-top:16px}.mt-3{margin-top:24px}.mb-2{margin-bottom:16px}
 .flex-between{display:flex;justify-content:space-between;align-items:center}
-
-/* MOBILE OVERFLOW FIXES */
-.stat-card-val{flex-wrap:wrap;word-break:break-word}
-.stat-card-lbl{flex-wrap:wrap;word-break:break-word}
-.stat-card{min-width:0}
-.header-balance{max-width:100%;overflow:hidden;min-width:0}
-.header-balance > div{min-width:0}
-.main{min-width:0}
-.content{min-width:0}
-
-
-.sidebar.open{transform:translateX(0)}
-.main{margin-left:0 !important;width:100% !important;max-width:100vw !important}
-.content{padding:12px !important;max-width:100% !important;min-width:0 !important}
-.page-title{font-size:20px}
-.page-sub{font-size:12px}
-.stats-grid{grid-template-columns:1fr !important;gap:10px}
-.grid-4{grid-template-columns:1fr 1fr;gap:10px}
-.header-balance{display:none !important}
-.header-title{font-size:16px}
-.toast{bottom:80px;right:10px;left:10px;max-width:none}
-.tasks-grid{grid-template-columns:1fr}
-.card{padding:14px}
-.stat-card{padding:12px !important;min-width:0}
-.stat-card-val{font-size:18px;flex-wrap:wrap;word-break:break-word;gap:4px !important}
-.stat-card-val svg{width:16px !important;height:16px !important}
-.stat-card-val img{width:14px !important;height:14px !important}
-.stat-card-lbl{flex-wrap:wrap;word-break:break-word;font-size:10px;gap:4px !important}
-.stat-card-lbl svg{width:12px !important;height:12px !important}
-.stat-card-lbl img{width:10px !important;height:10px !important}
-.stat-card-ic{width:36px;height:36px;font-size:16px}
-.form-input{padding:11px 14px}
-.btn-lg{padding:12px 20px;font-size:14px}
-#captchaBox{padding:16px}
-#mathNum1,#mathNum2{font-size:18px !important}
-#mathAnswer{width:70px !important;font-size:16px !important}
-}
-
-.grid-4{grid-template-columns:1fr !important}
-.page-title{font-size:18px}
-.header-balance{display:none !important}
-.header-balance-sep{display:none}
-.header-usd .usd-val{font-size:10px}
-.price-change{font-size:9px;padding:1px 4px}
-#google_translate_element{bottom:8px !important;left:8px !important;right:auto !important;transform:scale(0.8);transform-origin:bottom left}
-.goog-te-gadget-simple{padding:5px 8px !important;font-size:10px !important}
-.sidebar-brand{padding:14px 12px}
-.sidebar-brand-img{width:36px;height:36px}
-.sidebar-brand-name{font-size:15px}
-.header{height:56px;padding:0 12px}
-.header-avatar{width:32px;height:32px;font-size:11px}
-.content{padding:10px !important;max-width:100% !important}
-.tabs{padding:2px}
-.tab{padding:6px 10px;font-size:11px}
-.table th{padding:8px 10px;font-size:9px}
-.table td{padding:8px 10px;font-size:11px}
-.faq-q{padding:10px 12px;font-size:12px}
-.task-card{padding:10px;gap:8px}
-.task-icon{width:40px;height:40px;font-size:18px}
-.task-title{font-size:12px}
-.offerwall-iframe-container{height:calc(100dvh - 140px);min-height:280px}
-.stat-card-val{font-size:16px;gap:3px !important}
-.stat-card-val svg{width:14px !important;height:14px !important}
-.stat-card-val img{width:12px !important;height:12px !important}
-.stat-card{padding:10px !important}
-.stat-card-ic{width:32px;height:32px;font-size:14px}
-.stat-card-lbl{font-size:9px;gap:3px !important}
-.stat-card-lbl svg{width:10px !important;height:10px !important}
-.stat-card-lbl img{width:9px !important;height:9px !important}
-.stat-card-sub{font-size:10px}
-.stat-card-chg{font-size:10px}
-.card{padding:12px}
-.btn{padding:10px 14px;font-size:12px}
-.btn-lg{padding:12px 18px;font-size:13px}
-}
-
-.header-title{font-size:13px}
-.stat-card-val{font-size:14px;gap:2px !important}
-.stat-card-val svg{width:12px !important;height:12px !important}
-.stat-card-val img{width:10px !important;height:10px !important}
-.btn{padding:8px 12px;font-size:12px}
-.page-title{font-size:16px}
-.stat-card{padding:8px !important}
-.stat-card-ic{width:28px;height:28px;font-size:12px}
-.stat-card-lbl{font-size:8px;gap:2px !important}
-.stat-card-lbl svg{width:9px !important;height:9px !important}
-.stat-card-lbl img{width:8px !important;height:8px !important}
-.stat-card-sub{font-size:9px}
-.stat-card-chg{font-size:9px}
-.content{padding:8px !important}
-.card{padding:10px}
-.tab{padding:5px 8px;font-size:10px}
-}
-
-/* OFFERWALL IFRAME */
 .offerwall-iframe-container{width:100%;height:calc(100dvh - 200px);min-height:400px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--glass-brd);background:var(--bg-1)}
 .offerwall-iframe{width:100%;height:100%;border:none}
-
-/* ========== RESPONSIVE: TABLET (768px - 1199px) ========== */
-@media(max-width:1199px){
-  .stats-grid{grid-template-columns:repeat(2,1fr);gap:14px}
-  .grid-4{grid-template-columns:repeat(2,1fr);gap:14px}
-  .page-title{font-size:28px}
-  .content{padding:20px}
-}
-
-/* ========== RESPONSIVE: MOBIL (480px - 767px) ========== */
-@media(max-width:767px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:translateX(0)}
-  .main{margin-left:0 !important;width:100vw !important;max-width:100vw !important}
-  .content{padding:14px !important;max-width:100% !important;margin:0 !important;width:100% !important}
-  .page-title{font-size:22px}
-  .page-sub{font-size:13px}
-  .stats-grid{grid-template-columns:1fr !important;gap:12px}
-  .grid-4{grid-template-columns:1fr 1fr !important;gap:12px}
-  .header-balance{display:none !important}
-  .header-title{font-size:16px}
-  .header{height:60px;padding:0 16px}
-  .header-avatar{width:38px;height:38px;font-size:13px}
-  .card{padding:16px}
-  .stat-card{padding:18px !important}
-  .stat-card-ic{width:48px;height:48px;font-size:22px}
-  .stat-card-val{font-size:28px;gap:10px !important}
-  .stat-card-val svg{width:32px !important;height:32px !important}
-  .stat-card-lbl{font-size:13px;gap:8px !important}
-  .stat-card-lbl svg{width:24px !important;height:24px !important}
-  .tasks-grid{grid-template-columns:1fr}
-  .toast{bottom:80px;right:12px;left:12px;max-width:none}
-  .tabs{padding:3px}
-  .tab{padding:8px 14px;font-size:12px}
-  .form-input{padding:12px 14px}
-  .btn-lg{padding:13px 22px;font-size:14px}
-  #captchaBox{padding:16px}
-  #mathNum1,#mathNum2{font-size:20px !important}
-  #mathAnswer{width:80px !important;font-size:18px !important}
-  #google_translate_element{bottom:12px !important;left:12px !important;transform:scale(0.9);transform-origin:bottom left}
-}
-
-/* ========== RESPONSIVE: KUCUK MOBIL (< 480px) ========== */
-@media(max-width:479px){
-  .stats-grid{grid-template-columns:1fr !important;gap:10px}
-  .grid-4{grid-template-columns:1fr !important;gap:10px}
-  .page-title{font-size:18px}
-  .page-sub{font-size:12px}
-  .content{padding:10px !important;width:100% !important;margin:0 !important}
-  .header{height:54px;padding:0 12px}
-  .header-avatar{width:34px;height:34px;font-size:12px}
-  .header-title{font-size:14px}
-  .card{padding:12px}
-  .stat-card{padding:14px !important}
-  .stat-card-ic{width:42px;height:42px;font-size:20px}
-  .stat-card-val{font-size:24px;gap:8px !important}
-  .stat-card-val svg{width:28px !important;height:28px !important}
-  .stat-card-lbl{font-size:12px;gap:6px !important}
-  .stat-card-lbl svg{width:20px !important;height:20px !important}
-  .stat-card-sub{font-size:10px}
-  .stat-card-chg{font-size:10px}
-  .tabs{padding:2px}
-  .tab{padding:6px 10px;font-size:11px}
-  .table th{padding:8px 10px;font-size:9px}
-  .table td{padding:8px 10px;font-size:11px}
-  .faq-q{padding:10px 12px;font-size:12px}
-  .task-card{padding:10px;gap:8px}
-  .task-icon{width:40px;height:40px;font-size:18px}
-  .task-title{font-size:12px}
-  .btn{padding:10px 14px;font-size:12px}
-  .btn-lg{padding:12px 18px;font-size:13px}
-  .offerwall-iframe-container{height:calc(100dvh - 140px);min-height:280px}
-  #google_translate_element{bottom:8px !important;left:8px !important;transform:scale(0.8);transform-origin:bottom left}
-  .goog-te-gadget-simple{padding:6px 10px !important;font-size:10px !important}
-}
-
-/* ========== RESPONSIVE: COK KUCUK (< 360px) ========== */
-@media(max-width:359px){
-  .page-title{font-size:16px}
-  .stat-card{padding:12px !important}
-  .stat-card-ic{width:36px;height:36px;font-size:16px}
-  .stat-card-val{font-size:20px;gap:6px !important}
-  .stat-card-val svg{width:24px !important;height:24px !important}
-  .stat-card-lbl{font-size:11px;gap:5px !important}
-  .stat-card-lbl svg{width:16px !important;height:16px !important}
-  .content{padding:8px !important;width:100% !important;margin:0 !important}
-  .card{padding:10px}
-  .tab{padding:5px 8px;font-size:10px}
-  .btn{padding:8px 12px;font-size:11px}
-}
-
-
-/* DETAILED STATS */
+.referral-card{background:linear-gradient(145deg,rgba(255,215,0,0.06),rgba(255,215,0,0.02));border:1px solid rgba(255,215,0,0.2);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.referral-card-title{font-family:'Space Grotesk';font-size:16px;font-weight:700;color:var(--gold);margin-bottom:8px}
+.referral-card-val{font-family:'JetBrains Mono';font-size:28px;font-weight:700;color:var(--gold)}
+.referral-card-sub{font-size:12px;color:var(--text-dim);margin-top:4px}
 .detailed-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
 .stat-detail-item{background:var(--bg-3);border:1px solid var(--glass-brd);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
 .stat-detail-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
@@ -497,27 +214,15 @@ body {
 .stat-detail-change{font-size:11px;display:flex;align-items:center;gap:4px}
 .stat-detail-change.up{color:var(--success)}
 .stat-detail-change.down{color:var(--danger)}
-.stat-detail-period{font-size:10px;color:var(--text-dim);margin-top:2px}
-
-@media(max-width:479px){
-  .detailed-stats{grid-template-columns:1fr}
-}
-
-
-.page{display:none}
-.page.active{display:block}
-
-/* FORCE HIDE PAGES */
-#page-faucet,#page-offerwall,#page-swap,#page-withdraw,#page-faq,#page-admin{display:none !important}
-#page-dashboard{display:block !important}
-
+@media(max-width:1199px){.stats-grid{grid-template-columns:repeat(2,1fr);gap:14px}.grid-4{grid-template-columns:repeat(2,1fr);gap:14px}.page-title{font-size:28px}.content{padding:20px}}
+@media(max-width:767px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0!important;width:100vw!important;max-width:100vw!important}.content{padding:14px!important;max-width:100%!important;margin:0!important;width:100%!important}.page-title{font-size:22px}.page-sub{font-size:13px}.stats-grid{grid-template-columns:1fr!important;gap:12px}.grid-4{grid-template-columns:1fr 1fr!important;gap:12px}.header-balance{display:none!important}.header-title{font-size:16px}.header{height:60px;padding:0 16px}.header-avatar{width:38px;height:38px;font-size:13px}.card{padding:16px}.stat-card{padding:18px!important}.stat-card-ic{width:48px;height:48px;font-size:22px}.stat-card-val{font-size:28px;gap:10px!important}.tasks-grid{grid-template-columns:1fr}.toast{bottom:80px;right:12px;left:12px;max-width:none}.tabs{padding:3px}.tab{padding:8px 14px;font-size:12px}.form-input{padding:12px 14px}.btn-lg{padding:13px 22px;font-size:14px}#captchaBox{padding:16px}#mathNum1,#mathNum2{font-size:20px!important}#mathAnswer{width:80px!important;font-size:18px!important}#google_translate_element{bottom:12px!important;left:12px!important;transform:scale(0.9);transform-origin:bottom left}.detailed-stats{grid-template-columns:1fr}}
+@media(max-width:479px){.stats-grid{grid-template-columns:1fr!important;gap:10px}.grid-4{grid-template-columns:1fr!important;gap:10px}.page-title{font-size:18px}.page-sub{font-size:12px}.content{padding:10px!important;width:100%!important;margin:0!important}.header{height:54px;padding:0 12px}.header-avatar{width:34px;height:34px;font-size:12px}.header-title{font-size:14px}.card{padding:12px}.stat-card{padding:14px!important}.stat-card-ic{width:42px;height:42px;font-size:20px}.stat-card-val{font-size:24px;gap:8px!important}.stat-card-sub{font-size:10px}.stat-card-chg{font-size:10px}.tabs{padding:2px}.tab{padding:6px 10px;font-size:11px}.table th{padding:8px 10px;font-size:9px}.table td{padding:8px 10px;font-size:11px}.faq-q{padding:10px 12px;font-size:12px}.task-card{padding:10px;gap:8px}.task-icon{width:40px;height:40px;font-size:18px}.task-title{font-size:12px}.btn{padding:10px 14px;font-size:12px}.btn-lg{padding:12px 18px;font-size:13px}.offerwall-iframe-container{height:calc(100dvh - 140px);min-height:280px}#google_translate_element{bottom:8px!important;left:8px!important;transform:scale(0.8);transform-origin:bottom left}.goog-te-gadget-simple{padding:6px 10px!important;font-size:10px!important}.referral-card-val{font-size:22px}}
+@media(max-width:359px){.page-title{font-size:16px}.stat-card{padding:12px!important}.stat-card-ic{width:36px;height:36px;font-size:16px}.stat-card-val{font-size:20px;gap:6px!important}.content{padding:8px!important;width:100%!important;margin:0!important}.card{padding:10px}.tab{padding:5px 8px;font-size:10px}.btn{padding:8px 12px;font-size:11px}}
 </style>
 </head>
 <body>
-
 <div id="menuOverlay" onclick="toggleMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;backdrop-filter:blur(2px)"></div>
-<script>function hideLoading(){var ls=document.getElementById("loadingScreen");if(!ls)return;ls.style.display="none";ls.style.visibility="hidden";ls.style.opacity="0";try{ls.remove();}catch(e){}}setTimeout(function(){hideLoading();console.log("Loading screen force-closed");},3000);document.addEventListener("DOMContentLoaded",function(){try{if(typeof window.init==="function"){var result=window.init();if(result&&typeof result.then==="function"){result.then(function(){hideLoading();}).catch(function(e){console.warn("init error:",e);hideLoading();});}else{hideLoading();}}else{console.warn("init() not found");hideLoading();}}catch(e){console.warn("init exception:",e);hideLoading();}});</script>
-<div id="loadingScreen" style="position:fixed;inset:0;z-index:9998;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+<div id="loadingScreen" style="position:fixed;inset:0;z-index:9998;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .5s">
   <div style="width:80px;height:80px;position:relative">
     <svg viewBox="0 0 64 64" width="80" height="80" style="animation:loadSpin 1.2s linear infinite">
       <defs><linearGradient id="ldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#F5A623"/><stop offset="100%" style="stop-color:#B8860B"/></linearGradient></defs>
@@ -532,61 +237,24 @@ body {
     <div style="height:100%;width:0%;background:linear-gradient(90deg,#FFD700,#F5A623);border-radius:3px;animation:loadBar 1.5s ease-in-out infinite"></div>
   </div>
 </div>
-<style>
-@keyframes loadSpin{to{transform:rotate(360deg)}}
-@keyframes loadBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
-
-/* DETAILED STATS */
-.detailed-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
-.stat-detail-item{background:var(--bg-3);border:1px solid var(--glass-brd);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
-.stat-detail-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
-.stat-detail-value{font-size:18px;font-weight:700;color:var(--text);font-family:'Space Grotesk'}
-.stat-detail-change{font-size:11px;display:flex;align-items:center;gap:4px}
-.stat-detail-change.up{color:var(--success)}
-.stat-detail-change.down{color:var(--danger)}
-.stat-detail-period{font-size:10px;color:var(--text-dim);margin-top:2px}
-
-@media(max-width:479px){
-  .detailed-stats{grid-template-columns:1fr}
-}
-
-
-.page{display:none}
-.page.active{display:block}
-
-/* FORCE HIDE PAGES */
-#page-faucet,#page-offerwall,#page-swap,#page-withdraw,#page-faq,#page-admin{display:none !important}
-#page-dashboard{display:block !important}
-
-</style>
-
+<style>@keyframes loadSpin{to{transform:rotate(360deg)}}@keyframes loadBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}</style>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-brand" onclick="navigate('/')">
-    <div class="sidebar-brand-img"><svg viewBox="0 0 64 64" width="100%" height="100%" style="vertical-align:middle">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg></div>
+    <div class="sidebar-brand-img">
+      <svg viewBox="0 0 64 64" width="100%" height="100%" style="vertical-align:middle">
+        <defs><linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#F5A623"/><stop offset="100%" style="stop-color:#B8860B"/></linearGradient><filter id="cnxShadow"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/></filter></defs>
+        <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
+        <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text>
+        <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc">C</text>
+      </svg>
+    </div>
     <div class="sidebar-brand-txt">
       <span class="sidebar-brand-name">COINIX</span>
       <span class="sidebar-brand-sub">CNX Faucet</span>
     </div>
   </div>
-
   <nav class="sidebar-nav">
     <div class="sidebar-section">
       <div class="sidebar-section-title">Main</div>
@@ -611,361 +279,98 @@ body {
       <a class="sidebar-item" data-route="/faq" onclick="navigate('/faq')"><i class="fa-solid fa-circle-question"></i><span class="label">FAQ</span></a>
     </div>
   </nav>
-
   <div class="sidebar-footer">
     <div class="sidebar-user" onclick="navigate('/withdraw')">
       <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
       <div class="sidebar-user-info">
         <div class="sidebar-user-name" id="sidebarName">Loading...</div>
-        <div class="sidebar-user-bal" id="sidebarBal">
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="10" height="10" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> 0 CNX
-        </div>
+        <div class="sidebar-user-bal" id="sidebarBal"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
       </div>
     </div>
   </div>
 </aside>
-
 <div class="main" id="main">
   <header class="header">
     <button class="header-menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-    <div class="header-title">
-      <i class="fa-solid fa-circle-dot"></i>
-      <span id="headerTitle">Dashboard</span>
-    </div>
+    <div class="header-title"><i class="fa-solid fa-circle-dot"></i><span id="headerTitle">Dashboard</span></div>
     <div class="header-spacer"></div>
-
     <div class="header-balance" onclick="navigate('/withdraw')">
-      <svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>
+      <span style="color:var(--gold);font-weight:700">C</span>
       <div style="display:flex;align-items:center;gap:4px">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>
         <span class="val" id="hdrBalCnx">0</span>
-        <span class="text-dim" style="font-size:10px"> CNX</span>
-        <div class="header-usd">
-          <span class="usd-val" id="hdrCnxUSD">$0.0000</span>
-        </div>
+        <span class="text-dim" style="font-size:10px">CNX</span>
+        <div class="header-usd"><span class="usd-val" id="hdrCnxUSD">$0.0000</span></div>
       </div>
       <span class="header-balance-sep"></span>
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg>
+      <span style="color:#c2a633;font-weight:700">Ð</span>
       <div style="display:flex;align-items:center;gap:4px">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg>
         <span class="val doge" id="hdrBalDoge">0</span>
-        <span class="text-dim" style="font-size:10px"> DOGE</span>
-        <div class="header-usd">
-          <span class="usd-val" id="hdrDogeUSD">$0.0000</span>
-          <span class="price-change" id="hdrPriceChange">0.00%</span>
-        </div>
+        <span class="text-dim" style="font-size:10px">DOGE</span>
+        <div class="header-usd"><span class="usd-val" id="hdrDogeUSD">$0.0000</span><span class="price-change" id="hdrPriceChange">0.00%</span></div>
       </div>
     </div>
-
     <div class="header-avatar" id="headerAvatar" onclick="navigate('/withdraw')">?</div>
   </header>
-
   <main class="content">
-
     <!-- DASHBOARD -->
     <section class="page-section active" id="page-dashboard">
       <div class="page-head">
         <h1 class="page-title"><i class="fa-solid fa-chart-pie"></i> Dashboard</h1>
         <p class="page-sub">Overview of your COINIX earnings and activity</p>
       </div>
-
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg><span id="dashCnx">0.00</span></div>
-          <div class="stat-card-sub">≈ $<span id="dashCnxUSD">0.0000</span></div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
+          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700;font-size:28px">C</span> <span id="dashCnx">0.00</span></div>
+          <div class="stat-card-sub">~ $<span id="dashCnxUSD">0.0000</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg><span id="dashDoge">0.00</span></div>
-          <div class="stat-card-sub">≈ $<span id="dashDogeUSD">0.0000</span></div>
+          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
+          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="dashDoge">0.00</span></div>
+          <div class="stat-card-sub">~ $<span id="dashDogeUSD">0.0000</span></div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic green"><i class="fa-solid fa-chart-line"></i></div>
-          <div class="stat-card-lbl">Today's Earnings</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg><span id="dashToday">0.00</span></div>
+          <div class="stat-card-lbl">Today Earnings</div>
+          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="dashToday">0.00</span></div>
           <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> Active</div>
         </div>
       </div>
-
       <div class="stats-grid" style="margin-bottom:24px">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-droplet"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> Faucet</div>
-          <div class="stat-card-val gold" id="dashFaucet"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="16" height="16" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>0 CNX</div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Faucet</div>
+          <div class="stat-card-val gold" id="dashFaucet"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-clock"></i> Every 3 min</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> Offerwall</div>
-          <div class="stat-card-val" id="dashPtc"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="16" height="16" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>0 CNX</div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Offerwall</div>
+          <div class="stat-card-val" id="dashPtc"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-bolt"></i> Instant</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> Referrals</div>
-          <div class="stat-card-val gold" id="dashRef"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="16" height="16" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>0 CNX</div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Referrals</div>
+          <div class="stat-card-val gold" id="dashRef"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-coins"></i> <span id="dashRefCount">0</span> referrals</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><i class="fa-solid fa-paper-plane"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> Withdrawals</div>
-          <div class="stat-card-val" style="color:#c2a633" id="dashWd"><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg>0 DOGE</div>
+          <div class="stat-card-ic doge"><i class="fa-solid fa-paper-plane"></i></div>
+          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> Withdrawals</div>
+          <div class="stat-card-val" style="color:#c2a633" id="dashWd"><span style="font-weight:700;font-size:28px">Ð</span> 0 DOGE</div>
           <div class="stat-card-chg"><i class="fa-solid fa-check"></i> 0 successful</div>
         </div>
       </div>
-
       <div class="card mb-2">
-        <div class="card-hd">
-          <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
-        </div>
+        <div class="card-hd"><div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div></div>
         <div class="grid grid-4">
           <div class="card" onclick="navigate('/faucet')" style="cursor:pointer;padding:16px">
             <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,215,0,0.05));color:var(--gold);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-droplet"></i></div>
             <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Faucet</div>
-            <div style="font-size:12px;color:var(--text-dim)">Claim 0.20 CNX every 3 min</div>
+            <div style="font-size:12px;color:var(--text-dim)">Claim 1 CNX every 3 min</div>
           </div>
           <div class="card" onclick="navigate('/offerwall')" style="cursor:pointer;padding:16px">
             <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-gift"></i></div>
@@ -975,16 +380,15 @@ body {
           <div class="card" onclick="navigate('/swap')" style="cursor:pointer;padding:16px">
             <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-right-left"></i></div>
             <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Swap</div>
-            <div style="font-size:12px;color:var(--text-dim)">CNX → DOGE</div>
+            <div style="font-size:12px;color:var(--text-dim)">CNX to DOGE</div>
           </div>
           <div class="card" onclick="navigate('/withdraw')" style="cursor:pointer;padding:16px">
             <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);display:grid;place-items:center;font-size:16px;margin-bottom:10px"><i class="fa-solid fa-paper-plane"></i></div>
             <div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px">Withdraw</div>
-            <div style="font-size:12px;color:var(--text-dim)">DOGE → FaucetPay</div>
+            <div style="font-size:12px;color:var(--text-dim)">DOGE to FaucetPay</div>
           </div>
         </div>
       </div>
-
       <div class="card mt-3">
         <div class="card-hd">
           <div class="card-title"><i class="fa-solid fa-signal"></i> Live Withdrawals</div>
@@ -1000,75 +404,25 @@ body {
     <section class="page-section" id="page-faucet">
       <div class="page-head">
         <h1 class="page-title"><i class="fa-solid fa-droplet"></i> Free Faucet</h1>
-        <p class="page-sub">Claim 0.20 CNX every 3 minutes — unlimited</p>
+        <p class="page-sub">Claim 1 CNX every 3 minutes</p>
       </div>
-
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg><span id="faucetCnx">0.00</span></div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
+          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700;font-size:28px">C</span> <span id="faucetCnx">0.00</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg><span id="faucetDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
+          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="faucetDoge">0.00</span></div>
         </div>
       </div>
-
       <div class="card">
         <div style="text-align:center;padding:40px">
-          <div style="font-size:48px;font-weight:700;color:var(--gold);margin-bottom:16px">0.20 CNX</div>
-          <div style="color:var(--text-dim);margin-bottom:20px">You can claim once every <strong style="color:var(--gold)">3 minutes</strong>. Reward: <strong style="color:var(--gold)">0.20 CNX</strong> per claim.</div>
-
+          <div style="font-size:48px;font-weight:700;color:var(--gold);margin-bottom:16px">1 CNX</div>
+          <div style="color:var(--text-dim);margin-bottom:20px">Claim once every <strong style="color:var(--gold)">3 minutes</strong>. Reward: <strong style="color:var(--gold)">1 CNX</strong></div>
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">100 CNX = 1 USD</div>
           <div id="captchaBox" style="background:var(--glass);border:1px solid var(--glass-brd);border-radius:14px;padding:20px;margin-bottom:20px;max-width:320px;margin-left:auto;margin-right:auto">
             <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px"><i class="fa-solid fa-shield-halved" style="color:var(--gold)"></i> Anti-Bot Verification</div>
             <div id="mathCaptcha" style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px">
@@ -1080,119 +434,54 @@ body {
             </div>
             <button class="btn btn-secondary btn-sm" onclick="generateMathCaptcha()" style="font-size:12px"><i class="fa-solid fa-rotate"></i> New Question</button>
           </div>
-
           <button class="btn btn-primary btn-lg" id="claimBtn" onclick="doClaim()" style="padding:14px 32px;font-size:15px">
             <i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX
           </button>
-          <div id="claimStatus" class="cooldown-display ready">
-            <i class="fa-solid fa-circle-check"></i> Ready to claim!
-          </div>
+          <div id="claimStatus" class="cooldown-display ready"><i class="fa-solid fa-circle-check"></i> Ready to claim!</div>
         </div>
-
         <div class="stats-grid" style="margin-top:20px">
           <div class="stat-card">
             <div class="stat-card-lbl"><i class="fa-solid fa-hand-holding-dollar"></i> Total Claims</div>
             <div class="stat-card-val gold" id="statClaims">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-lbl"><i class="fa-solid fa-coins"></i> Earned</div>
-            <div class="stat-card-val gold" id="statEarned"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="16" height="16" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>0</div>
+            <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Earned</div>
+            <div class="stat-card-val gold" id="statEarned"><span style="color:var(--gold);font-weight:700">C</span> 0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE</div>
-            <div class="stat-card-val" style="color:#c2a633" id="statDoge"><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg>0</div>
+            <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE</div>
+            <div class="stat-card-val" style="color:#c2a633" id="statDoge"><span style="font-weight:700;font-size:28px">Ð</span> 0</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- OFFERWALL - 4 TABS -->
+    <!-- OFFERWALL -->
     <section class="page-section" id="page-offerwall">
       <div class="page-head">
         <h1 class="page-title"><i class="fa-solid fa-gift"></i> Earn Tasks</h1>
-        <p class="page-sub">Complete tasks and earn CNX instantly via Offerwall.me</p>
+        <p class="page-sub">Complete tasks and earn CNX instantly (+20% bonus on PTC, Shortlinks and Games)</p>
       </div>
-
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> Total Earned</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg><span id="owTotalEarned">0.00</span></div>
-          <div class="stat-card-sub">From all tasks</div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Total Earned</div>
+          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="owTotalEarned">0.00</span></div>
+          <div class="stat-card-sub">From all tasks (with +20% bonus)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic green"><i class="fa-solid fa-percent"></i></div>
+          <div class="stat-card-lbl">Bonus Rate</div>
+          <div class="stat-card-val" style="color:var(--success)">+20%</div>
+          <div class="stat-card-sub">On PTC, Shortlinks and Games</div>
         </div>
       </div>
-
       <div class="tabs">
         <div class="tab active" onclick="setOfferwallTab(this,'ptc')"><i class="fa-solid fa-gift"></i> PTC</div>
-        <div class="tab" onclick="setOfferwallTab(this,'visits')"><i class="fa-solid fa-globe"></i> Website Visits</div>
+        <div class="tab" onclick="setOfferwallTab(this,'visits')"><i class="fa-solid fa-globe"></i> Visits</div>
         <div class="tab" onclick="setOfferwallTab(this,'games')"><i class="fa-solid fa-gamepad"></i> Games</div>
         <div class="tab" onclick="setOfferwallTab(this,'shortlinks')"><i class="fa-solid fa-link"></i> Shortlinks</div>
       </div>
-
       <div id="tab-ptc" class="offerwall-tab">
         <div id="ptcContainer" class="tasks-grid">
           <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading PTC ads...</div></div>
@@ -1200,7 +489,7 @@ body {
       </div>
       <div id="tab-visits" class="offerwall-tab" style="display:none">
         <div id="visitsContainer" class="tasks-grid">
-          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading website visits...</div></div>
+          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading visits...</div></div>
         </div>
       </div>
       <div id="tab-games" class="offerwall-tab" style="display:none">
@@ -1218,71 +507,21 @@ body {
     <!-- SWAP -->
     <section class="page-section" id="page-swap">
       <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-right-left"></i> Swap CNX ↔ DOGE</h1>
-        <p class="page-sub">Convert instantly at 1:1 rate — zero fees</p>
+        <h1 class="page-title"><i class="fa-solid fa-right-left"></i> Swap CNX to DOGE</h1>
+        <p class="page-sub">Convert instantly at 1:1 rate, zero fees</p>
       </div>
-
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg><span id="swapCnx">0.00</span></div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
+          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="swapCnx">0.00</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg><span id="swapDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
+          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="swapDoge">0.00</span></div>
         </div>
       </div>
-
       <div class="card" style="max-width:500px;margin:0 auto">
         <div class="form-group">
           <div class="flex-between" style="margin-bottom:8px">
@@ -1292,24 +531,7 @@ body {
           <div style="display:flex;align-items:center;gap:10px">
             <input type="number" class="form-input" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="calcSwap()" style="flex:1">
             <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:var(--gold-soft);border:1px solid rgba(255,215,0,0.25);color:var(--gold);font-weight:600;font-size:13px;flex-shrink:0">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="14" height="14" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg>
-              <span id="swapFromCur">CNX</span>
+              <span style="font-weight:700">C</span><span id="swapFromCur">CNX</span>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
@@ -1319,48 +541,23 @@ body {
             <button class="btn btn-ghost btn-sm" onclick="setSwapMax()">MAX</button>
           </div>
         </div>
-
         <div style="text-align:center;margin:14px 0">
-          <button class="btn btn-ghost" onclick="flipSwap()" style="width:42px;height:42px;border-radius:50%;padding:0">
-            <i class="fa-solid fa-arrow-down-arrow-up"></i>
-          </button>
+          <button class="btn btn-ghost" onclick="flipSwap()" style="width:42px;height:42px;border-radius:50%;padding:0"><i class="fa-solid fa-arrow-down-arrow-up"></i></button>
         </div>
-
         <div class="form-group">
           <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">To (estimated)</div>
           <div style="display:flex;align-items:center;gap:10px">
             <input type="number" class="form-input" id="swapTo" placeholder="0.00" readonly style="flex:1">
             <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:rgba(194,166,51,0.1);border:1px solid rgba(194,166,51,0.25);color:#c2a633;font-weight:600;font-size:13px;flex-shrink:0">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="14" height="14" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg>
-              <span id="swapToCur">DOGE</span>
+              <span style="font-weight:700">Ð</span><span id="swapToCur">DOGE</span>
             </div>
           </div>
         </div>
-
         <div class="flex-between" style="padding:14px 0;border-top:1px solid var(--glass-brd);margin-top:10px;font-size:13px">
           <span class="text-dim">You will receive: <span class="text-gold" id="swapReceive">0.00</span></span>
-          <span class="text-dim">Rate: 1:1 · No fees</span>
+          <span class="text-dim">Rate: 1:1 - No fees</span>
         </div>
-
-        <button class="btn btn-primary btn-block btn-lg mt-2" id="swapBtn" onclick="doSwap()">
-          <i class="fa-solid fa-right-left"></i> Swap Now
-        </button>
+        <button class="btn btn-primary btn-block btn-lg mt-2" id="swapBtn" onclick="doSwap()"><i class="fa-solid fa-right-left"></i> Swap Now</button>
       </div>
     </section>
 
@@ -1370,108 +567,45 @@ body {
         <h1 class="page-title"><i class="fa-solid fa-paper-plane"></i> Withdraw DOGE</h1>
         <p class="page-sub">Send DOGE to your FaucetPay email</p>
       </div>
-
+      <div class="referral-card" id="referralCard" style="display:none">
+        <div class="referral-card-title"><i class="fa-solid fa-user-plus"></i> Referral Earnings</div>
+        <div class="referral-card-val"><span style="color:var(--gold);font-weight:700">C</span> <span id="refBalDisplay">0.00</span></div>
+        <div class="referral-card-sub">Collect to transfer to your main balance</div>
+        <button class="btn btn-primary btn-block mt-2" id="collectRefBtn" onclick="doCollectReferral()"><i class="fa-solid fa-coins"></i> Collect Referral Bonus</button>
+      </div>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-card-ic" style="background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border-color:rgba(194,166,51,0.3)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-label="D"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg><span id="wdDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
+          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="wdDoge">0.00</span></div>
           <div class="stat-card-sub">Ready to withdraw</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> CNX Balance</div>
-          <div class="stat-card-val gold"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:var(--gold)"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="12" fill="currentColor" stroke="none">C</text></svg><svg viewBox="0 0 64 64" width="18" height="18" style="vertical-align:middle;margin-left:2px">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg><span id="wdCnx">0.00</span></div>
-          <div class="stat-card-sub" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE →</div>
+          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
+          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="wdCnx">0.00</span></div>
+          <div class="stat-card-sub" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE -</div>
         </div>
       </div>
-
       <div class="tabs">
         <div class="tab active" onclick="setWdTab(this,'form')"><i class="fa-solid fa-paper-plane"></i> Withdraw</div>
         <div class="tab" onclick="setWdTab(this,'history')"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
       </div>
-
       <div id="wdTabForm">
         <div class="card mb-2" style="border-color:rgba(74,158,255,0.2);background:linear-gradient(135deg,rgba(74,158,255,0.06),rgba(74,158,255,0.02))">
           <div style="display:flex;align-items:flex-start;gap:10px">
             <i class="fa-solid fa-circle-info" style="color:var(--blue);font-size:18px;margin-top:2px"></i>
             <div>
               <div style="font-weight:600;margin-bottom:4px;font-size:14px">FaucetPay Only</div>
-              <div style="font-size:13px;color:var(--text-dim)">Withdrawals are sent to your <strong class="text-gold">FaucetPay email</strong>. Minimum: <strong class="text-gold">0.10 DOGE</strong> · Rate: 1:1 (no fees)</div>
+              <div style="font-size:13px;color:var(--text-dim)">Withdrawals are sent to your <strong class="text-gold">FaucetPay email</strong>. Minimum: <strong class="text-gold">0.10 DOGE</strong> - Rate: 1:1 (no fees)</div>
             </div>
           </div>
         </div>
-
         <div class="card mt-2">
           <div class="form-group">
-            <label class="form-label"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg> Currency</label>
+            <label class="form-label"><span style="color:#c2a633;font-weight:700">Ð</span> Currency</label>
             <div class="form-input" style="display:flex;align-items:center;gap:8px;padding:12px 14px">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;color:#c2a633"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="11" fill="currentColor" stroke="none">Ð</text></svg><svg viewBox="0 0 64 64" width="16" height="16" style="vertical-align:middle;margin-left:1px">
-  <defs>
-    <linearGradient id="dogeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#c2a633"/>
-      <stop offset="50%" style="stop-color:#e8c84a"/>
-      <stop offset="100%" style="stop-color:#a08020"/>
-    </linearGradient>
-    <filter id="dogeShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(194,166,51,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#dogeGrad)" filter="url(#dogeShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(100,80,20,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#6b5410" stroke="none">Ð</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="26" fill="#fff8dc" stroke="none">Ð</text>
-</svg>
-              DOGE (via FaucetPay)
+              <span style="color:#c2a633;font-weight:700">Ð</span> DOGE (via FaucetPay)
             </div>
           </div>
           <div class="form-group">
@@ -1491,13 +625,9 @@ body {
             <input type="email" class="form-input" id="wdEmail" placeholder="your@faucetpay.email">
             <div class="form-hint mt-1"><i class="fa-solid fa-info"></i> Only your FaucetPay email is accepted.</div>
           </div>
-
-          <button class="btn btn-primary btn-block btn-lg mt-2" id="wdBtn" onclick="doWithdraw()">
-            <i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay
-          </button>
+          <button class="btn btn-primary btn-block btn-lg mt-2" id="wdBtn" onclick="doWithdraw()"><i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay</button>
         </div>
       </div>
-
       <div id="wdTabHistory" style="display:none">
         <div class="card">
           <div class="card-title mb-2"><i class="fa-solid fa-clock-rotate-left"></i> Withdrawal History</div>
@@ -1519,12 +649,12 @@ body {
         <h1 class="page-title"><i class="fa-solid fa-circle-question"></i> FAQ</h1>
         <p class="page-sub">Frequently Asked Questions</p>
       </div>
-
       <div class="card">
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I earn CNX? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ul><li><strong>Claiming the faucet</strong> every 3 minutes (0.20 CNX)</li><li><strong>Completing Offerwall tasks</strong> - PTC ads, games, website visits, shortlinks</li><li><strong>Referral program</strong> — invite friends and earn <strong>+50 CNX</strong> per signup</li></ul></div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I withdraw? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ol><li>Earn <strong>CNX</strong> from faucet and offers.</li><li>Go to <strong>Swap</strong> and convert CNX → DOGE (1:1, no fees).</li><li>Go to <strong>Withdraw</strong> page.</li><li>Enter your <strong>FaucetPay email</strong> and the DOGE amount.</li><li>Minimum withdrawal is <strong>0.10 DOGE</strong>.</li><li>The admin processes your payout and DOGE arrives on your FaucetPay account.</li></ol></div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is CNX worth in USD? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">CNX is pegged 1:1 to DOGE. The USD value updates in real-time based on the current DOGE price. You can see the current USD value and 24h price change percentage next to your balance in the header.</div></div>
-        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What tasks are available on Offerwall? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Offerwall.me provides 4 types of tasks:<ul><li><strong>PTC (Paid-to-Click)</strong> - Watch ads and click links</li><li><strong>Website Visits</strong> - Visit websites for a specified time</li><li><strong>Games</strong> - Install and play games to reach certain levels</li><li><strong>Shortlinks</strong> - Visit shortened URLs</li></ul>All rewards are credited automatically via secure server-to-server postback.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I earn CNX? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ul><li><strong>Claiming the faucet</strong> every 3 minutes (1 CNX)</li><li><strong>Completing Offerwall tasks</strong> - PTC ads, games, website visits, shortlinks (+20% bonus)</li><li><strong>Referral program</strong> - invite friends and earn <strong>+50 CNX</strong> per signup</li></ul></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I withdraw? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a"><ol><li>Earn <strong>CNX</strong> from faucet and offers.</li><li>Go to <strong>Swap</strong> and convert CNX to DOGE (1:1, no fees).</li><li>Go to <strong>Withdraw</strong> page.</li><li>Enter your <strong>FaucetPay email</strong> and the DOGE amount.</li><li>Minimum withdrawal is <strong>0.10 DOGE</strong>.</li><li>The admin processes your payout and DOGE arrives on your FaucetPay account.</li></ol></div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is CNX worth in USD? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">100 CNX = 1 USD. So 1 CNX = $0.01. The USD value updates in real-time based on the current DOGE price. You can see the current USD value and 24h price change percentage next to your balance in the header.</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What tasks are available on Offerwall? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Offerwall.me provides 4 types of tasks:<ul><li><strong>PTC (Paid-to-Click)</strong> - Watch ads and click links</li><li><strong>Website Visits</strong> - Visit websites for a specified time</li><li><strong>Games</strong> - Install and play games to reach certain levels</li><li><strong>Shortlinks</strong> - Visit shortened URLs</li></ul>All rewards are credited automatically via secure server-to-server postback. <strong>PTC, Shortlinks and Games</strong> earn an extra <strong>+20% bonus</strong> on top of the base reward!</div></div>
+        <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How does referral bonus work? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">When someone signs up with your referral link, you earn <strong>50 CNX</strong> instantly. Additionally, you earn <strong>20% commission</strong> on all their faucet claims and offerwall earnings. Referral earnings are stored separately in your Referral Earnings balance. You can collect them anytime by clicking the Collect Referral Bonus button on the Withdraw page.</div></div>
         <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How long does withdrawal take? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Most withdrawals are processed within <strong>24 hours</strong>.</div></div>
       </div>
     </section>
@@ -1535,22 +665,91 @@ body {
         <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel</h1>
         <p class="page-sub">System management dashboard</p>
       </div>
-      <div class="card">
-        <p>Admin panel content will be loaded here...</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-ic"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-card-lbl">Total Users</div>
+          <div class="stat-card-val" id="adminTotalUsers">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic green"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+          <div class="stat-card-lbl">Total Claims</div>
+          <div class="stat-card-val" id="adminTotalClaims">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
+          <div class="stat-card-lbl">Offerwall Earnings</div>
+          <div class="stat-card-val gold" id="adminTotalOfferwall">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic doge"><i class="fa-solid fa-paper-plane"></i></div>
+          <div class="stat-card-lbl">Total Paid (DOGE)</div>
+          <div class="stat-card-val" style="color:#c2a633" id="adminTotalPaid">0</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="setAdminTab(this,'users')"><i class="fa-solid fa-users"></i> Users</div>
+        <div class="tab" onclick="setAdminTab(this,'withdrawals')"><i class="fa-solid fa-paper-plane"></i> Withdrawals</div>
+        <div class="tab" onclick="setAdminTab(this,'logs')"><i class="fa-solid fa-list"></i> Logs</div>
+        <div class="tab" onclick="setAdminTab(this,'settings')"><i class="fa-solid fa-gear"></i> Settings</div>
+      </div>
+      <div id="adminTabUsers">
+        <div class="card">
+          <div class="card-hd"><div class="card-title"><i class="fa-solid fa-users"></i> Users</div></div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table" id="adminUsersTable">
+                <thead><tr><th>ID</th><th>Username</th><th>Balance</th><th>Referrals</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="adminTabWithdrawals" style="display:none">
+        <div class="card">
+          <div class="card-hd"><div class="card-title"><i class="fa-solid fa-paper-plane"></i> Withdrawals</div></div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table" id="adminWdTable">
+                <thead><tr><th>ID</th><th>User</th><th>Amount</th><th>Email</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="adminTabLogs" style="display:none">
+        <div class="card">
+          <div class="card-hd"><div class="card-title"><i class="fa-solid fa-list"></i> System Logs</div></div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table" id="adminLogsTable">
+                <thead><tr><th>Action</th><th>User</th><th>Details</th><th>Time</th></tr></thead>
+                <tbody><tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="adminTabSettings" style="display:none">
+        <div class="card">
+          <div class="card-title mb-2"><i class="fa-solid fa-gear"></i> Site Settings</div>
+          <div class="form-group">
+            <label class="form-label">Maintenance Mode</label>
+            <select class="form-select" id="adminMaintenance"><option value="false">Off</option><option value="true">On</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="saveAdminSettings()">Save Settings</button>
+        </div>
       </div>
     </section>
-
   </main>
 </div>
-
 <div class="toast" id="toast">
   <div class="toast-icon"><i class="fa-solid fa-circle-check"></i></div>
   <span id="toastMsg">Success</span>
 </div>
-
-<!-- GERÇEK GOOGLE TRANSLATE WIDGET (Sağ Alt Küçük) -->
 <div id="google_translate_element"></div>
-
 <script>
 const API = window.location.origin;
 let TOKEN = localStorage.getItem('coinix_token') || '';
@@ -1558,7 +757,7 @@ let USER = null;
 let DOGE_PRICE = 0;
 let DOGE_CHANGE = 0;
 const FAUCET_COOLDOWN = 180000;
-const FAUCET_REWARD = 0.20;
+const FAUCET_REWARD = 1.0;
 const ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID';
 
 if(window.Telegram?.WebApp){
@@ -1590,22 +789,19 @@ function closeSidebar(){
 function navigate(route){
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-
-  const pageMap = {'/':'page-home','/faucet':'page-faucet','/offerwall':'page-offerwall','/swap':'page-swap','/withdraw':'page-withdraw','/faq':'page-faq','/admin':'page-admin'};
+  const pageMap = {'/':'page-dashboard','/faucet':'page-faucet','/offerwall':'page-offerwall','/swap':'page-swap','/withdraw':'page-withdraw','/faq':'page-faq','/admin':'page-admin'};
   const titleMap = {'/':'Dashboard','/faucet':'Faucet','/offerwall':'Offerwall','/swap':'Swap','/withdraw':'Withdraw','/faq':'FAQ','/admin':'Admin Panel'};
-
-  const pageId = pageMap[route] || 'page-home';
-  document.getElementById(pageId).classList.add('active');
+  const pageId = pageMap[route] || 'page-dashboard';
+  const pageEl = document.getElementById(pageId);
+  if(pageEl) pageEl.classList.add('active');
   document.querySelector(`[data-route="${route}"]`)?.classList.add('active');
   document.getElementById('headerTitle').textContent = titleMap[route] || 'COINIX';
-
   closeSidebar();
-
   if(route === '/') loadLive();
   if(route === '/faucet') { updateClaimCD(); generateMathCaptcha(); }
   if(route === '/offerwall') loadOfferwallTab('ptc');
   if(route === '/swap') { document.getElementById('swapAvail').textContent = USER ? fmt(USER.balance) : '0.00'; }
-  if(route === '/withdraw') loadWdHistory();
+  if(route === '/withdraw') { loadWdHistory(); loadReferralCard(); }
   if(route === '/admin') loadAdmin();
 }
 
@@ -1623,8 +819,8 @@ async function fetchDogePrice(){
 
 function updateUSDDisplay(){
   if(!USER) return;
-  const cnxUSD = (USER.balance * DOGE_PRICE).toFixed(4);
-  const dogeUSD = (USER.doge_balance * DOGE_PRICE).toFixed(4);
+  const cnxUSD = ((USER.balance || 0) * 0.01).toFixed(4);
+  const dogeUSD = ((USER.doge_balance || 0) * DOGE_PRICE).toFixed(4);
   document.getElementById('hdrCnxUSD').textContent = '$' + cnxUSD;
   document.getElementById('hdrDogeUSD').textContent = '$' + dogeUSD;
   document.getElementById('dashCnxUSD').textContent = cnxUSD;
@@ -1642,7 +838,6 @@ function updateUSDDisplay(){
 async function init(){
   await fetchDogePrice();
   setInterval(fetchDogePrice, 60000);
-
   if(window.Telegram?.WebApp?.initData){
     try{
       const res = await fetch(API + '/api/auth', {
@@ -1654,11 +849,9 @@ async function init(){
       if(d.token){
         TOKEN = d.token;
         localStorage.setItem('coinix_token', TOKEN);
-        showToast('✅ User account created!', 'success');
+        showToast('Welcome!', 'success');
       }
-    } catch(e){
-      showToast('⚠️ Network error', 'error');
-    }
+    } catch(e){ showToast('Network error', 'error'); }
   }
   await loadUser();
   loadLive();
@@ -1673,50 +866,34 @@ async function loadUser(){
       const name = USER.username || USER.first_name || 'User';
       const initial = name.charAt(0).toUpperCase();
       document.getElementById('sidebarName').textContent = name;
-      document.getElementById('sidebarBal').innerHTML = '<svg viewBox="0 0 64 64" width="12" height="12" style="vertical-align:middle">
-  <defs>
-    <linearGradient id="cnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#F5A623"/>
-      <stop offset="100%" style="stop-color:#B8860B"/>
-    </linearGradient>
-    <filter id="cnxShadow">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(255,215,0,0.4)"/>
-    </filter>
-  </defs>
-  <circle cx="32" cy="32" r="30" fill="url(#cnxGrad)" filter="url(#cnxShadow)"/>
-  <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-  <circle cx="32" cy="32" r="20" fill="none" stroke="rgba(139,69,19,0.2)" stroke-width="0.5"/>
-  <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00" stroke="none">C</text>
-  <text x="32" y="41" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#fff8dc" stroke="none">C</text>
-</svg> ' + fmt(USER.balance) + ' CNX';
+      document.getElementById('sidebarBal').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.balance) + ' CNX';
       document.getElementById('hdrBalCnx').textContent = fmt(USER.balance);
       document.getElementById('hdrBalDoge').textContent = fmt(USER.doge_balance);
-
       document.getElementById('dashCnx').textContent = fmt(USER.balance);
       document.getElementById('dashDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('dashToday').textContent = fmt((USER.total_earned||0) * 0.05);
-      document.getElementById('dashFaucet').textContent = fmt((USER.total_earned||0) - (USER.total_ptc_earnings||0)) + ' CNX';
-      document.getElementById('dashPtc').textContent = fmt(USER.total_ptc_earnings||0) + ' CNX';
-      document.getElementById('dashRef').textContent = fmt(USER.referral_earnings||0) + ' CNX';
+      document.getElementById('dashToday').textContent = fmt(USER.total_earned * 0.01);
+      document.getElementById('dashFaucet').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt((USER.total_earned||0) - (USER.total_offerwall_earned||0)) + ' CNX';
+      document.getElementById('dashPtc').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.total_offerwall_earned||0) + ' CNX';
+      document.getElementById('dashRef').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.referral_earnings||0) + ' CNX';
       document.getElementById('dashRefCount').textContent = USER.referrals || 0;
-      document.getElementById('dashWd').textContent = fmt(USER.total_withdrawals||0) + ' DOGE';
-
+      document.getElementById('dashWd').innerHTML = '<span style="font-weight:700;font-size:28px">D</span> ' + fmt(USER.total_withdrawals||0) + ' DOGE';
       document.getElementById('faucetCnx').textContent = fmt(USER.balance);
       document.getElementById('faucetDoge').textContent = fmt(USER.doge_balance);
       document.getElementById('statClaims').textContent = USER.total_claims || 0;
-      document.getElementById('statEarned').textContent = fmt(USER.total_earned || 0);
-      document.getElementById('statDoge').textContent = fmt(USER.doge_balance || 0);
-
-      document.getElementById('owTotalEarned').textContent = fmt(USER.total_ptc_earnings || 0);
-
+      document.getElementById('statEarned').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.total_earned || 0);
+      document.getElementById('statDoge').innerHTML = '<span style="font-weight:700;font-size:28px">D</span> ' + fmt(USER.doge_balance || 0);
+      document.getElementById('owTotalEarned').textContent = fmt(USER.total_offerwall_earned || 0);
       document.getElementById('swapCnx').textContent = fmt(USER.balance);
       document.getElementById('swapDoge').textContent = fmt(USER.doge_balance);
       document.getElementById('swapAvail').textContent = fmt(USER.balance);
-
       document.getElementById('wdCnx').textContent = fmt(USER.balance);
       document.getElementById('wdDoge').textContent = fmt(USER.doge_balance);
-
+      if(USER.referral_balance > 0){
+        document.getElementById('referralCard').style.display = 'block';
+        document.getElementById('refBalDisplay').textContent = fmt(USER.referral_balance);
+      } else {
+        document.getElementById('referralCard').style.display = 'none';
+      }
       const av = document.getElementById('headerAvatar');
       const sav = document.getElementById('sidebarAvatar');
       if(USER.photo_url){
@@ -1726,22 +903,18 @@ async function loadUser(){
         av.textContent = initial;
         sav.textContent = initial;
       }
-
       const isAdmin = USER.telegram_id === ADMIN_ID;
       document.getElementById('adminSection').style.display = isAdmin ? 'block' : 'none';
-
       updateUSDDisplay();
-      updateClaimCD();
-      showToast('✅ Data loaded', 'success');
     }
-  }catch(e){}
+  }catch(e){ console.error('loadUser error:', e); }
 }
 
 async function doClaim(){
   const btn = document.getElementById('claimBtn');
   const mathAnswer = document.getElementById('mathAnswer').value;
   if(!mathAnswer || mathAnswer === ''){
-    showToast('❌ Please solve the captcha first','error');
+    showToast('Please solve the captcha first','error');
     return;
   }
   btn.disabled = true;
@@ -1754,7 +927,7 @@ async function doClaim(){
     });
     const d = await res.json();
     if(res.ok){
-      showToast('✅ +'+d.amount+' CNX claimed!', 'success');
+      showToast('+'+d.amount+' CNX claimed!', 'success');
       document.getElementById('mathAnswer').value = '';
       await loadUser();
       btn.innerHTML = '<i class="fa-solid fa-check"></i> Claimed!';
@@ -1765,7 +938,7 @@ async function doClaim(){
         startCD(FAUCET_COOLDOWN);
       }, 1500);
     } else {
-      if(d.wait){ startCD(d.wait); showToast('⏳ Cooldown: '+Math.ceil(d.wait/1000)+'s','info'); }
+      if(d.wait){ startCD(d.wait); showToast('Cooldown: '+Math.ceil(d.wait/1000)+'s','info'); }
       else showToast(d.error || 'Failed','error');
       document.getElementById('mathAnswer').value = '';
       generateMathCaptcha();
@@ -1793,7 +966,6 @@ function startCD(ms){
   const status = document.getElementById('claimStatus');
   btn.disabled = true;
   status.classList.remove('ready');
-
   const interval = setInterval(() => {
     ms -= 1000;
     if(ms <= 0){
@@ -1815,110 +987,70 @@ function setCDReady(){
   status.innerHTML = '<i class="fa-solid fa-circle-check"></i> Ready to claim!';
 }
 
-// ============================================
-// OFFERWALL.ME - DOKÜMANA UYGUN FRONTEND
-// ============================================
-
 function setOfferwallTab(el, tab){
   if(el){
     el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     el.classList.add('active');
   }
   document.querySelectorAll('.offerwall-tab').forEach(t => t.style.display = 'none');
-  document.getElementById('tab-' + tab).style.display = 'block';
+  const tabEl = document.getElementById('tab-' + tab);
+  if(tabEl) tabEl.style.display = 'block';
   loadOfferwallTab(tab);
 }
 
 async function loadOfferwallTab(tab){
-  const container = document.getElementById(tab === 'ptc' ? 'ptcContainer' : 
-                                           tab === 'games' ? 'gamesContainer' : 
+  const container = document.getElementById(tab === 'ptc' ? 'ptcContainer' :
+                                           tab === 'games' ? 'gamesContainer' :
+                                           tab === 'visits' ? 'visitsContainer' :
                                            'shortlinksContainer');
-
+  if(!container) return;
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading...</div></div>';
-
   try{
-    if(tab === 'games'){
+    if(tab === 'games' || tab === 'visits'){
       await loadGamesOfferwall(container);
       return;
     }
-
     const endpoint = tab === 'ptc' ? '/api/offerwall/ptc' : '/api/offerwall/shortlinks';
-
     const res = await fetch(API + endpoint, {headers:{'Authorization':'Bearer '+TOKEN}});
-
     if(!res.ok){
       const errorData = await res.json().catch(() => ({}));
-      console.error('Offerwall API error:', res.status, errorData);
       throw new Error(`HTTP ${res.status}: ${errorData.error || 'Failed'}`);
     }
-
     const data = await res.json();
-
     if(!data.success){
       throw new Error(data.error || 'API returned error');
     }
-
     const items = data.ads || data.shortlinks || [];
-
     if(!items || items.length === 0){
-      container.innerHTML = `
-        <div class="empty-tasks">
-          <i class="fa-solid fa-inbox"></i>
-          <h3>No tasks available</h3>
-          <p>Check back later for new tasks!</p>
-        </div>
-      `;
+      container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-inbox"></i><h3>No tasks available</h3><p>Check back later for new tasks!</p></div>';
       return;
     }
-
     if(tab === 'ptc'){
       container.innerHTML = items.map(ad => `
         <div class="task-card">
-          <div class="task-icon">
-            ${ad.thumbnail ? `<img src="${ad.thumbnail}" alt="">` : '<i class="fa-solid fa-eye"></i>'}
-          </div>
+          <div class="task-icon">${ad.thumbnail ? `<img src="${ad.thumbnail}" alt="">` : '<i class="fa-solid fa-eye"></i>'}</div>
           <div class="task-info">
             <div class="task-title">${ad.title}</div>
-            <div class="task-meta">
-              <span class="task-reward">${ad.reward} CNX</span>
-              <span class="task-time"><i class="fa-regular fa-clock"></i> ${ad.duration}s</span>
-            </div>
+            <div class="task-meta"><span class="task-reward">${ad.reward} CNX (+20%)</span><span class="task-time"><i class="fa-regular fa-clock"></i> ${ad.duration}s</span></div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="startPTC('${ad.id}', '${ad.url}', ${ad.duration}, ${ad.reward})">
-            <i class="fa-solid fa-play"></i> Start
-          </button>
+          <button class="btn btn-primary btn-sm" onclick="startPTC('${ad.id}', '${ad.url}', ${ad.duration}, ${ad.reward})"><i class="fa-solid fa-play"></i> Start</button>
         </div>
       `).join('');
     } else {
       container.innerHTML = items.map(link => `
         <div class="task-card">
-          <div class="task-icon">
-            <i class="fa-solid fa-link"></i>
-          </div>
+          <div class="task-icon"><i class="fa-solid fa-link"></i></div>
           <div class="task-info">
             <div class="task-title">${link.name}</div>
-            <div class="task-meta">
-              <span class="task-reward">${link.reward} CNX</span>
-              ${link.remaining_views ? `<span class="task-time"><i class="fa-solid fa-eye"></i> ${link.remaining_views} left</span>` : ''}
-            </div>
+            <div class="task-meta"><span class="task-reward">${link.reward} CNX (+20%)</span>${link.remaining_views ? `<span class="task-time"><i class="fa-solid fa-eye"></i> ${link.remaining_views} left</span>` : ''}</div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="startShortlink('${link.id}', '${link.url}')">
-            <i class="fa-solid fa-play"></i> Go
-          </button>
+          <button class="btn btn-primary btn-sm" onclick="startShortlink('${link.id}', '${link.url}')"><i class="fa-solid fa-play"></i> Go</button>
         </div>
       `).join('');
     }
-
-    showToast(`✅ ${items.length} tasks loaded`, 'success');
   }catch(e){
     console.error('Offerwall load error:', e);
-    container.innerHTML = `
-      <div class="empty-tasks">
-        <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i>
-        <h3>Failed to load tasks</h3>
-        <p>${e.message || 'Please try again later'}</p>
-      </div>
-    `;
+    container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><h3>Failed to load tasks</h3><p>' + (e.message || 'Please try again later') + '</p></div>';
   }
 }
 
@@ -1926,57 +1058,58 @@ async function loadGamesOfferwall(container){
   try{
     const res = await fetch(API + '/api/offerwall/games', {headers:{'Authorization':'Bearer '+TOKEN}});
     const data = await res.json();
-
     if(!data.success || !data.url){
       throw new Error('Failed to get offerwall URL');
     }
-
-    container.innerHTML = `
-      <div class="offerwall-iframe-container">
-        <iframe class="offerwall-iframe" src="${data.url}" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
-      </div>
-    `;
-
-    showToast('✅ Games loaded', 'success');
+    container.innerHTML = `<div class="offerwall-iframe-container"><iframe class="offerwall-iframe" src="${data.url}" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe></div>`;
   }catch(e){
     console.error('Games load error:', e);
-    container.innerHTML = `
-      <div class="empty-tasks">
-        <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i>
-        <h3>Failed to load games</h3>
-        <p>${e.message || 'Please try again later'}</p>
-      </div>
-    `;
+    container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><h3>Failed to load games</h3><p>' + (e.message || 'Please try again later') + '</p></div>';
   }
 }
 
 function startPTC(adId, url, duration, reward){
-  if(!url){
-    showToast('❌ No URL available', 'error');
-    return;
-  }
-
+  if(!url){ showToast('No URL available', 'error'); return; }
   const win = window.open(url, '_blank');
-  if(!win){
-    showToast('❌ Popup blocked! Please allow popups.', 'error');
-    return;
-  }
-
-  showToast(`⏳ Watch ad for ${duration}s to earn ${reward} CNX`, 'info');
-
-  setTimeout(() => {
-    showToast(`✅ PTC completed! +${reward} CNX will be credited via postback.`, 'success');
-  }, duration * 1000);
+  if(!win){ showToast('Popup blocked! Please allow popups.', 'error'); return; }
+  showToast(`Watch ad for ${duration}s to earn ${reward} CNX (+20% bonus)`, 'info');
+  setTimeout(() => { showToast(`PTC completed! +${reward} CNX will be credited via postback.`, 'success'); }, duration * 1000);
 }
 
 function startShortlink(linkId, url){
-  if(!url){
-    showToast('❌ No URL available', 'error');
-    return;
-  }
-
+  if(!url){ showToast('No URL available', 'error'); return; }
   window.open(url, '_blank');
-  showToast('✅ Shortlink opened! Complete to earn CNX', 'success');
+  showToast('Shortlink opened! Complete to earn CNX (+20% bonus)', 'success');
+}
+
+function loadReferralCard(){
+  if(!USER) return;
+  if(USER.referral_balance > 0){
+    document.getElementById('referralCard').style.display = 'block';
+    document.getElementById('refBalDisplay').textContent = fmt(USER.referral_balance);
+  } else {
+    document.getElementById('referralCard').style.display = 'none';
+  }
+}
+
+async function doCollectReferral(){
+  const btn = document.getElementById('collectRefBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner spinner-sm"></div> Collecting...';
+  try{
+    const res = await fetch(API + '/api/referral/collect', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}
+    });
+    const d = await res.json();
+    if(res.ok){
+      showToast(d.message, 'success');
+      await loadUser();
+    } else {
+      showToast(d.error || 'Failed','error');
+    }
+  } catch(e){ showToast('Network error','error'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-coins"></i> Collect Referral Bonus'; }
 }
 
 function calcSwap(){
@@ -1986,18 +1119,16 @@ function calcSwap(){
 }
 function setSwapPct(p){
   if(!USER) return;
-  const avail = USER.balance;
+  const avail = USER.balance || 0;
   document.getElementById('swapFrom').value = (avail * p).toFixed(2);
   calcSwap();
 }
 function setSwapMax(){
   if(!USER) return;
-  document.getElementById('swapFrom').value = USER.balance;
+  document.getElementById('swapFrom').value = (USER.balance || 0).toFixed(2);
   calcSwap();
 }
-function flipSwap(){
-  showToast('Swap direction: CNX → DOGE', 'info');
-}
+function flipSwap(){ showToast('Swap direction: CNX to DOGE', 'info'); }
 async function doSwap(){
   const amt = parseFloat(document.getElementById('swapFrom').value);
   if(!amt || amt <= 0){ showToast('Enter valid amount','error'); return; }
@@ -2012,7 +1143,7 @@ async function doSwap(){
     });
     const d = await res.json();
     if(res.ok){
-      showToast('✅ Swap completed!','success');
+      showToast('Swap completed!','success');
       await loadUser();
       document.getElementById('swapFrom').value = '';
       document.getElementById('swapTo').value = '';
@@ -2048,7 +1179,7 @@ async function doWithdraw(){
     });
     const d = await res.json();
     if(res.ok){
-      showToast('✅ Withdrawal submitted!','success');
+      showToast('Withdrawal submitted!','success');
       await loadUser();
       document.getElementById('wdAmount').value = '';
       document.getElementById('wdEmail').value = '';
@@ -2077,7 +1208,6 @@ async function loadWdHistory(){
           <td class="text-dim">${timeAgo(w.timestamp)}</td>
         </tr>
       `).join('');
-      showToast('✅ History loaded', 'success');
     }
   } catch(e){}
 }
@@ -2113,19 +1243,141 @@ async function loadLive(){
   } catch(e){}
 }
 
+function setAdminTab(el, tab){
+  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('adminTabUsers').style.display = tab==='users'?'block':'none';
+  document.getElementById('adminTabWithdrawals').style.display = tab==='withdrawals'?'block':'none';
+  document.getElementById('adminTabLogs').style.display = tab==='logs'?'block':'none';
+  document.getElementById('adminTabSettings').style.display = tab==='settings'?'block':'none';
+  if(tab==='users') loadAdminUsers();
+  if(tab==='withdrawals') loadAdminWithdrawals();
+  if(tab==='logs') loadAdminLogs();
+}
+
 async function loadAdmin(){
   if(!USER || USER.telegram_id !== ADMIN_ID){
     showToast('Admin access denied','error');
     navigate('/');
     return;
   }
-  showToast('✅ Admin panel loaded', 'success');
+  try{
+    const res = await fetch(API + '/api/admin/stats?admin_key=' + ADMIN_ID);
+    if(res.ok){
+      const stats = await res.json();
+      document.getElementById('adminTotalUsers').textContent = stats.totalUsers || 0;
+      document.getElementById('adminTotalClaims').textContent = stats.totalClaims || 0;
+      document.getElementById('adminTotalOfferwall').textContent = fmt(stats.totalOfferwall || 0);
+      document.getElementById('adminTotalPaid').textContent = fmt(stats.totalPaid || 0);
+    }
+  }catch(e){}
+  loadAdminUsers();
 }
 
-setInterval(() => {
-  loadUser();
-  fetchDogePrice();
-}, 30000);
+async function loadAdminUsers(){
+  const tb = document.getElementById('adminUsersTable').querySelector('tbody');
+  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  try{
+    const res = await fetch(API + '/api/admin/users?admin_key=' + ADMIN_ID);
+    if(res.ok){
+      const list = await res.json();
+      if(!list.length){
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)">No users</td></tr>';
+        return;
+      }
+      tb.innerHTML = list.map(u => `
+        <tr>
+          <td class="mono">${u.id?.substring(0,10)||'-'}</td>
+          <td>${u.username||u.first_name||'-'}</td>
+          <td class="gold mono">${fmt(u.balance)} CNX</td>
+          <td>${u.referrals||0}</td>
+          <td><span class="${u.banned?'danger':'success'}">${u.banned?'Banned':'Active'}</span></td>
+          <td><button class="btn btn-sm btn-ghost" onclick="adminBanUser('${u.id}', ${!u.banned})">${u.banned?'Unban':'Ban'}</button></td>
+        </tr>
+      `).join('');
+    }
+  }catch(e){}
+}
+
+async function loadAdminWithdrawals(){
+  const tb = document.getElementById('adminWdTable').querySelector('tbody');
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  try{
+    const res = await fetch(API + '/api/admin/withdrawals?admin_key=' + ADMIN_ID);
+    if(res.ok){
+      const list = await res.json();
+      if(!list.length){
+        tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals</td></tr>';
+        return;
+      }
+      tb.innerHTML = list.map(w => `
+        <tr>
+          <td class="mono">${w.id?.substring(0,8)||'-'}</td>
+          <td class="mono">${w.user_id?.substring(0,10)||'-'}</td>
+          <td class="gold mono">${fmt(w.amount)} DOGE</td>
+          <td>${w.faucetpay_email||'-'}</td>
+          <td><span class="${w.status==='approved'?'success':w.status==='pending'?'warn':'danger'}">${w.status||'pending'}</span></td>
+          <td class="text-dim">${timeAgo(w.timestamp)}</td>
+          <td>${w.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="adminApproveWd('${w.id}')">Approve</button>`:'-'}</td>
+        </tr>
+      `).join('');
+    }
+  }catch(e){}
+}
+
+async function loadAdminLogs(){
+  const tb = document.getElementById('adminLogsTable').querySelector('tbody');
+  tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  try{
+    const res = await fetch(API + '/api/admin/logs?admin_key=' + ADMIN_ID);
+    if(res.ok){
+      const list = await res.json();
+      if(!list.length){
+        tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)">No logs</td></tr>';
+        return;
+      }
+      tb.innerHTML = list.map(l => `
+        <tr>
+          <td>${l.action||'-'}</td>
+          <td class="mono">${l.user_id?.substring(0,10)||'-'}</td>
+          <td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${JSON.stringify(l.details||{}).substring(0,60)}</td>
+          <td class="text-dim">${timeAgo(l.timestamp)}</td>
+        </tr>
+      `).join('');
+    }
+  }catch(e){}
+}
+
+async function adminBanUser(userId, ban){
+  try{
+    const res = await fetch(API + '/api/admin/' + (ban?'ban':'unban') + '-user?admin_key=' + ADMIN_ID, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({userId})
+    });
+    if(res.ok){ showToast(ban?'User banned':'User unbanned','success'); loadAdminUsers(); }
+  }catch(e){ showToast('Failed','error'); }
+}
+
+async function adminApproveWd(id){
+  try{
+    const res = await fetch(API + '/api/admin/approve-withdrawal?admin_key=' + ADMIN_ID, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({id})
+    });
+    if(res.ok){ showToast('Withdrawal approved','success'); loadAdminWithdrawals(); }
+  }catch(e){ showToast('Failed','error'); }
+}
+
+function saveAdminSettings(){ showToast('Settings saved','success'); }
+
+function generateMathCaptcha(){
+  const n1 = Math.floor(Math.random() * 10) + 1;
+  const n2 = Math.floor(Math.random() * 10) + 1;
+  document.getElementById('mathNum1').textContent = n1;
+  document.getElementById('mathNum2').textContent = n2;
+}
 
 function hideLoading(){
   const ls = document.getElementById('loadingScreen');
@@ -2135,28 +1387,14 @@ function hideLoading(){
   setTimeout(()=>{ if(ls && ls.parentNode) ls.remove(); }, 600);
 }
 
-// ZORLA KAPATMA - init() ne olursa olsun 2 saniye sonra kapanır
-setTimeout(hideLoading, 2000);
+setInterval(() => { loadUser(); fetchDogePrice(); }, 30000);
 
 document.addEventListener('DOMContentLoaded', () => {
   try {
-    if(typeof init === 'function') {
-      init().then(() => {
-        hideLoading();
-      }).catch((err) => {
-        console.warn('Init error:', err);
-        hideLoading();
-      });
-    } else {
-      console.warn('init() function not found');
-      hideLoading();
-    }
-  } catch(err) {
-    console.warn('Init exception:', err);
-    hideLoading();
-  }
+    init().then(() => { hideLoading(); }).catch((err) => { console.warn('Init error:', err); hideLoading(); });
+  } catch(err) { console.warn('Init exception:', err); hideLoading(); }
 });
-
+setTimeout(hideLoading, 3000);
 </script>
 </body>
 </html>
