@@ -218,13 +218,83 @@ body{top:0!important;position:static!important;margin-top:0!important}
 @media(max-width:767px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0!important;width:100vw!important;max-width:100vw!important}.content{padding:14px!important;max-width:100%!important;margin:0!important;width:100%!important}.page-title{font-size:22px}.page-sub{font-size:13px}.stats-grid{grid-template-columns:1fr!important;gap:12px}.grid-4{grid-template-columns:1fr 1fr!important;gap:12px}.header-balance{display:none!important}.header-title{font-size:16px}.header{height:60px;padding:0 16px}.header-avatar{width:38px;height:38px;font-size:13px}.card{padding:16px}.stat-card{padding:18px!important}.stat-card-ic{width:48px;height:48px;font-size:22px}.stat-card-val{font-size:28px;gap:10px!important}.tasks-grid{grid-template-columns:1fr}.toast{bottom:80px;right:12px;left:12px;max-width:none}.tabs{padding:3px}.tab{padding:8px 14px;font-size:12px}.form-input{padding:12px 14px}.btn-lg{padding:13px 22px;font-size:14px}#captchaBox{padding:16px}#mathNum1,#mathNum2{font-size:20px!important}#mathAnswer{width:80px!important;font-size:18px!important}#google_translate_element{bottom:12px!important;left:12px!important;transform:scale(0.9);transform-origin:bottom left}.detailed-stats{grid-template-columns:1fr}}
 @media(max-width:479px){.stats-grid{grid-template-columns:1fr!important;gap:10px}.grid-4{grid-template-columns:1fr!important;gap:10px}.page-title{font-size:18px}.page-sub{font-size:12px}.content{padding:10px!important;width:100%!important;margin:0!important}.header{height:54px;padding:0 12px}.header-avatar{width:34px;height:34px;font-size:12px}.header-title{font-size:14px}.card{padding:12px}.stat-card{padding:14px!important}.stat-card-ic{width:42px;height:42px;font-size:20px}.stat-card-val{font-size:24px;gap:8px!important}.stat-card-sub{font-size:10px}.stat-card-chg{font-size:10px}.tabs{padding:2px}.tab{padding:6px 10px;font-size:11px}.table th{padding:8px 10px;font-size:9px}.table td{padding:8px 10px;font-size:11px}.faq-q{padding:10px 12px;font-size:12px}.task-card{padding:10px;gap:8px}.task-icon{width:40px;height:40px;font-size:18px}.task-title{font-size:12px}.btn{padding:10px 14px;font-size:12px}.btn-lg{padding:12px 18px;font-size:13px}.offerwall-iframe-container{height:calc(100dvh - 140px);min-height:280px}#google_translate_element{bottom:8px!important;left:8px!important;transform:scale(0.8);transform-origin:bottom left}.goog-te-gadget-simple{padding:6px 10px!important;font-size:10px!important}.referral-card-val{font-size:22px}}
 @media(max-width:359px){.page-title{font-size:16px}.stat-card{padding:12px!important}.stat-card-ic{width:36px;height:36px;font-size:16px}.stat-card-val{font-size:20px;gap:6px!important}.content{padding:8px!important;width:100%!important;margin:0!important}.card{padding:10px}.tab{padding:5px 8px;font-size:10px}.btn{padding:8px 12px;font-size:11px}}
+
+/* ===== Coinix additions: skeleton, community banner, admin badge, earn cards, promo ===== */
+.skeleton{position:relative;overflow:hidden;background:linear-gradient(90deg,var(--glass) 0%,rgba(255,255,255,0.08) 50%,var(--glass) 100%);background-size:200% 100%;animation:skelShine 1.4s ease-in-out infinite;border-radius:8px;color:transparent!important}
+.skeleton::after{content:'';position:absolute;inset:0}
+@keyframes skelShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skel-line{height:14px;margin:6px 0}
+.skel-line.lg{height:24px}
+.skel-line.sm{height:10px}
+.skel-circle{width:56px;height:56px;border-radius:50%!important;flex-shrink:0}
+
+.community-banner{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:var(--radius);background:linear-gradient(135deg,rgba(74,158,255,0.12),rgba(139,92,246,0.08));border:1px solid rgba(74,158,255,0.25);margin-bottom:22px;text-decoration:none;color:inherit;transition:all .25s;cursor:pointer;position:relative;overflow:hidden}
+.community-banner::before{content:'';position:absolute;top:-50%;right:-10%;width:200px;height:200px;background:radial-gradient(circle,rgba(74,158,255,0.15),transparent 70%);pointer-events:none}
+.community-banner:hover{transform:translateY(-2px);border-color:rgba(74,158,255,0.5);box-shadow:0 10px 30px rgba(74,158,255,0.15)}
+.community-banner-ic{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--purple));display:grid;place-items:center;color:#fff;font-size:22px;flex-shrink:0;box-shadow:0 8px 24px rgba(74,158,255,0.3)}
+.community-banner-txt{flex:1;min-width:0}
+.community-banner-title{font-family:'Space Grotesk';font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.community-banner-handle{color:var(--blue);font-family:'JetBrains Mono';font-weight:600}
+.community-banner-sub{font-size:12px;color:var(--text-dim)}
+.community-banner-cta{padding:8px 16px;border-radius:10px;background:var(--blue);color:#fff;font-size:12px;font-weight:600;flex-shrink:0}
+
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;background:var(--glass);color:var(--text-dim);border:1px solid var(--glass-brd);margin-left:6px;line-height:1.4}
+.role-badge.admin{background:linear-gradient(90deg,#FFD700,#F5A623);color:#1a1300;border-color:#FFD700;box-shadow:0 2px 8px rgba(255,215,0,0.3)}
+.role-badge i{font-size:9px}
+
+.earn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:24px}
+.earn-card{position:relative;background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid var(--glass-brd);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .3s;overflow:hidden;text-decoration:none;color:inherit;display:block}
+.earn-card:hover{transform:translateY(-4px);border-color:rgba(255,215,0,0.3);box-shadow:0 10px 30px rgba(0,0,0,0.4)}
+.earn-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;background:radial-gradient(circle,rgba(255,215,0,0.08),transparent 70%);opacity:0;transition:opacity .3s}
+.earn-card:hover::before{opacity:1}
+.earn-card-ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:22px;margin-bottom:14px;flex-shrink:0}
+.earn-card-ic.gold{background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,215,0,0.05));color:var(--gold);border:1px solid rgba(255,215,0,0.25)}
+.earn-card-ic.blue{background:linear-gradient(135deg,rgba(74,158,255,0.2),rgba(74,158,255,0.05));color:var(--blue);border:1px solid rgba(74,158,255,0.25)}
+.earn-card-ic.green{background:linear-gradient(135deg,rgba(0,208,132,0.2),rgba(0,208,132,0.05));color:var(--success);border:1px solid rgba(0,208,132,0.25)}
+.earn-card-ic.purple{background:linear-gradient(135deg,rgba(139,92,246,0.2),rgba(139,92,246,0.05));color:var(--purple);border:1px solid rgba(139,92,246,0.25)}
+.earn-card-ic.doge{background:linear-gradient(135deg,rgba(194,166,51,0.2),rgba(194,166,51,0.05));color:#c2a633;border:1px solid rgba(194,166,51,0.25)}
+.earn-card-ic.pink{background:linear-gradient(135deg,rgba(236,72,153,0.2),rgba(236,72,153,0.05));color:#ec4899;border:1px solid rgba(236,72,153,0.25)}
+.earn-card-title{font-family:'Space Grotesk';font-size:16px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.earn-card-sub{font-size:12px;color:var(--text-dim);margin-bottom:12px;min-height:30px}
+.earn-card-meta{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--glass-brd);font-size:11px;color:var(--text-muted)}
+.earn-card-badge{padding:3px 8px;border-radius:6px;background:rgba(0,208,132,0.12);color:var(--success);font-weight:700;font-size:10px}
+.earn-card-badge.bonus{background:rgba(255,215,0,0.12);color:var(--gold)}
+
+.promo-redeem-box{background:linear-gradient(145deg,rgba(255,215,0,0.08),rgba(255,215,0,0.02));border:1px solid rgba(255,215,0,0.25);border-radius:var(--radius);padding:24px;margin-bottom:24px;text-align:center}
+.promo-redeem-box h3{margin-bottom:8px;font-family:'Space Grotesk';font-size:18px;color:var(--gold)}
+.promo-redeem-box p{font-size:13px;color:var(--text-dim);margin-bottom:18px}
+.promo-input-row{display:flex;gap:10px;max-width:480px;margin:0 auto}
+.promo-input-row input{flex:1;text-transform:uppercase;font-family:'JetBrains Mono';font-weight:600;letter-spacing:2px;text-align:center;font-size:16px}
+.promo-history-empty{text-align:center;padding:40px 20px;color:var(--text-dim)}
+.promo-history-empty i{font-size:42px;opacity:.3;margin-bottom:12px;display:block}
+
+.inline-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.inline-status.online{background:rgba(0,208,132,0.12);color:var(--success)}
+.inline-status.offline{background:rgba(255,71,87,0.12);color:var(--danger)}
+.inline-status .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+
+.section-divider{display:flex;align-items:center;gap:12px;margin:24px 0 16px;color:var(--text-muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--glass-brd)}
+
+/* CNX SVG icon helpers */
+.cnx-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.cnx-icon svg{width:100%;height:100%;display:block}
+
+/* DOGE SVG icon helpers */
+.doge-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.doge-icon svg{width:100%;height:100%;display:block}
+
+@media(max-width:767px){.community-banner{padding:14px;gap:10px}.community-banner-ic{width:40px;height:40px;font-size:18px}.community-banner-cta{display:none}.promo-input-row{flex-direction:column}.earn-grid{grid-template-columns:1fr 1fr;gap:12px}.earn-card{padding:14px}.earn-card-ic{width:42px;height:42px;font-size:18px}}
+@media(max-width:479px){.earn-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div id="menuOverlay" onclick="toggleMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;backdrop-filter:blur(2px)"></div>
 <div id="loadingScreen" style="position:fixed;inset:0;z-index:9998;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;transition:opacity .5s">
-  <div style="width:80px;height:80px;position:relative">
-    <svg viewBox="0 0 64 64" width="80" height="80" style="animation:loadSpin 1.2s linear infinite">
+  <div style="width:96px;height:96px;position:relative">
+    <svg viewBox="0 0 64 64" width="96" height="96" style="animation:loadSpin 1.2s linear infinite">
       <defs><linearGradient id="ldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#F5A623"/><stop offset="100%" style="stop-color:#B8860B"/></linearGradient></defs>
       <circle cx="32" cy="32" r="30" fill="url(#ldGrad)"/>
       <circle cx="32" cy="32" r="24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
@@ -263,7 +333,8 @@ body{top:0!important;position:static!important;margin-top:0!important}
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">Earn</div>
-      <a class="sidebar-item" data-route="/offerwall" onclick="navigate('/offerwall')"><i class="fa-solid fa-gift"></i><span class="label">Offerwall</span></a>
+      <a class="sidebar-item" data-route="/earn" onclick="navigate('/earn')"><i class="fa-solid fa-gift"></i><span class="label">Earn Zone</span><span class="badge">HOT</span></a>
+      <a class="sidebar-item" data-route="/promo" onclick="navigate('/promo')"><i class="fa-solid fa-ticket"></i><span class="label">Promo Codes</span></a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-title">Actions</div>
@@ -283,8 +354,8 @@ body{top:0!important;position:static!important;margin-top:0!important}
     <div class="sidebar-user" onclick="navigate('/withdraw')">
       <div class="sidebar-user-avatar" id="sidebarAvatar">?</div>
       <div class="sidebar-user-info">
-        <div class="sidebar-user-name" id="sidebarName">Loading...</div>
-        <div class="sidebar-user-bal" id="sidebarBal"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
+        <div class="sidebar-user-name"><span id="sidebarName">Loading...</span><span class="role-badge" id="sidebarRole"><i class="fa-solid fa-user"></i> Member</span></div>
+        <div class="sidebar-user-bal" id="sidebarBal"><span class="cnx-icon" style="width:14px;height:14px"><svg viewBox="0 0 64 64"><defs><linearGradient id="sbCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#sbCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0 CNX</div>
       </div>
     </div>
   </div>
@@ -295,14 +366,22 @@ body{top:0!important;position:static!important;margin-top:0!important}
     <div class="header-title"><i class="fa-solid fa-circle-dot"></i><span id="headerTitle">Dashboard</span></div>
     <div class="header-spacer"></div>
     <div class="header-balance" onclick="navigate('/withdraw')">
-      <span style="color:var(--gold);font-weight:700">C</span>
+      <span class="cnx-icon" style="width:22px;height:22px">
+        <svg viewBox="0 0 64 64"><defs><linearGradient id="hdrCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#hdrCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg>
+      </span>
       <div style="display:flex;align-items:center;gap:4px">
         <span class="val" id="hdrBalCnx">0</span>
         <span class="text-dim" style="font-size:10px">CNX</span>
         <div class="header-usd"><span class="usd-val" id="hdrCnxUSD">$0.0000</span></div>
       </div>
       <span class="header-balance-sep"></span>
-      <span style="color:#c2a633;font-weight:700">Ð</span>
+      <span class="doge-icon" style="width:22px;height:22px">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="hdrDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs>
+          <circle cx="32" cy="32" r="30" fill="url(#hdrDoge)"/>
+          <text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text>
+        </svg>
+      </span>
       <div style="display:flex;align-items:center;gap:4px">
         <span class="val doge" id="hdrBalDoge">0</span>
         <span class="text-dim" style="font-size:10px">DOGE</span>
@@ -321,47 +400,74 @@ body{top:0!important;position:static!important;margin-top:0!important}
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
-          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700;font-size:28px">C</span> <span id="dashCnx">0.00</span></div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="dCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#dCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> CNX Balance</div>
+          <div class="stat-card-val gold"><span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="dCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#dCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> <span id="dashCnx">0.00</span></div>
           <div class="stat-card-sub">~ $<span id="dashCnxUSD">0.0000</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
-          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="dashDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#dDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="dDoge2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#dDoge2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="dDoge3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#dDoge3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> <span id="dashDoge">0.00</span></div>
           <div class="stat-card-sub">~ $<span id="dashDogeUSD">0.0000</span></div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic green"><i class="fa-solid fa-chart-line"></i></div>
           <div class="stat-card-lbl">Today Earnings</div>
-          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="dashToday">0.00</span></div>
+          <div class="stat-card-val gold"><span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="tCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#tCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> <span id="dashToday">0.00</span></div>
           <div class="stat-card-chg"><i class="fa-solid fa-arrow-up"></i> Active</div>
         </div>
       </div>
       <div class="stats-grid" style="margin-bottom:24px">
         <div class="stat-card">
           <div class="stat-card-ic"><i class="fa-solid fa-droplet"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Faucet</div>
-          <div class="stat-card-val gold" id="dashFaucet"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="fcCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#fcCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> Faucet</div>
+          <div class="stat-card-val gold" id="dashFaucet"><span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="fcCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#fcCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-clock"></i> Every 3 min</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Offerwall</div>
-          <div class="stat-card-val" id="dashPtc"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="ptCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#ptCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> Offerwall</div>
+          <div class="stat-card-val" id="dashPtc"><span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="ptCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#ptCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-bolt"></i> Instant</div>
         </div>
         <div class="stat-card">
           <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Referrals</div>
-          <div class="stat-card-val gold" id="dashRef"><span style="color:var(--gold);font-weight:700">C</span> 0 CNX</div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="rfCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#rfCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> Referrals</div>
+          <div class="stat-card-val gold" id="dashRef"><span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="rfCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#rfCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0 CNX</div>
           <div class="stat-card-chg"><i class="fa-solid fa-coins"></i> <span id="dashRefCount">0</span> referrals</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic doge"><i class="fa-solid fa-paper-plane"></i></div>
-          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> Withdrawals</div>
-          <div class="stat-card-val" style="color:#c2a633" id="dashWd"><span style="font-weight:700;font-size:28px">Ð</span> 0 DOGE</div>
+          <div class="stat-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdDoge2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color:#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdDoge2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> Withdrawals</div>
+          <div class="stat-card-val" style="color:#c2a633" id="dashWd"><span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdDoge3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdDoge3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> 0 DOGE</div>
           <div class="stat-card-chg"><i class="fa-solid fa-check"></i> 0 successful</div>
+        </div>
+      </div>
+      <div class="section-divider"><i class="fa-solid fa-chart-line"></i> Live Earnings Breakdown</div>
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="stat-card">
+          <div class="stat-card-ic gold"><i class="fa-solid fa-ticket"></i></div>
+          <div class="stat-card-lbl"><i class="fa-solid fa-ticket"></i> Promo Rewards</div>
+          <div class="stat-card-val gold" id="kpiPromo"><span class="cnx-icon" style="width:26px;height:26px"><svg viewBox="0 0 64 64"><defs><linearGradient id="kpCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#kpCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0</div>
+          <div class="stat-card-sub"><span id="kpiPromoCount">0</span> redemptions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic green"><i class="fa-solid fa-droplet"></i></div>
+          <div class="stat-card-lbl"><i class="fa-solid fa-droplet"></i> Today's Claims</div>
+          <div class="stat-card-val" style="color:var(--success)" id="kpiClaims">0</div>
+          <div class="stat-card-sub">+<span id="kpiClaimsCnx">0</span> CNX today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
+          <div class="stat-card-lbl"><i class="fa-solid fa-user-plus"></i> Referral Income</div>
+          <div class="stat-card-val" style="color:var(--purple)" id="kpiRef"><span style="color:var(--purple);font-weight:700">C</span> 0</div>
+          <div class="stat-card-sub"><span id="kpiRefCount">0</span> referrals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
+          <div class="stat-card-lbl"><i class="fa-solid fa-gift"></i> Offer Earnings</div>
+          <div class="stat-card-val" style="color:var(--blue)" id="kpiOffer"><span style="color:var(--blue);font-weight:700">C</span> 0</div>
+          <div class="stat-card-sub">PTC, Games, Shortlinks</div>
         </div>
       </div>
       <div class="card mb-2">
@@ -408,14 +514,14 @@ body{top:0!important;position:static!important;margin-top:0!important}
       </div>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
-          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700;font-size:28px">C</span> <span id="faucetCnx">0.00</span></div>
+          <div class="stat-card-ic"><span class="cnx-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="faCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#faCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="faCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#faCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> CNX Balance</div>
+          <div class="stat-card-val gold"><span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="faCnx3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#faCnx3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> <span id="faucetCnx">0.00</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
-          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="faucetDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="faDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#faDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="faDoge2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#faDoge2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="faDoge3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color:#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#faDoge3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> <span id="faucetDoge">0.00</span></div>
         </div>
       </div>
       <div class="card">
@@ -445,40 +551,73 @@ body{top:0!important;position:static!important;margin-top:0!important}
             <div class="stat-card-val gold" id="statClaims">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Earned</div>
-            <div class="stat-card-val gold" id="statEarned"><span style="color:var(--gold);font-weight:700">C</span> 0</div>
+            <div class="stat-card-lbl"><span class="cnx-icon" style="width:16px;height:16px"><svg viewBox="0 0 64 64"><defs><linearGradient id="scCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#scCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> Earned</div>
+            <div class="stat-card-val gold" id="statEarned"><span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="scCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#scCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE</div>
-            <div class="stat-card-val" style="color:#c2a633" id="statDoge"><span style="font-weight:700;font-size:28px">Ð</span> 0</div>
+            <div class="stat-card-lbl"><span class="doge-icon" style="width:16px;height:16px"><svg viewBox="0 0 64 64"><defs><linearGradient id="scDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color:#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#scDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> DOGE</div>
+            <div class="stat-card-val" style="color:#c2a633" id="statDoge"><span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="scDoge2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#scDoge2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> 0</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- OFFERWALL -->
-    <section class="page-section" id="page-offerwall">
+    <!-- EARN ZONE -->
+    <section class="page-section" id="page-earn">
       <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-gift"></i> Earn Tasks</h1>
+        <h1 class="page-title"><i class="fa-solid fa-gift"></i> Earn Zone</h1>
         <p class="page-sub">Complete tasks and earn CNX instantly (+20% bonus on PTC, Shortlinks and Games)</p>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> Total Earned</div>
-          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="owTotalEarned">0.00</span></div>
-          <div class="stat-card-sub">From all tasks (with +20% bonus)</div>
+      <a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener" class="community-banner">
+        <div class="community-banner-ic"><i class="fa-brands fa-telegram"></i></div>
+        <div class="community-banner-txt">
+          <div class="community-banner-title">🎁 Join our Telegram Community</div>
+          <div class="community-banner-sub"><span class="community-banner-handle">@CoinixCommunity</span> · Get promo codes &amp; updates first</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-card-ic green"><i class="fa-solid fa-percent"></i></div>
-          <div class="stat-card-lbl">Bonus Rate</div>
-          <div class="stat-card-val" style="color:var(--success)">+20%</div>
-          <div class="stat-card-sub">On PTC, Shortlinks and Games</div>
-        </div>
+        <div class="community-banner-cta">Join <i class="fa-solid fa-arrow-right" style="margin-left:4px"></i></div>
+      </a>
+      <div class="earn-grid">
+        <a class="earn-card" href="javascript:void(0)" onclick="switchEarnTab('ptc')">
+          <div class="earn-card-ic gold"><i class="fa-solid fa-rectangle-ad"></i></div>
+          <div class="earn-card-title">PTC <span class="earn-card-badge bonus">+20%</span></div>
+          <div class="earn-card-sub">View paid ads and click links to earn CNX instantly.</div>
+          <div class="earn-card-meta"><span>Highest payouts</span><span><i class="fa-solid fa-arrow-right"></i></span></div>
+        </a>
+        <a class="earn-card" href="javascript:void(0)" onclick="switchEarnTab('shortlinks')">
+          <div class="earn-card-ic blue"><i class="fa-solid fa-link"></i></div>
+          <div class="earn-card-title">Shortlinks <span class="earn-card-badge bonus">+20%</span></div>
+          <div class="earn-card-sub">Visit shortened URLs and complete short tasks.</div>
+          <div class="earn-card-meta"><span>5-30s per link</span><span><i class="fa-solid fa-arrow-right"></i></span></div>
+        </a>
+        <a class="earn-card" href="javascript:void(0)" onclick="switchEarnTab('visits')">
+          <div class="earn-card-ic purple"><i class="fa-solid fa-globe"></i></div>
+          <div class="earn-card-title">Offers &amp; Visits</div>
+          <div class="earn-card-sub">Visit websites and complete offerwall surveys.</div>
+          <div class="earn-card-meta"><span>High rewards</span><span><i class="fa-solid fa-arrow-right"></i></span></div>
+        </a>
+        <a class="earn-card" href="javascript:void(0)" onclick="switchEarnTab('games')">
+          <div class="earn-card-ic green"><i class="fa-solid fa-gamepad"></i></div>
+          <div class="earn-card-title">Games <span class="earn-card-badge bonus">+20%</span></div>
+          <div class="earn-card-sub">Install and play mobile games to reach milestones.</div>
+          <div class="earn-card-meta"><span>Big rewards</span><span><i class="fa-solid fa-arrow-right"></i></span></div>
+        </a>
+        <a class="earn-card" href="javascript:void(0)" onclick="navigate('/promo')">
+          <div class="earn-card-ic pink"><i class="fa-solid fa-ticket"></i></div>
+          <div class="earn-card-title">Promo Codes</div>
+          <div class="earn-card-sub">Redeem codes shared by our community for bonus coins.</div>
+          <div class="earn-card-meta"><span>Free coins</span><span><i class="fa-solid fa-arrow-right"></i></span></div>
+        </a>
+        <a class="earn-card" href="javascript:void(0)" onclick="navigate('/faucet')">
+          <div class="earn-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="ecDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#ecDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
+          <div class="earn-card-title">Faucet</div>
+          <div class="earn-card-sub">Free CNX every 3 minutes — the easiest earn method.</div>
+          <div class="earn-card-meta"><span>Every 3 min</span><span><i class="fa-solid fa-arrow-right"></i></span></div>
+        </a>
       </div>
+      <div class="section-divider"><i class="fa-solid fa-list"></i> Live Tasks</div>
       <div class="tabs">
-        <div class="tab active" onclick="setOfferwallTab(this,'ptc')"><i class="fa-solid fa-gift"></i> PTC</div>
-        <div class="tab" onclick="setOfferwallTab(this,'visits')"><i class="fa-solid fa-globe"></i> Visits</div>
+        <div class="tab active" onclick="setOfferwallTab(this,'ptc')"><i class="fa-solid fa-rectangle-ad"></i> PTC</div>
+        <div class="tab" onclick="setOfferwallTab(this,'visits')"><i class="fa-solid fa-globe"></i> Offers</div>
         <div class="tab" onclick="setOfferwallTab(this,'games')"><i class="fa-solid fa-gamepad"></i> Games</div>
         <div class="tab" onclick="setOfferwallTab(this,'shortlinks')"><i class="fa-solid fa-link"></i> Shortlinks</div>
       </div>
@@ -489,7 +628,7 @@ body{top:0!important;position:static!important;margin-top:0!important}
       </div>
       <div id="tab-visits" class="offerwall-tab" style="display:none">
         <div id="visitsContainer" class="tasks-grid">
-          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading visits...</div></div>
+          <div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading offers...</div></div>
         </div>
       </div>
       <div id="tab-games" class="offerwall-tab" style="display:none">
@@ -504,6 +643,50 @@ body{top:0!important;position:static!important;margin-top:0!important}
       </div>
     </section>
 
+    <!-- PROMO CODES -->
+    <section class="page-section" id="page-promo">
+      <div class="page-head">
+        <h1 class="page-title"><i class="fa-solid fa-ticket"></i> Promo Codes</h1>
+        <p class="page-sub">Redeem codes for free CNX &amp; DOGE. Find codes in <a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">@CoinixCommunity</a></p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-ic pink"><i class="fa-solid fa-ticket"></i></div>
+          <div class="stat-card-lbl">Codes Redeemed</div>
+          <div class="stat-card-val gold" id="promoCountTotal">0</div>
+          <div class="stat-card-sub">All-time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-ic gold"><span class="cnx-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="pbCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#pbCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span></div>
+          <div class="stat-card-lbl">Total Bonus Earned</div>
+          <div class="stat-card-val gold" id="promoBonusTotal"><span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="pbCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#pbCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> 0.00</div>
+          <div class="stat-card-sub">From promo codes</div>
+        </div>
+      </div>
+      <div class="promo-redeem-box">
+        <h3><i class="fa-solid fa-key"></i> Enter Promo Code</h3>
+        <p>Codes are case-insensitive. Each code can only be used once per account.</p>
+        <div class="promo-input-row">
+          <input type="text" class="form-input" id="promoCodeInput" placeholder="WELCOME100" maxlength="32" autocomplete="off">
+          <button class="btn btn-primary btn-lg" id="promoRedeemBtn" onclick="redeemPromoCode()"><i class="fa-solid fa-bolt"></i> Redeem</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Your Redemption History</div>
+          <span class="inline-status" id="promoDbStatus"><span class="dot"></span> Synced</span>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="table" id="promoHistoryTable">
+              <thead><tr><th>Code</th><th>Reward</th><th>Coin</th><th>Time</th></tr></thead>
+              <tbody><tr><td colspan="4"><div class="promo-history-empty"><i class="fa-solid fa-ticket"></i><p>Loading...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- SWAP -->
     <section class="page-section" id="page-swap">
       <div class="page-head">
@@ -512,14 +695,14 @@ body{top:0!important;position:static!important;margin-top:0!important}
       </div>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
-          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="swapCnx">0.00</span></div>
+          <div class="stat-card-ic"><span class="cnx-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="swCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#swCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="swCnx2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#swCnx2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> CNX Balance</div>
+          <div class="stat-card-val gold"><span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="swCnx3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#swCnx3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> <span id="swapCnx">0.00</span></div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
-          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="swapDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="swDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#swDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="swDoge2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#swDoge2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="swDoge3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#swDoge3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> <span id="swapDoge">0.00</span></div>
         </div>
       </div>
       <div class="card" style="max-width:500px;margin:0 auto">
@@ -531,7 +714,7 @@ body{top:0!important;position:static!important;margin-top:0!important}
           <div style="display:flex;align-items:center;gap:10px">
             <input type="number" class="form-input" id="swapFrom" placeholder="0.00" step="0.01" min="0" oninput="calcSwap()" style="flex:1">
             <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:var(--gold-soft);border:1px solid rgba(255,215,0,0.25);color:var(--gold);font-weight:600;font-size:13px;flex-shrink:0">
-              <span style="font-weight:700">C</span><span id="swapFromCur">CNX</span>
+              <span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="sfi" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#sfi)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span><span id="swapFromCur">CNX</span>
             </div>
           </div>
           <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
@@ -549,7 +732,7 @@ body{top:0!important;position:static!important;margin-top:0!important}
           <div style="display:flex;align-items:center;gap:10px">
             <input type="number" class="form-input" id="swapTo" placeholder="0.00" readonly style="flex:1">
             <div style="display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:10px;background:rgba(194,166,51,0.1);border:1px solid rgba(194,166,51,0.25);color:#c2a633;font-weight:600;font-size:13px;flex-shrink:0">
-              <span style="font-weight:700">Ð</span><span id="swapToCur">DOGE</span>
+              <span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="sti" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#sti)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span><span id="swapToCur">DOGE</span>
             </div>
           </div>
         </div>
@@ -569,21 +752,21 @@ body{top:0!important;position:static!important;margin-top:0!important}
       </div>
       <div class="referral-card" id="referralCard" style="display:none">
         <div class="referral-card-title"><i class="fa-solid fa-user-plus"></i> Referral Earnings</div>
-        <div class="referral-card-val"><span style="color:var(--gold);font-weight:700">C</span> <span id="refBalDisplay">0.00</span></div>
+        <div class="referral-card-val"><span class="cnx-icon" style="width:26px;height:26px;vertical-align:middle"><svg viewBox="0 0 64 64"><defs><linearGradient id="rcCnx" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#rcCnx)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> <span id="refBalDisplay">0.00</span></div>
         <div class="referral-card-sub">Collect to transfer to your main balance</div>
         <button class="btn btn-primary btn-block mt-2" id="collectRefBtn" onclick="doCollectReferral()"><i class="fa-solid fa-coins"></i> Collect Referral Bonus</button>
       </div>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-card-ic doge"><span style="font-weight:700;font-size:20px">Ð</span></div>
-          <div class="stat-card-lbl"><span style="color:#c2a633;font-weight:700">Ð</span> DOGE Balance</div>
-          <div class="stat-card-val" style="color:#c2a633"><span style="font-weight:700;font-size:28px">Ð</span> <span id="wdDoge">0.00</span></div>
+          <div class="stat-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdhDoge" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdhDoge)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdhDoge2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color:#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdhDoge2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> DOGE Balance</div>
+          <div class="stat-card-val" style="color:#c2a633"><span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdhDoge3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdhDoge3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> <span id="wdDoge">0.00</span></div>
           <div class="stat-card-sub">Ready to withdraw</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic"><i class="fa-solid fa-coins"></i></div>
-          <div class="stat-card-lbl"><span style="color:var(--gold);font-weight:700">C</span> CNX Balance</div>
-          <div class="stat-card-val gold"><span style="color:var(--gold);font-weight:700">C</span> <span id="wdCnx">0.00</span></div>
+          <div class="stat-card-ic"><span class="cnx-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdc" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdc)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span></div>
+          <div class="stat-card-lbl"><span class="cnx-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdc2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdc2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> CNX Balance</div>
+          <div class="stat-card-val gold"><span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdc3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color:#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdc3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> <span id="wdCnx">0.00</span></div>
           <div class="stat-card-sub" style="cursor:pointer;color:var(--blue)" onclick="navigate('/swap')">Swap to DOGE -</div>
         </div>
       </div>
@@ -603,9 +786,9 @@ body{top:0!important;position:static!important;margin-top:0!important}
         </div>
         <div class="card mt-2">
           <div class="form-group">
-            <label class="form-label"><span style="color:#c2a633;font-weight:700">Ð</span> Currency</label>
+            <label class="form-label"><span class="doge-icon" style="width:14px;height:14px;vertical-align:middle"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdcd" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdcd)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> Currency</label>
             <div class="form-input" style="display:flex;align-items:center;gap:8px;padding:12px 14px">
-              <span style="color:#c2a633;font-weight:700">Ð</span> DOGE (via FaucetPay)
+              <span class="doge-icon" style="width:18px;height:18px"><svg viewBox="0 0 64 64"><defs><linearGradient id="wdcd2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#wdcd2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> DOGE (via FaucetPay)
             </div>
           </div>
           <div class="form-group">
@@ -662,7 +845,7 @@ body{top:0!important;position:static!important;margin-top:0!important}
     <!-- ADMIN -->
     <section class="page-section" id="page-admin">
       <div class="page-head">
-        <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel</h1>
+        <h1 class="page-title"><i class="fa-solid fa-shield-halved"></i> Admin Panel <span class="role-badge admin"><i class="fa-solid fa-crown"></i> Admin</span></h1>
         <p class="page-sub">System management dashboard</p>
       </div>
       <div class="stats-grid">
@@ -678,22 +861,63 @@ body{top:0!important;position:static!important;margin-top:0!important}
         </div>
         <div class="stat-card">
           <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
-          <div class="stat-card-lbl">Offerwall Earnings</div>
+          <div class="stat-card-lbl">Earn Zone Earnings</div>
           <div class="stat-card-val gold" id="adminTotalOfferwall">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-card-ic doge"><i class="fa-solid fa-paper-plane"></i></div>
+          <div class="stat-card-ic doge"><span class="doge-icon" style="width:22px;height:22px"><svg viewBox="0 0 64 64"><defs><linearGradient id="atD" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#atD)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span></div>
           <div class="stat-card-lbl">Total Paid (DOGE)</div>
           <div class="stat-card-val" style="color:#c2a633" id="adminTotalPaid">0</div>
         </div>
       </div>
       <div class="tabs">
-        <div class="tab active" onclick="setAdminTab(this,'users')"><i class="fa-solid fa-users"></i> Users</div>
-        <div class="tab" onclick="setAdminTab(this,'withdrawals')"><i class="fa-solid fa-paper-plane"></i> Withdrawals</div>
+        <div class="tab active" onclick="setAdminTab(this,'dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</div>
+        <div class="tab" onclick="setAdminTab(this,'users')"><i class="fa-solid fa-users"></i> Users</div>
+        <div class="tab" onclick="setAdminTab(this,'withdrawals')"><i class="fa-solid fa-paper-plane"></i> Withdraws</div>
+        <div class="tab" onclick="setAdminTab(this,'promo')"><i class="fa-solid fa-ticket"></i> Promo Codes</div>
+        <div class="tab" onclick="setAdminTab(this,'rewards')"><i class="fa-solid fa-coins"></i> Rewards</div>
         <div class="tab" onclick="setAdminTab(this,'logs')"><i class="fa-solid fa-list"></i> Logs</div>
         <div class="tab" onclick="setAdminTab(this,'settings')"><i class="fa-solid fa-gear"></i> Settings</div>
       </div>
-      <div id="adminTabUsers">
+
+      <div id="adminTabDashboard">
+        <div class="kpi-grid">
+          <div class="stat-card">
+            <div class="stat-card-ic gold"><i class="fa-solid fa-ticket"></i></div>
+            <div class="stat-card-lbl">Today's Promo Rewards</div>
+            <div class="stat-card-val gold" id="adPromoToday">0</div>
+            <div class="stat-card-sub"><span id="adPromoCountToday">0</span> redemptions</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-ic green"><i class="fa-solid fa-droplet"></i></div>
+            <div class="stat-card-lbl">Today's Claims</div>
+            <div class="stat-card-val" style="color:var(--success)" id="adClaimsToday">0</div>
+            <div class="stat-card-sub">Faucet activity</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-ic purple"><i class="fa-solid fa-user-plus"></i></div>
+            <div class="stat-card-lbl">Referral Income Today</div>
+            <div class="stat-card-val" style="color:var(--purple)" id="adRefToday">0</div>
+            <div class="stat-card-sub">From active referrals</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-ic blue"><i class="fa-solid fa-gift"></i></div>
+            <div class="stat-card-lbl">Today's Offer Earnings</div>
+            <div class="stat-card-val" style="color:var(--blue)" id="adOfferToday">0</div>
+            <div class="stat-card-sub">PTC + Games + Shortlinks</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title mb-2"><i class="fa-solid fa-chart-line"></i> 7-Day Snapshot</div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-card-lbl">New users (7d)</div><div class="stat-card-val" id="adNewUsers">0</div></div>
+            <div class="stat-card"><div class="stat-card-lbl">Total earned (7d)</div><div class="stat-card-val gold" id="adEarned7d">0</div></div>
+            <div class="stat-card"><div class="stat-card-lbl">Withdrawals (7d)</div><div class="stat-card-val doge" id="adWd7d">0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="adminTabUsers" style="display:none">
         <div class="card">
           <div class="card-hd"><div class="card-title"><i class="fa-solid fa-users"></i> Users</div></div>
           <div class="table-wrap">
@@ -719,6 +943,73 @@ body{top:0!important;position:static!important;margin-top:0!important}
           </div>
         </div>
       </div>
+
+      <div id="adminTabPromo" style="display:none">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title"><i class="fa-solid fa-ticket"></i> Promo Codes</div>
+            <button class="btn btn-primary btn-sm" onclick="showCreatePromo()"><i class="fa-solid fa-plus"></i> New Code</button>
+          </div>
+          <div class="form-group" id="createPromoForm" style="display:none;background:var(--glass);padding:16px;border-radius:12px;border:1px solid var(--glass-brd);margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px">
+              <div><label class="form-label">Code</label><input class="form-input" id="newPromoCode" placeholder="WELCOME100" style="text-transform:uppercase"></div>
+              <div><label class="form-label">Coin</label><select class="form-select" id="newPromoCoin"><option value="CNX">CNX</option><option value="DOGE">DOGE</option></select></div>
+              <div><label class="form-label">Reward</label><input class="form-input" id="newPromoReward" type="number" placeholder="50" min="0.01" step="0.01"></div>
+              <div><label class="form-label">Usage Limit</label><input class="form-input" id="newPromoLimit" type="number" placeholder="100" min="1"></div>
+              <div><label class="form-label">Expires</label><input class="form-input" id="newPromoExpiry" type="date"></div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="createPromoCode()"><i class="fa-solid fa-check"></i> Create</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('createPromoForm').style.display='none'">Cancel</button>
+          </div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table" id="adminPromoTable">
+                <thead><tr><th>Code</th><th>Coin</th><th>Reward</th><th>Used</th><th>Limit</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-3">
+          <div class="card-hd"><div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Usage History</div></div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table" id="adminPromoUsageTable">
+                <thead><tr><th>User</th><th>Code</th><th>Reward</th><th>Coin</th><th>Time</th></tr></thead>
+                <tbody><tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="adminTabRewards" style="display:none">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title"><i class="fa-solid fa-coins"></i> Coin Rewards</div>
+            <button class="btn btn-primary btn-sm" onclick="showCreateReward()"><i class="fa-solid fa-plus"></i> New Reward</button>
+          </div>
+          <div class="form-group" id="createRewardForm" style="display:none;background:var(--glass);padding:16px;border-radius:12px;border:1px solid var(--glass-brd);margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px">
+              <div><label class="form-label">Name</label><input class="form-input" id="newRewardName" placeholder="Daily Bonus"></div>
+              <div><label class="form-label">Coin</label><select class="form-select" id="newRewardCoin"><option value="CNX">CNX</option><option value="DOGE">DOGE</option></select></div>
+              <div><label class="form-label">Amount</label><input class="form-input" id="newRewardAmount" type="number" placeholder="25" min="0.01" step="0.01"></div>
+              <div><label class="form-label">Daily Limit</label><input class="form-input" id="newRewardLimit" type="number" placeholder="100" min="0"></div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="createReward()"><i class="fa-solid fa-check"></i> Create</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('createRewardForm').style.display='none'">Cancel</button>
+          </div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="table" id="adminRewardsTable">
+                <thead><tr><th>Name</th><th>Coin</th><th>Amount</th><th>Daily Limit</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="adminTabLogs" style="display:none">
         <div class="card">
           <div class="card-hd"><div class="card-title"><i class="fa-solid fa-list"></i> System Logs</div></div>
@@ -751,58 +1042,114 @@ body{top:0!important;position:static!important;margin-top:0!important}
 </div>
 <div id="google_translate_element"></div>
 <script>
-const API = window.location.origin;
+// ===== INLINE BOOTSTRAP (runs before index.js) =====
+window.COINIX = window.COINIX || { ready: false, error: null, config: {} };
+window.COINIX.startParams = { ref: null, promo: null };
+
+// Parse Telegram WebApp startapp / start_param
+try {
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    try { tg.ready(); tg.expand(); } catch (e) {}
+    const sp = (tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
+    if (sp) {
+      if (sp.startsWith('ref_')) {
+        const id = sp.replace('ref_', '').trim();
+        if (/^\d+$/.test(id)) window.COINIX.startParams.ref = id;
+      } else if (sp.startsWith('promo_')) {
+        window.COINIX.startParams.promo = sp.replace('promo_', '').trim();
+      } else if (/^\d+$/.test(sp)) {
+        window.COINIX.startParams.ref = sp;
+      }
+    }
+  }
+} catch (e) { /* no telegram */ }
+
+function hideLoading() {
+  const ls = document.getElementById('loadingScreen');
+  if (!ls || ls.dataset.hidden === '1') return;
+  ls.dataset.hidden = '1';
+  ls.style.opacity = '0';
+  ls.style.pointerEvents = 'none';
+  setTimeout(() => { if (ls && ls.parentNode) ls.parentNode.removeChild(ls); }, 600);
+}
+window.COINIX.hideLoading = hideLoading;
+
+setTimeout(hideLoading, 2500);
+
+try {
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    if (tg.colorScheme === 'light') document.body.classList.add('tg-light');
+    document.documentElement.style.setProperty('--tg-viewport-height', (tg.viewportHeight || window.innerHeight) + 'px');
+  }
+} catch (e) {}
+
+window.addEventListener('error', () => hideLoading());
+window.addEventListener('unhandledrejection', () => hideLoading());
+
+// ===== APP FRONTEND (inline; mirrors index.js client behaviour) =====
+const API = (window.location.origin && window.location.origin !== 'null') ? window.location.origin : '';
 let TOKEN = localStorage.getItem('coinix_token') || '';
 let USER = null;
 let DOGE_PRICE = 0;
 let DOGE_CHANGE = 0;
 const FAUCET_COOLDOWN = 180000;
 const FAUCET_REWARD = 1.0;
-const ADMIN_ID = 'YOUR_ADMIN_TELEGRAM_ID';
+const ADMIN_ID = (window.COINIX_CONFIG && window.COINIX_CONFIG.ADMIN_TELEGRAM_ID) || '';
 
-if(window.Telegram?.WebApp){
-  try { Telegram.WebApp.ready(); Telegram.WebApp.expand(); } catch(e){}
+if (window.Telegram && window.Telegram.WebApp) {
+  try { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); } catch (e) {}
 }
 
 let toastTimer;
-function showToast(msg, type='success'){
+function showToast(msg, type='success') {
   const toast = document.getElementById('toast');
+  if (!toast) return;
   const icon = toast.querySelector('.toast-icon i');
   document.getElementById('toastMsg').textContent = msg;
   toast.className = 'toast show ' + type;
-  icon.className = 'fa-solid ' + (type==='success'?'fa-circle-check':type==='error'?'fa-circle-xmark':'fa-circle-info');
+  if (icon) icon.className = 'fa-solid ' + (type==='success'?'fa-circle-check':type==='error'?'fa-circle-xmark':'fa-circle-info');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
 function fmt(n){ return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}); }
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
-function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('active');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('active');
-}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sidebarOverlay').classList.toggle('active'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('active'); }
+function toggleMenu(){ const m=document.getElementById('menuOverlay'); if(m) m.style.display = (m.style.display==='none'?'block':'none'); }
 
 function navigate(route){
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
-  const pageMap = {'/':'page-dashboard','/faucet':'page-faucet','/offerwall':'page-offerwall','/swap':'page-swap','/withdraw':'page-withdraw','/faq':'page-faq','/admin':'page-admin'};
-  const titleMap = {'/':'Dashboard','/faucet':'Faucet','/offerwall':'Offerwall','/swap':'Swap','/withdraw':'Withdraw','/faq':'FAQ','/admin':'Admin Panel'};
+  if(route === '/offerwall') route = '/earn';
+  const pageMap = {'/':'page-dashboard','/faucet':'page-faucet','/earn':'page-earn','/promo':'page-promo','/swap':'page-swap','/withdraw':'page-withdraw','/faq':'page-faq','/admin':'page-admin'};
+  const titleMap = {'/':'Dashboard','/faucet':'Faucet','/earn':'Earn Zone','/promo':'Promo Codes','/swap':'Swap','/withdraw':'Withdraw','/faq':'FAQ','/admin':'Admin Panel'};
   const pageId = pageMap[route] || 'page-dashboard';
   const pageEl = document.getElementById(pageId);
   if(pageEl) pageEl.classList.add('active');
   document.querySelector(`[data-route="${route}"]`)?.classList.add('active');
-  document.getElementById('headerTitle').textContent = titleMap[route] || 'COINIX';
+  const titleEl = document.getElementById('headerTitle');
+  if (titleEl) titleEl.textContent = titleMap[route] || 'COINIX';
   closeSidebar();
-  if(route === '/') loadLive();
-  if(route === '/faucet') { updateClaimCD(); generateMathCaptcha(); }
-  if(route === '/offerwall') loadOfferwallTab('ptc');
-  if(route === '/swap') { document.getElementById('swapAvail').textContent = USER ? fmt(USER.balance) : '0.00'; }
-  if(route === '/withdraw') { loadWdHistory(); loadReferralCard(); }
-  if(route === '/admin') loadAdmin();
+  if(route === '/') { if (typeof loadLive === 'function') loadLive(); if (typeof loadDashboardKpi === 'function') loadDashboardKpi(); }
+  if(route === '/faucet') { if (typeof updateClaimCD === 'function') updateClaimCD(); if (typeof generateMathCaptcha === 'function') generateMathCaptcha(); }
+  if(route === '/earn' && typeof loadOfferwallTab === 'function') loadOfferwallTab('ptc');
+  if(route === '/promo' && typeof loadPromoPage === 'function') loadPromoPage();
+  if(route === '/swap') { const sa=document.getElementById('swapAvail'); if(sa) sa.textContent = USER ? fmt(USER.balance) : '0.00'; }
+  if(route === '/withdraw') { if (typeof loadWdHistory === 'function') loadWdHistory(); if (typeof loadReferralCard === 'function') loadReferralCard(); }
+  if(route === '/admin' && typeof loadAdmin === 'function') loadAdmin();
+  try { window.history?.replaceState(null, '', '#' + route); } catch(e){}
+}
+
+function switchEarnTab(tab){
+  const el = document.querySelectorAll('#page-earn .tabs .tab');
+  let idx = {ptc:0,visits:1,games:2,shortlinks:3}[tab];
+  if(typeof idx !== 'number') return;
+  setOfferwallTab(el[idx], tab);
+  document.querySelector('.tabs').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 async function fetchDogePrice(){
@@ -821,40 +1168,95 @@ function updateUSDDisplay(){
   if(!USER) return;
   const cnxUSD = ((USER.balance || 0) * 0.01).toFixed(4);
   const dogeUSD = ((USER.doge_balance || 0) * DOGE_PRICE).toFixed(4);
-  document.getElementById('hdrCnxUSD').textContent = '$' + cnxUSD;
-  document.getElementById('hdrDogeUSD').textContent = '$' + dogeUSD;
-  document.getElementById('dashCnxUSD').textContent = cnxUSD;
-  document.getElementById('dashDogeUSD').textContent = dogeUSD;
+  const h1=document.getElementById('hdrCnxUSD'); if(h1) h1.textContent = '$' + cnxUSD;
+  const h2=document.getElementById('hdrDogeUSD'); if(h2) h2.textContent = '$' + dogeUSD;
+  const d1=document.getElementById('dashCnxUSD'); if(d1) d1.textContent = cnxUSD;
+  const d2=document.getElementById('dashDogeUSD'); if(d2) d2.textContent = dogeUSD;
   const changeEl = document.getElementById('hdrPriceChange');
-  if(DOGE_CHANGE >= 0){
-    changeEl.textContent = '+' + DOGE_CHANGE.toFixed(2) + '%';
-    changeEl.className = 'price-change price-up';
-  } else {
-    changeEl.textContent = DOGE_CHANGE.toFixed(2) + '%';
-    changeEl.className = 'price-change price-down';
+  if(changeEl){
+    if(DOGE_CHANGE >= 0){
+      changeEl.textContent = '+' + DOGE_CHANGE.toFixed(2) + '%';
+      changeEl.className = 'price-change price-up';
+    } else {
+      changeEl.textContent = DOGE_CHANGE.toFixed(2) + '%';
+      changeEl.className = 'price-change price-down';
+    }
   }
 }
 
 async function init(){
+  hideLoading();
   await fetchDogePrice();
   setInterval(fetchDogePrice, 60000);
-  if(window.Telegram?.WebApp?.initData){
+
+  // Telegram WebApp auth
+  if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData){
     try{
       const res = await fetch(API + '/api/auth', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({initData: Telegram.WebApp.initData})
+        body: JSON.stringify({
+          initData: window.Telegram.WebApp.initData,
+          ref: window.COINIX.startParams.ref || null
+        })
       });
       const d = await res.json();
       if(d.token){
         TOKEN = d.token;
         localStorage.setItem('coinix_token', TOKEN);
-        showToast('Welcome!', 'success');
+        if (d.isNew) showToast('Welcome to Coinix!', 'success');
+        else showToast('Welcome back!', 'success');
       }
-    } catch(e){ showToast('Network error', 'error'); }
+    } catch(e){
+      console.warn('Telegram auth skipped:', e);
+    }
   }
   await loadUser();
-  loadLive();
+  if (typeof loadLive === 'function') loadLive();
+  if (typeof loadDashboardKpi === 'function') loadDashboardKpi();
+  try {
+    const hash = window.location.hash.replace('#','');
+    if(hash && hash !== '/') navigate(hash);
+  } catch(e){}
+  hideLoading();
+}
+
+async function api(path, options = {}, retries = 1){
+  const opts = Object.assign({ headers: {} }, options);
+  if(TOKEN && !opts.headers.Authorization) opts.headers.Authorization = 'Bearer ' + TOKEN;
+  if(opts.body && typeof opts.body !== 'string' && !(opts.body instanceof FormData)){
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(opts.body);
+  }
+  let lastErr;
+  for(let i = 0; i <= retries; i++){
+    try{
+      const res = await fetch(API + path, opts);
+      const data = await res.json().catch(() => ({}));
+      if(!res.ok){
+        const msg = (data && data.error) ? data.error : ('Request failed (' + res.status + ')');
+        const err = new Error(msg);
+        err.status = res.status; err.data = data;
+        throw err;
+      }
+      return data;
+    } catch(e){
+      lastErr = e;
+      const m = e.message || '';
+      const isNetwork = (m.includes('Failed to fetch') || m.includes('NetworkError') || m.includes('Load failed'));
+      if(isNetwork && i < retries){
+        await new Promise(r => setTimeout(r, 400 * (i + 1)));
+        continue;
+      }
+      break;
+    }
+  }
+  const m = lastErr?.message || '';
+  let friendly = m || 'Something went wrong.';
+  if (m.includes('Failed to fetch') || m.includes('NetworkError')) friendly = 'Network error. Check your connection.';
+  const err = new Error(friendly);
+  err.original = lastErr;
+  throw err;
 }
 
 async function loadUser(){
@@ -865,58 +1267,70 @@ async function loadUser(){
       USER = await res.json();
       const name = USER.username || USER.first_name || 'User';
       const initial = name.charAt(0).toUpperCase();
-      document.getElementById('sidebarName').textContent = name;
-      document.getElementById('sidebarBal').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.balance) + ' CNX';
-      document.getElementById('hdrBalCnx').textContent = fmt(USER.balance);
-      document.getElementById('hdrBalDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('dashCnx').textContent = fmt(USER.balance);
-      document.getElementById('dashDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('dashToday').textContent = fmt(USER.total_earned * 0.01);
-      document.getElementById('dashFaucet').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt((USER.total_earned||0) - (USER.total_offerwall_earned||0)) + ' CNX';
-      document.getElementById('dashPtc').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.total_offerwall_earned||0) + ' CNX';
-      document.getElementById('dashRef').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.referral_earnings||0) + ' CNX';
-      document.getElementById('dashRefCount').textContent = USER.referrals || 0;
-      document.getElementById('dashWd').innerHTML = '<span style="font-weight:700;font-size:28px">D</span> ' + fmt(USER.total_withdrawals||0) + ' DOGE';
-      document.getElementById('faucetCnx').textContent = fmt(USER.balance);
-      document.getElementById('faucetDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('statClaims').textContent = USER.total_claims || 0;
-      document.getElementById('statEarned').innerHTML = '<span style="color:var(--gold);font-weight:700">C</span> ' + fmt(USER.total_earned || 0);
-      document.getElementById('statDoge').innerHTML = '<span style="font-weight:700;font-size:28px">D</span> ' + fmt(USER.doge_balance || 0);
-      document.getElementById('owTotalEarned').textContent = fmt(USER.total_offerwall_earned || 0);
-      document.getElementById('swapCnx').textContent = fmt(USER.balance);
-      document.getElementById('swapDoge').textContent = fmt(USER.doge_balance);
-      document.getElementById('swapAvail').textContent = fmt(USER.balance);
-      document.getElementById('wdCnx').textContent = fmt(USER.balance);
-      document.getElementById('wdDoge').textContent = fmt(USER.doge_balance);
+      const sN=document.getElementById('sidebarName'); if(sN) sN.textContent = name;
+      const sB=document.getElementById('sidebarBal'); if(sB) sB.innerHTML = '<span class="cnx-icon" style="width:14px;height:14px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u1)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt(USER.balance) + ' CNX';
+      const h1=document.getElementById('hdrBalCnx'); if(h1) h1.textContent = fmt(USER.balance);
+      const h2=document.getElementById('hdrBalDoge'); if(h2) h2.textContent = fmt(USER.doge_balance);
+      const setTxt = (id, v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+      setTxt('dashCnx', fmt(USER.balance));
+      setTxt('dashDoge', fmt(USER.doge_balance));
+      setTxt('dashToday', fmt((USER.total_earned||0) * 0.01));
+      const dF=document.getElementById('dashFaucet'); if(dF) dF.innerHTML = '<span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u2)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt((USER.total_earned||0)-(USER.total_offerwall_earned||0)) + ' CNX';
+      const dP=document.getElementById('dashPtc'); if(dP) dP.innerHTML = '<span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u3)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt(USER.total_offerwall_earned||0) + ' CNX';
+      const dR=document.getElementById('dashRef'); if(dR) dR.innerHTML = '<span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u4)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt(USER.referral_earnings||0) + ' CNX';
+      setTxt('dashRefCount', USER.referrals||0);
+      const dW=document.getElementById('dashWd'); if(dW) dW.innerHTML = '<span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u5" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u5)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> ' + fmt(USER.total_withdrawals||0) + ' DOGE';
+      setTxt('faucetCnx', fmt(USER.balance));
+      setTxt('faucetDoge', fmt(USER.doge_balance));
+      setTxt('statClaims', USER.total_claims||0);
+      const sE=document.getElementById('statEarned'); if(sE) sE.innerHTML = '<span class="cnx-icon" style="width:28px;height:28px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u6)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt(USER.total_earned||0);
+      const sD=document.getElementById('statDoge'); if(sD) sD.innerHTML = '<span class="doge-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="u7" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#f5d27a"/><stop offset="50%" stop-color="#c2a633"/><stop offset="100%" stop-color="#8a731a"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#u7)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="34" fill="#fff">Ð</text></svg></span> ' + fmt(USER.doge_balance||0);
+      const oT=document.getElementById('owTotalEarned'); if(oT) oT.textContent = fmt(USER.total_offerwall_earned||0);
+      setTxt('swapCnx', fmt(USER.balance));
+      setTxt('swapDoge', fmt(USER.doge_balance));
+      setTxt('swapAvail', fmt(USER.balance));
+      setTxt('wdCnx', fmt(USER.balance));
+      setTxt('wdDoge', fmt(USER.doge_balance));
+      const refCard = document.getElementById('referralCard');
+      const refBalEl = document.getElementById('refBalDisplay');
       if(USER.referral_balance > 0){
-        document.getElementById('referralCard').style.display = 'block';
-        document.getElementById('refBalDisplay').textContent = fmt(USER.referral_balance);
+        if (refCard) refCard.style.display = 'block';
+        if (refBalEl) refBalEl.textContent = fmt(USER.referral_balance);
       } else {
-        document.getElementById('referralCard').style.display = 'none';
+        if (refCard) refCard.style.display = 'none';
       }
       const av = document.getElementById('headerAvatar');
       const sav = document.getElementById('sidebarAvatar');
       if(USER.photo_url){
-        av.innerHTML = `<img src="${USER.photo_url}">`;
-        sav.innerHTML = `<img src="${USER.photo_url}">`;
+        if (av) av.innerHTML = '<img src="'+USER.photo_url+'">';
+        if (sav) sav.innerHTML = '<img src="'+USER.photo_url+'">';
       } else {
-        av.textContent = initial;
-        sav.textContent = initial;
+        if (av) av.textContent = initial;
+        if (sav) sav.textContent = initial;
       }
-      const isAdmin = USER.telegram_id === ADMIN_ID;
-      document.getElementById('adminSection').style.display = isAdmin ? 'block' : 'none';
+      const isAdmin = ADMIN_ID && String(USER.telegram_id) === String(ADMIN_ID);
+      const adminSection = document.getElementById('adminSection');
+      if (adminSection) adminSection.style.display = isAdmin ? 'block' : 'none';
+      const roleEl = document.getElementById('sidebarRole');
+      if(roleEl){
+        if(isAdmin){
+          roleEl.className = 'role-badge admin';
+          roleEl.innerHTML = '<i class="fa-solid fa-crown"></i> Admin';
+        } else {
+          roleEl.className = 'role-badge';
+          roleEl.innerHTML = '<i class="fa-solid fa-user"></i> Member';
+        }
+      }
+      if (typeof updateUserKpis === 'function') updateUserKpis();
       updateUSDDisplay();
     }
-  }catch(e){ console.error('loadUser error:', e); }
+  }catch(e){ console.warn('loadUser error:', e); }
 }
 
 async function doClaim(){
   const btn = document.getElementById('claimBtn');
   const mathAnswer = document.getElementById('mathAnswer').value;
-  if(!mathAnswer || mathAnswer === ''){
-    showToast('Please solve the captcha first','error');
-    return;
-  }
+  if(!mathAnswer || mathAnswer === ''){ showToast('Please solve the captcha first','error'); return; }
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner spinner-sm"></div> Claiming...';
   try{
@@ -934,47 +1348,46 @@ async function doClaim(){
       setTimeout(() => {
         btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
         btn.disabled = false;
-        generateMathCaptcha();
-        startCD(FAUCET_COOLDOWN);
+        if (typeof generateMathCaptcha === 'function') generateMathCaptcha();
+        if (typeof startCD === 'function') startCD(FAUCET_COOLDOWN);
       }, 1500);
     } else {
-      if(d.wait){ startCD(d.wait); showToast('Cooldown: '+Math.ceil(d.wait/1000)+'s','info'); }
+      if(d.wait && typeof startCD === 'function') { startCD(d.wait); showToast('Cooldown: '+Math.ceil(d.wait/1000)+'s','info'); }
       else showToast(d.error || 'Failed','error');
       document.getElementById('mathAnswer').value = '';
-      generateMathCaptcha();
+      if (typeof generateMathCaptcha === 'function') generateMathCaptcha();
       btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
       btn.disabled = false;
     }
   } catch(e){
     showToast('Network error','error');
     document.getElementById('mathAnswer').value = '';
-    generateMathCaptcha();
+    if (typeof generateMathCaptcha === 'function') generateMathCaptcha();
     btn.innerHTML = '<i class="fa-solid fa-hand-holding-dollar"></i> CLAIM CNX';
     btn.disabled = false;
   }
 }
 
 function updateClaimCD(){
-  if(!USER || !USER.last_claim) { setCDReady(); return; }
+  if(!USER || !USER.last_claim) { if (typeof setCDReady === 'function') setCDReady(); return; }
   const elapsed = Date.now() - USER.last_claim;
-  if(elapsed < FAUCET_COOLDOWN) startCD(FAUCET_COOLDOWN - elapsed);
-  else setCDReady();
+  if(elapsed < FAUCET_COOLDOWN && typeof startCD === 'function') startCD(FAUCET_COOLDOWN - elapsed);
+  else if (typeof setCDReady === 'function') setCDReady();
 }
 
 function startCD(ms){
   const btn = document.getElementById('claimBtn');
   const status = document.getElementById('claimStatus');
+  if (!btn || !status) return;
   btn.disabled = true;
   status.classList.remove('ready');
   const interval = setInterval(() => {
     ms -= 1000;
-    if(ms <= 0){
-      clearInterval(interval);
-      setCDReady();
-    } else {
+    if(ms <= 0){ clearInterval(interval); if (typeof setCDReady === 'function') setCDReady(); }
+    else {
       const mins = Math.floor(ms / 60000);
       const secs = Math.floor((ms % 60000) / 1000);
-      status.innerHTML = `<i class="fa-solid fa-clock"></i> Next claim in <strong>${mins}:${secs.toString().padStart(2, '0')}</strong>`;
+      status.innerHTML = '<i class="fa-solid fa-clock"></i> Next claim in <strong>'+mins+':'+secs.toString().padStart(2,'0')+'</strong>';
     }
   }, 1000);
 }
@@ -982,6 +1395,7 @@ function startCD(ms){
 function setCDReady(){
   const btn = document.getElementById('claimBtn');
   const status = document.getElementById('claimStatus');
+  if (!btn || !status) return;
   btn.disabled = false;
   status.classList.add('ready');
   status.innerHTML = '<i class="fa-solid fa-circle-check"></i> Ready to claim!';
@@ -995,62 +1409,29 @@ function setOfferwallTab(el, tab){
   document.querySelectorAll('.offerwall-tab').forEach(t => t.style.display = 'none');
   const tabEl = document.getElementById('tab-' + tab);
   if(tabEl) tabEl.style.display = 'block';
-  loadOfferwallTab(tab);
+  if (typeof loadOfferwallTab === 'function') loadOfferwallTab(tab);
 }
 
 async function loadOfferwallTab(tab){
-  const container = document.getElementById(tab === 'ptc' ? 'ptcContainer' :
-                                           tab === 'games' ? 'gamesContainer' :
-                                           tab === 'visits' ? 'visitsContainer' :
-                                           'shortlinksContainer');
+  const container = document.getElementById(tab === 'ptc' ? 'ptcContainer' : tab === 'games' ? 'gamesContainer' : tab === 'visits' ? 'visitsContainer' : 'shortlinksContainer');
   if(!container) return;
   container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);grid-column:1/-1"><div class="spinner" style="margin:0 auto"></div><div style="margin-top:10px">Loading...</div></div>';
   try{
-    if(tab === 'games' || tab === 'visits'){
-      await loadGamesOfferwall(container);
-      return;
-    }
+    if(tab === 'games' || tab === 'visits'){ if (typeof loadGamesOfferwall === 'function') await loadGamesOfferwall(container); return; }
     const endpoint = tab === 'ptc' ? '/api/offerwall/ptc' : '/api/offerwall/shortlinks';
     const res = await fetch(API + endpoint, {headers:{'Authorization':'Bearer '+TOKEN}});
-    if(!res.ok){
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(`HTTP ${res.status}: ${errorData.error || 'Failed'}`);
-    }
+    if(!res.ok){ const errorData = await res.json().catch(() => ({})); throw new Error('HTTP '+res.status+': '+(errorData.error||'Failed')); }
     const data = await res.json();
-    if(!data.success){
-      throw new Error(data.error || 'API returned error');
-    }
+    if(!data.success) throw new Error(data.error || 'API returned error');
     const items = data.ads || data.shortlinks || [];
-    if(!items || items.length === 0){
-      container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-inbox"></i><h3>No tasks available</h3><p>Check back later for new tasks!</p></div>';
-      return;
-    }
+    if(!items || !items.length){ container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-inbox"></i><h3>No tasks available</h3><p>Check back later for new tasks!</p></div>'; return; }
     if(tab === 'ptc'){
-      container.innerHTML = items.map(ad => `
-        <div class="task-card">
-          <div class="task-icon">${ad.thumbnail ? `<img src="${ad.thumbnail}" alt="">` : '<i class="fa-solid fa-eye"></i>'}</div>
-          <div class="task-info">
-            <div class="task-title">${ad.title}</div>
-            <div class="task-meta"><span class="task-reward">${ad.reward} CNX (+20%)</span><span class="task-time"><i class="fa-regular fa-clock"></i> ${ad.duration}s</span></div>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="startPTC('${ad.id}', '${ad.url}', ${ad.duration}, ${ad.reward})"><i class="fa-solid fa-play"></i> Start</button>
-        </div>
-      `).join('');
+      container.innerHTML = items.map(ad => '<div class="task-card"><div class="task-icon">'+(ad.thumbnail?('<img src="'+ad.thumbnail+'" alt="">'):'<i class="fa-solid fa-eye"></i>')+'</div><div class="task-info"><div class="task-title">'+escapeHtml(ad.title)+'</div><div class="task-meta"><span class="task-reward">'+ad.reward+' CNX (+20%)</span><span class="task-time"><i class="fa-regular fa-clock"></i> '+ad.duration+'s</span></div></div><button class="btn btn-primary btn-sm" onclick="startPTC(\''+ad.id+'\', \''+ad.url+'\', '+ad.duration+', '+ad.reward+')"><i class="fa-solid fa-play"></i> Start</button></div>').join('');
     } else {
-      container.innerHTML = items.map(link => `
-        <div class="task-card">
-          <div class="task-icon"><i class="fa-solid fa-link"></i></div>
-          <div class="task-info">
-            <div class="task-title">${link.name}</div>
-            <div class="task-meta"><span class="task-reward">${link.reward} CNX (+20%)</span>${link.remaining_views ? `<span class="task-time"><i class="fa-solid fa-eye"></i> ${link.remaining_views} left</span>` : ''}</div>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="startShortlink('${link.id}', '${link.url}')"><i class="fa-solid fa-play"></i> Go</button>
-        </div>
-      `).join('');
+      container.innerHTML = items.map(link => '<div class="task-card"><div class="task-icon"><i class="fa-solid fa-link"></i></div><div class="task-info"><div class="task-title">'+escapeHtml(link.name)+'</div><div class="task-meta"><span class="task-reward">'+link.reward+' CNX (+20%)</span>'+(link.remaining_views?('<span class="task-time"><i class="fa-solid fa-eye"></i> '+link.remaining_views+' left</span>'):'')+'</div></div><button class="btn btn-primary btn-sm" onclick="startShortlink(\''+link.id+'\', \''+link.url+'\')"><i class="fa-solid fa-play"></i> Go</button></div>').join('');
     }
   }catch(e){
-    console.error('Offerwall load error:', e);
-    container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><h3>Failed to load tasks</h3><p>' + (e.message || 'Please try again later') + '</p></div>';
+    container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><h3>Failed to load tasks</h3><p>'+escapeHtml(e.message)+'</p></div>';
   }
 }
 
@@ -1058,13 +1439,10 @@ async function loadGamesOfferwall(container){
   try{
     const res = await fetch(API + '/api/offerwall/games', {headers:{'Authorization':'Bearer '+TOKEN}});
     const data = await res.json();
-    if(!data.success || !data.url){
-      throw new Error('Failed to get offerwall URL');
-    }
-    container.innerHTML = `<div class="offerwall-iframe-container"><iframe class="offerwall-iframe" src="${data.url}" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe></div>`;
+    if(!data.success || !data.url) throw new Error('Failed to get offerwall URL');
+    container.innerHTML = '<div class="offerwall-iframe-container"><iframe class="offerwall-iframe" src="'+data.url+'" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe></div>';
   }catch(e){
-    console.error('Games load error:', e);
-    container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><h3>Failed to load games</h3><p>' + (e.message || 'Please try again later') + '</p></div>';
+    container.innerHTML = '<div class="empty-tasks"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><h3>Failed to load games</h3><p>'+escapeHtml(e.message)+'</p></div>';
   }
 }
 
@@ -1072,8 +1450,8 @@ function startPTC(adId, url, duration, reward){
   if(!url){ showToast('No URL available', 'error'); return; }
   const win = window.open(url, '_blank');
   if(!win){ showToast('Popup blocked! Please allow popups.', 'error'); return; }
-  showToast(`Watch ad for ${duration}s to earn ${reward} CNX (+20% bonus)`, 'info');
-  setTimeout(() => { showToast(`PTC completed! +${reward} CNX will be credited via postback.`, 'success'); }, duration * 1000);
+  showToast('Watch ad for '+duration+'s to earn '+reward+' CNX (+20% bonus)', 'info');
+  setTimeout(() => { showToast('PTC completed! +'+reward+' CNX will be credited via postback.', 'success'); }, duration * 1000);
 }
 
 function startShortlink(linkId, url){
@@ -1084,11 +1462,12 @@ function startShortlink(linkId, url){
 
 function loadReferralCard(){
   if(!USER) return;
+  const rc=document.getElementById('referralCard'); if(!rc) return;
   if(USER.referral_balance > 0){
-    document.getElementById('referralCard').style.display = 'block';
-    document.getElementById('refBalDisplay').textContent = fmt(USER.referral_balance);
+    rc.style.display = 'block';
+    const rbd=document.getElementById('refBalDisplay'); if(rbd) rbd.textContent = fmt(USER.referral_balance);
   } else {
-    document.getElementById('referralCard').style.display = 'none';
+    rc.style.display = 'none';
   }
 }
 
@@ -1097,37 +1476,21 @@ async function doCollectReferral(){
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner spinner-sm"></div> Collecting...';
   try{
-    const res = await fetch(API + '/api/referral/collect', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}
-    });
+    const res = await fetch(API + '/api/referral/collect', {method:'POST', headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}});
     const d = await res.json();
-    if(res.ok){
-      showToast(d.message, 'success');
-      await loadUser();
-    } else {
-      showToast(d.error || 'Failed','error');
-    }
+    if(res.ok){ showToast(d.message, 'success'); await loadUser(); }
+    else showToast(d.error || 'Failed','error');
   } catch(e){ showToast('Network error','error'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-coins"></i> Collect Referral Bonus'; }
 }
 
 function calcSwap(){
   const from = parseFloat(document.getElementById('swapFrom').value) || 0;
-  document.getElementById('swapTo').value = from.toFixed(2);
-  document.getElementById('swapReceive').textContent = from.toFixed(2);
+  const sTo = document.getElementById('swapTo'); if(sTo) sTo.value = from.toFixed(2);
+  const sR = document.getElementById('swapReceive'); if(sR) sR.textContent = from.toFixed(2);
 }
-function setSwapPct(p){
-  if(!USER) return;
-  const avail = USER.balance || 0;
-  document.getElementById('swapFrom').value = (avail * p).toFixed(2);
-  calcSwap();
-}
-function setSwapMax(){
-  if(!USER) return;
-  document.getElementById('swapFrom').value = (USER.balance || 0).toFixed(2);
-  calcSwap();
-}
+function setSwapPct(p){ if(!USER) return; const a = (USER.balance||0); const e = document.getElementById('swapFrom'); if(e) e.value = (a*p).toFixed(2); calcSwap(); }
+function setSwapMax(){ if(!USER) return; const e = document.getElementById('swapFrom'); if(e) e.value = (USER.balance||0).toFixed(2); calcSwap(); }
 function flipSwap(){ showToast('Swap direction: CNX to DOGE', 'info'); }
 async function doSwap(){
   const amt = parseFloat(document.getElementById('swapFrom').value);
@@ -1136,19 +1499,10 @@ async function doSwap(){
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner spinner-sm"></div> Swapping...';
   try{
-    const res = await fetch(API + '/api/swap', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({amount:amt,direction:'cnx-to-doge'})
-    });
+    const res = await fetch(API + '/api/swap', {method:'POST', headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}, body: JSON.stringify({amount:amt,direction:'cnx-to-doge'})});
     const d = await res.json();
-    if(res.ok){
-      showToast('Swap completed!','success');
-      await loadUser();
-      document.getElementById('swapFrom').value = '';
-      document.getElementById('swapTo').value = '';
-      document.getElementById('swapReceive').textContent = '0.00';
-    } else showToast(d.error || 'Failed','error');
+    if(res.ok){ showToast('Swap completed!','success'); await loadUser(); document.getElementById('swapFrom').value=''; document.getElementById('swapTo').value=''; const sR=document.getElementById('swapReceive'); if(sR) sR.textContent='0.00'; }
+    else showToast(d.error || 'Failed','error');
   } catch(e){ showToast('Network error','error'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-left"></i> Swap Now'; }
 }
@@ -1158,11 +1512,9 @@ function setWdTab(el, tab){
   el.classList.add('active');
   document.getElementById('wdTabForm').style.display = tab==='form' ? 'block' : 'none';
   document.getElementById('wdTabHistory').style.display = tab==='history' ? 'block' : 'none';
-  if(tab==='history') loadWdHistory();
+  if(tab==='history' && typeof loadWdHistory === 'function') loadWdHistory();
 }
-function setWdAmt(v){
-  document.getElementById('wdAmount').value = v==='max' ? (USER?USER.doge_balance:0) : v;
-}
+function setWdAmt(v){ const e=document.getElementById('wdAmount'); if(e) e.value = v==='max' ? (USER?USER.doge_balance:0) : v; }
 async function doWithdraw(){
   const amt = parseFloat(document.getElementById('wdAmount').value);
   const email = document.getElementById('wdEmail').value.trim();
@@ -1172,42 +1524,23 @@ async function doWithdraw(){
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner spinner-sm"></div> Processing...';
   try{
-    const res = await fetch(API + '/api/withdraw', {
-      method:'POST',
-      headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify({faucetpay_email:email,amount:amt})
-    });
+    const res = await fetch(API + '/api/withdraw', {method:'POST', headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}, body: JSON.stringify({faucetpay_email:email,amount:amt})});
     const d = await res.json();
-    if(res.ok){
-      showToast('Withdrawal submitted!','success');
-      await loadUser();
-      document.getElementById('wdAmount').value = '';
-      document.getElementById('wdEmail').value = '';
-    } else showToast(d.error||'Failed','error');
+    if(res.ok){ showToast('Withdrawal submitted!','success'); await loadUser(); document.getElementById('wdAmount').value=''; document.getElementById('wdEmail').value=''; }
+    else showToast(d.error||'Failed','error');
   } catch(e){ showToast('Network error','error'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Withdraw to FaucetPay'; }
 }
 async function loadWdHistory(){
   if(!TOKEN) return;
-  const tb = document.getElementById('wdHistoryTable').querySelector('tbody');
-  tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  const tb = document.getElementById('wdHistoryTable')?.querySelector('tbody');
+  if(tb) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
   try{
     const res = await fetch(API + '/api/withdrawals', {headers:{'Authorization':'Bearer '+TOKEN}});
     if(res.ok){
       const list = await res.json();
-      if(!list.length){
-        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals yet</td></tr>';
-        return;
-      }
-      tb.innerHTML = list.map(w => `
-        <tr>
-          <td class="mono">${w.id?w.id.substring(0,8)+'...':'-'}</td>
-          <td class="gold mono">${fmt(w.amount)} DOGE</td>
-          <td class="mono">${w.faucetpay_email||'-'}</td>
-          <td><span class="${w.status==='approved'?'success':w.status==='pending'?'warn':'danger'}">${w.status||'pending'}</span></td>
-          <td class="text-dim">${timeAgo(w.timestamp)}</td>
-        </tr>
-      `).join('');
+      if(!list.length){ if(tb) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals yet</td></tr>'; return; }
+      if(tb) tb.innerHTML = list.map(w => '<tr><td class="mono">'+(w.id?w.id.substring(0,8)+'...':'-')+'</td><td class="gold mono">'+fmt(w.amount)+' DOGE</td><td class="mono">'+escapeHtml(w.faucetpay_email||'-')+'</td><td><span class="'+(w.status==='approved'?'success':w.status==='pending'?'warn':'danger')+'">'+escapeHtml(w.status||'pending')+'</span></td><td class="text-dim">'+timeAgo(w.timestamp)+'</td></tr>').join('');
     }
   } catch(e){}
 }
@@ -1229,16 +1562,9 @@ async function loadLive(){
     if(res.ok){
       const list = await res.json();
       const c = document.getElementById('liveList');
-      if(!list.length){
-        c.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals yet</div>';
-        return;
-      }
-      c.innerHTML = list.slice(0,8).map(w => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-brd)">
-          <div style="font-size:12px;color:var(--text-dim)">${w.user_id ? w.user_id.substring(0,8)+'...' : 'User'}</div>
-          <div style="font-family:'JetBrains Mono';font-weight:600;color:var(--gold);font-size:13px">${fmt(w.amount)} DOGE</div>
-        </div>
-      `).join('');
+      if(!c) return;
+      if(!list.length){ c.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals yet</div>'; return; }
+      c.innerHTML = list.slice(0,8).map(w => '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-brd)"><div style="font-size:12px;color:var(--text-dim)">'+(w.user_id ? w.user_id.substring(0,8)+'...' : 'User')+'</div><div style="font-family:JetBrains Mono;font-weight:600;color:var(--gold);font-size:13px">'+fmt(w.amount)+' DOGE</div></div>').join('');
     }
   } catch(e){}
 }
@@ -1246,126 +1572,86 @@ async function loadLive(){
 function setAdminTab(el, tab){
   el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('adminTabUsers').style.display = tab==='users'?'block':'none';
-  document.getElementById('adminTabWithdrawals').style.display = tab==='withdrawals'?'block':'none';
-  document.getElementById('adminTabLogs').style.display = tab==='logs'?'block':'none';
-  document.getElementById('adminTabSettings').style.display = tab==='settings'?'block':'none';
-  if(tab==='users') loadAdminUsers();
-  if(tab==='withdrawals') loadAdminWithdrawals();
-  if(tab==='logs') loadAdminLogs();
+  const tabs = ['dashboard','users','withdrawals','promo','rewards','logs','settings'];
+  tabs.forEach(t => {
+    const node = document.getElementById('adminTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if(node) node.style.display = t === tab ? 'block' : 'none';
+  });
+  if(tab==='users' && typeof loadAdminUsers === 'function') loadAdminUsers();
+  if(tab==='withdrawals' && typeof loadAdminWithdrawals === 'function') loadAdminWithdrawals();
+  if(tab==='logs' && typeof loadAdminLogs === 'function') loadAdminLogs();
+  if(tab==='promo') { if (typeof loadAdminPromo === 'function') loadAdminPromo(); if (typeof loadAdminPromoUsage === 'function') loadAdminPromoUsage(); }
+  if(tab==='rewards' && typeof loadAdminRewards === 'function') loadAdminRewards();
+  if(tab==='dashboard' && typeof loadAdminDashboard === 'function') loadAdminDashboard();
 }
 
 async function loadAdmin(){
-  if(!USER || USER.telegram_id !== ADMIN_ID){
-    showToast('Admin access denied','error');
-    navigate('/');
-    return;
+  if(!USER || (ADMIN_ID && String(USER.telegram_id) !== String(ADMIN_ID))){
+    showToast('Admin access denied','error'); navigate('/'); return;
   }
   try{
-    const res = await fetch(API + '/api/admin/stats?admin_key=' + ADMIN_ID);
+    const res = await fetch(API + '/api/admin/stats?admin_key=' + encodeURIComponent(ADMIN_ID));
     if(res.ok){
       const stats = await res.json();
-      document.getElementById('adminTotalUsers').textContent = stats.totalUsers || 0;
-      document.getElementById('adminTotalClaims').textContent = stats.totalClaims || 0;
-      document.getElementById('adminTotalOfferwall').textContent = fmt(stats.totalOfferwall || 0);
-      document.getElementById('adminTotalPaid').textContent = fmt(stats.totalPaid || 0);
+      const set = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent = fmt(v); };
+      set('adminTotalUsers', stats.totalUsers||0);
+      set('adminTotalClaims', stats.totalClaims||0);
+      set('adminTotalOfferwall', stats.totalOfferwall||0);
+      set('adminTotalPaid', stats.totalPaid||0);
     }
   }catch(e){}
-  loadAdminUsers();
+  if (typeof loadAdminUsers === 'function') loadAdminUsers();
 }
 
 async function loadAdminUsers(){
-  const tb = document.getElementById('adminUsersTable').querySelector('tbody');
-  tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  const tb = document.getElementById('adminUsersTable')?.querySelector('tbody');
+  if(tb) tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
   try{
-    const res = await fetch(API + '/api/admin/users?admin_key=' + ADMIN_ID);
+    const res = await fetch(API + '/api/admin/users?admin_key=' + encodeURIComponent(ADMIN_ID));
     if(res.ok){
       const list = await res.json();
-      if(!list.length){
-        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)">No users</td></tr>';
-        return;
-      }
-      tb.innerHTML = list.map(u => `
-        <tr>
-          <td class="mono">${u.id?.substring(0,10)||'-'}</td>
-          <td>${u.username||u.first_name||'-'}</td>
-          <td class="gold mono">${fmt(u.balance)} CNX</td>
-          <td>${u.referrals||0}</td>
-          <td><span class="${u.banned?'danger':'success'}">${u.banned?'Banned':'Active'}</span></td>
-          <td><button class="btn btn-sm btn-ghost" onclick="adminBanUser('${u.id}', ${!u.banned})">${u.banned?'Unban':'Ban'}</button></td>
-        </tr>
-      `).join('');
+      if(!list.length){ if(tb) tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)">No users</td></tr>'; return; }
+      if(tb) tb.innerHTML = list.map(u => '<tr><td class="mono">'+(u.id?.substring(0,10)||'-')+'</td><td>'+escapeHtml(u.username||u.first_name||'-')+'</td><td class="gold mono">'+fmt(u.balance)+' CNX</td><td>'+(u.referrals||0)+'</td><td><span class="'+(u.banned?'danger':'success')+'">'+(u.banned?'Banned':'Active')+'</span></td><td><button class="btn btn-sm btn-ghost" onclick="adminBanUser(\''+u.id+'\', '+!u.banned+')">'+(u.banned?'Unban':'Ban')+'</button></td></tr>').join('');
     }
   }catch(e){}
 }
 
 async function loadAdminWithdrawals(){
-  const tb = document.getElementById('adminWdTable').querySelector('tbody');
-  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  const tb = document.getElementById('adminWdTable')?.querySelector('tbody');
+  if(tb) tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
   try{
-    const res = await fetch(API + '/api/admin/withdrawals?admin_key=' + ADMIN_ID);
+    const res = await fetch(API + '/api/admin/withdrawals?admin_key=' + encodeURIComponent(ADMIN_ID));
     if(res.ok){
       const list = await res.json();
-      if(!list.length){
-        tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals</td></tr>';
-        return;
-      }
-      tb.innerHTML = list.map(w => `
-        <tr>
-          <td class="mono">${w.id?.substring(0,8)||'-'}</td>
-          <td class="mono">${w.user_id?.substring(0,10)||'-'}</td>
-          <td class="gold mono">${fmt(w.amount)} DOGE</td>
-          <td>${w.faucetpay_email||'-'}</td>
-          <td><span class="${w.status==='approved'?'success':w.status==='pending'?'warn':'danger'}">${w.status||'pending'}</span></td>
-          <td class="text-dim">${timeAgo(w.timestamp)}</td>
-          <td>${w.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="adminApproveWd('${w.id}')">Approve</button>`:'-'}</td>
-        </tr>
-      `).join('');
+      if(!list.length){ if(tb) tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)">No withdrawals</td></tr>'; return; }
+      if(tb) tb.innerHTML = list.map(w => '<tr><td class="mono">'+(w.id?.substring(0,8)||'-')+'</td><td class="mono">'+(w.user_id?.substring(0,10)||'-')+'</td><td class="gold mono">'+fmt(w.amount)+' DOGE</td><td>'+escapeHtml(w.faucetpay_email||'-')+'</td><td><span class="'+(w.status==='approved'?'success':w.status==='pending'?'warn':'danger')+'">'+escapeHtml(w.status||'pending')+'</span></td><td class="text-dim">'+timeAgo(w.timestamp)+'</td><td>'+(w.status==='pending'?('<button class="btn btn-sm btn-primary" onclick="adminApproveWd(\''+w.id+'\')">Approve</button>'):'-')+'</td></tr>').join('');
     }
   }catch(e){}
 }
 
 async function loadAdminLogs(){
-  const tb = document.getElementById('adminLogsTable').querySelector('tbody');
-  tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  const tb = document.getElementById('adminLogsTable')?.querySelector('tbody');
+  if(tb) tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)"><div class="spinner" style="margin:0 auto"></div></td></tr>';
   try{
-    const res = await fetch(API + '/api/admin/logs?admin_key=' + ADMIN_ID);
+    const res = await fetch(API + '/api/admin/logs?admin_key=' + encodeURIComponent(ADMIN_ID));
     if(res.ok){
       const list = await res.json();
-      if(!list.length){
-        tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)">No logs</td></tr>';
-        return;
-      }
-      tb.innerHTML = list.map(l => `
-        <tr>
-          <td>${l.action||'-'}</td>
-          <td class="mono">${l.user_id?.substring(0,10)||'-'}</td>
-          <td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${JSON.stringify(l.details||{}).substring(0,60)}</td>
-          <td class="text-dim">${timeAgo(l.timestamp)}</td>
-        </tr>
-      `).join('');
+      if(!list.length){ if(tb) tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-dim)">No logs</td></tr>'; return; }
+      if(tb) tb.innerHTML = list.map(l => '<tr><td>'+escapeHtml(l.action||'-')+'</td><td class="mono">'+(l.user_id?.substring(0,10)||'-')+'</td><td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(JSON.stringify(l.details||{}).substring(0,60))+'</td><td class="text-dim">'+timeAgo(l.timestamp)+'</td></tr>').join('');
     }
   }catch(e){}
 }
 
 async function adminBanUser(userId, ban){
   try{
-    const res = await fetch(API + '/api/admin/' + (ban?'ban':'unban') + '-user?admin_key=' + ADMIN_ID, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({userId})
-    });
+    const res = await fetch(API + '/api/admin/' + (ban?'ban':'unban') + '-user?admin_key=' + encodeURIComponent(ADMIN_ID), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId})});
     if(res.ok){ showToast(ban?'User banned':'User unbanned','success'); loadAdminUsers(); }
   }catch(e){ showToast('Failed','error'); }
 }
 
 async function adminApproveWd(id){
   try{
-    const res = await fetch(API + '/api/admin/approve-withdrawal?admin_key=' + ADMIN_ID, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({id})
-    });
+    const res = await fetch(API + '/api/admin/approve-withdrawal?admin_key=' + encodeURIComponent(ADMIN_ID), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id})});
     if(res.ok){ showToast('Withdrawal approved','success'); loadAdminWithdrawals(); }
   }catch(e){ showToast('Failed','error'); }
 }
@@ -1375,25 +1661,236 @@ function saveAdminSettings(){ showToast('Settings saved','success'); }
 function generateMathCaptcha(){
   const n1 = Math.floor(Math.random() * 10) + 1;
   const n2 = Math.floor(Math.random() * 10) + 1;
-  document.getElementById('mathNum1').textContent = n1;
-  document.getElementById('mathNum2').textContent = n2;
+  const e1=document.getElementById('mathNum1'); if(e1) e1.textContent = n1;
+  const e2=document.getElementById('mathNum2'); if(e2) e2.textContent = n2;
 }
 
-function hideLoading(){
-  const ls = document.getElementById('loadingScreen');
-  if(!ls) return;
-  ls.style.opacity='0';
-  ls.style.pointerEvents='none';
-  setTimeout(()=>{ if(ls && ls.parentNode) ls.remove(); }, 600);
+async function loadDashboardKpi(){
+  try{
+    const d = await api('/api/me/dashboard');
+    if(d){ USER = Object.assign(USER || {}, d); if (typeof updateUserKpis === 'function') updateUserKpis(); }
+  } catch(e){ /* silent */ }
 }
 
+function updateUserKpis(){
+  if(!USER) return;
+  const promo = USER.promo_earnings || 0;
+  const promoCount = USER.promo_used_count || 0;
+  const promoEl = document.getElementById('kpiPromo'); if(promoEl) promoEl.innerHTML = '<span class="cnx-icon" style="width:26px;height:26px"><svg viewBox="0 0 64 64"><defs><linearGradient id="k1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color:#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#k1)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt(promo);
+  const pcEl = document.getElementById('kpiPromoCount'); if(pcEl) pcEl.textContent = promoCount;
+  const tc = USER.today_claims || 0;
+  const tcc = USER.today_claim_cnx || 0;
+  const tcEl = document.getElementById('kpiClaims'); if(tcEl) tcEl.textContent = tc;
+  const tccEl = document.getElementById('kpiClaimsCnx'); if(tccEl) tccEl.textContent = fmt(tcc);
+  const ref = USER.referral_earnings || 0;
+  const refc = USER.referrals || 0;
+  const refEl = document.getElementById('kpiRef'); if(refEl) refEl.innerHTML = '<span style="color:var(--purple);font-weight:700">C</span> ' + fmt(ref);
+  const refcEl = document.getElementById('kpiRefCount'); if(refcEl) refcEl.textContent = refc;
+  const off = USER.total_offerwall_earned || 0;
+  const offEl = document.getElementById('kpiOffer'); if(offEl) offEl.innerHTML = '<span style="color:var(--blue);font-weight:700">C</span> ' + fmt(off);
+}
+
+function showSkeletonRow(tableId, colspan){
+  const tb = document.getElementById(tableId)?.querySelector('tbody');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="' + colspan + '" style="padding:24px"><div class="skeleton skel-line lg" style="width:60%"></div><div class="skeleton skel-line" style="width:80%"></div><div class="skeleton skel-line sm" style="width:40%"></div></td></tr>';
+}
+
+function setDbStatus(online){
+  const el = document.getElementById('promoDbStatus');
+  if(!el) return;
+  el.className = 'inline-status ' + (online ? 'online' : 'offline');
+  el.innerHTML = '<span class="dot"></span> ' + (online ? 'Synced' : 'Offline');
+}
+
+async function loadPromoPage(){
+  showSkeletonRow('promoHistoryTable', 4);
+  try{
+    const d = await api('/api/promo/history');
+    const tb = document.getElementById('promoHistoryTable').querySelector('tbody');
+    const list = d.history || d || [];
+    const total = d.totalBonus || 0;
+    const cnt = d.count || list.length;
+    const pbt=document.getElementById('promoBonusTotal'); if(pbt) pbt.innerHTML = '<span class="cnx-icon" style="width:32px;height:32px"><svg viewBox="0 0 64 64"><defs><linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#B8860B"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(#p1)"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="28" fill="#7a5c00">C</text></svg></span> ' + fmt(total);
+    const pct=document.getElementById('promoCountTotal'); if(pct) pct.textContent = cnt;
+    if(!list.length){
+      tb.innerHTML = '<tr><td colspan="4"><div class="promo-history-empty"><i class="fa-solid fa-ticket"></i><p>No redemptions yet — try a code from <a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener" style="color:var(--blue)">@CoinixCommunity</a></p></div></td></tr>';
+      setDbStatus(true);
+      return;
+    }
+    tb.innerHTML = list.map(p => '<tr><td><span class="mono gold">'+escapeHtml(p.code || '')+'</span></td><td class="mono gold">+'+fmt(p.reward || 0)+'</td><td><span class="mono">'+escapeHtml(p.coin || 'CNX')+'</span></td><td class="text-dim">'+timeAgo(p.usedAt || p.used_at)+'</td></tr>').join('');
+    setDbStatus(true);
+  } catch(e){
+    setDbStatus(false);
+    const tb = document.getElementById('promoHistoryTable')?.querySelector('tbody');
+    if(tb) tb.innerHTML = '<tr><td colspan="4"><div class="promo-history-empty"><i class="fa-solid fa-circle-exclamation" style="color:var(--danger)"></i><p>'+escapeHtml(e.message)+'</p></div></td></tr>';
+  }
+}
+
+async function redeemPromoCode(){
+  const codeEl = document.getElementById('promoCodeInput');
+  const code = (codeEl.value || '').trim();
+  if(!code){ showToast('Enter a code first', 'error'); return; }
+  const btn = document.getElementById('promoRedeemBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner spinner-sm"></div> Redeeming…';
+  try{
+    const d = await api('/api/promo/redeem', { method:'POST', body: { code } });
+    showToast('+'+(d.reward || 0)+' '+(d.coin || 'CNX')+' added!', 'success');
+    codeEl.value = '';
+    await loadUser();
+    await loadPromoPage();
+  } catch(e){
+    showToast(e.message || 'Redeem failed', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Redeem';
+  }
+}
+
+async function loadAdminPromo(){
+  showSkeletonRow('adminPromoTable', 7);
+  try{
+    const list = await api('/api/admin/promo/list?admin_key=' + encodeURIComponent(ADMIN_ID));
+    const tb = document.getElementById('adminPromoTable').querySelector('tbody');
+    if(!list.length){ tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)">No promo codes yet</td></tr>'; return; }
+    tb.innerHTML = list.map(p => '<tr><td class="mono gold">'+escapeHtml(p.code)+'</td><td class="mono">'+escapeHtml(p.coin || 'CNX')+'</td><td class="mono gold">+'+fmt(p.reward)+'</td><td class="mono">'+(p.usedCount || 0)+'</td><td class="mono">'+(p.usageLimit || '∞')+'</td><td><span class="'+(p.enabled?'success':'danger')+'">'+(p.enabled?'Active':'Disabled')+'</span></td><td><button class="btn btn-sm btn-ghost" onclick="togglePromoCode(\''+escapeHtml(p.code)+'\', '+!p.enabled+')">'+(p.enabled?'Disable':'Enable')+'</button> <button class="btn btn-sm btn-ghost" onclick="deletePromoCode(\''+escapeHtml(p.code)+'\')" style="color:var(--danger)"><i class="fa-solid fa-trash"></i></button></td></tr>').join('');
+  } catch(e){
+    const tb = document.getElementById('adminPromoTable')?.querySelector('tbody');
+    if(tb) tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--danger)">'+escapeHtml(e.message)+'</td></tr>';
+  }
+}
+
+async function loadAdminPromoUsage(){
+  showSkeletonRow('adminPromoUsageTable', 5);
+  try{
+    const d = await api('/api/admin/promo/usage?admin_key=' + encodeURIComponent(ADMIN_ID));
+    const list = d.usage || d || [];
+    const tb = document.getElementById('adminPromoUsageTable').querySelector('tbody');
+    if(!list.length){ tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-dim)">No usage yet</td></tr>'; return; }
+    tb.innerHTML = list.slice(0,200).map(u => '<tr><td>'+escapeHtml(u.username || String(u.userId || ''))+'</td><td class="mono gold">'+escapeHtml(u.code)+'</td><td class="mono gold">+'+fmt(u.reward)+' '+escapeHtml(u.coin || 'CNX')+'</td><td class="mono">'+escapeHtml(u.coin || 'CNX')+'</td><td class="text-dim">'+timeAgo(u.usedAt || u.used_at)+'</td></tr>').join('');
+  } catch(e){
+    const tb = document.getElementById('adminPromoUsageTable')?.querySelector('tbody');
+    if(tb) tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--danger)">'+escapeHtml(e.message)+'</td></tr>';
+  }
+}
+
+function showCreatePromo(){ const f=document.getElementById('createPromoForm'); if(f) f.style.display='block'; const c=document.getElementById('newPromoCode'); if(c) c.focus(); }
+
+async function createPromoCode(){
+  const code = (document.getElementById('newPromoCode').value || '').trim().toUpperCase();
+  const coin = document.getElementById('newPromoCoin').value;
+  const reward = parseFloat(document.getElementById('newPromoReward').value);
+  const limit = parseInt(document.getElementById('newPromoLimit').value);
+  const expiry = document.getElementById('newPromoExpiry').value;
+  if(!code){ showToast('Enter a code', 'error'); return; }
+  if(!reward || reward <= 0){ showToast('Enter valid reward', 'error'); return; }
+  try{
+    await api('/api/admin/promo/create?admin_key=' + encodeURIComponent(ADMIN_ID), { method:'POST', body: { code, coin, reward, usageLimit: limit || null, expiresAt: expiry || null } });
+    showToast('Promo code created', 'success');
+    ['newPromoCode','newPromoReward','newPromoLimit','newPromoExpiry'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+    const f=document.getElementById('createPromoForm'); if(f) f.style.display='none';
+    loadAdminPromo();
+  } catch(e){ showToast(e.message, 'error'); }
+}
+
+async function togglePromoCode(code, enable){
+  try{
+    await api('/api/admin/promo/toggle?admin_key=' + encodeURIComponent(ADMIN_ID), { method:'POST', body: { code, enabled: enable } });
+    showToast(enable ? 'Code enabled' : 'Code disabled', 'success');
+    loadAdminPromo();
+  } catch(e){ showToast(e.message, 'error'); }
+}
+
+async function deletePromoCode(code){
+  if(!confirm('Delete promo code '+code+'?')) return;
+  try{
+    await api('/api/admin/promo/delete?admin_key=' + encodeURIComponent(ADMIN_ID), { method:'POST', body: { code } });
+    showToast('Code deleted', 'success');
+    loadAdminPromo();
+  } catch(e){ showToast(e.message, 'error'); }
+}
+
+async function loadAdminRewards(){
+  showSkeletonRow('adminRewardsTable', 6);
+  try{
+    const d = await api('/api/admin/rewards?admin_key=' + encodeURIComponent(ADMIN_ID));
+    const list = d.rewards || d || [];
+    const tb = document.getElementById('adminRewardsTable').querySelector('tbody');
+    if(!list.length){ tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-dim)">No rewards yet</td></tr>'; return; }
+    tb.innerHTML = list.map(r => '<tr><td>'+escapeHtml(r.name)+'</td><td class="mono">'+escapeHtml(r.coin || 'CNX')+'</td><td class="mono gold">'+fmt(r.amount)+'</td><td class="mono">'+(r.dailyLimit || '∞')+'</td><td><span class="'+(r.enabled?'success':'danger')+'">'+(r.enabled?'Active':'Disabled')+'</span></td><td><button class="btn btn-sm btn-ghost" onclick="toggleReward(\''+r.id+'\', '+!r.enabled+')">'+(r.enabled?'Disable':'Enable')+'</button> <button class="btn btn-sm btn-ghost" onclick="deleteReward(\''+r.id+'\')" style="color:var(--danger)"><i class="fa-solid fa-trash"></i></button></td></tr>').join('');
+  } catch(e){
+    const tb = document.getElementById('adminRewardsTable')?.querySelector('tbody');
+    if(tb) tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger)">'+escapeHtml(e.message)+'</td></tr>';
+  }
+}
+
+function showCreateReward(){ const f=document.getElementById('createRewardForm'); if(f) f.style.display='block'; }
+
+async function createReward(){
+  const name = (document.getElementById('newRewardName').value || '').trim();
+  const coin = document.getElementById('newRewardCoin').value;
+  const amount = parseFloat(document.getElementById('newRewardAmount').value);
+  const dailyLimit = parseInt(document.getElementById('newRewardLimit').value);
+  if(!name){ showToast('Enter reward name', 'error'); return; }
+  if(!amount || amount <= 0){ showToast('Enter valid amount', 'error'); return; }
+  try{
+    await api('/api/admin/rewards/create?admin_key=' + encodeURIComponent(ADMIN_ID), { method:'POST', body: { name, coin, amount, dailyLimit: dailyLimit || 0 } });
+    showToast('Reward created', 'success');
+    ['newRewardName','newRewardAmount','newRewardLimit'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
+    const f=document.getElementById('createRewardForm'); if(f) f.style.display='none';
+    loadAdminRewards();
+  } catch(e){ showToast(e.message, 'error'); }
+}
+
+async function toggleReward(id, enable){
+  try{
+    await api('/api/admin/rewards/toggle?admin_key=' + encodeURIComponent(ADMIN_ID), { method:'POST', body: { id, enabled: enable } });
+    showToast(enable?'Reward enabled':'Reward disabled', 'success');
+    loadAdminRewards();
+  } catch(e){ showToast(e.message, 'error'); }
+}
+
+async function deleteReward(id){
+  if(!confirm('Delete this reward?')) return;
+  try{
+    await api('/api/admin/rewards/delete?admin_key=' + encodeURIComponent(ADMIN_ID), { method:'POST', body: { id } });
+    showToast('Reward deleted', 'success');
+    loadAdminRewards();
+  } catch(e){ showToast(e.message, 'error'); }
+}
+
+async function loadAdminDashboard(){
+  try{
+    const d = await api('/api/admin/dashboard?admin_key=' + encodeURIComponent(ADMIN_ID));
+    if(!d) return;
+    const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent = fmt(v); };
+    set('adPromoToday', d.promoRewards || 0);
+    set('adPromoCountToday', d.promoCount || 0);
+    set('adClaimsToday', d.todayClaims || 0);
+    set('adRefToday', d.referralIncome || 0);
+    set('adOfferToday', d.offerEarnings || 0);
+    set('adNewUsers', d.newUsers7d || 0);
+    set('adEarned7d', d.earned7d || 0);
+    set('adWd7d', d.withdrawals7d || 0);
+  } catch(e){}
+}
+
+// ===== BOOT =====
 setInterval(() => { loadUser(); fetchDogePrice(); }, 30000);
 
-document.addEventListener('DOMContentLoaded', () => {
+function bootApp(){
   try {
-    init().then(() => { hideLoading(); }).catch((err) => { console.warn('Init error:', err); hideLoading(); });
+    init().then(() => hideLoading()).catch((err) => { console.warn('Init error:', err); hideLoading(); });
   } catch(err) { console.warn('Init exception:', err); hideLoading(); }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+  bootApp();
+}
+
 setTimeout(hideLoading, 3000);
 </script>
 </body>
