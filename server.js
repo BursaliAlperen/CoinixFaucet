@@ -37,8 +37,12 @@ const BOT_USERNAME = process.env.BOT_USERNAME || 'your_bot';
 const JWT_SECRET = process.env.JWT_SECRET || 'b}$8h7w)BKeC7jwQ+bhVB%ZElD)*jK@=$4W%9S,s4%a7Njv.YeG$pTfzh:2?1D4j';
 const ADMIN_SECRET = process.env.ADMIN_ID;
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY;
-const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
-const OFFERWALL_SECRET = process.env.OFFERWALL_SECRET_KEY;
+
+// Offerwall.me Config
+const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;       // API KEY (iframe URL için)
+const OFFERWALL_SECRET = process.env.OFFERWALL_SECRET_KEY;   // SECRET KEY (Postback signature için)
+const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN; // API TOKEN (PTC/Shortlink API için)
+
 const APP_URL = process.env.APP_URL || 'https://yourdomain.com';
 const PORT = process.env.PORT || 3000;
 
@@ -49,19 +53,54 @@ const FAUCET_COOLDOWN = 180000; // 3 dakika
 const FAUCET_REWARD = 0.20; // 0.20 CNX
 
 // ============================================
-// SECURITY (Helmet)
+// OFFERWALL.ME IP WHITELIST
+// Doküman: https://offerwall.me/docs/
+// ============================================
+const OFFERWALL_IPS = [
+  '95.216.65.163',
+  '2a01:4f9:2b:1dc::2'
+];
+
+// ============================================
+// SECURITY (Helmet) - GÜNCELLENDİ
 // ============================================
 function setupSecurity(app) {
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://telegram.org", "https://translate.googleapis.com", "https://translate.google.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://translate.googleapis.com"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdn.jsdelivr.net",
+          "https://offerwall.me",
+          "https://*.offerwall.me",
+          "https://telegram.org",
+          "https://translate.googleapis.com",
+          "https://translate.google.com"
+        ],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+          "https://translate.googleapis.com"
+        ],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com"],
-        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://translate.google.com"],
+        connectSrc: [
+          "'self'",
+          "https://*.googleapis.com",
+          "https://*.firebaseio.com",
+          "https://api.coingecko.com",
+          "https://offerwall.me",
+          "https://*.offerwall.me"
+        ],
+        frameSrc: [
+          "'self'",
+          "https://offerwall.me",
+          "https://*.offerwall.me",
+          "https://translate.google.com"
+        ],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: []
       }
@@ -121,11 +160,43 @@ async function logAction(action, userId, details = {}) {
   } catch (e) { logger.error('Log error', { error: e.message }); }
 }
 
+// Kullanıcı IP adresini al
+function getUserIp(req) {
+  return req.headers['cf-connecting-ip'] || 
+         req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+         req.ip || 
+         req.connection?.remoteAddress || 
+         '0.0.0.0';
+}
+
+// Kullanıcı ülkesini al (Cloudflare header veya IP lookup)
+async function getUserCountry(req) {
+  // Cloudflare country header (en güvenilir)
+  if (req.headers['cf-ipcountry'] && req.headers['cf-ipcountry'] !== 'XX') {
+    return req.headers['cf-ipcountry'].toUpperCase();
+  }
+  
+  // IP'den ülke bul (fallback)
+  try {
+    const ip = getUserIp(req);
+    if (ip && ip !== '0.0.0.0' && !ip.startsWith('192.168.') && !ip.startsWith('10.')) {
+      const response = await fetch(`https://ipapi.co/${ip}/country/`, { timeout: 3000 });
+      if (response.ok) {
+        const country = (await response.text()).trim();
+        if (/^[A-Z]{2}$/.test(country)) return country;
+      }
+    }
+  } catch (e) {
+    logger.debug('Country lookup failed', { error: e.message });
+  }
+  
+  return 'US'; // Default
+}
+
 // ============================================
 // DOGE PRICE CACHE (CoinGecko)
 // ============================================
 let dogePriceCache = { price: 0, change: 0, lastUpdate: 0 };
-
 async function fetchDogePrice() {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd&include_24hr_change=true');
@@ -141,51 +212,135 @@ async function fetchDogePrice() {
     return dogePriceCache;
   }
 }
-
-// Her 2 dakikada bir fiyat güncelle
 setInterval(fetchDogePrice, 120000);
-fetchDogePrice(); // İlk yükleme
+fetchDogePrice();
 
 // ============================================
-// OFFERWALL.ME API HELPER
+// OFFERWALL.ME PTC API HELPER (YENİ - DOĞRU)
+// Doküman: https://offerwall.me/docs/#api-integration-for-ptc-ads
 // ============================================
-async function fetchOfferwallOffers(type) {
+async function fetchPTCOffers(userId, userIp, country) {
   try {
-    const response = await fetch(`https://offerwall.me/api/v1/offers?app_id=${OFFERWALL_APP_ID}&type=${type}`, {
-      headers: { 
-        'Authorization': `Bearer ${OFFERWALL_SECRET}`,
-        'Content-Type': 'application/json'
-      },
-      timeout: 10000
-    });
-    
-    if (!response.ok) {
-      logger.warn('Offerwall API error', { status: response.status, type });
-      return [];
+    if (!OFFERWALL_API_TOKEN) {
+      logger.error('OFFERWALL_API_TOKEN is not configured in .env');
+      return { success: false, error: 'API token not configured', ads: [] };
     }
+
+    const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${encodeURIComponent(userId)}&ip=${encodeURIComponent(userIp)}&token=${OFFERWALL_API_TOKEN}&country=${encodeURIComponent(country)}`;
     
+    logger.info('PTC API Request', { userId, country, url: apiUrl.replace(OFFERWALL_API_TOKEN, '***') });
+    
+    const response = await fetch(apiUrl, {
+      timeout: 15000,
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'COINIX-Faucet/3.0'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('PTC API HTTP Error', { 
+        status: response.status, 
+        statusText: response.statusText,
+        body: errorText.substring(0, 500)
+      });
+      return { success: false, error: `HTTP ${response.status}`, ads: [] };
+    }
+
     const data = await response.json();
-    
-    // Normalize response
-    const offers = (data.offers || data.data || []).map(offer => ({
-      id: offer.id || offer.offer_id,
-      title: offer.title || offer.name || 'Untitled Offer',
-      description: offer.description || '',
-      reward: offer.payout || offer.reward || offer.amount || 0,
-      currency: offer.currency || 'CNX',
-      thumbnail: offer.thumbnail || offer.icon || offer.image || '',
-      time: offer.time || offer.duration || offer.estimated_time || '',
-      url: offer.url || offer.click_url || '',
-      trackingUrl: offer.tracking_url || offer.trackingUrl || offer.url || '',
-      type: offer.type || offer.offer_type || type,
-      platform: offer.platform || '',
-      requirements: offer.requirements || ''
-    }));
-    
-    return offers;
+    logger.info('PTC API Response', { 
+      status: data.status, 
+      count: data.data ? data.data.length : 0,
+      message: data.message || 'OK'
+    });
+
+    if (data.status === 200 && Array.isArray(data.data)) {
+      const ads = data.data.map(campaign => ({
+        id: campaign.id || campaign.url,
+        title: campaign.title || 'PTC Ad',
+        description: campaign.description || '',
+        reward: Number(campaign.reward) || 0,
+        currency: 'CNX',
+        duration: campaign.duration || 0,
+        url: campaign.url || '',
+        type: campaign.type === 1 ? 'window' : 'iframe',
+        maxDisplay: campaign.max === 0 ? 'ONE TIME' : 
+                    campaign.max < 25 ? `${campaign.max} HOUR${campaign.max > 1 ? 'S' : ''}` :
+                    `${Math.floor(campaign.max / 48)} DAY${Math.floor(campaign.max / 48) > 2 ? 'S' : ''}`,
+        remaining: campaign.remaining_views || 0
+      }));
+      
+      return { success: true, ads, total: ads.length };
+    } else {
+      logger.warn('PTC API returned non-200 status', { status: data.status, message: data.message });
+      return { success: false, error: data.message || 'No ads available', ads: [] };
+    }
   } catch (err) {
-    logger.error('Offerwall fetch error', { error: err.message, type });
-    return [];
+    logger.error('PTC API fetch error', { error: err.message, code: err.code });
+    return { success: false, error: err.message, ads: [] };
+  }
+}
+
+// ============================================
+// OFFERWALL.ME SHORTLINK API HELPER (YENİ - DOĞRU)
+// Doküman: https://offerwall.me/docs/#api-integration-for-shortlink-ads
+// ============================================
+async function fetchShortlinkOffers(userId, userIp, country) {
+  try {
+    if (!OFFERWALL_API_TOKEN) {
+      logger.error('OFFERWALL_API_TOKEN is not configured in .env');
+      return { success: false, error: 'API token not configured', shortlinks: [] };
+    }
+
+    const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${encodeURIComponent(userId)}&ip=${encodeURIComponent(userIp)}&token=${OFFERWALL_API_TOKEN}&country=${encodeURIComponent(country)}`;
+    
+    logger.info('Shortlink API Request', { userId, country, url: apiUrl.replace(OFFERWALL_API_TOKEN, '***') });
+    
+    const response = await fetch(apiUrl, {
+      timeout: 15000,
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'COINIX-Faucet/3.0'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Shortlink API HTTP Error', { 
+        status: response.status, 
+        statusText: response.statusText,
+        body: errorText.substring(0, 500)
+      });
+      return { success: false, error: `HTTP ${response.status}`, shortlinks: [] };
+    }
+
+    const data = await response.json();
+    logger.info('Shortlink API Response', { 
+      status: data.status, 
+      count: data.data ? data.data.length : 0,
+      message: data.message || 'OK'
+    });
+
+    if (data.status === 200 && Array.isArray(data.data)) {
+      const shortlinks = data.data.map(campaign => ({
+        id: campaign.id || campaign.url,
+        name: campaign.name || 'Shortlink',
+        reward: Number(campaign.reward) || 0,
+        currency: 'CNX',
+        url: campaign.url || '',
+        remaining_views: campaign.remaining_views || 0,
+        daily_limit: campaign.daily_limit || 0
+      }));
+      
+      return { success: true, shortlinks, total: shortlinks.length };
+    } else {
+      logger.warn('Shortlink API returned non-200 status', { status: data.status, message: data.message });
+      return { success: false, error: data.message || 'No shortlinks available', shortlinks: [] };
+    }
+  } catch (err) {
+    logger.error('Shortlink API fetch error', { error: err.message, code: err.code });
+    return { success: false, error: err.message, shortlinks: [] };
   }
 }
 
@@ -289,11 +444,11 @@ async function claim(req, res) {
     if (d.banned) return res.status(403).json({ error: 'User banned' });
     const now = Date.now();
     const lastClaim = d.last_claim ? d.last_claim.toMillis() : 0;
-    const cooldown = FAUCET_COOLDOWN; // 3 dakika
+    const cooldown = FAUCET_COOLDOWN;
     if (now - lastClaim < cooldown) {
       return res.status(429).json({ error: 'Cooldown active', wait: cooldown - (now - lastClaim) });
     }
-    const amount = FAUCET_REWARD; // 0.20 CNX
+    const amount = FAUCET_REWARD;
     await userRef.update({ balance: increment(amount), total_earned: increment(amount), total_claims: increment(1), last_claim: serverTimestamp() });
     res.json({ success: true, amount, balance: (d.balance || 0) + amount });
   } catch (err) { logger.error('Claim error', { error: err.message, userId }); res.status(500).json({ error: 'Claim failed' }); }
@@ -380,7 +535,6 @@ async function getWithdrawStats(req, res) {
 // ============================================
 async function getDogePrice(req, res) {
   try {
-    // Cache 1 dakikadan eskiyse güncelle
     if (Date.now() - dogePriceCache.lastUpdate > 60000) {
       await fetchDogePrice();
     }
@@ -396,60 +550,100 @@ async function getDogePrice(req, res) {
 }
 
 // ============================================
-// OFFERWALL.ME API CONTROLLERS
+// OFFERWALL.ME API CONTROLLERS (GÜNCELLENDİ)
 // ============================================
+
+// Offerwall iframe URL - DOĞRU FORMAT (path parameter)
 async function getOfferwallUrl(req, res) {
   const userId = String(req.user.userId);
-  const subId = Buffer.from(userId).toString('base64');
-  const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}?subid=${subId}`;
-  res.json({ url, user_id: userId, app_id: OFFERWALL_APP_ID });
+  // Doküman: https://offerwall.me/offerwall/[API_KEY]/[USER_ID]
+  const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
+  logger.info('Offerwall URL generated', { userId, url });
+  res.json({ 
+    url, 
+    user_id: userId, 
+    app_id: OFFERWALL_APP_ID,
+    iframe: `<iframe scrolling="yes" frameborder="0" style="width:100%;height:800px;border:0;padding:0;margin:0;" src="${url}"></iframe>`
+  });
 }
 
+// PTC Ads - DOĞRU API
 async function getPTCAds(req, res) {
   try {
     const userId = String(req.user.userId);
-    const offers = await fetchOfferwallOffers('ptc');
-    await logAction('ptc_ads_loaded', userId, { count: offers.length });
-    res.json({ success: true, ads: offers, total: offers.length });
+    const userIp = getUserIp(req);
+    const country = await getUserCountry(req);
+    
+    const result = await fetchPTCOffers(userId, userIp, country);
+    await logAction('ptc_ads_loaded', userId, { 
+      count: result.ads.length, 
+      success: result.success,
+      error: result.error || null,
+      country 
+    });
+    
+    res.json({ 
+      success: result.success, 
+      ads: result.ads, 
+      total: result.total,
+      error: result.error || null
+    });
   } catch (err) {
-    logger.error('Get PTC Ads error', { error: err.message });
-    res.status(500).json({ error: 'Failed to load PTC ads' });
+    logger.error('Get PTC Ads error', { error: err.message, stack: err.stack });
+    res.status(500).json({ success: false, error: 'Failed to load PTC ads', ads: [] });
   }
 }
 
+// Website Visits - Offerwall iframe içinde gösterilir, ayrı API yok
 async function getWebsiteVisits(req, res) {
   try {
     const userId = String(req.user.userId);
-    const offers = await fetchOfferwallOffers('website_visit');
-    await logAction('visits_loaded', userId, { count: offers.length });
-    res.json({ success: true, visits: offers, total: offers.length });
+    await logAction('visits_loaded', userId, { note: 'Offerwall iframe handles this' });
+    // Website visits Offerwall iframe içinde gösterilir, ayrı API yok
+    res.json({ success: true, visits: [], total: 0, note: 'Available in Offerwall iframe' });
   } catch (err) {
     logger.error('Get Website Visits error', { error: err.message });
-    res.status(500).json({ error: 'Failed to load website visits' });
+    res.status(500).json({ success: false, error: 'Failed to load website visits', visits: [] });
   }
 }
 
+// Games - Offerwall iframe içinde gösterilir, ayrı API yok
 async function getGames(req, res) {
   try {
     const userId = String(req.user.userId);
-    const offers = await fetchOfferwallOffers('game');
-    await logAction('games_loaded', userId, { count: offers.length });
-    res.json({ success: true, games: offers, total: offers.length });
+    await logAction('games_loaded', userId, { note: 'Offerwall iframe handles this' });
+    // Games Offerwall iframe içinde gösterilir, ayrı API yok
+    res.json({ success: true, games: [], total: 0, note: 'Available in Offerwall iframe' });
   } catch (err) {
     logger.error('Get Games error', { error: err.message });
-    res.status(500).json({ error: 'Failed to load games' });
+    res.status(500).json({ success: false, error: 'Failed to load games', games: [] });
   }
 }
 
+// Shortlinks - DOĞRU API
 async function getShortlinks(req, res) {
   try {
     const userId = String(req.user.userId);
-    const offers = await fetchOfferwallOffers('shortlink');
-    await logAction('shortlinks_loaded', userId, { count: offers.length });
-    res.json({ success: true, shortlinks: offers, total: offers.length });
+    const userIp = getUserIp(req);
+    const country = await getUserCountry(req);
+    
+    const result = await fetchShortlinkOffers(userId, userIp, country);
+    await logAction('shortlinks_loaded', userId, { 
+      count: result.shortlinks.length, 
+      success: result.success,
+      error: result.error || null,
+      country 
+    });
+    
+    res.json({ 
+      success: result.success, 
+      shortlinks: result.shortlinks, 
+      total: result.total,
+      error: result.error || null
+    });
   } catch (err) {
-    logger.error('Get Shortlinks error', { error: err.message });
-    res.status(500).json({ error: 'Failed to load shortlinks' });
+    logger.error('Get Shortlinks error', { error: err.message, stack: err.stack });
+    res.status(500).json({ success: false, error: 'Failed to load shortlinks', shortlinks: [] });
   }
 }
 
@@ -488,64 +682,117 @@ async function getOfferwallStats(req, res) {
 }
 
 // ============================================
-// POSTBACK (GÜVENLİ - DUPLICATE PROTECTION)
+// POSTBACK (GÜVENLİ - DÜZELTİLDİ)
+// Doküman: https://offerwall.me/docs/#s2s
 // ============================================
 async function postback(req, res) {
   try {
-    const { subid, transid, reward, signature, status = '1', offer_name, offer_type, reward_name, reward_value, payout, userIp, country } = req.body;
-    
-    if (!subid || !transid || !reward || !signature) {
-      logger.warn('Postback missing params', { subid, transid });
+    // ✅ DOĞRU PARAMETRE İSİMLERİ (camelCase)
+    const { 
+      subId, transId, reward, signature, 
+      status = '1', offer_name, offer_type, 
+      reward_name, reward_value, payout, 
+      userIp, country, debug 
+    } = req.body;
+
+    // Debug log (test postback'leri için)
+    if (debug === '1' || debug === 1) {
+      logger.info('TEST POSTBACK received', { subId, transId, reward, status });
+    }
+
+    // Gerekli parametreleri kontrol et
+    if (!subId || !transId || !reward || !signature) {
+      logger.warn('Postback missing required params', { 
+        hasSubId: !!subId, 
+        hasTransId: !!transId, 
+        hasReward: !!reward, 
+        hasSignature: !!signature 
+      });
       return res.status(400).send('missing params');
     }
-    
-    // MD5 Signature Validation
-    const expected = crypto.createHash('md5')
-      .update(`${subid}.${transid}.${reward}.${OFFERWALL_SECRET}`)
+
+    // ✅ IP WHITELIST KONTROLÜ (opsiyonel ama önerilen)
+    const clientIp = getUserIp(req);
+    if (!OFFERWALL_IPS.includes(clientIp)) {
+      logger.warn('Postback from non-whitelisted IP', { 
+        clientIp, 
+        allowed: OFFERWALL_IPS,
+        subId, 
+        transId 
+      });
+      // IP whitelist kontrolü - production'da aktif edilebilir
+      // return res.status(403).send('invalid ip');
+    }
+
+    // ✅ DOĞRU SIGNATURE DOĞRULAMA (NOKTASIZ!)
+    // Doküman: md5(subId + transId + reward + secretkey)
+    // PHP'de . birleştirme operatörü, ayraç değil!
+    const expectedSignature = crypto.createHash('md5')
+      .update(`${subId}${transId}${reward}${OFFERWALL_SECRET}`)
       .digest('hex');
-    
-    if (signature !== expected) {
-      logger.warn('Postback invalid signature', { transid });
+
+    if (signature !== expectedSignature) {
+      logger.error('Postback INVALID SIGNATURE', { 
+        transId, 
+        received: signature, 
+        expected: expectedSignature,
+        subIdLength: subId.length,
+        transIdLength: transId.length
+      });
       return res.status(403).send('invalid sig');
     }
-    
-    // Decode user ID
-    let userId;
-    try { userId = Buffer.from(subid, 'base64').toString('ascii'); }
-    catch (e) { return res.status(400).send('invalid subid'); }
-    
+
+    // Kullanıcı ID'yi al (artık Base64 decode gerekmez, doğrudan kullan)
+    const userId = String(subId);
+    logger.info('Postback signature valid', { userId, transId, reward, status });
+
     const userRef = db.collection('users').doc(userId);
     const doc = await userRef.get();
-    
-    if (!doc.exists) return res.status(404).send('user not found');
-    if (doc.data().banned) return res.status(403).send('banned');
-    
-    // ✅ DUPLICATE PROTECTION
-    const existingTx = await db.collection('offerwall_completions')
-      .where('trans_id', '==', transid)
-      .limit(1)
-      .get();
-    
-    if (!existingTx.empty) {
-      logger.info('Postback duplicate', { transid });
-      return res.status(200).send('OK');
+
+    if (!doc.exists) {
+      logger.warn('Postback user not found', { userId, transId });
+      return res.status(404).send('user not found');
     }
     
+    if (doc.data().banned) {
+      logger.warn('Postback banned user', { userId, transId });
+      return res.status(403).send('banned');
+    }
+
+    // ✅ DUPLICATE PROTECTION
+    const existingTx = await db.collection('offerwall_completions')
+      .where('trans_id', '==', transId)
+      .limit(1)
+      .get();
+
+    if (!existingTx.empty) {
+      logger.info('Postback DUPLICATE - already processed', { transId, userId });
+      return res.status(200).send('ok');
+    }
+
     const amt = Number(reward);
-    if (isNaN(amt) || amt <= 0) return res.status(400).send('invalid reward');
-    
+    if (isNaN(amt) || amt <= 0) {
+      logger.error('Postback invalid reward amount', { reward, transId });
+      return res.status(400).send('invalid reward');
+    }
+
     // ✅ ATOMIC TRANSACTION
     await db.runTransaction(async (t) => {
       const userDoc = await t.get(userRef);
       if (!userDoc.exists) throw new Error('User not found');
       
-      if (status === '1' || status === 1 || !status) {
+      const statusNum = Number(status);
+      
+      if (statusNum === 1 || status === '1' || !status) {
+        // ✅ STATUS 1: Ödülü ekle
         t.update(userRef, {
           balance: increment(amt),
           total_earned: increment(amt),
           total_ptc_earnings: increment(amt)
         });
-      } else if (status === '2' || status === 2) {
+        logger.info('Postback REWARD ADDED', { userId, transId, amount: amt });
+      } else if (statusNum === 2 || status === '2') {
+        // ✅ STATUS 2: Chargeback - Ödülü çıkar
         const currentBalance = userDoc.data().balance || 0;
         const deductAmt = Math.min(amt, currentBalance);
         if (deductAmt > 0) {
@@ -554,12 +801,17 @@ async function postback(req, res) {
             total_earned: increment(-deductAmt),
             total_ptc_earnings: increment(-deductAmt)
           });
+          logger.warn('Postback CHARGEBACK', { userId, transId, deducted: deductAmt, original: amt });
+        } else {
+          logger.warn('Postback chargeback but zero balance', { userId, transId });
         }
+      } else {
+        logger.warn('Postback unknown status', { status, transId });
       }
       
-      t.set(db.collection('offerwall_completions').doc(transid), {
+      t.set(db.collection('offerwall_completions').doc(transId), {
         user_id: userId,
-        trans_id: transid,
+        trans_id: transId,
         task_type: offer_type || 'offer',
         offer_name: offer_name || 'Unknown',
         reward_name: reward_name || offer_name,
@@ -567,19 +819,21 @@ async function postback(req, res) {
         amount: amt,
         payout_usd: Number(payout) || 0,
         currency: 'CNX',
-        status: (status === '1' || status === 1) ? 'completed' : 'chargeback',
-        user_ip: userIp || req.ip,
+        status: (statusNum === 1 || status === '1') ? 'completed' : 'chargeback',
+        user_ip: userIp || clientIp,
         country: country || 'unknown',
+        debug: debug === '1' || debug === 1,
         timestamp: serverTimestamp()
       });
     });
+
+    await logAction('offerwall_completed', userId, { transId, amount: amt, status });
+    logger.info('Postback SUCCESS', { userId, transId, amt, status });
     
-    await logAction('offerwall_completed', userId, { transid, amount: amt });
-    logger.info('Postback success', { userId, transid, amt });
-    res.status(200).send('OK');
-    
+    // ✅ "ok" response döndür (Offerwall bunu bekliyor)
+    res.status(200).send('ok');
   } catch (err) {
-    logger.error('Postback error', { error: err.message });
+    logger.error('Postback error', { error: err.message, stack: err.stack });
     res.status(500).send('error');
   }
 }
@@ -678,6 +932,7 @@ async function broadcast(req, res) {
 const app = express();
 process.on('unhandledRejection', (err) => { logger.error('Unhandled Rejection', { error: err.message, stack: err.stack }); });
 process.on('uncaughtException', (err) => { logger.error('Uncaught Exception', { error: err.message, stack: err.stack }); });
+
 setInterval(() => {
   https.get(`${APP_URL}/ping`, (res) => { logger.debug('Keep-alive ping', { status: res.statusCode }); }).on('error', (err) => { logger.error('Keep-alive ping error', { error: err.message }); });
 }, 600000);
@@ -721,7 +976,7 @@ app.get('/api/offerwall/games', jwtAuth, getGames);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
 app.get('/api/offerwall/stats', jwtAuth, getOfferwallStats);
 
-// Postback
+// Postback - Rate limiter YOK (Offerwall sunucusundan geliyor)
 app.post('/api/postback', postback);
 app.post('/api/offerwall-postback', postback);
 
@@ -741,7 +996,7 @@ app.get('/api/admin/settings', adminAuth, getSettings);
 app.post('/api/admin/settings', adminAuth, updateSettings);
 app.post('/api/admin/broadcast', adminAuth, broadcast);
 
-// SPA Fallback - Tüm route'lar tek index.html'e
+// SPA Fallback
 app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
 app.use((err, req, res, next) => {
@@ -750,5 +1005,11 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  logger.info('COINIX FAUCET v3.0.0 running', { port: PORT, env: process.env.NODE_ENV || 'development', url: APP_URL });
+  logger.info('COINIX FAUCET v3.1.0 running', { 
+    port: PORT, 
+    env: process.env.NODE_ENV || 'development', 
+    url: APP_URL,
+    offerwall_configured: !!(OFFERWALL_APP_ID && OFFERWALL_SECRET),
+    offerwall_api_token: !!OFFERWALL_API_TOKEN
+  });
 });
