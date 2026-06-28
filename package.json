@@ -3,12 +3,8 @@
   "version": "3.1.0",
   "description": "COINIX Faucet - Earn CNX & DOGE",
   "main": "api/index.js",
-  "scripts": {
-    "start": "node api/index.js",
-    "dev": "node api/index.js"
-  },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
     "compression": "^1.7.4",
