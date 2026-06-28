@@ -11,9 +11,29 @@ const helmet = require('helmet');
 const admin = require('firebase-admin');
 
 // ============================================
-// FIREBASE - serviceAccountKey.json KORUNUYOR
+// FIREBASE - serviceAccountKey.json YERINE ENV VAR
+// Vercel'de secret files yok, base64 encoded env var kullan
 // ============================================
-const serviceAccount = require('./serviceAccountKey.json');
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  try {
+    const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+    serviceAccount = JSON.parse(decoded);
+    logger.info('Firebase initialized from FIREBASE_SERVICE_ACCOUNT_BASE64 env var');
+  } catch (e) {
+    logger.error('Failed to decode FIREBASE_SERVICE_ACCOUNT_BASE64', { error: e.message });
+    throw new Error('Invalid FIREBASE_SERVICE_ACCOUNT_BASE64. Run: base64 serviceAccountKey.json');
+  }
+} else {
+  // Fallback: local geliştirme için serviceAccountKey.json
+  try {
+    serviceAccount = require('./serviceAccountKey.json');
+    logger.info('Firebase initialized from serviceAccountKey.json (local dev)');
+  } catch (e) {
+    logger.error('Firebase init failed: No FIREBASE_SERVICE_ACCOUNT_BASE64 env var and no serviceAccountKey.json');
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 env var required. See .env file');
+  }
+}
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const db = admin.firestore();
 const serverTimestamp = () => admin.firestore.FieldValue.serverTimestamp();
