@@ -139,7 +139,8 @@ body {
 .sidebar-user-bal img{width:12px;height:12px}
 
 /* MAIN */
-.main{flex:1;height:100dvh;margin-left:var(--sidebar-w);transition:margin-left .3s;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1;min-width:0;width:calc(100% - var(--sidebar-w))}
+.main{flex:1;height:100dvh;margin-left:var(--sidebar-w);transition:margin-left .3s;display:flex;flex-direction:column;overflow:hidden;position:relative;z-index:1;min-width:0;width:calc(100% - var(--sidebar-w));box-sizing:border-box}
+.main.sidebar-closed{margin-left:0;width:100%}
 .main.expanded{margin-left:0}
 .header{height:var(--header-h);flex-shrink:0;background:rgba(5,6,15,0.72);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--glass-brd);display:flex;align-items:center;padding:0 24px;gap:16px;position:relative;z-index:100}
 .header-menu-btn{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:8px;border-radius:8px}
@@ -162,7 +163,7 @@ body {
 .header-avatar img{width:100%;height:100%;object-fit:cover}
 
 /* CONTENT */
-.content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow-y:auto;overflow-x:hidden;min-height:0}
+.content{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto;overflow-y:auto;overflow-x:hidden;min-height:0;box-sizing:border-box}
 }
 
 /* PAGE SECTIONS */
@@ -410,7 +411,7 @@ body {
   .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0 !important;width:100vw !important;max-width:100vw !important}
-  .content{padding:14px !important;max-width:100% !important;margin:0 !important}
+  .content{padding:14px !important;max-width:100% !important;margin:0 !important;width:100% !important}
   .page-title{font-size:22px}
   .page-sub{font-size:13px}
   .stats-grid{grid-template-columns:1fr !important;gap:12px}
@@ -444,7 +445,7 @@ body {
   .grid-4{grid-template-columns:1fr !important;gap:10px}
   .page-title{font-size:18px}
   .page-sub{font-size:12px}
-  .content{padding:10px !important}
+  .content{padding:10px !important;width:100% !important;margin:0 !important}
   .header{height:54px;padding:0 12px}
   .header-avatar{width:34px;height:34px;font-size:12px}
   .header-title{font-size:14px}
@@ -481,18 +482,50 @@ body {
   .stat-card-val svg{width:24px !important;height:24px !important}
   .stat-card-lbl{font-size:11px;gap:5px !important}
   .stat-card-lbl svg{width:16px !important;height:16px !important}
-  .content{padding:8px !important}
+  .content{padding:8px !important;width:100% !important;margin:0 !important}
   .card{padding:10px}
   .tab{padding:5px 8px;font-size:10px}
   .btn{padding:8px 12px;font-size:11px}
 }
 
+
+/* DETAILED STATS */
+.detailed-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.stat-detail-item{background:var(--bg-3);border:1px solid var(--glass-brd);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.stat-detail-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.stat-detail-value{font-size:18px;font-weight:700;color:var(--text);font-family:'Space Grotesk'}
+.stat-detail-change{font-size:11px;display:flex;align-items:center;gap:4px}
+.stat-detail-change.up{color:var(--success)}
+.stat-detail-change.down{color:var(--danger)}
+.stat-detail-period{font-size:10px;color:var(--text-dim);margin-top:2px}
+
+@media(max-width:479px){
+  .detailed-stats{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
-<div id="menuOverlay" onclick="toggleMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;backdrop-filter:blur(2px)"></div>
+<script>
+// AGRESIF: Tüm sayfaları hemen gizle, sadece dashboard göster
+(function(){
+  var pages = document.querySelectorAll('.page');
+  for(var i=0;i<pages.length;i++){
+    pages[i].style.display = 'none';
+    pages[i].style.visibility = 'hidden';
+    pages[i].classList.remove('active');
+  }
+  var dash = document.getElementById('page-dashboard');
+  if(dash){
+    dash.style.display = 'block';
+    dash.style.visibility = 'visible';
+    dash.classList.add('active');
+  }
+})();
+</script>
+<div id="menuOverlay" onclick="toggleMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;backdrop-filter:blur(2px)"></div>
 <script>function hideLoading(){var ls=document.getElementById("loadingScreen");if(!ls)return;ls.style.display="none";ls.style.visibility="hidden";ls.style.opacity="0";try{ls.remove();}catch(e){}}setTimeout(function(){hideLoading();console.log("Loading screen force-closed");},3000);document.addEventListener("DOMContentLoaded",function(){try{if(typeof window.init==="function"){var result=window.init();if(result&&typeof result.then==="function"){result.then(function(){hideLoading();}).catch(function(e){console.warn("init error:",e);hideLoading();});}else{hideLoading();}}else{console.warn("init() not found");hideLoading();}}catch(e){console.warn("init exception:",e);hideLoading();}});</script>
-<div id="loadingScreen" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+<div id="loadingScreen" style="position:fixed;inset:0;z-index:9998;background:linear-gradient(180deg,#05060f 0%,#0b0d1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
   <div style="width:80px;height:80px;position:relative">
     <svg viewBox="0 0 64 64" width="80" height="80" style="animation:loadSpin 1.2s linear infinite">
       <defs><linearGradient id="ldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#FFD700"/><stop offset="50%" style="stop-color:#F5A623"/><stop offset="100%" style="stop-color:#B8860B"/></linearGradient></defs>
@@ -510,6 +543,21 @@ body {
 <style>
 @keyframes loadSpin{to{transform:rotate(360deg)}}
 @keyframes loadBar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}
+
+/* DETAILED STATS */
+.detailed-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:16px}
+.stat-detail-item{background:var(--bg-3);border:1px solid var(--glass-brd);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.stat-detail-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
+.stat-detail-value{font-size:18px;font-weight:700;color:var(--text);font-family:'Space Grotesk'}
+.stat-detail-change{font-size:11px;display:flex;align-items:center;gap:4px}
+.stat-detail-change.up{color:var(--success)}
+.stat-detail-change.down{color:var(--danger)}
+.stat-detail-period{font-size:10px;color:var(--text-dim);margin-top:2px}
+
+@media(max-width:479px){
+  .detailed-stats{grid-template-columns:1fr}
+}
+
 </style>
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
