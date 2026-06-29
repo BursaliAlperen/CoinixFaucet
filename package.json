@@ -7,9 +7,6 @@
     "start": "node api/index.js",
     "dev": "nodemon api/index.js"
   },
-  "engines": {
-    "node": "22.x"
-  },
   "dependencies": {
     "compression": "^1.8.1",
     "cors": "^2.8.5",
