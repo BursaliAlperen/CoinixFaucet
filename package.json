@@ -5,7 +5,9 @@
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
-    "dev": "nodemon api/index.js"
+    "dev": "nodemon api/index.js",
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'Vercel build complete'"
   },
   "engines": {
     "node": "24.x"
