@@ -2,1015 +2,2498 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>COINIX Faucet - Earn CNX & DOGE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COINIX Faucet</title>
+    <link rel="icon" href="/coinix.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #f1f5f9; --surface-color: #ffffff; --surface-2-color: #e2e8f0;
-            --text-primary: #0f172a; --text-secondary: #64748b;
-            --accent-color: #f59e0b; --accent-hover: #d97706; --accent-text: #0f172a;
-            --success-color: #10b981; --danger-color: #ef4444; --warning-color: #f59e0b;
-            --border-color: #cbd5e1; --shadow-sm: 0 1px 2px rgba(0,0,0,0.08);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1); --glass-bg: rgba(255,255,255,0.7);
-            --glass-border: rgba(100,116,139,0.2); --radius-sm: 8px; --radius-md: 12px;
-            --radius-lg: 16px; --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-            --nav-height: 60px; --sidebar-width: 260px;
-        }
-        .dark-mode {
-            --bg-color: #0f172a; --surface-color: #1e293b; --surface-2-color: #334155;
-            --text-primary: #f1f5f9; --text-secondary: #94a3b8; --accent-text: #0f172a;
-            --border-color: #334155; --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.4); --glass-bg: rgba(30,41,59,0.6);
-            --glass-border: rgba(148,163,184,0.1);
-        }
-
-        /* KÖKTEN ÇÖZÜM: TIKLAMA SORUNLARINI YOK ET */
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        
-        html, body, .app-layout, .main-area, .container, .page, .card, .card-glass, 
-        .btn, .input-field, .nav-item, .sidebar-item, .quick-action-btn, .earn-card, 
-        .percent-btn, .faq-item, .lang-btn, .theme-toggle, .list-item {
-            position: relative;
-            z-index: 1;
-            pointer-events: auto !important;
+            --primary: #f7931a;
+            --primary-dark: #e2821a;
+            --secondary: #627eea;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f0f23;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #16213e;
+            --text: #ffffff;
+            --text-secondary: #94a3b8;
+            --border: #2d2d44;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 16px;
+            --radius-sm: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Google Translate tamamen kaldırıldı */
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f1f5f9;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--bg-color); color: var(--text-primary); line-height: 1.5;
-            overflow-x: hidden !important; overflow-y: auto !important;
-            min-height: 100vh !important; top: 0 !important; margin-top: 0 !important;
-            padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px);
-            transition: background 0.3s, color 0.3s; position: static !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+            transition: var(--transition);
         }
 
-        .icon { width: 24px; height: 24px; flex-shrink: 0; }
-        #loading-screen { position: fixed; inset: 0; background: var(--bg-color); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.4s, visibility 0.4s; }
-        #loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        #loading-screen img { width: 80px; height: 80px; margin-bottom: 20px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+        }
 
-        .app-header { position: sticky; top: 0; z-index: 100; background: var(--surface-color); border-bottom: 1px solid var(--border-color); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
-        .app-header .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
-        .app-header .logo img { width: 32px; height: 32px; }
-        .header-right { display: flex; align-items: center; gap: 10px; }
-        .header-balance { display: flex; align-items: center; gap: 6px; background: var(--surface-2-color); padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; }
-        .header-balance img { width: 18px; height: 18px; }
-        .theme-toggle { width: 38px; height: 38px; border-radius: 50%; background: var(--surface-2-color); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); }
-        .theme-toggle svg { width: 18px; height: 18px; }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            margin-bottom: 16px;
+        }
 
-        .app-layout { display: flex; min-height: 100vh; }
-        .main-area { flex: 1; min-width: 0; }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-        .card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; }
-        .card-glass { background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(10px); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
-        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        .card-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+        }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-        .stat-box { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; text-align: center; }
-        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .stat-label img { width: 14px; height: 14px; }
-        .stat-value { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; border: none; cursor: pointer; width: 100%; z-index: 10; }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-primary { background: var(--accent-color); color: var(--accent-text); }
-        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
-        .btn-secondary { background: var(--surface-2-color); color: var(--text-primary); border: 1px solid var(--border-color); }
-        
-        .input-group { margin-bottom: 16px; z-index: 5; }
-        .input-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
-        .input-field { width: 100%; padding: 12px 14px; background: var(--surface-2-color); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 14px; outline: none; }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--nav-height) + var(--safe-area-bottom)); background: var(--surface-color); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; padding-bottom: var(--safe-area-bottom); z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 12px; color: var(--text-secondary); font-size: 10px; font-weight: 500; cursor: pointer; }
-        .nav-item.active { color: var(--accent-color); }
-        .nav-item svg { width: 22px; height: 22px; }
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            color: var(--text);
+            font-size: 18px;
+        }
 
-        .sidebar { display: none; width: var(--sidebar-width); background: var(--surface-color); border-right: 1px solid var(--border-color); padding: 20px 12px; position: fixed; inset: 0; right: auto; z-index: 99; overflow-y: auto; }
-        .sidebar .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; padding: 8px 12px; margin-bottom: 24px; }
-        .sidebar-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: var(--text-secondary); font-size: 14px; font-weight: 500; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 4px; }
-        .sidebar-item:hover { background: var(--surface-2-color); }
-        .sidebar-item.active { background: var(--accent-color); color: var(--accent-text); }
-        .sidebar-item svg { width: 20px; height: 20px; }
+        .icon-btn:hover {
+            background: var(--bg-card-hover);
+            transform: scale(1.05);
+        }
 
-        .faucet-timer { text-align: center; padding: 20px; background: var(--surface-2-color); border-radius: var(--radius-md); margin-bottom: 16px; }
-        .faucet-timer .time { font-size: 32px; font-weight: 700; color: var(--accent-color); }
-        .captcha-box { background: var(--surface-2-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; }
-        .captcha-question { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 12px; color: var(--accent-color); }
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 18px;
+            height: 18px;
+            background: var(--danger);
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
 
-        .offerwall-container { position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: none; pointer-events: none; }
-        .offerwall-container.active { display: flex; flex-direction: column; pointer-events: auto; }
-        .offerwall-header { padding: 12px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-        .offerwall-frame { flex: 1; width: 100%; border: none; }
+        .balance-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
 
-        .list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-2-color); border-radius: var(--radius-sm); margin-bottom: 8px; }
-        .list-item-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-        .list-item-sub { font-size: 12px; color: var(--text-secondary); }
-        .list-item-value { font-size: 14px; font-weight: 700; color: var(--success-color); }
+        .balance-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
 
-        .toast { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 20px; box-shadow: var(--shadow-md); z-index: 9998; opacity: 0; transition: all 0.3s; max-width: 90%; }
-        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        .toast.success { border-left: 4px solid var(--success-color); }
-        .toast.error { border-left: 4px solid var(--danger-color); }
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
 
-        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .quick-action-btn { background: var(--surface-2-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; text-align: center; cursor: pointer; }
-        .quick-action-btn:hover { border-color: var(--accent-color); }
-        .quick-action-btn svg { width: 28px; height: 28px; margin-bottom: 8px; color: var(--accent-color); }
+        .balance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
 
-        .percent-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-        .percent-btn { padding: 8px; background: var(--surface-2-color); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; }
-        .percent-btn:hover { background: var(--accent-color); color: var(--accent-text); }
+        .balance-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-        .faq-item { background: var(--surface-2-color); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; cursor: pointer; }
-        .faq-question { padding: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-        .faq-answer { padding: 0 14px; max-height: 0; overflow: hidden; transition: all 0.3s; color: var(--text-secondary); font-size: 13px; }
-        .faq-item.open .faq-answer { padding: 0 14px 14px; max-height: 200px; }
-        .faq-item.open .faq-question svg { transform: rotate(180deg); }
+        .balance-card .label img {
+            width: 16px;
+            height: 16px;
+        }
 
-        .earn-card { background: var(--surface-2-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; cursor: pointer; }
-        .earn-card:hover { border-color: var(--accent-color); }
-        .earn-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .earn-card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-        .earn-card-badge { background: rgba(245, 158, 11, 0.2); color: var(--accent-color); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .balance-card .value {
+            font-size: 22px;
+            font-weight: 700;
+        }
 
-        .lang-switcher { position: fixed; bottom: calc(var(--nav-height) + 20px); left: 20px; z-index: 500; }
-        .lang-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-color); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-md); }
-        .lang-btn svg { width: 20px; height: 20px; }
-        .lang-dropdown { position: absolute; bottom: 54px; left: 0; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); min-width: 160px; padding: 6px; display: none; }
-        .lang-dropdown.open { display: block; }
-        .lang-option { padding: 10px 14px; font-size: 13px; cursor: pointer; border-radius: var(--radius-sm); }
-        .lang-option:hover { background: var(--surface-2-color); }
-        .lang-option.active { background: var(--accent-color); color: var(--accent-text); }
+        .balance-card .usd {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
 
-        .demo-screen { position: fixed; inset: 0; background: var(--bg-color); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-        .demo-screen.active { display: flex; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
 
-        /* ADMIN TABS */
-        .admin-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
-        .admin-tab { padding: 10px 12px; background: var(--surface-2-color); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-primary); }
-        .admin-tab.active { background: var(--accent-color); color: var(--accent-text); border-color: var(--accent-color); }
-        .admin-panel { animation: fadeIn 0.3s ease; }
-        .admin-user-row { display:flex; align-items:center; gap:10px; padding:10px; background:var(--surface-2-color); border-radius:var(--radius-sm); margin-bottom:8px; }
-        .admin-user-avatar { width:36px; height:36px; border-radius:50%; background:var(--accent-color); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--accent-text); flex-shrink:0; overflow:hidden; }
-        .admin-user-avatar img { width:100%; height:100%; object-fit:cover; }
-        .admin-user-info { flex:1; min-width:0; }
-        .admin-user-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .admin-user-meta { font-size:11px; color:var(--text-secondary); }
-        .admin-user-actions { display:flex; gap:4px; }
-        .admin-user-actions button { width:auto; padding:6px 10px; font-size:11px; }
+        .stat-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 8px;
+            text-align: center;
+        }
 
-        .referral-link-box { display:flex; gap:8px; align-items:center; background:var(--surface-2-color); padding:10px; border-radius:var(--radius-sm); margin-bottom:12px; }
-        .referral-link-box input { flex:1; background:transparent; border:none; color:var(--text-primary); font-size:12px; outline:none; min-width:0; }
-        .referral-link-box button { width:auto; padding:6px 14px; font-size:12px; }
+        .stat-item .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
 
-        .ref-user-row { display:flex; align-items:center; gap:10px; padding:10px; background:var(--surface-2-color); border-radius:var(--radius-sm); margin-bottom:8px; }
-        .ref-user-row .avatar { width:32px; height:32px; border-radius:50%; background:var(--accent-color); color:var(--accent-text); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
-        .ref-user-row .info { flex:1; min-width:0; }
-        .ref-user-row .name { font-size:13px; font-weight:600; }
-        .ref-user-row .meta { font-size:11px; color:var(--text-secondary); }
+        .stat-item .stat-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
 
-        @media (min-width: 1024px) {
-            body { padding-bottom: 20px; }
-            .sidebar { display: block; }
-            .main-area { margin-left: var(--sidebar-width); }
-            .bottom-nav { display: none; }
-            .app-header { display: none; }
-            .container { padding: 30px 40px; max-width: 1000px; }
-            .stats-grid, .quick-actions { grid-template-columns: repeat(4, 1fr); }
-            .lang-switcher, .toast { bottom: 20px; }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(247, 147, 26, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card-hover);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            color: white;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(247, 147, 26, 0.1);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-action {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-action:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .quick-action .icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .quick-action .text {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item .nav-icon {
+            font-size: 20px;
+        }
+
+        .captcha-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .captcha-box .question {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .cooldown-timer {
+            text-align: center;
+            padding: 12px;
+            background: rgba(247, 147, 26, 0.1);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .earn-zone-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .earn-zone-item:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .earn-zone-item .info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .earn-zone-item .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .earn-zone-item .bonus-tag {
+            background: var(--success);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .swap-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .swap-coin {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .swap-coin.cnx {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .swap-coin.doge {
+            background: linear-gradient(135deg, #c2a633, #a89028);
+            color: white;
+        }
+
+        .swap-arrow {
+            font-size: 24px;
+            color: var(--text-secondary);
+        }
+
+        .rate-info {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .admin-tab {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .admin-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .admin-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .admin-stat {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+        }
+
+        .admin-stat .label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .admin-stat .value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .user-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+        }
+
+        .user-list-item .user-info {
+            flex: 1;
+        }
+
+        .user-list-item .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-list-item .user-id {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .user-list-item .user-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mini-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: none;
+            color: var(--text);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--danger);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 10002;
+            display: none;
+        }
+
+        .offline-banner.show {
+            display: block;
+        }
+
+        .confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+        }
+
+        .transaction-item .tx-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .transaction-item .tx-icon.in {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .transaction-item .tx-icon.out {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .transaction-item .tx-info {
+            flex: 1;
+        }
+
+        .transaction-item .tx-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .transaction-item .tx-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .transaction-item .tx-amount {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .transaction-item .tx-amount.positive {
+            color: var(--success);
+        }
+
+        .transaction-item .tx-amount.negative {
+            color: var(--danger);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .ref-link-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .ref-link-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 12px;
+            outline: none;
+        }
+
+        .ref-link-box .copy-btn {
+            padding: 6px 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .percentage-btns {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .pct-btn {
+            padding: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .pct-btn:hover, .pct-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .faq-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 14px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .faq-answer {
+            padding: 0 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .faq-item.open .faq-answer {
+            padding: 0 16px 14px;
+            max-height: 200px;
+        }
+
+        .pull-to-refresh {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-60px);
+            transition: transform 0.3s ease;
+        }
+
+        .pull-to-refresh.active {
+            transform: translateY(0);
+        }
+
+        .streak-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: linear-gradient(135deg, #ff6b35, #f7931a);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin: 4px;
         }
     </style>
 </head>
 <body>
-    <div id="loading-screen">
-        <img src="/loading.png" alt="Loading" onerror="this.style.display='none'">
-        <p>Initializing COINIX...</p>
+    <div class="offline-banner" id="offlineBanner">📡 You are offline. Some features may not work.</div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 16px; color: var(--text-secondary);">Loading COINIX...</p>
     </div>
 
-    <div id="demo-screen" class="demo-screen">
-        <h1>📱 Mobil cihazlardan giriniz</h1>
-        <p>Bu uygulama sadece Telegram mobil uygulaması içinden açılabilir.</p>
-        <p style="font-size:13px;color:var(--text-secondary);max-width:400px;margin:10px auto;">Lütfen telefonunuzdan Telegram'ı açıp bot üzerinden uygulamayı başlatın.</p>
-        <button class="btn btn-primary" style="max-width:300px;margin-bottom:10px;margin-top:10px;" data-action="open-telegram">Telegram Bot'u Aç</button>
-        <button class="btn btn-secondary" style="max-width:300px;" data-action="enable-demo">PC Demo Modu (test)</button>
-    </div>
+    <div class="toast" id="toast"></div>
 
-    <div id="toast"></div>
+    <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
 
-    <div class="app-layout">
-        <aside class="sidebar">
+    <div class="container" id="appContainer" style="display:none;">
+        <header class="header">
             <div class="logo">
-                <img src="/coinix.png" alt="" onerror="this.style.display='none'">
-                <span>COINIX</span>
+                <img src="/coinix.png" alt="COINIX">
+                <h1>COINIX</h1>
             </div>
-            <div class="sidebar-item active" data-nav="dashboard">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                <span>Dashboard</span>
+            <div class="header-actions">
+                <button class="icon-btn" id="notificationsBtn" onclick="navigateTo('notifications')">
+                    🔔
+                    <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+                </button>
+                <button class="icon-btn" id="themeToggle" onclick="toggleTheme()">🌙</button>
             </div>
-            <div class="sidebar-item" data-nav="faucet">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Faucet</span>
-            </div>
-            <div class="sidebar-item" data-nav="earn">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                <span>Earn Zone</span>
-            </div>
-            <div class="sidebar-item" data-nav="promo">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
-                <span>Promo</span>
-            </div>
-            <div class="sidebar-item" data-nav="swap">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                <span>Swap</span>
-            </div>
-            <div class="sidebar-item" data-nav="withdraw">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                <span>Withdraw</span>
-            </div>
-            <div class="sidebar-item" data-nav="referrals">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                <span>Referrals</span>
-            </div>
-            <div class="sidebar-item" data-nav="faq">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>FAQ</span>
-            </div>
-            <!-- ⭐ ADMIN BUTONU (Sadece admin kullanıcılar için görünür) -->
-            <div class="sidebar-item" data-nav="admin" style="display:none;" id="sidebar-admin">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span>Admin Panel</span>
-            </div>
-            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
-                <div class="sidebar-item" data-action="toggle-theme">
-                    <svg id="sidebar-theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                    <span id="sidebar-theme-text">Dark Mode</span>
+        </header>
+
+        <!-- DASHBOARD PAGE -->
+        <div class="page active" id="page-dashboard">
+            <div class="balance-cards">
+                <div class="balance-card">
+                    <div class="label"><img src="/coinix.png" alt="CNX"> CNX Balance</div>
+                    <div class="value" id="dashBalance">0.00</div>
+                    <div class="usd" id="dashBalanceUsd">~ $0.00</div>
+                </div>
+                <div class="balance-card">
+                    <div class="label"><img src="/dogecoin.png" alt="DOGE"> DOGE Balance</div>
+                    <div class="value" id="dashDogeBalance">0.00000000</div>
+                    <div class="usd" id="dashDogeBalanceUsd">~ $0.00</div>
                 </div>
             </div>
-        </aside>
 
-        <div class="main-area">
-            <header class="app-header">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button id="header-admin-btn" data-nav="admin" style="display:none;width:36px;height:36px;border-radius:50%;background:var(--surface-2-color);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);" title="Admin Panel">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </button>
-                    <div class="logo">
-                        <img src="/coinix.png" alt="" onerror="this.style.display='none'">
-                        <span>COINIX</span>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="dashTodayEarned">0.00</div>
+                    <div class="stat-label">Today</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="dashReferrals">0</div>
+                    <div class="stat-label">Referrals</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="dashStreak">0</div>
+                    <div class="stat-label">🔥 Streak</div>
+                </div>
+            </div>
+
+            <div class="section-title">⚡ Quick Actions</div>
+            <div class="quick-actions">
+                <div class="quick-action" onclick="navigateTo('faucet')">
+                    <div class="icon">🚰</div>
+                    <div class="text">Faucet</div>
+                </div>
+                <div class="quick-action" onclick="navigateTo('earn')">
+                    <div class="icon">💰</div>
+                    <div class="text">Earn Zone</div>
+                </div>
+                <div class="quick-action" onclick="navigateTo('swap')">
+                    <div class="icon">🔄</div>
+                    <div class="text">Swap</div>
+                </div>
+                <div class="quick-action" onclick="navigateTo('withdraw')">
+                    <div class="icon">💸</div>
+                    <div class="text">Withdraw</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">📊 Live Earnings</div>
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="dashClaims">0</div>
+                        <div class="stat-label">Faucet Claims</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="dashOfferEarned">0.00</div>
+                        <div class="stat-label">Offer Earnings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="dashPromoEarned">0.00</div>
+                        <div class="stat-label">Promo Rewards</div>
                     </div>
                 </div>
-                <div class="header-right">
-                    <div class="header-balance">
-                        <img src="/coinix.png" alt="" onerror="this.style.display='none'">
-                        <span id="header-balance-cnx">0.00</span>
-                    </div>
-                    <button class="theme-toggle" data-action="toggle-theme">
-                        <svg id="header-theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                    </button>
-                </div>
-            </header>
+            </div>
+        </div>
 
-            <main class="container">
-                <!-- DASHBOARD -->
-                <div id="page-dashboard" class="page active">
-                    <div class="card-glass">
-                        <div class="card-title">Welcome back!</div>
-                        <div class="card-subtitle" id="welcome-name">Start earning CNX & DOGE today</div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label"><img src="/coinix.png" alt="" onerror="this.style.display='none'"> CNX Balance</div><div class="stat-value" id="dash-cnx-balance">0.00</div><div class="stat-sub" id="dash-cnx-usd" style="font-size:11px;color:var(--text-secondary);">~ $0.00</div></div>
-                        <div class="stat-box"><div class="stat-label"><img src="/dogecoin.png" alt="" onerror="this.style.display='none'"> DOGE Balance</div><div class="stat-value" id="dash-doge-balance">0.00</div><div class="stat-sub" id="dash-doge-usd" style="font-size:11px;color:var(--text-secondary);">~ $0.00</div></div>
-                        <div class="stat-box"><div class="stat-label">Today</div><div class="stat-value" id="dash-today-earned">0.00</div></div>
-                        <div class="stat-box"><div class="stat-label">Referrals</div><div class="stat-value" id="dash-referrals">0</div></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Quick Actions</div>
-                        <div class="quick-actions">
-                            <div class="quick-action-btn" data-nav="faucet"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Faucet</span></div>
-                            <div class="quick-action-btn" data-nav="earn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>Earn Zone</span></div>
-                            <div class="quick-action-btn" data-nav="swap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Swap</span></div>
-                            <div class="quick-action-btn" data-nav="withdraw"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Withdraw</span></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Live Earnings</div>
-                        <div class="list-item"><div><div class="list-item-title">Faucet Claims</div></div><div class="list-item-value" id="dash-faucet-today">0</div></div>
-                        <div class="list-item"><div><div class="list-item-title">Offer Earnings</div></div><div class="list-item-value" id="dash-offer-earned">0.00</div></div>
-                        <div class="list-item"><div><div class="list-item-title">Promo Rewards</div></div><div class="list-item-value" id="dash-promo-earned">0.00</div></div>
-                    </div>
+        <!-- FAUCET PAGE -->
+        <div class="page" id="page-faucet">
+            <div class="card">
+                <div class="section-title">🚰 Free Faucet</div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Claim 0.20 CNX every 3 minutes</p>
+                
+                <div class="cooldown-timer" id="cooldownTimer" style="display:none;">
+                    Next claim in <span id="cooldownTime">03:00</span>
                 </div>
 
-                <!-- FAUCET -->
-                <div id="page-faucet" class="page">
-                    <div class="card-glass">
-                        <div class="card-title">Free Faucet</div>
-                        <div class="card-subtitle">Claim 1 CNX every 3 minutes</div>
-                        <div class="faucet-timer"><div class="time" id="faucet-timer">03:00</div><div class="card-subtitle">Next claim in</div></div>
-                        <div class="captcha-box">
-                            <div class="card-title">Anti-Bot Verification</div>
-                            <div class="captcha-question" id="captcha-question">? + ? =</div>
-                            <input type="number" class="input-field" id="captcha-answer" placeholder="Your answer">
-                            <button class="btn btn-secondary" style="margin-top:10px;" data-action="refresh-captcha">New Question</button>
-                        </div>
-                        <button class="btn btn-primary" id="btn-claim-faucet" data-action="claim-faucet">CLAIM CNX</button>
+                <div class="captcha-box" id="captchaBox">
+                    <div class="section-title" style="justify-content: center;">Anti-Bot Verification</div>
+                    <div class="question" id="captchaQuestion">? + ? =</div>
+                    <div class="input-group">
+                        <input type="number" id="captchaInput" placeholder="Your answer">
                     </div>
-                    <div class="card">
-                        <div class="card-title">Statistics</div>
-                        <div class="stats-grid">
-                            <div class="stat-box"><div class="stat-label">Total Claims</div><div class="stat-value" id="faucet-total-claims">0</div></div>
-                            <div class="stat-box"><div class="stat-label">Total Earned</div><div class="stat-value" id="faucet-total-earned">0.00</div></div>
-                        </div>
-                    </div>
+                    <button class="btn btn-secondary" onclick="refreshCaptcha()" style="margin-bottom: 12px;">🔄 New Question</button>
+                    <button class="btn btn-primary" id="claimBtn" onclick="claimFaucet()">CLAIM 0.20 CNX</button>
                 </div>
 
-                <!-- EARN -->
-                <div id="page-earn" class="page">
-                    <div class="card-glass"><div class="card-title">Earn Zone</div><div class="card-subtitle">+20% bonus on PTC, Shortlinks and Games</div></div>
-                    <div class="earn-card" data-action="load-ptc"><div class="earn-card-header"><div class="earn-card-title">PTC Ads</div><span class="earn-card-badge">+20%</span></div><div style="font-size:13px;color:var(--text-secondary);">View ads and earn CNX instantly.</div></div>
-                    <div class="earn-card" data-action="load-shortlinks"><div class="earn-card-header"><div class="earn-card-title">Shortlinks</div><span class="earn-card-badge">+20%</span></div><div style="font-size:13px;color:var(--text-secondary);">Visit shortened URLs.</div></div>
-                    <div class="earn-card" data-action="load-games"><div class="earn-card-header"><div class="earn-card-title">Games</div><span class="earn-card-badge">+20%</span></div><div style="font-size:13px;color:var(--text-secondary);">Play mobile games.</div></div>
-                    <div class="earn-card" data-action="load-offerwall"><div class="earn-card-header"><div class="earn-card-title">Offers & Visits</div></div><div style="font-size:13px;color:var(--text-secondary);">Complete surveys.</div></div>
-                </div>
-
-                <!-- PROMO -->
-                <div id="page-promo" class="page">
-                    <div class="card-glass">
-                        <div class="card-title">Promo Codes</div>
-                        <div class="card-subtitle">Redeem codes for free CNX & DOGE.</div>
-                        <div class="input-group"><label class="input-label">Code</label><input type="text" class="input-field" id="promo-code-input" placeholder="CODE123"></div>
-                        <button class="btn btn-primary" data-action="redeem-promo">Redeem</button>
+                <div class="stats-grid" style="margin-top: 20px; margin-bottom: 0;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="faucetTotalClaims">0</div>
+                        <div class="stat-label">Total Claims</div>
                     </div>
-                    <div class="card"><div class="card-title">History</div><div id="promo-history-list"></div></div>
-                </div>
-
-                <!-- SWAP -->
-                <div id="page-swap" class="page">
-                    <div class="card-glass">
-                        <div class="card-title">Swap CNX to DOGE</div>
-                        <div class="card-subtitle">1:1 rate, zero fees</div>
-                        <div class="stats-grid">
-                            <div class="stat-box"><div class="stat-label">CNX</div><div class="stat-value" id="swap-cnx-balance">0.00</div></div>
-                            <div class="stat-box"><div class="stat-label">DOGE</div><div class="stat-value" id="swap-doge-balance">0.00</div></div>
-                        </div>
-                        <div class="input-group"><label class="input-label">Amount (CNX)</label><input type="number" class="input-field" id="swap-amount-input" placeholder="0.00"></div>
-                        <div class="percent-btns">
-                            <button class="percent-btn" data-swap-percent="25">25%</button>
-                            <button class="percent-btn" data-swap-percent="50">50%</button>
-                            <button class="percent-btn" data-swap-percent="75">75%</button>
-                            <button class="percent-btn" data-swap-percent="100">MAX</button>
-                        </div>
-                        <button class="btn btn-primary" data-action="execute-swap">Swap Now</button>
+                    <div class="stat-item">
+                        <div class="stat-value" id="faucetTotalEarned">0.00</div>
+                        <div class="stat-label">Total Earned</div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- WITHDRAW -->
-                <div id="page-withdraw" class="page">
-                    <div class="card-glass"><div class="card-title">Withdraw DOGE</div><div class="card-subtitle">Send to FaucetPay email</div></div>
-                    <div class="card">
-                        <div class="card-title">Referral Earnings</div>
-                        <div style="display:flex;gap:10px;align-items:center;">
-                            <div style="flex:1;"><div class="stat-value" id="wd-referral-balance">0.00 CNX</div></div>
-                            <button class="btn btn-secondary" style="width:auto;" data-action="collect-referral">Collect</button>
-                        </div>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label">DOGE</div><div class="stat-value" id="wd-doge-balance">0.00</div></div>
-                        <div class="stat-box"><div class="stat-label">CNX</div><div class="stat-value" id="wd-cnx-balance">0.00</div></div>
-                    </div>
-                    <div class="card">
-                        <div class="input-group"><label class="input-label">FaucetPay Email</label><input type="email" class="input-field" id="wd-email-input" placeholder="your@email.com"></div>
-                        <div class="input-group"><label class="input-label">Amount (DOGE)</label><input type="number" class="input-field" id="wd-amount-input" placeholder="0.10" step="0.01"></div>
-                        <div class="percent-btns">
-                            <button class="percent-btn" data-wd-amount="0.5">0.5</button>
-                            <button class="percent-btn" data-wd-amount="1">1</button>
-                            <button class="percent-btn" data-wd-amount="5">5</button>
-                            <button class="percent-btn" data-wd-percent="100">MAX</button>
-                        </div>
-                        <button class="btn btn-primary" data-action="execute-withdraw">Withdraw</button>
-                    </div>
-                    <div class="card"><div class="card-title">History</div><div id="withdraw-history-list"></div></div>
-                </div>
-
-                <!-- ADMIN (Sadece admin kullanıcılar için) -->
-                <div id="page-admin" class="page" style="display:none;">
-                    <div class="card-glass">
-                        <div class="card-title">⚙️ Admin Panel</div>
-                        <div class="card-subtitle">Users, broadcasts, promo codes & withdrawals</div>
-                    </div>
-
-                    <!-- Üst istatistik -->
-                    <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label">Users</div><div class="stat-value" id="admin-total-users">0</div></div>
-                        <div class="stat-box"><div class="stat-label">Total Paid</div><div class="stat-value" id="admin-total-paid">0.00</div></div>
-                        <div class="stat-box"><div class="stat-label">Withdrawals</div><div class="stat-value" id="admin-total-wd">0</div></div>
-                        <div class="stat-box"><div class="stat-label">Offerwall</div><div class="stat-value" id="admin-total-offerwall">0.00</div></div>
-                    </div>
-
-                    <!-- TAB BAR -->
-                    <div class="admin-tabs">
-                        <button class="admin-tab active" data-admin-tab="users">👥 Users</button>
-                        <button class="admin-tab" data-admin-tab="broadcast">📣 Broadcast</button>
-                        <button class="admin-tab" data-admin-tab="promos">🎟️ Promos</button>
-                        <button class="admin-tab" data-admin-tab="withdraws">💸 Withdraws</button>
-                    </div>
-
-                    <!-- USERS TAB -->
-                    <div class="admin-panel active" id="admin-panel-users">
-                        <div class="card">
-                            <div class="card-title">Users (<span id="admin-users-count">0</span>)</div>
-                            <div class="input-group"><input type="text" class="input-field" id="admin-users-search" placeholder="Search by name, username, ID..."></div>
-                            <div id="admin-users-list" style="max-height:60vh;overflow-y:auto;"></div>
-                        </div>
-                    </div>
-
-                    <!-- BROADCAST TAB -->
-                    <div class="admin-panel" id="admin-panel-broadcast" style="display:none;">
-                        <div class="card">
-                            <div class="card-title">Broadcast to all users</div>
-                            <div class="card-subtitle">Sends via Telegram bot to all non-banned users.</div>
-                            <div class="input-group"><label class="input-label">Message (Markdown)</label><textarea class="input-field" id="admin-broadcast-msg" rows="4"></textarea></div>
-                            <button class="btn btn-primary" data-action="admin-broadcast">📣 Send Broadcast</button>
-                        </div>
-                        <div class="card">
-                            <div class="card-title">Send DM to specific user</div>
-                            <div class="card-subtitle">Direct message via Telegram bot.</div>
-                            <div class="input-group"><label class="input-label">Target User ID</label><input type="text" class="input-field" id="admin-dm-userid" placeholder="Telegram ID"></div>
-                            <div class="input-group"><label class="input-label">Message</label><textarea class="input-field" id="admin-dm-msg" rows="3"></textarea></div>
-                            <button class="btn btn-primary" data-action="admin-send-dm">✉️ Send DM</button>
-                        </div>
-                    </div>
-
-                    <!-- PROMOS TAB -->
-                    <div class="admin-panel" id="admin-panel-promos" style="display:none;">
-                        <div class="card">
-                            <div class="card-title">Create Promo Code</div>
-                            <div class="input-group"><label class="input-label">Code</label><input type="text" class="input-field" id="admin-promo-code" placeholder="WELCOME2024"></div>
-                            <div class="stats-grid">
-                                <div class="input-group"><label class="input-label">Coin</label><select class="input-field" id="admin-promo-coin"><option value="CNX">CNX</option><option value="DOGE">DOGE</option></select></div>
-                                <div class="input-group"><label class="input-label">Reward</label><input type="number" class="input-field" id="admin-promo-reward" placeholder="10"></div>
-                            </div>
-                            <div class="input-group"><label class="input-label">Usage Limit</label><input type="number" class="input-field" id="admin-promo-limit" placeholder="100"></div>
-                            <button class="btn btn-primary" data-action="admin-create-promo">➕ Create</button>
-                        </div>
-                        <div class="card">
-                            <div class="card-title">Active Promo Codes (<span id="admin-promos-count">0</span>)</div>
-                            <div id="admin-promos-list" style="max-height:50vh;overflow-y:auto;"></div>
-                        </div>
-                    </div>
-
-                    <!-- WITHDRAWS TAB -->
-                    <div class="admin-panel" id="admin-panel-withdraws" style="display:none;">
-                        <div class="card">
-                            <div class="card-title">Withdrawal Requests (<span id="admin-wd-count">0</span>)</div>
-                            <div id="admin-wd-list" style="max-height:60vh;overflow-y:auto;"></div>
-                        </div>
+        <!-- EARN ZONE PAGE -->
+        <div class="page" id="page-earn">
+            <div class="section-title">💰 Earn Zone <span class="streak-badge">+20% bonus</span></div>
+            
+            <div class="earn-zone-item" onclick="openPTC()">
+                <div class="info">
+                    <div class="icon">📺</div>
+                    <div>
+                        <div style="font-weight: 600;">PTC Ads</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">View ads and earn CNX instantly.</div>
                     </div>
                 </div>
+                <span class="bonus-tag">+20%</span>
+            </div>
 
-                <!-- FAQ -->
-                <div id="page-referrals" class="page">
-                    <div class="card-glass">
-                        <div class="card-title">🤝 Referrals</div>
-                        <div class="card-subtitle">Earn <b>+1 CNX</b> for every friend who joins + <b>20% lifetime</b> commission on their earnings.</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Your Referral Link</div>
-                        <div class="referral-link-box">
-                            <input type="text" id="referral-link-input" readonly value="Loading...">
-                            <button class="btn btn-secondary" data-action="copy-referral">Copy</button>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-box"><div class="stat-label">Total Referrals</div><div class="stat-value" id="referral-stat-count">0</div></div>
-                            <div class="stat-box"><div class="stat-label">Referral Earnings</div><div class="stat-value" id="referral-stat-earned">0.00</div></div>
-                        </div>
-                        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
-                            <div style="flex:1;"><div class="stat-value" id="referral-balance-display">0.00 CNX</div><div class="card-subtitle">Pending commission</div></div>
-                            <button class="btn btn-secondary" style="width:auto;" data-action="collect-referral">Collect</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">Your Referrals (<span id="referral-list-count">0</span>)</div>
-                        <div id="referral-list"></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">How it works</div>
-                        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">
-                            1. Share your unique link with friends.<br>
-                            2. They tap <b>Start</b> in the COINIX Telegram bot.<br>
-                            3. You instantly receive <b>+1 CNX</b>.<br>
-                            4. Plus <b>20%</b> of every offer/faucet earning they make, forever.
-                        </div>
+            <div class="earn-zone-item" onclick="openShortlinks()">
+                <div class="info">
+                    <div class="icon">🔗</div>
+                    <div>
+                        <div style="font-weight: 600;">Shortlinks</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Visit shortened URLs.</div>
                     </div>
                 </div>
+                <span class="bonus-tag">+20%</span>
+            </div>
 
-                <!-- FAQ -->
-                <div id="page-faq" class="page">
-                    <div class="card-glass"><div class="card-title">FAQ</div></div>
-                    <div class="faq-item">
-                        <div class="faq-question"><span>How do I earn CNX?</span><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
-                        <div class="faq-answer">Claim faucet every 3 min (1 CNX), complete Offerwall tasks, invite friends.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question"><span>How to withdraw?</span><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
-                        <div class="faq-answer">Swap CNX to DOGE (1:1), then withdraw. Min 0.10 DOGE.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question"><span>CNX worth?</span><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
-                        <div class="faq-answer">100 CNX = 1 USD. Updates in real-time.</div>
-                    </div>
-                    <div class="faq-item">
-                        <div class="faq-question"><span>Referral bonus?</span><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
-                        <div class="faq-answer">50 CNX per signup + 20% lifetime commission.</div>
+            <div class="earn-zone-item" onclick="openGames()">
+                <div class="info">
+                    <div class="icon">🎮</div>
+                    <div>
+                        <div style="font-weight: 600;">Games</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Play mobile games.</div>
                     </div>
                 </div>
-            </main>
+                <span class="bonus-tag">+20%</span>
+            </div>
+
+            <div class="earn-zone-item" onclick="openOfferwall()">
+                <div class="info">
+                    <div class="icon">📋</div>
+                    <div>
+                        <div style="font-weight: 600;">Offers & Visits</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Complete surveys.</div>
+                    </div>
+                </div>
+                <span class="bonus-tag">+20%</span>
+            </div>
+        </div>
+
+        <!-- PROMO PAGE -->
+        <div class="page" id="page-promo">
+            <div class="card">
+                <div class="section-title">🎟️ Promo Codes</div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Redeem codes for free CNX & DOGE.</p>
+                
+                <div class="input-group">
+                    <label>Code</label>
+                    <input type="text" id="promoCodeInput" placeholder="Enter promo code" style="text-transform: uppercase;">
+                </div>
+                <button class="btn btn-primary" onclick="redeemPromo()">Redeem</button>
+            </div>
+
+            <div class="card">
+                <div class="section-title">📜 Redeem History</div>
+                <div id="promoHistoryList">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>No promo codes redeemed yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SWAP PAGE -->
+        <div class="page" id="page-swap">
+            <div class="card">
+                <div class="section-title">🔄 Swap CNX to DOGE</div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Dynamic rate based on live market price.</p>
+
+                <div class="swap-visual">
+                    <div class="swap-coin cnx">C</div>
+                    <div class="swap-arrow">→</div>
+                    <div class="swap-coin doge">Ð</div>
+                </div>
+
+                <div class="rate-info" id="swapRateInfo">1 CNX = $0.01 | DOGE: $0.20</div>
+
+                <div class="input-group">
+                    <label>Amount (CNX)</label>
+                    <input type="number" id="swapAmount" placeholder="0.00" step="0.01" oninput="updateSwapPreview()">
+                </div>
+
+                <div class="percentage-btns">
+                    <div class="pct-btn" onclick="setSwapPercent(25)">25%</div>
+                    <div class="pct-btn" onclick="setSwapPercent(50)">50%</div>
+                    <div class="pct-btn" onclick="setSwapPercent(75)">75%</div>
+                    <div class="pct-btn" onclick="setSwapPercent(100)">MAX</div>
+                </div>
+
+                <div id="swapPreview" style="text-align: center; margin-bottom: 16px; font-size: 14px; color: var(--text-secondary);">
+                    You will receive: <strong id="swapPreviewAmount">0.00000000 DOGE</strong>
+                </div>
+
+                <button class="btn btn-primary" onclick="executeSwap()">Swap Now</button>
+            </div>
+        </div>
+
+        <!-- WITHDRAW PAGE -->
+        <div class="page" id="page-withdraw">
+            <div class="card">
+                <div class="section-title">💸 Withdraw DOGE</div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Send to FaucetPay email</p>
+
+                <div class="balance-cards" style="margin-bottom: 20px;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="wdReferralBalance">0.00</div>
+                        <div class="stat-label">Referral Earnings</div>
+                    </div>
+                    <button class="btn btn-success" style="margin-top: 8px;" onclick="collectReferral()">Collect</button>
+                </div>
+
+                <div class="input-group">
+                    <label>FaucetPay Email</label>
+                    <input type="email" id="wdEmail" placeholder="your@email.com">
+                </div>
+
+                <div class="input-group">
+                    <label>Amount (DOGE)</label>
+                    <input type="number" id="wdAmount" placeholder="0.00000000" step="0.00000001">
+                </div>
+
+                <div class="percentage-btns">
+                    <div class="pct-btn" onclick="setWdPercent(25)">25%</div>
+                    <div class="pct-btn" onclick="setWdPercent(50)">50%</div>
+                    <div class="pct-btn" onclick="setWdPercent(75)">75%</div>
+                    <div class="pct-btn" onclick="setWdPercent(100)">MAX</div>
+                </div>
+
+                <button class="btn btn-primary" onclick="withdrawDoge()">Withdraw</button>
+            </div>
+
+            <div class="card">
+                <div class="section-title">📜 Withdraw History</div>
+                <div id="withdrawHistoryList">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>No withdrawals yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REFERRAL PAGE -->
+        <div class="page" id="page-referral">
+            <div class="card">
+                <div class="section-title">🤝 Referrals</div>
+                <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Earn +1 CNX for every friend who joins + 20% lifetime commission on their earnings.</p>
+
+                <div class="ref-link-box">
+                    <input type="text" id="refLink" readonly>
+                    <button class="copy-btn" onclick="copyRefLink()">Copy</button>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="refTotal">0</div>
+                        <div class="stat-label">Total Referrals</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="refEarnings">0.00</div>
+                        <div class="stat-label">Referral Earnings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="refPending">0.00</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">👥 Your Referrals</div>
+                <div id="referralList">
+                    <div class="empty-state">
+                        <div class="icon">👥</div>
+                        <p>No referrals yet. Share your link!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANSACTIONS PAGE -->
+        <div class="page" id="page-transactions">
+            <div class="section-title">📋 Transaction History</div>
+            <div id="transactionList">
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <p>No transactions yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NOTIFICATIONS PAGE -->
+        <div class="page" id="page-notifications">
+            <div class="section-title">🔔 Notifications</div>
+            <div id="notificationList">
+                <div class="empty-state">
+                    <div class="icon">🔔</div>
+                    <p>No notifications.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN PAGE -->
+        <div class="page" id="page-admin">
+            <div class="section-title">⚙️ Admin Panel</div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">Users, broadcasts, promo codes & withdrawals</p>
+
+            <div class="admin-stat-grid" id="adminStatsGrid">
+                <div class="admin-stat">
+                    <div class="label">Total Users</div>
+                    <div class="value" id="adminTotalUsers">0</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="label">Today's Users</div>
+                    <div class="value" id="adminTodayUsers">0</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="label">Online Now</div>
+                    <div class="value" id="adminOnlineUsers">0</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="label">Pending Withdraws</div>
+                    <div class="value" id="adminPendingWd">0</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="label">Total Paid</div>
+                    <div class="value" id="adminTotalPaid">0.00</div>
+                </div>
+                <div class="admin-stat">
+                    <div class="label">Total Claims</div>
+                    <div class="value" id="adminTotalClaims">0</div>
+                </div>
+            </div>
+
+            <div class="admin-tabs">
+                <div class="admin-tab active" onclick="switchAdminTab('users')">👥 Users</div>
+                <div class="admin-tab" onclick="switchAdminTab('broadcast')">📣 Broadcast</div>
+                <div class="admin-tab" onclick="switchAdminTab('promos')">🎟️ Promos</div>
+                <div class="admin-tab" onclick="switchAdminTab('withdraws')">💸 Withdraws</div>
+            </div>
+
+            <div id="adminTab-users">
+                <div class="input-group">
+                    <input type="text" id="adminUserSearch" placeholder="Search by username..." oninput="searchAdminUsers()">
+                </div>
+                <button class="btn btn-secondary" onclick="exportUsersCSV()" style="margin-bottom: 16px;">📥 Export CSV</button>
+                <div id="adminUserList"></div>
+            </div>
+
+            <div id="adminTab-broadcast" style="display:none;">
+                <div class="card">
+                    <div class="section-title">📣 Broadcast to all users</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 12px; font-size: 13px;">Sends via Telegram bot to all non-banned users.</p>
+                    <div class="input-group">
+                        <label>Message</label>
+                        <textarea id="broadcastMessage" rows="4" placeholder="Type your message..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendBroadcast()">📣 Send Broadcast</button>
+                </div>
+                <div class="card">
+                    <div class="section-title">✉️ Send DM to specific user</div>
+                    <div class="input-group">
+                        <label>Target User ID</label>
+                        <input type="text" id="dmUserId" placeholder="Telegram User ID">
+                    </div>
+                    <div class="input-group">
+                        <label>Message</label>
+                        <textarea id="dmMessage" rows="3" placeholder="Type your message..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendDM()">✉️ Send DM</button>
+                </div>
+            </div>
+
+            <div id="adminTab-promos" style="display:none;">
+                <div class="card">
+                    <div class="section-title">➕ Create Promo Code</div>
+                    <div class="input-group">
+                        <label>Code</label>
+                        <input type="text" id="promoCode" placeholder="WELCOME2024" style="text-transform: uppercase;">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="input-group">
+                            <label>Coin</label>
+                            <select id="promoCoin">
+                                <option value="CNX">CNX</option>
+                                <option value="DOGE">DOGE</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Reward</label>
+                            <input type="number" id="promoReward" placeholder="10" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Usage Limit</label>
+                        <input type="number" id="promoLimit" placeholder="100" value="100">
+                    </div>
+                    <button class="btn btn-primary" onclick="createPromo()">➕ Create</button>
+                </div>
+                <div class="card">
+                    <div class="section-title">🎟️ Active Promo Codes</div>
+                    <div id="adminPromoList"></div>
+                </div>
+            </div>
+
+            <div id="adminTab-withdraws" style="display:none;">
+                <div class="card">
+                    <div class="section-title">💸 Withdrawal Requests</div>
+                    <div id="adminWithdrawList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ PAGE -->
+        <div class="page" id="page-faq">
+            <div class="section-title">❓ FAQ</div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">How do I earn CNX? <span>▼</span></div>
+                <div class="faq-answer">Claim faucet every 3 min (0.20 CNX), complete Offerwall tasks, invite friends.</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">How to withdraw? <span>▼</span></div>
+                <div class="faq-answer">Swap CNX to DOGE (dynamic rate based on live market), then withdraw to FaucetPay. Min 0.10 DOGE.</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">CNX worth? <span>▼</span></div>
+                <div class="faq-answer">100 CNX = 1 USD. Updates in real-time.</div>
+            </div>
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">Referral bonus? <span>▼</span></div>
+                <div class="faq-answer">1 CNX per signup + 20% lifetime commission on all their earnings.</div>
+            </div>
+        </div>
+
+        <!-- SETTINGS PAGE -->
+        <div class="page" id="page-settings">
+            <div class="section-title">⚙️ Settings</div>
+            <div class="card">
+                <div class="earn-zone-item" onclick="toggleTheme()">
+                    <div class="info">
+                        <div class="icon">🎨</div>
+                        <div>
+                            <div style="font-weight: 600;">Theme</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);" id="currentThemeText">Dark Mode</div>
+                        </div>
+                    </div>
+                    <span>→</span>
+                </div>
+                <div class="earn-zone-item" onclick="toggleHaptic()">
+                    <div class="info">
+                        <div class="icon">📳</div>
+                        <div>
+                            <div style="font-weight: 600;">Haptic Feedback</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);" id="hapticStatus">Enabled</div>
+                        </div>
+                    </div>
+                    <span>→</span>
+                </div>
+            </div>
         </div>
     </div>
 
     <nav class="bottom-nav">
-        <div class="nav-item active" data-nav="dashboard"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
-        <div class="nav-item" data-nav="faucet"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Faucet</span></div>
-        <div class="nav-item" data-nav="earn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>Earn</span></div>
-        <div class="nav-item" data-nav="swap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Swap</span></div>
-        <div class="nav-item" data-nav="withdraw"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Withdraw</span></div>
-        <div class="nav-item" data-nav="referrals"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Refs</span></div>
+        <a class="nav-item active" onclick="navigateTo('dashboard')">
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+        </a>
+        <a class="nav-item" onclick="navigateTo('faucet')">
+            <span class="nav-icon">🚰</span>
+            <span>Faucet</span>
+        </a>
+        <a class="nav-item" onclick="navigateTo('earn')">
+            <span class="nav-icon">💰</span>
+            <span>Earn</span>
+        </a>
+        <a class="nav-item" onclick="navigateTo('swap')">
+            <span class="nav-icon">🔄</span>
+            <span>Swap</span>
+        </a>
+        <a class="nav-item" onclick="navigateTo('promo')">
+            <span class="nav-icon">🎟️</span>
+            <span>Promo</span>
+        </a>
+        <a class="nav-item" onclick="navigateTo('withdraw')">
+            <span class="nav-icon">💸</span>
+            <span>Withdraw</span>
+        </a>
     </nav>
 
-    <div class="offerwall-container" id="offerwall-frame-container">
-        <div class="offerwall-header">
-            <div class="card-title" id="offerwall-title">Tasks</div>
-            <button class="btn btn-secondary" style="width:auto;padding:8px 16px;" data-action="close-offerwall">Close</button>
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>User Details</h3>
+                <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+            </div>
+            <div id="userModalContent"></div>
         </div>
-        <iframe class="offerwall-frame" id="offerwall-iframe"></iframe>
     </div>
 
-    <!-- Google Translate kaldırıldı -->
-
-    <!-- RichAds Push + Banner -->
-    <div id="richads-banner-slot" style="position:fixed;bottom:calc(var(--nav-height) + var(--safe-area-bottom));left:0;right:0;z-index:50;display:flex;justify-content:center;pointer-events:none;">
-      <div id="richads-banner" style="pointer-events:auto;"></div>
-    </div>
-    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
     <script>
-      window.TelegramAdsController = new TelegramAdsController();
-      window.TelegramAdsController.initialize({
-        pubId: "988708",
-        appId: "7950"
-      });
-      // Banner embed: otomatik göster (script yüklendikten sonra)
-      window.addEventListener('load', function() {
-        try {
-          if (window.TelegramAdsController && typeof window.TelegramAdsController.showBanner === 'function') {
-            window.TelegramAdsController.showBanner('richads-banner');
-          }
-        } catch(e) { console.warn('RichAds banner:', e.message); }
-      });
-      // Push notification: tarayıcı izinli ise otomatik tetikle (kullanıcı etkileşimi sonrası)
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          try {
-            if (window.TelegramAdsController && typeof window.TelegramAdsController.showPush === 'function') {
-              window.TelegramAdsController.showPush();
-            }
-          } catch(e) { console.warn('RichAds push:', e.message); }
-        }, 3000);
-      });
-    </script>
-
-    <script>
-        const API_BASE = window.location.origin;
         const tg = window.Telegram?.WebApp;
-        let authToken = localStorage.getItem('coinix_token');
-        let userData = null, dogePrice = { price: 0 }, faucetTimerInterval = null, nextClaimTime = 0, demoMode = false;
-        let referralLink = '', adminUsersCache = [], adminPromosCache = [], adminWdCache = [];
-        const FAUCET_COOLDOWN = 180000;
+        let currentUser = null;
+        let authToken = null;
+        let dogePrice = 0.20;
+        let cnxUsd = 0.01;
+        let cooldownInterval = null;
+        let hapticEnabled = true;
+        let currentPage = 'dashboard';
+        let adminStatsInterval = null;
 
-        // === DEVICE FINGERPRINT (aynı cihazdan farklı hesap engeli) ===
-        function getDeviceFP() {
-            let fp = localStorage.getItem('coinix_device_fp');
-            if (!fp) {
-                fp = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36) + '_' + navigator.userAgent.length.toString(36);
-                localStorage.setItem('coinix_device_fp', fp);
-            }
-            return fp;
-        }
+        const API_BASE = window.location.origin;
 
-        // === EVENT DELEGATION ===
-        document.addEventListener('click', function(e) {
-            const nav = e.target.closest('[data-nav]');
-            if (nav) { navigateTo(nav.dataset.nav); return; }
-            const act = e.target.closest('[data-action]');
-            if (act) {
-                switch(act.dataset.action) {
-                    case 'claim-faucet': claimFaucet(); break;
-                    case 'refresh-captcha': refreshCaptcha(); break;
-                    case 'redeem-promo': redeemPromo(); break;
-                    case 'execute-swap': executeSwap(); break;
-                    case 'execute-withdraw': executeWithdraw(); break;
-                    case 'collect-referral': collectReferral(); break;
-                    case 'copy-referral': copyReferral(); break;
-                    case 'admin-create-promo': adminCreatePromo(); break;
-                    case 'admin-broadcast': adminBroadcast(); break;
-                    case 'admin-send-dm': adminSendDM(); break;
-                    case 'toggle-theme': toggleTheme(); break;
-                    case 'close-offerwall': closeOfferwall(); break;
-                    case 'enable-demo': enableDemoMode(); break;
-                    case 'open-telegram': window.open('https://t.me/CoinixBot', '_blank'); break;
-                    case 'load-ptc': loadOfferwall('ptc'); break;
-                    case 'load-shortlinks': loadOfferwall('shortlinks'); break;
-                    case 'load-games': loadOfferwall('games'); break;
-                    case 'load-offerwall': loadOfferwall('offerwall'); break;
+        function initApp() {
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                if (tg.colorScheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
                 }
-                return;
+                tg.onEvent('themeChanged', () => {
+                    document.documentElement.setAttribute('data-theme', tg.colorScheme);
+                });
             }
-            const tab = e.target.closest('[data-admin-tab]');
-            if (tab) { switchAdminTab(tab.dataset.adminTab); return; }
-            const sp = e.target.closest('[data-swap-percent]');
-            if (sp) { setSwapPercent(parseInt(sp.dataset.swapPercent)); return; }
-            const wa = e.target.closest('[data-wd-amount]');
-            if (wa) { document.getElementById('wd-amount-input').value = wa.dataset.wdAmount; return; }
-            const wp = e.target.closest('[data-wd-percent]');
-            if (wp) { document.getElementById('wd-amount-input').value = ((userData.doge_balance||0)*parseInt(wp.dataset.wdPercent)/100).toFixed(2); return; }
-            const faq = e.target.closest('.faq-item');
-            if (faq) { faq.classList.toggle('open'); return; }
-        });
-
-        document.addEventListener('input', (e) => {
-            if (e.target.id === 'swap-amount-input') updateSwapEstimate();
-            if (e.target.id === 'admin-users-search') { renderAdminUsers(e.target.value); }
-        });
-
-        function toggleTheme() { document.body.classList.toggle('dark-mode'); localStorage.setItem('coinix_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); updateThemeIcons(); }
-        function updateThemeIcons() {
-            const isDark = document.body.classList.contains('dark-mode');
-            const sun = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
-            const moon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
-            document.getElementById('header-theme-icon').innerHTML = isDark ? sun : moon;
-            document.getElementById('sidebar-theme-icon').innerHTML = isDark ? sun : moon;
-            document.getElementById('sidebar-theme-text').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+            setupOfflineDetection();
+            setupPullToRefresh();
+            setupSwipeGestures();
+            initAuth();
         }
 
-        function enableDemoMode() {
-            demoMode = true;
-            userData = { balance: 1250, doge_balance: 42, total_earned: 3500, total_claims: 87, referrals: 12, referral_balance: 45, last_claim: Date.now() - 60000, is_admin: true, telegram_id: 'demo', first_name: 'Demo', username: 'demo' };
-            dogePrice = { price: 0.1245 };
-            referralLink = 'https://t.me/CoinixBot?start=ref_demo';
-            document.getElementById('demo-screen').classList.remove('active');
-            document.getElementById('loading-screen').classList.add('hidden');
-            updateUI(); initFaucetTimer();
+        function setupOfflineDetection() {
+            const updateOnlineStatus = () => {
+                const banner = document.getElementById('offlineBanner');
+                if (!navigator.onLine) {
+                    banner.classList.add('show');
+                } else {
+                    banner.classList.remove('show');
+                }
+            };
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
         }
 
-        async function apiRequest(endpoint, method = 'GET', body = null, isAdmin = false) {
-            if (demoMode) {
-                if (endpoint === '/api/doge-price') return dogePrice;
-                if (endpoint === '/api/me') return userData;
-                if (endpoint === '/api/captcha') return { question: '5 + 3 = ?' };
-                if (endpoint === '/api/claim') { userData.balance += 1; return { amount: 1 }; }
-                if (endpoint === '/api/offerwall/ptc') return { ads: [{id:'1',title:'Visit Ad',description:'Stay 30s',reward:0.5,duration:30,url:'#'}], total: 1 };
-                if (endpoint === '/api/offerwall/shortlinks') return { shortlinks: [{id:'1',name:'Short Link',reward:1.2,url:'#',remaining_views:85}], total: 1 };
-                if (endpoint.includes('/api/offerwall/')) return { url: 'https://offerwall.me/demo' };
-                if (endpoint === '/api/referral') return { link: referralLink, referrals: userData.referrals, earnings: userData.referral_balance, referral_balance: userData.referral_balance };
-                if (endpoint === '/api/referral/list') return { count: 3, list: [{id:'111',first_name:'Alice',username:'alice',photo_url:null,total_earned:50,created_at:Date.now()-86400000},{id:'222',first_name:'Bob',username:'bob',photo_url:null,total_earned:120,created_at:Date.now()-172800000},{id:'333',first_name:'Carol',username:null,photo_url:null,total_earned:8,created_at:Date.now()-3600000}] };
-                if (endpoint === '/api/admin/stats') return { totalUsers: 150, totalPaid_doge: 42.5, totalWithdrawals: 12, totalOfferwall: 220 };
-                if (endpoint === '/api/admin/users') return [{id:'111',first_name:'Alice',username:'alice',balance:50,doge_balance:0,total_earned:50,created_at:Date.now()-86400000,banned:false},{id:'222',first_name:'Bob',username:'bob',balance:120,doge_balance:5,total_earned:200,created_at:Date.now()-172800000,banned:false}];
-                if (endpoint === '/api/admin/withdrawals') return [{id:'wd1',user_id:'222',faucetpay_email:'bob@ex.com',amount:1.5,status:'pending',timestamp:Date.now()-3600000}];
-                if (endpoint === '/api/admin/promo/list') return [{code:'WELCOME',coin:'CNX',reward:5,usageLimit:100,usedCount:12,enabled:true}];
-                return { success: true };
-            }
-            const headers = { 'Content-Type': 'application/json' };
-            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
-            if (isAdmin) headers['x-admin-key'] = localStorage.getItem('admin_key') || '';
-            const res = await fetch(API_BASE + endpoint, { method, headers, body: body ? JSON.stringify(body) : null });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed');
-            return data;
+        function setupPullToRefresh() {
+            let startY = 0;
+            let pulling = false;
+            document.addEventListener('touchstart', (e) => {
+                if (window.scrollY === 0) {
+                    startY = e.touches[0].clientY;
+                    pulling = true;
+                }
+            });
+            document.addEventListener('touchmove', (e) => {
+                if (!pulling) return;
+                const deltaY = e.touches[0].clientY - startY;
+                if (deltaY > 80) {
+                    refreshData();
+                    pulling = false;
+                }
+            });
+            document.addEventListener('touchend', () => {
+                pulling = false;
+            });
         }
 
-        const fmt = (n, d=2) => Number(n||0).toFixed(d);
-        function showToast(msg, type='success') { const t = document.getElementById('toast'); t.className = 'toast ' + type; t.innerHTML = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
-
-        function escapeHtml(s) { return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-        function updateUI() {
-            if (!userData) return;
-            const c = fmt(userData.balance), d = fmt(userData.doge_balance);
-            const dp = dogePrice.price || 0;
-            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-            set('header-balance-cnx', c); set('dash-cnx-balance', c); set('dash-cnx-usd', '~ $' + fmt((userData.balance||0)*dp/100, 4));
-            set('dash-doge-balance', d); set('dash-doge-usd', '~ $' + fmt((userData.doge_balance||0)*dp, 4));
-            set('dash-referrals', userData.referrals||0); set('swap-cnx-balance', c); set('swap-doge-balance', d);
-            set('wd-doge-balance', d); set('wd-cnx-balance', c); set('wd-referral-balance', fmt(userData.referral_balance||0) + ' CNX');
-            set('faucet-total-claims', userData.total_claims||0); set('faucet-total-earned', fmt(userData.total_earned||0));
-            set('dash-faucet-today', userData.total_claims||0);
-            set('referral-stat-count', userData.referrals||0);
-            set('referral-stat-earned', fmt(userData.referral_earnings||0));
-            set('referral-balance-display', fmt(userData.referral_balance||0) + ' CNX');
-
-            // ADMIN PANEL GÖSTER
-            if (userData.is_admin) {
-                const ab = document.getElementById('header-admin-btn');
-                if (ab) ab.style.display = 'flex';
-                const sb = document.getElementById('sidebar-admin');
-                if (sb) sb.style.display = 'flex';
-                const pa = document.getElementById('page-admin');
-                if (pa) pa.style.display = 'block';
+        function setupSwipeGestures() {
+            let touchStartX = 0;
+            let touchEndX = 0;
+            const pages = ['dashboard', 'faucet', 'earn', 'swap', 'promo', 'withdraw'];
+            document.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            document.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            function handleSwipe() {
+                const deltaX = touchEndX - touchStartX;
+                if (Math.abs(deltaX) < 50) return;
+                const currentIndex = pages.indexOf(currentPage);
+                if (currentIndex === -1) return;
+                if (deltaX > 0 && currentIndex > 0) {
+                    navigateTo(pages[currentIndex - 1]);
+                } else if (deltaX < 0 && currentIndex < pages.length - 1) {
+                    navigateTo(pages[currentIndex + 1]);
+                }
             }
-            if (userData.first_name) set('welcome-name', 'Welcome, ' + userData.first_name + '!');
         }
 
         async function initAuth() {
-            if (localStorage.getItem('coinix_theme') === 'dark') document.body.classList.add('dark-mode');
-            updateThemeIcons();
-            try {
-                if (!authToken) {
-                    if (!tg?.initData) { document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('demo-screen').classList.add('active'); return; }
-                    const refParam = (tg.initDataUnsafe?.start_param || '').replace(/^ref_/, '');
-                    const auth = await apiRequest('/api/auth', 'POST', {
-                        initData: tg.initData,
-                        ref: refParam,
-                        device_fp: getDeviceFP()
-                    });
-                    authToken = auth.token; localStorage.setItem('coinix_token', authToken);
-                    if (auth.is_admin) localStorage.setItem('admin_key', auth.token);
-                }
-                userData = await apiRequest('/api/me');
-                dogePrice = await apiRequest('/api/doge-price');
-                updateUI(); initFaucetTimer();
-                loadReferralData();
-                document.getElementById('loading-screen').classList.add('hidden');
-            } catch (err) {
-                document.getElementById('loading-screen').innerHTML = '<p style="color:red;padding:20px;text-align:center;">' + escapeHtml(err.message) + '</p>';
+            const initData = tg?.initData;
+            if (!initData && !window.location.search.includes('test=1')) {
+                document.getElementById('loadingOverlay').innerHTML = '<p style="color: white; text-align: center; padding: 20px;">📱 Please open this app from Telegram.</p>';
+                return;
             }
-        }
-
-        function navigateTo(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item, .sidebar-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + id)?.classList.add('active');
-            document.querySelectorAll(`[data-nav="${id}"]`).forEach(n => n.classList.add('active'));
-            if (id === 'faucet') refreshCaptcha();
-            else if (id === 'withdraw') loadWithdrawHistory();
-            else if (id === 'promo') loadPromoHistory();
-            else if (id === 'referrals') loadReferralData();
-            else if (id === 'admin') loadAdminData();
-            window.scrollTo(0, 0);
-        }
-
-        function initFaucetTimer() {
-            if (!userData) return;
-            nextClaimTime = Date.now() + Math.max(0, FAUCET_COOLDOWN - (Date.now() - (userData.last_claim||0)));
-            if (faucetTimerInterval) clearInterval(faucetTimerInterval);
-            updateTimerDisplay(); faucetTimerInterval = setInterval(updateTimerDisplay, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const diff = Math.max(0, nextClaimTime - Date.now());
-            const m = Math.floor(diff/60000), s = Math.floor((diff%60000)/1000);
-            document.getElementById('faucet-timer').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-            const b = document.getElementById('btn-claim-faucet');
-            b.disabled = diff > 0; b.textContent = diff > 0 ? 'Wait' : 'CLAIM CNX';
-        }
-
-        async function refreshCaptcha() { try { const d = await apiRequest('/api/captcha'); document.getElementById('captcha-question').textContent = d.question; document.getElementById('captcha-answer').value = ''; } catch(e){} }
-        async function claimFaucet() { const ans = document.getElementById('captcha-answer').value.trim(); if (!ans) return showToast('Enter answer', 'error'); const b = document.getElementById('btn-claim-faucet'); b.disabled = true; try { const d = await apiRequest('/api/claim', 'POST', { captchaAnswer: ans }); showToast('+' + d.amount + ' CNX', 'success'); userData = await apiRequest('/api/me'); updateUI(); initFaucetTimer(); refreshCaptcha(); } catch(e) { showToast(e.message, 'error'); refreshCaptcha(); } finally { b.disabled = false; updateTimerDisplay(); } }
-
-        function generateAdsHTML(items, title) {
-            if (!items || !items.length) return '<html><body style="background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">No ' + title + ' available right now.<br><br><a href="javascript:window.close()" style="color:#f59e0b;">Close</a></body></html>';
-            return '<!DOCTYPE html><html><head><style>body{background:#0f172a;color:#f1f5f9;font-family:sans-serif;padding:20px;margin:0;}h2{color:#f59e0b;margin-bottom:16px;}a{display:block;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:12px;text-decoration:none;color:#f1f5f9;}a:hover{border-color:#f59e0b;}.r{color:#f59e0b;font-weight:600;}.d{color:#94a3b8;font-size:13px;margin-top:4px;}</style></head><body><h2>' + title + '</h2>' + items.map(i => '<a href="' + i.url + '" target="_blank"><div><strong>' + escapeHtml(i.title||i.name) + '</strong><div class="d">' + escapeHtml(i.description||'') + '</div></div><div class="r">+' + i.reward + ' CNX</div></a>').join('') + '</body></html>';
-        }
-
-        async function loadOfferwall(type) {
-            const container = document.getElementById('offerwall-frame-container');
-            container.classList.add('active');
-            document.getElementById('offerwall-title').textContent = type === 'ptc' ? 'PTC Ads' : type === 'shortlinks' ? 'Shortlinks' : type === 'games' ? 'Games' : 'Offerwall';
-            const iframe = document.getElementById('offerwall-iframe');
             try {
-                showToast('Loading ' + type + '...', 'success');
-                const res = await apiRequest('/api/offerwall/' + type);
-                if (type === 'ptc' && res.ads && res.ads.length) { iframe.srcdoc = generateAdsHTML(res.ads, 'PTC Ads'); }
-                else if (type === 'shortlinks' && res.shortlinks && res.shortlinks.length) { iframe.srcdoc = generateAdsHTML(res.shortlinks, 'Shortlinks'); }
-                else if (res.url) { iframe.srcdoc = ''; iframe.src = res.url; }
-                else { iframe.srcdoc = generateAdsHTML([], type); }
-            } catch(e) {
-                console.error('loadOfferwall error', e);
-                showToast(e.message || 'Failed to load', 'error');
-                iframe.srcdoc = '<html><body style="background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;padding:20px;text-align:center;">Failed to load.<br>' + escapeHtml(e.message) + '<br><br><a href="javascript:parent.postMessage({action:\'close-offerwall\'},\'*\')" style="color:#f59e0b;">Close</a></body></html>';
-            }
-        }
-        function closeOfferwall() { document.getElementById('offerwall-frame-container').classList.remove('active'); const f = document.getElementById('offerwall-iframe'); f.src = ''; f.srcdoc = ''; }
-
-        async function redeemPromo() { const code = document.getElementById('promo-code-input').value.trim(); if (!code) return; try { const d = await apiRequest('/api/promo/redeem', 'POST', { code }); showToast('+' + d.reward + ' ' + d.coin, 'success'); userData = await apiRequest('/api/me'); updateUI(); loadPromoHistory(); } catch(e) { showToast(e.message, 'error'); } }
-        async function loadPromoHistory() { try { const d = await apiRequest('/api/promo/history'); document.getElementById('promo-history-list').innerHTML = d.history && d.history.length ? d.history.map(h => '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(h.code) + '</div></div><div class="list-item-value">+' + h.reward + ' ' + h.coin + '</div></div>').join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No codes yet.</div>'; } catch(e){} }
-
-        function updateSwapEstimate() { /* no-op */ }
-        function setSwapPercent(p) { document.getElementById('swap-amount-input').value = ((userData.balance||0)*p/100).toFixed(2); }
-        async function executeSwap() { const a = parseFloat(document.getElementById('swap-amount-input').value); if (!a || a > (userData.balance||0)) return showToast('Invalid', 'error'); try { await apiRequest('/api/swap', 'POST', { amount: a, direction: 'cnx-to-doge' }); showToast('Swapped!', 'success'); userData = await apiRequest('/api/me'); updateUI(); } catch(e) { showToast(e.message, 'error'); } }
-
-        async function executeWithdraw() { const e = document.getElementById('wd-email-input').value; const a = parseFloat(document.getElementById('wd-amount-input').value); if (!e.includes('@') || a < 0.1) return showToast('Invalid', 'error'); try { await apiRequest('/api/withdraw', 'POST', { faucetpay_email: e, amount: a }); showToast('Success!', 'success'); userData = await apiRequest('/api/me'); updateUI(); loadWithdrawHistory(); } catch(e) { showToast(e.message, 'error'); } }
-        async function loadWithdrawHistory() { try { const d = await apiRequest('/api/withdrawals'); document.getElementById('withdraw-history-list').innerHTML = d && d.length ? d.map(w => '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(w.faucetpay_email) + '</div><div class="list-item-sub">' + w.status + '</div></div><div class="list-item-value">' + w.amount + ' DOGE</div></div>').join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No withdrawals yet.</div>'; } catch(e){} }
-
-        async function collectReferral() { try { const d = await apiRequest('/api/referral/collect', 'POST'); showToast('+' + (d.amount||0) + ' CNX', 'success'); userData = await apiRequest('/api/me'); updateUI(); loadReferralData(); } catch(e) { showToast(e.message, 'error'); } }
-
-        // === REFERRALS PAGE ===
-        async function loadReferralData() {
-            try {
-                const ref = await apiRequest('/api/referral');
-                referralLink = ref.link || '';
-                const inp = document.getElementById('referral-link-input');
-                if (inp) inp.value = referralLink;
-                const list = await apiRequest('/api/referral/list');
-                document.getElementById('referral-list-count').textContent = list.count || 0;
-                const target = document.getElementById('referral-list');
-                if (!list.list || !list.list.length) {
-                    target.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No referrals yet. Share your link!</div>';
+                const ref = tg?.initDataUnsafe?.start_param?.replace('ref_', '') || null;
+                const device_fp = generateDeviceFP();
+                const response = await fetch(`${API_BASE}/api/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ initData: initData || 'test=1', ref, device_fp })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    authToken = data.token;
+                    currentUser = { userId: data.user_id, username: data.username, is_admin: data.is_admin, isNew: data.isNew };
+                    document.getElementById('appContainer').style.display = 'block';
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    if (data.is_admin) {
+                        document.querySelector('.bottom-nav').innerHTML += '<a class="nav-item" onclick="navigateTo(\'admin\')"><span class="nav-icon">⚙️</span><span>Admin</span></a>';
+                    }
+                    await loadDashboard();
+                    await loadDogePrice();
+                    await loadNotifications();
+                    startCooldownTimer();
+                    if (tg?.MainButton) {
+                        tg.MainButton.setText('CLAIM 0.20 CNX');
+                        tg.MainButton.show();
+                        tg.MainButton.onClick(() => claimFaucet());
+                    }
+                    hapticFeedback('light');
                 } else {
-                    target.innerHTML = list.list.map(r => {
-                        const initial = (r.first_name || r.username || '?').charAt(0).toUpperCase();
-                        const avatar = r.photo_url ? '<img src="' + escapeHtml(r.photo_url) + '" onerror="this.style.display=\'none\'">' : initial;
-                        const date = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
-                        return '<div class="ref-user-row"><div class="avatar">' + avatar + '</div><div class="info"><div class="name">' + escapeHtml(r.first_name || r.username || ('User ' + r.id)) + '</div><div class="meta">' + escapeHtml(r.username ? '@' + r.username : 'id: ' + r.id) + ' • joined ' + date + '</div></div><div style="font-size:12px;font-weight:600;">+' + fmt(r.total_earned) + ' CNX</div></div>';
-                    }).join('');
+                    throw new Error(data.error || 'Auth failed');
                 }
-            } catch (e) { console.warn('loadReferralData', e); }
-        }
-        async function copyReferral() {
-            try {
-                await navigator.clipboard.writeText(referralLink);
-                showToast('Link copied!', 'success');
-            } catch(e) {
-                const inp = document.getElementById('referral-link-input');
-                inp.select(); document.execCommand('copy'); showToast('Link copied!', 'success');
+            } catch (err) {
+                document.getElementById('loadingOverlay').innerHTML = `<p style="color: white; text-align: center; padding: 20px;">Error: ${err.message}</p>`;
             }
         }
 
-        // === ADMIN PANEL ===
-        function switchAdminTab(tabId) {
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabId));
-            document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
-            const panel = document.getElementById('admin-panel-' + tabId);
-            if (panel) panel.style.display = 'block';
-            // lazy-load each tab
-            if (tabId === 'users') loadAdminUsers();
-            else if (tabId === 'promos') loadAdminPromos();
-            else if (tabId === 'withdraws') loadAdminWithdrawals();
+        function generateDeviceFP() {
+            const nav = navigator;
+            const screen = window.screen;
+            const fp = [
+                nav.userAgent,
+                nav.language,
+                screen.width + 'x' + screen.height,
+                screen.colorDepth,
+                new Date().getTimezoneOffset()
+            ].join('|');
+            return btoa(fp).slice(0, 64);
         }
 
-        async function loadAdminData() {
+        async function apiCall(endpoint, options = {}) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
             try {
-                const d = await apiRequest('/api/admin/stats', 'GET', null, true);
-                document.getElementById('admin-total-users').textContent = d.totalUsers||0;
-                document.getElementById('admin-total-paid').textContent = fmt(d.totalPaid_doge||d.totalPaid||0);
-                document.getElementById('admin-total-wd').textContent = d.totalWithdrawals||0;
-                document.getElementById('admin-total-offerwall').textContent = fmt(d.totalOfferwall||0);
-            } catch(e) { showToast('Admin stats failed', 'error'); }
+                const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                showToast(`Network error: ${err.message}`, 'error');
+                return { error: err.message };
+            }
+        }
+
+        async function adminApiCall(endpoint, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`,
+                'x-admin-key': authToken
+            };
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+                const data = await response.json();
+                return data;
+            } catch (err) {
+                showToast(`Network error: ${err.message}`, 'error');
+                return { error: err.message };
+            }
+        }
+
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const page = document.getElementById(`page-${pageId}`);
+            if (page) {
+                page.classList.add('active');
+                currentPage = pageId;
+                window.location.hash = pageId;
+            }
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => {
+                if (n.textContent.toLowerCase().includes(pageId.slice(0, 4))) {
+                    n.classList.add('active');
+                }
+            });
+            if (pageId === 'admin' && currentUser?.is_admin) loadAdminStats();
+            if (pageId === 'notifications') loadNotifications();
+            if (pageId === 'transactions') loadTransactions();
+            hapticFeedback('light');
+        }
+
+        function hapticFeedback(type = 'light') {
+            if (!hapticEnabled) return;
+            try {
+                if (tg?.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred(type);
+                }
+            } catch (e) {}
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            document.getElementById('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+            document.getElementById('currentThemeText').textContent = next === 'dark' ? 'Dark Mode' : 'Light Mode';
+            hapticFeedback('light');
+        }
+
+        function toggleHaptic() {
+            hapticEnabled = !hapticEnabled;
+            document.getElementById('hapticStatus').textContent = hapticEnabled ? 'Enabled' : 'Disabled';
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        async function loadDashboard() {
+            const data = await apiCall('/api/me');
+            if (data.error) return;
+            document.getElementById('dashBalance').textContent = (data.balance || 0).toFixed(2);
+            document.getElementById('dashBalanceUsd').textContent = `~ $${((data.balance || 0) * cnxUsd).toFixed(2)}`;
+            document.getElementById('dashDogeBalance').textContent = (data.doge_balance || 0).toFixed(8);
+            document.getElementById('dashDogeBalanceUsd').textContent = `~ $${((data.doge_balance || 0) * dogePrice).toFixed(2)}`;
+            document.getElementById('dashReferrals').textContent = data.referrals || 0;
+            document.getElementById('dashClaims').textContent = data.total_claims || 0;
+            document.getElementById('dashOfferEarned').textContent = (data.total_offerwall_earned || 0).toFixed(2);
+            document.getElementById('dashPromoEarned').textContent = (data.total_promo_earned || 0).toFixed(2);
+            document.getElementById('faucetTotalClaims').textContent = data.total_claims || 0;
+            document.getElementById('faucetTotalEarned').textContent = (data.total_earned || 0).toFixed(2);
+            document.getElementById('wdReferralBalance').textContent = (data.referral_balance || 0).toFixed(2);
+            document.getElementById('refTotal').textContent = data.referrals || 0;
+            document.getElementById('refEarnings').textContent = (data.referral_earnings || 0).toFixed(2);
+            document.getElementById('refPending').textContent = (data.referral_balance || 0).toFixed(2);
+            const refLink = `https://t.me/${tg?.BotUsername || 'CoinixBot'}?start=ref_${currentUser.userId}`;
+            document.getElementById('refLink').value = refLink;
+        }
+
+        async function loadDogePrice() {
+            const data = await apiCall('/api/doge-price');
+            if (data.price) {
+                dogePrice = data.price;
+                cnxUsd = data.cnx_usd || 0.01;
+                document.getElementById('swapRateInfo').textContent = `1 CNX = $${cnxUsd} | DOGE: $${dogePrice.toFixed(4)}`;
+                updateSwapPreview();
+            }
+        }
+
+        async function loadNotifications() {
+            const data = await apiCall('/api/notifications');
+            if (data.notifications) {
+                const unread = data.notifications.filter(n => !n.read).length + (data.broadcasts?.length || 0);
+                const badge = document.getElementById('notifBadge');
+                if (unread > 0) {
+                    badge.style.display = 'flex';
+                    badge.textContent = unread;
+                } else {
+                    badge.style.display = 'none';
+                }
+                renderNotifications(data);
+            }
+        }
+
+        function renderNotifications(data) {
+            const container = document.getElementById('notificationList');
+            if (!data.notifications?.length && !data.broadcasts?.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🔔</div><p>No notifications.</p></div>';
+                return;
+            }
+            let html = '';
+            if (data.broadcasts?.length) {
+                data.broadcasts.forEach(b => {
+                    html += `<div class="transaction-item"><div class="tx-icon in">📢</div><div class="tx-info"><div class="tx-title">Broadcast</div><div class="tx-date">${new Date(b.timestamp).toLocaleString()}</div></div></div>`;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        async function loadTransactions() {
+            const data = await apiCall('/api/transactions');
+            const container = document.getElementById('transactionList');
+            if (!data.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No transactions yet.</p></div>';
+                return;
+            }
+            let html = '';
+            data.forEach(tx => {
+                const isIn = tx.amount > 0;
+                html += `<div class="transaction-item">
+                    <div class="tx-icon ${isIn ? 'in' : 'out'}">${isIn ? '↓' : '↑'}</div>
+                    <div class="tx-info">
+                        <div class="tx-title">${tx.description || tx.type}</div>
+                        <div class="tx-date">${new Date(tx.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div class="tx-amount ${isIn ? 'positive' : 'negative'}">${isIn ? '+' : ''}${tx.amount} ${tx.coin}</div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function startCooldownTimer() {
+            if (cooldownInterval) clearInterval(cooldownInterval);
+            cooldownInterval = setInterval(async () => {
+                const data = await apiCall('/api/balance');
+                if (data.last_claim) {
+                    const elapsed = Date.now() - data.last_claim;
+                    const remaining = 180000 - elapsed;
+                    if (remaining > 0) {
+                        document.getElementById('cooldownTimer').style.display = 'block';
+                        const mins = Math.floor(remaining / 60000);
+                        const secs = Math.floor((remaining % 60000) / 1000);
+                        document.getElementById('cooldownTime').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                        document.getElementById('claimBtn').disabled = true;
+                    } else {
+                        document.getElementById('cooldownTimer').style.display = 'none';
+                        document.getElementById('claimBtn').disabled = false;
+                    }
+                }
+            }, 1000);
+        }
+
+        async function refreshCaptcha() {
+            const data = await apiCall('/api/captcha');
+            if (data.success) {
+                document.getElementById('captchaQuestion').textContent = data.question;
+                document.getElementById('captchaInput').value = '';
+            }
+        }
+
+        async function claimFaucet() {
+            const answer = document.getElementById('captchaInput').value;
+            if (!answer) {
+                showToast('Please solve the captcha', 'error');
+                return;
+            }
+            const data = await apiCall('/api/claim', {
+                method: 'POST',
+                body: JSON.stringify({ captchaAnswer: answer })
+            });
+            if (data.success) {
+                showToast(`Claimed ${data.amount} CNX!`, 'success');
+                hapticFeedback('medium');
+                triggerConfetti();
+                await loadDashboard();
+                await refreshCaptcha();
+                startCooldownTimer();
+            } else {
+                showToast(data.error || 'Claim failed', 'error');
+                await refreshCaptcha();
+            }
+        }
+
+        function updateSwapPreview() {
+            const amount = parseFloat(document.getElementById('swapAmount').value) || 0;
+            const usdValue = amount * cnxUsd;
+            const dogeAmount = dogePrice > 0 ? (usdValue / dogePrice).toFixed(8) : '0.00000000';
+            document.getElementById('swapPreviewAmount').textContent = `${dogeAmount} DOGE`;
+        }
+
+        function setSwapPercent(pct) {
+            const balance = parseFloat(document.getElementById('dashBalance').textContent) || 0;
+            const amount = (balance * pct / 100).toFixed(2);
+            document.getElementById('swapAmount').value = amount;
+            updateSwapPreview();
+        }
+
+        async function executeSwap() {
+            const amount = parseFloat(document.getElementById('swapAmount').value);
+            if (!amount || amount <= 0) {
+                showToast('Enter a valid amount', 'error');
+                return;
+            }
+            const data = await apiCall('/api/swap', {
+                method: 'POST',
+                body: JSON.stringify({ amount, direction: 'cnx-to-doge' })
+            });
+            if (data.success) {
+                showToast(`Swapped ${data.cnx_amount} CNX → ${data.doge_amount.toFixed(8)} DOGE`, 'success');
+                hapticFeedback('medium');
+                document.getElementById('swapAmount').value = '';
+                updateSwapPreview();
+                await loadDashboard();
+            } else {
+                showToast(data.error || 'Swap failed', 'error');
+            }
+        }
+
+        function setWdPercent(pct) {
+            const balance = parseFloat(document.getElementById('dashDogeBalance').textContent) || 0;
+            const amount = (balance * pct / 100).toFixed(8);
+            document.getElementById('wdAmount').value = amount;
+        }
+
+        async function withdrawDoge() {
+            const email = document.getElementById('wdEmail').value;
+            const amount = parseFloat(document.getElementById('wdAmount').value);
+            if (!email || !email.includes('@')) {
+                showToast('Enter a valid email', 'error');
+                return;
+            }
+            if (!amount || amount < 0.1) {
+                showToast('Minimum 0.10 DOGE', 'error');
+                return;
+            }
+            const data = await apiCall('/api/withdraw', {
+                method: 'POST',
+                body: JSON.stringify({ faucetpay_email: email, amount })
+            });
+            if (data.success) {
+                showToast('Withdrawal request submitted!', 'success');
+                hapticFeedback('medium');
+                document.getElementById('wdEmail').value = '';
+                document.getElementById('wdAmount').value = '';
+                await loadDashboard();
+                await loadWithdrawHistory();
+            } else {
+                showToast(data.error || 'Withdrawal failed', 'error');
+            }
+        }
+
+        async function loadWithdrawHistory() {
+            const data = await apiCall('/api/withdrawals');
+            const container = document.getElementById('withdrawHistoryList');
+            if (!data.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No withdrawals yet.</p></div>';
+                return;
+            }
+            let html = '';
+            data.forEach(wd => {
+                const statusColor = wd.status === 'approved' ? 'var(--success)' : wd.status === 'rejected' ? 'var(--danger)' : 'var(--warning)';
+                html += `<div class="transaction-item">
+                    <div class="tx-icon out">💸</div>
+                    <div class="tx-info">
+                        <div class="tx-title">${wd.faucetpay_email}</div>
+                        <div class="tx-date">${new Date(wd.timestamp).toLocaleString()} • <span style="color: ${statusColor};">${wd.status}</span></div>
+                    </div>
+                    <div class="tx-amount negative">-${wd.amount} DOGE</div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function collectReferral() {
+            const data = await apiCall('/api/referral/collect', { method: 'POST' });
+            if (data.success) {
+                showToast(`Collected ${data.amount} CNX!`, 'success');
+                hapticFeedback('medium');
+                await loadDashboard();
+            } else {
+                showToast(data.error || 'Failed to collect', 'error');
+            }
+        }
+
+        async function redeemPromo() {
+            const code = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+            if (!code) {
+                showToast('Enter a promo code', 'error');
+                return;
+            }
+            const data = await apiCall('/api/promo/redeem', {
+                method: 'POST',
+                body: JSON.stringify({ code })
+            });
+            if (data.success) {
+                showToast(`Redeemed ${data.reward} ${data.coin}!`, 'success');
+                hapticFeedback('medium');
+                triggerConfetti();
+                document.getElementById('promoCodeInput').value = '';
+                await loadDashboard();
+                await loadPromoHistory();
+            } else {
+                showToast(data.error || 'Invalid code', 'error');
+            }
+        }
+
+        async function loadPromoHistory() {
+            const data = await apiCall('/api/promo/history');
+            const container = document.getElementById('promoHistoryList');
+            if (!data.history?.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No promo codes redeemed yet.</p></div>';
+                return;
+            }
+            let html = '';
+            data.history.forEach(p => {
+                html += `<div class="transaction-item">
+                    <div class="tx-icon in">🎟️</div>
+                    <div class="tx-info">
+                        <div class="tx-title">${p.code}</div>
+                        <div class="tx-date">${new Date(p.usedAt).toLocaleString()}</div>
+                    </div>
+                    <div class="tx-amount positive">+${p.reward} ${p.coin}</div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function copyRefLink() {
+            const input = document.getElementById('refLink');
+            input.select();
+            document.execCommand('copy');
+            showToast('Referral link copied!', 'success');
+            hapticFeedback('light');
+        }
+
+        async function openPTC() {
+            const data = await apiCall('/api/offerwall/ptc');
+            if (data.success && data.ads?.length) {
+                let html = '<div class="section-title">📺 PTC Ads</div>';
+                data.ads.forEach(ad => {
+                    html += `<div class="earn-zone-item" onclick="window.open('${ad.url}', '_blank')">
+                        <div class="info">
+                            <div class="icon">📺</div>
+                            <div>
+                                <div style="font-weight: 600;">${ad.title}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">${ad.duration}s • ${ad.reward} CNX</div>
+                            </div>
+                        </div>
+                        <span class="bonus-tag">+${ad.reward}</span>
+                    </div>`;
+                });
+                document.getElementById('page-earn').insertAdjacentHTML('afterbegin', `<div class="card" id="ptcModal">${html}</div>`);
+            } else {
+                showToast('No ads available', 'error');
+            }
+        }
+
+        async function openShortlinks() {
+            const data = await apiCall('/api/offerwall/shortlinks');
+            if (data.success && data.shortlinks?.length) {
+                let html = '<div class="section-title">🔗 Shortlinks</div>';
+                data.shortlinks.forEach(link => {
+                    html += `<div class="earn-zone-item" onclick="window.open('${link.url}', '_blank')">
+                        <div class="info">
+                            <div class="icon">🔗</div>
+                            <div>
+                                <div style="font-weight: 600;">${link.name}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">${link.reward} CNX</div>
+                            </div>
+                        </div>
+                        <span class="bonus-tag">+${link.reward}</span>
+                    </div>`;
+                });
+                document.getElementById('page-earn').insertAdjacentHTML('afterbegin', `<div class="card" id="slModal">${html}</div>`);
+            } else {
+                showToast('No shortlinks available', 'error');
+            }
+        }
+
+        async function openGames() {
+            const data = await apiCall('/api/offerwall/games');
+            if (data.success && data.url) {
+                window.open(data.url, '_blank');
+            }
+        }
+
+        async function openOfferwall() {
+            const data = await apiCall('/api/offerwall/offerwall');
+            if (data.success && data.url) {
+                window.open(data.url, '_blank');
+            }
+        }
+
+        async function loadAdminStats() {
+            if (adminStatsInterval) clearInterval(adminStatsInterval);
+            const fetchStats = async () => {
+                const data = await adminApiCall('/api/admin/stats');
+                if (data.error) return;
+                document.getElementById('adminTotalUsers').textContent = data.totalUsers || 0;
+                document.getElementById('adminTodayUsers').textContent = data.todayUsers || 0;
+                document.getElementById('adminOnlineUsers').textContent = data.onlineUsers || 0;
+                document.getElementById('adminPendingWd').textContent = data.pendingWithdraws || 0;
+                document.getElementById('adminTotalPaid').textContent = (data.totalWithdrawals || 0).toFixed(2);
+                document.getElementById('adminTotalClaims').textContent = data.totalFaucetClaims || 0;
+            };
+            await fetchStats();
+            adminStatsInterval = setInterval(fetchStats, 30000);
             loadAdminUsers();
+            loadAdminPromos();
+            loadAdminWithdrawals();
+        }
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            ['users', 'broadcast', 'promos', 'withdraws'].forEach(t => {
+                document.getElementById(`adminTab-${t}`).style.display = t === tab ? 'block' : 'none';
+            });
         }
 
         async function loadAdminUsers() {
-            try {
-                adminUsersCache = await apiRequest('/api/admin/users', 'GET', null, true);
-                renderAdminUsers('');
-            } catch(e) { console.warn(e); }
-        }
-        function renderAdminUsers(filter) {
-            const list = document.getElementById('admin-users-list');
-            const count = document.getElementById('admin-users-count');
-            if (!adminUsersCache || !adminUsersCache.length) {
-                list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No users yet.</div>';
-                count.textContent = '0';
+            const data = await adminApiCall('/api/admin/users');
+            const container = document.getElementById('adminUserList');
+            if (!data.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>No users found.</p></div>';
                 return;
             }
-            const q = (filter||'').toLowerCase().trim();
-            const filtered = q ? adminUsersCache.filter(u => {
-                return (u.first_name||'').toLowerCase().includes(q) ||
-                       (u.username||'').toLowerCase().includes(q) ||
-                       String(u.id||'').includes(q);
-            }) : adminUsersCache;
-            count.textContent = filtered.length;
-            list.innerHTML = filtered.map(u => {
-                const initial = (u.first_name || u.username || '?').charAt(0).toUpperCase();
-                const banned = u.banned ? ' <span style="color:#ef4444;font-size:10px;">BANNED</span>' : '';
-                return '<div class="admin-user-row"><div class="admin-user-avatar">' + initial + '</div><div class="admin-user-info"><div class="admin-user-name">' + escapeHtml(u.first_name || u.username || ('User ' + u.id)) + banned + '</div><div class="admin-user-meta">@' + escapeHtml(u.username||'-') + ' • ' + escapeHtml(String(u.id)) + '</div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;">' + fmt(u.balance) + ' CNX</div><div style="font-size:11px;color:var(--text-secondary);">' + fmt(u.doge_balance) + ' DOGE</div></div></div>';
-            }).join('') || '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No match.</div>';
+            let html = '';
+            data.forEach(user => {
+                html += `<div class="user-list-item">
+                    <div class="user-info">
+                        <div class="user-name">${user.first_name || user.username || 'Unknown'}</div>
+                        <div class="user-id">ID: ${user.telegram_id} • Balance: ${(user.balance || 0).toFixed(2)} CNX</div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="mini-btn" style="background: var(--primary); color: white;" onclick="viewUserDetails('${user.telegram_id}')">View</button>
+                        <button class="mini-btn" style="background: ${user.banned ? 'var(--success)' : 'var(--danger)'}; color: white;" onclick="${user.banned ? `unbanUser('${user.telegram_id}')` : `banUser('${user.telegram_id}')`}">${user.banned ? 'Unban' : 'Ban'}</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function searchAdminUsers() {
+            const search = document.getElementById('adminUserSearch').value;
+            const data = await adminApiCall(`/api/admin/users?search=${encodeURIComponent(search)}`);
+            const container = document.getElementById('adminUserList');
+            if (!data.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>No users found.</p></div>';
+                return;
+            }
+            let html = '';
+            data.forEach(user => {
+                html += `<div class="user-list-item">
+                    <div class="user-info">
+                        <div class="user-name">${user.first_name || user.username || 'Unknown'}</div>
+                        <div class="user-id">ID: ${user.telegram_id} • Balance: ${(user.balance || 0).toFixed(2)} CNX</div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="mini-btn" style="background: var(--primary); color: white;" onclick="viewUserDetails('${user.telegram_id}')">View</button>
+                        <button class="mini-btn" style="background: ${user.banned ? 'var(--success)' : 'var(--danger)'}; color: white;" onclick="${user.banned ? `unbanUser('${user.telegram_id}')` : `banUser('${user.telegram_id}')`}">${user.banned ? 'Unban' : 'Ban'}</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function viewUserDetails(userId) {
+            const users = await adminApiCall('/api/admin/users');
+            const user = users.find(u => u.telegram_id === userId);
+            if (!user) return;
+            const content = `
+                <div class="admin-stat-grid">
+                    <div class="admin-stat"><div class="label">ID</div><div class="value">${user.telegram_id}</div></div>
+                    <div class="admin-stat"><div class="label">Username</div><div class="value">@${user.username || 'N/A'}</div></div>
+                    <div class="admin-stat"><div class="label">Balance</div><div class="value">${(user.balance || 0).toFixed(2)} CNX</div></div>
+                    <div class="admin-stat"><div class="label">DOGE</div><div class="value">${(user.doge_balance || 0).toFixed(8)}</div></div>
+                    <div class="admin-stat"><div class="label">Total Earned</div><div class="value">${(user.total_earned || 0).toFixed(2)}</div></div>
+                    <div class="admin-stat"><div class="label">Referrals</div><div class="value">${user.referrals || 0}</div></div>
+                </div>
+                <div class="input-group">
+                    <label>Edit Balance (CNX)</label>
+                    <input type="number" id="editBalanceAmount" placeholder="Amount">
+                </div>
+                <div class="input-group">
+                    <label>Reason</label>
+                    <input type="text" id="editBalanceReason" placeholder="Reason for edit">
+                </div>
+                <button class="btn btn-primary" onclick="editUserBalance('${userId}')">Update Balance</button>
+                <button class="btn btn-secondary" style="margin-top: 8px;" onclick="sendDMToUser('${userId}')">Send DM</button>
+            `;
+            document.getElementById('userModalContent').innerHTML = content;
+            document.getElementById('userModal').classList.add('active');
+        }
+
+        async function editUserBalance(userId) {
+            const amount = parseFloat(document.getElementById('editBalanceAmount').value);
+            const reason = document.getElementById('editBalanceReason').value;
+            if (!amount) {
+                showToast('Enter an amount', 'error');
+                return;
+            }
+            const data = await adminApiCall('/api/admin/add-balance', {
+                method: 'POST',
+                body: JSON.stringify({ userId, amount, currency: 'cnx', reason })
+            });
+            if (data.success) {
+                showToast('Balance updated!', 'success');
+                closeModal('userModal');
+                loadAdminUsers();
+            } else {
+                showToast(data.error || 'Failed', 'error');
+            }
+        }
+
+        async function sendDMToUser(userId) {
+            const message = prompt('Enter message:');
+            if (!message) return;
+            const data = await adminApiCall('/api/admin/send-dm', {
+                method: 'POST',
+                body: JSON.stringify({ userId, message })
+            });
+            if (data.success) {
+                showToast('Message sent!', 'success');
+            } else {
+                showToast(data.error || 'Failed', 'error');
+            }
+        }
+
+        async function banUser(userId) {
+            if (!confirm('Ban this user?')) return;
+            const data = await adminApiCall('/api/admin/ban-user', {
+                method: 'POST',
+                body: JSON.stringify({ userId })
+            });
+            if (data.success) {
+                showToast('User banned', 'success');
+                loadAdminUsers();
+            }
+        }
+
+        async function unbanUser(userId) {
+            if (!confirm('Unban this user?')) return;
+            const data = await adminApiCall('/api/admin/unban-user', {
+                method: 'POST',
+                body: JSON.stringify({ userId })
+            });
+            if (data.success) {
+                showToast('User unbanned', 'success');
+                loadAdminUsers();
+            }
         }
 
         async function loadAdminPromos() {
-            try {
-                adminPromosCache = await apiRequest('/api/admin/promo/list', 'GET', null, true);
-                const list = document.getElementById('admin-promos-list');
-                const count = document.getElementById('admin-promos-count');
-                count.textContent = adminPromosCache.length || 0;
-                if (!adminPromosCache.length) {
-                    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No promo codes.</div>';
-                    return;
-                }
-                list.innerHTML = adminPromosCache.map(p => {
-                    const pct = p.usageLimit ? Math.round((p.usedCount/p.usageLimit)*100) : 0;
-                    return '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(p.code) + '</div><div class="list-item-sub">' + p.reward + ' ' + p.coin + ' • ' + p.usedCount + '/' + p.usageLimit + ' (' + pct + '%)' + (p.enabled===false?' • DISABLED':'') + '</div></div><div class="admin-user-actions"><button class="btn btn-secondary" data-action="admin-toggle-promo" data-code="' + escapeHtml(p.code) + '" data-enabled="' + (p.enabled===false?'1':'0') + '">' + (p.enabled===false?'Enable':'Disable') + '</button><button class="btn btn-secondary" data-action="admin-delete-promo" data-code="' + escapeHtml(p.code) + '" style="background:var(--danger-color);color:white;">Del</button></div></div>';
-                }).join('');
-            } catch(e) {}
+            const data = await adminApiCall('/api/admin/promo/list');
+            const container = document.getElementById('adminPromoList');
+            if (!data.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🎟️</div><p>No promo codes.</p></div>';
+                return;
+            }
+            let html = '';
+            data.forEach(p => {
+                html += `<div class="user-list-item">
+                    <div class="user-info">
+                        <div class="user-name">${p.code}</div>
+                        <div class="user-id">${p.coin} ${p.reward} • ${p.usedCount}/${p.usageLimit} used</div>
+                    </div>
+                    <div class="user-actions">
+                        <button class="mini-btn" style="background: ${p.enabled ? 'var(--success)' : 'var(--danger)'}; color: white;" onclick="togglePromo('${p.code}', ${!p.enabled})">${p.enabled ? 'Disable' : 'Enable'}</button>
+                        <button class="mini-btn" style="background: var(--danger); color: white;" onclick="deletePromo('${p.code}')">Delete</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function createPromo() {
+            const code = document.getElementById('promoCode').value.trim().toUpperCase();
+            const coin = document.getElementById('promoCoin').value;
+            const reward = parseFloat(document.getElementById('promoReward').value);
+            const usageLimit = parseInt(document.getElementById('promoLimit').value);
+            if (!code || !reward) {
+                showToast('Fill all fields', 'error');
+                return;
+            }
+            const data = await adminApiCall('/api/admin/promo/create', {
+                method: 'POST',
+                body: JSON.stringify({ code, coin, reward, usageLimit })
+            });
+            if (data.success) {
+                showToast('Promo created!', 'success');
+                document.getElementById('promoCode').value = '';
+                document.getElementById('promoReward').value = '';
+                loadAdminPromos();
+            } else {
+                showToast(data.error || 'Failed', 'error');
+            }
+        }
+
+        async function togglePromo(code, enabled) {
+            const data = await adminApiCall('/api/admin/promo/toggle', {
+                method: 'POST',
+                body: JSON.stringify({ code, enabled })
+            });
+            if (data.success) {
+                showToast('Promo updated', 'success');
+                loadAdminPromos();
+            }
+        }
+
+        async function deletePromo(code) {
+            if (!confirm('Delete this promo?')) return;
+            const data = await adminApiCall('/api/admin/promo/delete', {
+                method: 'POST',
+                body: JSON.stringify({ code })
+            });
+            if (data.success) {
+                showToast('Promo deleted', 'success');
+                loadAdminPromos();
+            }
         }
 
         async function loadAdminWithdrawals() {
-            try {
-                adminWdCache = await apiRequest('/api/admin/withdrawals', 'GET', null, true);
-                const list = document.getElementById('admin-wd-list');
-                const count = document.getElementById('admin-wd-count');
-                count.textContent = adminWdCache.length || 0;
-                if (!adminWdCache.length) {
-                    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No withdrawals.</div>';
-                    return;
-                }
-                list.innerHTML = adminWdCache.map(w => {
-                    const date = w.timestamp ? new Date(w.timestamp).toLocaleString() : '';
-                    const status = w.status || 'pending';
-                    const statusColor = status === 'approved' ? '#10b981' : status === 'rejected' ? '#ef4444' : '#f59e0b';
-                    const actions = status === 'pending' ?
-                        '<div class="admin-user-actions"><button class="btn btn-secondary" data-action="admin-approve-wd" data-id="' + escapeHtml(w.id) + '" style="background:#10b981;color:white;">✓</button><button class="btn btn-secondary" data-action="admin-reject-wd" data-id="' + escapeHtml(w.id) + '" style="background:#ef4444;color:white;">✗</button></div>' :
-                        '<span style="font-size:11px;color:' + statusColor + ';">' + status + '</span>';
-                    return '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(w.faucetpay_email||'') + '</div><div class="list-item-sub">' + escapeHtml(String(w.user_id)) + ' • ' + date + '</div></div><div style="text-align:right;"><div class="list-item-value">' + w.amount + ' DOGE</div>' + actions + '</div></div>';
-                }).join('');
-            } catch(e) {}
-        }
-
-        async function adminCreatePromo() {
-            try {
-                await apiRequest('/api/admin/promo/create', 'POST', {
-                    code: document.getElementById('admin-promo-code').value,
-                    coin: document.getElementById('admin-promo-coin').value,
-                    reward: parseFloat(document.getElementById('admin-promo-reward').value),
-                    usageLimit: parseInt(document.getElementById('admin-promo-limit').value)
-                }, true);
-                showToast('Promo created!', 'success');
-                loadAdminPromos();
-            } catch(e) { showToast(e.message, 'error'); }
-        }
-        async function adminBroadcast() {
-            const msg = document.getElementById('admin-broadcast-msg').value.trim();
-            if (!msg) return showToast('Message empty', 'error');
-            if (!confirm('Broadcast to ALL users via Telegram bot?')) return;
-            try {
-                showToast('Sending...', 'success');
-                const r = await apiRequest('/api/admin/broadcast', 'POST', { message: msg }, true);
-                if (r.bot) showToast('Sent to ' + r.bot.sent + ' users (' + r.bot.failed + ' failed)', 'success');
-                else showToast('Logged (bot not running)', 'success');
-            } catch(e) { showToast(e.message, 'error'); }
-        }
-        async function adminSendDM() {
-            const uid = document.getElementById('admin-dm-userid').value.trim();
-            const msg = document.getElementById('admin-dm-msg').value.trim();
-            if (!uid || !msg) return showToast('User ID & message required', 'error');
-            try {
-                const r = await apiRequest('/api/admin/send-dm', 'POST', { userId: uid, message: msg }, true);
-                if (r.bot_sent) showToast('DM sent!', 'success');
-                else showToast('Logged. Bot error: ' + (r.bot_error||'unknown'), 'error');
-            } catch(e) { showToast(e.message, 'error'); }
-        }
-
-        // === GLOBAL CLICK HANDLER for admin list buttons ===
-        document.addEventListener('click', async function(e) {
-            const a = e.target.closest('[data-action]');
-            if (!a) return;
-            const action = a.dataset.action;
-            if (action === 'admin-toggle-promo') {
-                try {
-                    await apiRequest('/api/admin/promo/toggle', 'POST', { code: a.dataset.code, enabled: a.dataset.enabled !== '1' }, true);
-                    loadAdminPromos();
-                } catch(e) { showToast(e.message, 'error'); }
-            } else if (action === 'admin-delete-promo') {
-                if (!confirm('Delete promo ' + a.dataset.code + '?')) return;
-                try {
-                    await apiRequest('/api/admin/promo/delete', 'POST', { code: a.dataset.code }, true);
-                    loadAdminPromos();
-                } catch(e) { showToast(e.message, 'error'); }
-            } else if (action === 'admin-approve-wd') {
-                try {
-                    await apiRequest('/api/admin/approve-withdrawal', 'POST', { id: a.dataset.id }, true);
-                    loadAdminWithdrawals();
-                } catch(e) { showToast(e.message, 'error'); }
-            } else if (action === 'admin-reject-wd') {
-                if (!confirm('Reject this withdrawal? Amount will be refunded.')) return;
-                try {
-                    await apiRequest('/api/admin/reject-withdrawal', 'POST', { id: a.dataset.id }, true);
-                    loadAdminWithdrawals();
-                } catch(e) { showToast(e.message, 'error'); }
+            const data = await adminApiCall('/api/admin/withdrawals');
+            const container = document.getElementById('adminWithdrawList');
+            if (!data.length) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">💸</div><p>No withdrawal requests.</p></div>';
+                return;
             }
+            let html = '';
+            data.forEach(wd => {
+                const statusColor = wd.status === 'approved' ? 'var(--success)' : wd.status === 'rejected' ? 'var(--danger)' : 'var(--warning)';
+                html += `<div class="user-list-item">
+                    <div class="user-info">
+                        <div class="user-name">${wd.faucetpay_email}</div>
+                        <div class="user-id">ID: ${wd.user_id} • ${wd.amount} DOGE • <span style="color: ${statusColor};">${wd.status}</span></div>
+                    </div>
+                    <div class="user-actions">
+                        ${wd.status === 'pending' ? `
+                            <button class="mini-btn" style="background: var(--success); color: white;" onclick="approveWithdrawal('${wd.id}')">Approve</button>
+                            <button class="mini-btn" style="background: var(--danger); color: white;" onclick="rejectWithdrawal('${wd.id}')">Reject</button>
+                        ` : ''}
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function approveWithdrawal(id) {
+            if (!confirm('Approve this withdrawal?')) return;
+            const data = await adminApiCall('/api/admin/approve-withdrawal', {
+                method: 'POST',
+                body: JSON.stringify({ id })
+            });
+            if (data.success) {
+                showToast('Withdrawal approved', 'success');
+                loadAdminWithdrawals();
+                loadAdminStats();
+            }
+        }
+
+        async function rejectWithdrawal(id) {
+            if (!confirm('Reject this withdrawal? Funds will be returned.')) return;
+            const data = await adminApiCall('/api/admin/reject-withdrawal', {
+                method: 'POST',
+                body: JSON.stringify({ id })
+            });
+            if (data.success) {
+                showToast('Withdrawal rejected', 'success');
+                loadAdminWithdrawals();
+                loadAdminStats();
+            }
+        }
+
+        async function sendBroadcast() {
+            const message = document.getElementById('broadcastMessage').value;
+            if (!message) {
+                showToast('Enter a message', 'error');
+                return;
+            }
+            if (!confirm('Send broadcast to all users?')) return;
+            const data = await adminApiCall('/api/admin/broadcast', {
+                method: 'POST',
+                body: JSON.stringify({ message })
+            });
+            if (data.success) {
+                showToast(`Broadcast sent to ${data.sent} users!`, 'success');
+                document.getElementById('broadcastMessage').value = '';
+            } else {
+                showToast(data.error || 'Failed', 'error');
+            }
+        }
+
+        async function sendDM() {
+            const userId = document.getElementById('dmUserId').value;
+            const message = document.getElementById('dmMessage').value;
+            if (!userId || !message) {
+                showToast('Fill all fields', 'error');
+                return;
+            }
+            const data = await adminApiCall('/api/admin/send-dm', {
+                method: 'POST',
+                body: JSON.stringify({ userId, message })
+            });
+            if (data.success) {
+                showToast('DM sent!', 'success');
+                document.getElementById('dmUserId').value = '';
+                document.getElementById('dmMessage').value = '';
+            } else {
+                showToast(data.error || 'Failed', 'error');
+            }
+        }
+
+        async function exportUsersCSV() {
+            window.open(`${API_BASE}/api/admin/export-csv?Authorization=Bearer ${authToken}`, '_blank');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function toggleFaq(el) {
+            el.classList.toggle('open');
+        }
+
+        function triggerConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const particles = [];
+            const colors = ['#f7931a', '#627eea', '#22c55e', '#ef4444', '#f59e0b'];
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 6 + 2,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            let frame = 0;
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.2;
+                    p.rotation += p.rotationSpeed;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+                frame++;
+                if (frame < 120) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+
+        async function refreshData() {
+            showToast('Refreshing...', 'success');
+            await loadDashboard();
+            await loadDogePrice();
+            await loadNotifications();
+        }
+
+        function addRippleEffect() {
+            document.querySelectorAll('.btn, .quick-action, .earn-zone-item').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        }
+
+        window.addEventListener('load', () => {
+            initApp();
+            addRippleEffect();
+            refreshCaptcha();
+            const hash = window.location.hash.slice(1);
+            if (hash) navigateTo(hash);
         });
 
-        if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
-        window.addEventListener('DOMContentLoaded', initAuth);
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.slice(1);
+            if (hash && hash !== currentPage) navigateTo(hash);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
