@@ -1051,7 +1051,11 @@
         async function apiRequest(endpoint, method = 'GET', body = null) {
             const headers = { 'Content-Type': 'application/json' };
             if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-            
+            // ⭐ Güvenlik: admin endpoint'leri için admin_key header'da gönderilir (URL/log'a düşmesin)
+            if (endpoint.includes('/admin/')) {
+                headers['x-admin-key'] = localStorage.getItem('admin_key') || '';
+            }
+
             try {
                 const res = await fetch(`${API_BASE}${endpoint}`, {
                     method,

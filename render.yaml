@@ -1,3 +1,6 @@
+# ⚠️ Bu dosya referans. Gizli değerleri BURAYA YAZMA.
+# Render dashboard → Environment'dan aşağıdaki key'leri MANUEL ekleyeceksin.
+
 services:
   - type: web
     name: coinix-faucet
@@ -11,3 +14,13 @@ services:
         value: production
       - key: PORT
         value: 10000
+      # ⬇️ Dashboard'dan secret olarak eklenecek key'ler:
+      # - BOT_TOKEN                                (BotFather'dan, örn: 123456789:AAH...)
+      # - JWT_SECRET                               (openssl rand -hex 32)
+      # - FIREBASE_SERVICE_ACCOUNT_JSON            (Firebase service account JSON, tek satır string)
+      # - ADMIN_TELEGRAM_ID                        (senin telegram_id numaran)
+      # - ADMIN_SECRET_KEY                         (openssl rand -hex 32, ayrı bir secret)
+      # - OFFERWALL_APP_ID
+      # - OFFERWALL_SECRET_KEY
+      # - OFFERWALL_API_TOKEN
+      # - APP_URL                                  (https://coinixfaucet.onrender.com)
