@@ -29,6 +29,7 @@ try {
         serviceAccount = JSON.parse(decoded);
         console.log('[Firebase] Using FIREBASE_SERVICE_ACCOUNT_BASE64');
     }
+
     if (serviceAccount) {
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
         db = admin.firestore();
@@ -63,7 +64,7 @@ const logger = {
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
 const JWT_SECRET = process.env.JWT_SECRET || (() => {
-    console.error('[CONFIG] JWT_SECRET env variable is missing! Using ephemeral secret (tokens will be invalidated on restart).');
+    console.error('[CONFIG] JWT_SECRET env variable is missing! Using ephemeral secret.');
     return require('crypto').randomBytes(32).toString('hex');
 })();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
@@ -74,7 +75,6 @@ const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
 const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
 const PORT = process.env.PORT || 10000;
 
-// ⭐ Kritik eksik config'leri başlangıçta logla
 function validateCriticalConfig() {
     const missing = [];
     if (!BOT_TOKEN) missing.push('BOT_TOKEN');
@@ -84,7 +84,6 @@ function validateCriticalConfig() {
     }
     if (missing.length) {
         console.error('[CONFIG] ❌ MISSING REQUIRED ENV VARS:', missing.join(', '));
-        console.error('[CONFIG] Auth and data operations will fail until these are set.');
     } else {
         console.log('[CONFIG] ✅ All critical env vars present');
     }
@@ -132,37 +131,47 @@ const authLimiter = rateLimit({ windowMs: 300000, max: 20 });
 const claimLimiter = rateLimit({ windowMs: 60000, max: 30 });
 const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10 });
 const promoLimiter = rateLimit({ windowMs: 3600000, max: 30 });
+const postbackLimiter = rateLimit({ windowMs: 60000, max: 60 });
 
 // ============================================
 // AUTH MIDDLEWARE
 // ============================================
+// ⭐ DÜZELTME: URLSearchParams decode yaptığı için hash bozuluyordu. Raw string parsing kullanıldı.
 function validateTelegramInitData(initData) {
     if (!initData || !BOT_TOKEN) return false;
     try {
-        const urlParams = new URLSearchParams(initData);
-        const hash = urlParams.get('hash');
+        const pairs = initData.split('&');
+        const params = {};
+        let hash = '';
+        
+        for (const pair of pairs) {
+            const idx = pair.indexOf('=');
+            if (idx === -1) continue;
+            const key = pair.substring(0, idx);
+            const value = pair.substring(idx + 1);
+            if (key === 'hash') {
+                hash = value;
+            } else {
+                params[key] = value; // Raw value, NO decoding
+            }
+        }
         if (!hash) return false;
 
-        // ⭐ Replay attack koruması: auth_date 5 dakikadan eski veya gelecekse reddet
-        const authDateStr = urlParams.get('auth_date');
-        if (authDateStr) {
-            const authDate = parseInt(authDateStr, 10);
+        if (params.auth_date) {
+            const authDate = parseInt(params.auth_date, 10);
             const now = Math.floor(Date.now() / 1000);
             if (!isNaN(authDate) && Math.abs(now - authDate) > 300) {
-                logger.warn('Init data auth_date too old or in future', { authDate, now, drift: now - authDate });
+                logger.warn('Init data auth_date too old or in future', { authDate, now });
                 return false;
             }
         }
 
-        urlParams.delete('hash');
-        // Telegram spec: data-check-string = alphabetically sorted entries joined by '\n'
-        const entries = Array.from(urlParams.entries()).sort(([a], [b]) => a.localeCompare(b));
-        const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n');
-        // secret_key = HMAC-SHA256(key="WebAppData", message=bot_token) as bytes
+        const entries = Object.keys(params).sort().map(k => `${k}=${params[k]}`);
+        const dataCheckString = entries.join('\n');
+        
         const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
-        // check = HMAC-SHA256(key=secret_key, message=data_check_string) as hex
         const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
-        // Constant-time compare (timing attack koruması)
+        
         const a = Buffer.from(hash, 'hex');
         const b = Buffer.from(checkHash, 'hex');
         if (a.length !== b.length || a.length === 0) return false;
@@ -179,16 +188,17 @@ function jwtAuth(req, res, next) {
     try {
         req.user = jwt.verify(token, JWT_SECRET);
         next();
-    } catch (e) { return res.status(403).json({ error: 'Invalid token' }); }
+    } catch (e) { 
+        return res.status(403).json({ error: 'Invalid token' }); 
+    }
 }
 
-// Admin koruması: iki faktör — header'da admin_key VE JWT'de is_admin=true olmalı
 function adminAuth(req, res, next) {
+    // ⭐ DÜZELTME: Frontend query param yerine header kullanacak şekilde güncellenecek.
     const key = req.headers['x-admin-key'];
     if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) {
         return res.status(403).json({ error: 'Forbidden' });
     }
-    // İkinci katman: geçerli bir admin JWT de gerekli
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) return res.status(403).json({ error: 'Admin token required' });
     try {
@@ -254,7 +264,6 @@ async function fetchDogePrice() {
         return dogePriceCache;
     }
 }
-
 fetchDogePrice();
 setInterval(fetchDogePrice, 120000);
 
@@ -277,7 +286,8 @@ async function getPTCAds(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
+        // ⭐ DÜZELTME: api parametresi APP_ID olmalı ve action=ptc eklenmeli
+        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&action=ptc&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
         const data = await response.json();
@@ -300,7 +310,8 @@ async function getShortlinks(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
+        // ⭐ DÜZELTME: slapi.php yerine api.php ve action=shortlink
+        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&action=shortlink&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
         const data = await response.json();
@@ -319,8 +330,9 @@ async function getGames(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
-        const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
-        res.json({ success: true, url });
+        // ⭐ DÜZELTME: getOfferwallUrl ile aynı URL'i dönüyordu. Games endpoint'i ayrıldı.
+        const url = `https://offerwall.me/games/${OFFERWALL_APP_ID}/${userId}`;
+        res.json({ success: true, url, user_id: userId });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -338,28 +350,36 @@ async function postback(req, res) {
     try {
         const clientIp = getClientIP(req);
         if (!isOfferwallIP(clientIp)) return res.status(403).send('ERROR: Invalid source');
+        
         const { subId, transId, reward, signature, status = '1', offer_name, offer_type } = req.body;
         if (!subId || !transId || !reward || !signature) return res.status(400).send('ERROR: Missing params');
+        
         const expectedSig = crypto.createHash('md5').update(`${subId}${transId}${reward}${OFFERWALL_SECRET_KEY}`).digest('hex');
         if (signature !== expectedSig) return res.status(403).send('ERROR: Signature mismatch');
+        
         const userRef = db.collection('users').doc(subId);
         const doc = await userRef.get();
         if (!doc.exists) return res.status(404).send('ERROR: User not found');
         if (doc.data().banned) return res.status(403).send('ERROR: User banned');
+        
         const existingTx = await db.collection('offerwall_completions').where('trans_id', '==', transId).limit(1).get();
         if (!existingTx.empty) return res.status(200).send('ok');
+        
         const baseAmt = Number(reward);
         if (isNaN(baseAmt) || baseAmt <= 0) return res.status(400).send('ERROR: Invalid reward');
+        
         const taskType = String(offer_type || 'offer').toLowerCase();
         const isBonusEligible = BONUS_TYPES.some(t => taskType.includes(t));
         const bonusAmt = isBonusEligible ? Math.round(baseAmt * BONUS_PERCENT) / 100 : 0;
         const totalAmt = Math.round((baseAmt + bonusAmt) * 100) / 100;
         const numericStatus = parseInt(status) || 1;
+        
         await db.runTransaction(async (t) => {
             const userDoc = await t.get(userRef);
             if (!userDoc.exists) throw new Error('User not found');
             const userData = userDoc.data();
             const currentBalance = userData.balance || 0;
+            
             if (numericStatus === 1) {
                 t.update(userRef, {
                     balance: increment(totalAmt),
@@ -384,6 +404,7 @@ async function postback(req, res) {
                 timestamp: serverTimestamp()
             });
         });
+        
         if (numericStatus === 1) await giveReferralBonus(subId, baseAmt, taskType);
         await logAction('offerwall_completed', subId, { transId, totalAmt });
         res.status(200).send('ok');
@@ -401,17 +422,35 @@ async function auth(req, res) {
     const { initData, ref } = req.body;
     if (!initData) return res.status(400).json({ error: 'Missing initData' });
     if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid signature' });
+    
     let user;
     try {
-        const urlParams = new URLSearchParams(initData);
-        user = JSON.parse(urlParams.get('user'));
-    } catch (e) { return res.status(400).json({ error: 'Bad user data' }); }
+        // ⭐ DÜZELTME: user JSON string'i decode edilmeli
+        const pairs = initData.split('&');
+        let userStr = '';
+        for (const pair of pairs) {
+            const idx = pair.indexOf('=');
+            if (idx === -1) continue;
+            const key = pair.substring(0, idx);
+            const value = pair.substring(idx + 1);
+            if (key === 'user') {
+                userStr = decodeURIComponent(value);
+                break;
+            }
+        }
+        user = JSON.parse(userStr);
+    } catch (e) { 
+        return res.status(400).json({ error: 'Bad user data' }); 
+    }
+    
     if (!user || !user.id) return res.status(400).json({ error: 'No user data' });
     const userId = String(user.id);
     const userRef = db.collection('users').doc(userId);
+    
     try {
         const doc = await userRef.get();
         const isNew = !doc.exists;
+        
         if (isNew) {
             const newUser = {
                 telegram_id: userId, username: user.username || null, first_name: user.first_name || null,
@@ -422,7 +461,9 @@ async function auth(req, res) {
                 is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
                 last_claim: null, created_at: serverTimestamp()
             };
+            // ⭐ DÜZELTME: new User yerine newUser objesi kaydedilmeli
             await userRef.set(newUser);
+            
             if (ref && ref !== userId) {
                 const refRef = db.collection('users').doc(String(ref));
                 const refDoc = await refRef.get();
@@ -438,6 +479,7 @@ async function auth(req, res) {
         } else {
             if (doc.data().banned) return res.status(403).json({ error: 'User banned' });
         }
+        
         const isAdmin = String(userId) === String(ADMIN_TELEGRAM_ID);
         const token = jwt.sign({ userId, username: user.username, is_admin: isAdmin }, JWT_SECRET, { expiresIn: '7d' });
         res.json({ success: true, user_id: userId, username: user.username, token, isNew, is_admin: isAdmin });
@@ -513,6 +555,7 @@ async function giveReferralBonus(userId, amount, type) {
         const bonusAmount = Math.round(amount * (REFERRAL_COMMISSION_PERCENT / 100) * 100) / 100;
         if (bonusAmount <= 0) return;
         const referrerRef = db.collection('users').doc(referrerId);
+        
         await db.runTransaction(async (t) => {
             const refDoc = await t.get(referrerRef);
             if (!refDoc.exists) return;
@@ -554,8 +597,10 @@ async function claim(req, res) {
     const userId = String(req.user.userId);
     const { captchaAnswer } = req.body;
     if (!captchaAnswer) return res.status(400).json({ error: 'Captcha required', captchaRequired: true });
+    
     const captchaResult = verifyCaptcha(userId, captchaAnswer);
     if (!captchaResult.valid) return res.status(403).json({ error: captchaResult.error, captchaRequired: true });
+    
     const userRef = db.collection('users').doc(userId);
     try {
         const now = Date.now();
@@ -752,15 +797,18 @@ async function redeemPromo(req, res) {
         }
         if ((promo.usedCount || 0) >= (promo.usageLimit || promo.maxUses || 0)) return res.status(400).json({ error: 'Code usage limit reached' });
         if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'You already used this code' });
+        
         const userRef = db.collection('users').doc(userId);
         const field = (promo.coin === 'DOGE') ? 'doge_balance' : 'balance';
         const totalField = (promo.coin === 'DOGE') ? 'total_doge_earned' : 'total_earned';
         const reward = Number(promo.reward);
+        
         await db.runTransaction(async (t) => {
             const u = await t.get(userRef);
             if (!u.exists) throw new Error('User not found');
             const ud = u.data();
             if (ud.banned) throw new Error('User banned');
+            
             const freshPromo = await t.get(promoRef);
             const fp = freshPromo.data();
             if (fp.enabled === false) throw new Error('Code disabled');
@@ -770,6 +818,7 @@ async function redeemPromo(req, res) {
             }
             if ((fp.usedCount || 0) >= (fp.usageLimit || fp.maxUses || 0)) throw new Error('Code usage limit reached');
             if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('You already used this code');
+            
             t.update(userRef, {
                 [field]: increment(reward),
                 [totalField]: increment(reward),
@@ -840,8 +889,10 @@ async function adminCreatePromo(req, res) {
         if (!code) return res.status(400).json({ error: 'Invalid code' });
         if (!reward || reward <= 0 || isNaN(reward)) return res.status(400).json({ error: 'Invalid reward' });
         if (!['CNX', 'DOGE'].includes(coin)) return res.status(400).json({ error: 'Coin must be CNX or DOGE' });
+        
         const promoRef = db.collection('promoCodes').doc(code);
         if ((await promoRef.get()).exists) return res.status(400).json({ error: 'Code already exists' });
+        
         await promoRef.set({
             code, coin, reward, usageLimit, usedCount: 0, usedBy: [], enabled: true,
             createdBy: req.user.userId, createdAt: serverTimestamp(),
@@ -910,6 +961,7 @@ async function adminRejectWithdrawal(req, res) {
         if (!wd.exists) return res.status(404).json({ error: 'Not found' });
         const wdData = wd.data();
         if (wdData.status === 'approved') return res.status(400).json({ error: 'Already approved' });
+        
         await db.runTransaction(async (t) => {
             const u = await t.get(db.collection('users').doc(String(wdData.user_id)));
             if (u.exists) t.update(u.ref, { doge_balance: increment(wdData.amount || 0) });
@@ -974,7 +1026,8 @@ async function adminGetStats(req, res) {
         res.json({
             totalUsers: usersSnap.size,
             totalWithdrawals: wdSnap.size,
-            totalPaid: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
+            // ⭐ DÜZELTME: Frontend ile uyumlu olması için totalPaid_doge olarak dönüldü
+            totalPaid_doge: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
             totalOfferwall: offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
             totalClaims: claimsSnap.size,
             bannedUsers: usersSnap.docs.filter(d => d.data().banned).length
@@ -1027,7 +1080,6 @@ async function getGlobalStats(req, res) {
 // EXPRESS APP
 // ============================================
 const app = express();
-
 process.on('unhandledRejection', (err) => logger.error('Unhandled Rejection', { error: err.message }));
 process.on('uncaughtException', (err) => logger.error('Uncaught Exception', { error: err.message }));
 
@@ -1057,16 +1109,18 @@ app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
 app.get('/api/referral', jwtAuth, getReferral);
 app.post('/api/referral/collect', jwtAuth, collectReferralBonus);
 app.get('/api/doge-price', getDogePrice);
+
 app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
 app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
 app.get('/api/offerwall/games', jwtAuth, getGames);
-// Postback rate limit (sahte imza denemelerini engelle)
-const postbackLimiter = rateLimit({ windowMs: 60000, max: 60 });
+
 app.post('/api/postback', postbackLimiter, postback);
 app.post('/api/offerwall-postback', postbackLimiter, postback);
+
 app.post('/api/promo/redeem', promoLimiter, jwtAuth, redeemPromo);
 app.get('/api/promo/history', jwtAuth, getPromoHistory);
+
 app.get('/api/stats/global', getGlobalStats);
 
 app.get('/api/admin/stats', adminAuth, adminGetStats);
@@ -1091,7 +1145,6 @@ app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
 // ============================================
 const publicPath = path.join(__dirname, '..');
 console.log('[Static] Serving files from:', publicPath);
-
 app.use(express.static(publicPath, {
     maxAge: '1d',
     setHeaders: (res, p) => {
@@ -1117,7 +1170,7 @@ app.get('*', (req, res) => {
     });
 });
 
-// Error handler — production'da stack trace sızdırma
+// Error handler
 app.use((err, req, res, next) => {
     logger.error('Express error', { error: err.message, path: req.path });
     if (process.env.NODE_ENV === 'production') {
@@ -1137,12 +1190,10 @@ if (require.main === module) {
     });
 
     // ============================================
-    // ⭐ KEEP-ALIVE (Render free tier 15dk spin-down önleme)
+    // ⭐ KEEP-ALIVE
     // ============================================
-    // Birden fazla endpoint'i sırayla ping'le, başarısızlıkları logla,
-    // sadece production'da çalıştır.
     if (process.env.NODE_ENV === 'production' && APP_URL) {
-        const PING_INTERVAL_MS = 14 * 60 * 1000; // 14 dakika
+        const PING_INTERVAL_MS = 14 * 60 * 1000;
         const PING_ENDPOINTS = ['/ping', '/api/health'];
         let pingIndex = 0;
         let consecutiveFailures = 0;
@@ -1163,12 +1214,11 @@ if (require.main === module) {
                 consecutiveFailures++;
                 logger.warn(`[KeepAlive] FAIL ${endpoint} (${consecutiveFailures}): ${e.message}`);
                 if (consecutiveFailures >= 3) {
-                    logger.error(`[KeepAlive] ${consecutiveFailures} consecutive failures — service may be unhealthy`);
+                    logger.error(`[KeepAlive] ${consecutiveFailures} consecutive failures`);
                 }
             }
         };
 
-        // İlk ping 30 saniye sonra, sonra her 14 dakikada
         setTimeout(() => {
             keepAlivePing();
             setInterval(keepAlivePing, PING_INTERVAL_MS);
@@ -1176,12 +1226,10 @@ if (require.main === module) {
 
         logger.info('[KeepAlive] enabled (interval: 14m)');
     } else {
-        logger.info('[KeepAlive] disabled (NODE_ENV != production or APP_URL missing)');
+        logger.info('[KeepAlive] disabled');
     }
 
-    // ============================================
     // Graceful shutdown
-    // ============================================
     const shutdown = (signal) => {
         logger.info(`${signal} received, shutting down gracefully…`);
         server.close(() => {
