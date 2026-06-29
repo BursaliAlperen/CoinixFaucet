@@ -1,4 +1,4 @@
-'''require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -1957,9 +1957,3 @@ if (require.main === module) {
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));
 }
-'''
-
-with open('/mnt/agents/output/index.js', 'w', encoding='utf-8') as f:
-    f.write(backend_code)
-
-print("Backend written. Size:", len(backend_code))
