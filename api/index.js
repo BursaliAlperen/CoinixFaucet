@@ -20,18 +20,11 @@ let Timestamp = null;
 try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
         serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-        console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_JSON env var');
+        console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_JSON');
     } else if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
         const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
         serviceAccount = JSON.parse(decoded);
-        console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_BASE64 env var');
-    } else {
-        try {
-            serviceAccount = require('./serviceAccountKey.json');
-            console.log('Firebase: Using serviceAccountKey.json (local dev)');
-        } catch (e) {
-            console.error('Firebase: No credentials found.');
-        }
+        console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_BASE64');
     }
     if (serviceAccount) {
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -42,8 +35,6 @@ try {
         increment = (n) => FieldValue.increment(n);
         firebaseInitialized = true;
         console.log('Firebase initialized successfully');
-    } else {
-        console.warn('Firebase: Running WITHOUT database');
     }
 } catch (e) {
     console.error('Firebase init error:', e.message);
@@ -54,20 +45,17 @@ try {
 const logger = {
     info: (msg, meta = {}) => console.log(`[INFO] ${msg}`, meta),
     error: (msg, meta = {}) => console.error(`[ERROR] ${msg}`, meta),
-    debug: (msg, meta = {}) => console.log(`[DEBUG] ${msg}`, meta),
     warn: (msg, meta = {}) => console.warn(`[WARN] ${msg}`, meta)
 };
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const BOT_USERNAME = process.env.BOT_USERNAME || 'your_bot';
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || (process.env.JWT_SECRET || 'change-me-in-production');
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
 const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
-const APP_URL = process.env.APP_URL || 'https://coinix-faucet.vercel.app';
-const PORT = process.env.PORT || 3000;
 
 const FAUCET_COOLDOWN = 180000;
 const FAUCET_REWARD = 1.0;
@@ -76,31 +64,11 @@ const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'shortlinks', 'game', 'games', 'visit', 'visits'];
 
-function setupSecurity(app) {
-    app.use(helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-                fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-                imgSrc: ["'self'", "data:", "https:", "blob:"],
-                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me"],
-                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-                objectSrc: ["'none'"],
-                upgradeInsecureRequests: []
-            }
-        },
-        crossOriginEmbedderPolicy: false,
-        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
-    }));
-}
-
-const generalLimiter = rateLimit({ windowMs: 60 * 1000, max: 120, message: { error: 'Too many requests' } });
-const authLimiter = rateLimit({ windowMs: 5 * 60 * 1000, max: 20, message: { error: 'Too many auth attempts' } });
-const claimLimiter = rateLimit({ windowMs: 60 * 1000, max: 30, message: { error: 'Too many claims' } });
-const withdrawLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, message: { error: 'Too many withdrawals' } });
-const promoLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, message: { error: 'Too many promo attempts' } });
+const generalLimiter = rateLimit({ windowMs: 60000, max: 120 });
+const authLimiter = rateLimit({ windowMs: 300000, max: 20 });
+const claimLimiter = rateLimit({ windowMs: 60000, max: 30 });
+const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10 });
+const promoLimiter = rateLimit({ windowMs: 3600000, max: 30 });
 
 function validateTelegramInitData(initData) {
     if (!initData || !BOT_TOKEN) return false;
@@ -135,17 +103,12 @@ function adminAuth(req, res, next) {
 async function logAction(action, userId, details = {}) {
     if (!db) return;
     try {
-        await db.collection('logs').add({
-            action,
-            user_id: userId || null,
-            details: details || {},
-            timestamp: serverTimestamp()
-        });
+        await db.collection('logs').add({ action, user_id: userId, details, timestamp: serverTimestamp() });
     } catch (e) { logger.error('Log error', { error: e.message }); }
 }
 
 function getClientIP(req) {
-    return (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '0.0.0.0').split(',')[0].trim();
+    return (req.headers['x-forwarded-for'] || '0.0.0.0').split(',')[0].trim();
 }
 
 function startOfTodayTs() {
@@ -165,10 +128,7 @@ let dogePriceCache = { price: 0, change: 0, lastUpdate: 0 };
 
 async function fetchDogePrice() {
     try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd&include_24hr_change=true', { signal: controller.signal });
-        clearTimeout(timeout);
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd&include_24hr_change=true');
         if (!response.ok) return dogePriceCache;
         const data = await response.json();
         if (data?.dogecoin?.usd != null) {
@@ -185,95 +145,80 @@ async function fetchDogePrice() {
     }
 }
 
-setInterval(fetchDogePrice, 120000);
 fetchDogePrice();
 
 async function getOfferwallUrl(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
         const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
         res.json({ success: true, url, user_id: userId });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to generate offerwall URL' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
 async function getPTCAds(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
+        if (!OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        if (!OFFERWALL_API_TOKEN) {
-            return res.json({ success: true, ads: [], total: 0, message: 'API token not configured' });
-        }
         const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        const response = await fetch(apiUrl, { method: 'GET', headers: { 'Accept': 'application/json' }, signal: controller.signal });
-        clearTimeout(timeout);
+        const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
         const data = await response.json();
-        if (data.status !== 200) return res.json({ success: false, error: data.message || 'API error', ads: [] });
+        if (data.status !== 200) return res.json({ success: false, ads: [] });
         const ads = (data.data || []).map(ad => ({
-            id: ad.id || ad.campaign_id || String(Math.random()),
-            title: ad.title || 'Untitled Ad',
+            id: ad.id || String(Math.random()),
+            title: ad.title || 'Ad',
             description: ad.description || '',
             reward: Number(ad.reward) || 0,
-            duration: ad.duration || ad.time || 30,
+            duration: ad.duration || 30,
             url: ad.url || '',
-            type: ad.type || 1,
-            max: ad.max || 0,
             thumbnail: ad.thumbnail || ''
         }));
         await logAction('ptc_ads_loaded', userId, { count: ads.length });
         res.json({ success: true, ads, total: ads.length });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to load PTC ads' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
 async function getShortlinks(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
+        if (!OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        if (!OFFERWALL_API_TOKEN) {
-            return res.json({ success: true, shortlinks: [], total: 0, message: 'API token not configured' });
-        }
         const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        const response = await fetch(apiUrl, { method: 'GET', headers: { 'Accept': 'application/json' }, signal: controller.signal });
-        clearTimeout(timeout);
+        const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
         const data = await response.json();
-        if (data.status !== 200) return res.json({ success: false, error: data.message || 'API error', shortlinks: [] });
+        if (data.status !== 200) return res.json({ success: false, shortlinks: [] });
         const shortlinks = (data.data || []).map(link => ({
-            id: link.id || link.campaign_id || String(Math.random()),
-            name: link.name || link.title || 'Untitled Link',
+            id: link.id || String(Math.random()),
+            name: link.name || 'Link',
             reward: Number(link.reward) || 0,
             url: link.url || '',
-            remaining_views: link.remaining_views || 0,
-            daily_limit: link.daily_limit || 0
+            remaining_views: link.remaining_views || 0
         }));
-        await logAction('shortlinks_loaded', userId, { count: shortlinks.length });
         res.json({ success: true, shortlinks, total: shortlinks.length });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to load shortlinks' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
 async function getGames(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
         const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
         res.json({ success: true, url });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to load games' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
@@ -282,23 +227,17 @@ const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
 function isOfferwallIP(ip) {
     if (!ip) return false;
     const normalized = ip.toLowerCase();
-    return OFFERWALL_IPS.some(allowed => normalized === allowed.toLowerCase());
+    return OFFERWALL_IPS.some(a => normalized === a.toLowerCase());
 }
 
 async function postback(req, res) {
     try {
         const clientIp = getClientIP(req);
-        if (!isOfferwallIP(clientIp)) {
-            return res.status(403).send('ERROR: Invalid source');
-        }
-        const { subId, transId, reward, signature, status = '1', offer_name, offer_type, reward_name, reward_value, payout, userIp, country, debug = '0' } = req.body;
-        if (!subId || !transId || !reward || !signature) {
-            return res.status(400).send('ERROR: Missing params');
-        }
+        if (!isOfferwallIP(clientIp)) return res.status(403).send('ERROR: Invalid source');
+        const { subId, transId, reward, signature, status = '1', offer_name, offer_type } = req.body;
+        if (!subId || !transId || !reward || !signature) return res.status(400).send('ERROR: Missing params');
         const expectedSig = crypto.createHash('md5').update(`${subId}${transId}${reward}${OFFERWALL_SECRET_KEY}`).digest('hex');
-        if (signature !== expectedSig) {
-            return res.status(403).send('ERROR: Signature does not match');
-        }
+        if (signature !== expectedSig) return res.status(403).send('ERROR: Signature mismatch');
         const userRef = db.collection('users').doc(subId);
         const doc = await userRef.get();
         if (!doc.exists) return res.status(404).send('ERROR: User not found');
@@ -338,24 +277,15 @@ async function postback(req, res) {
                 trans_id: transId,
                 task_type: taskType,
                 offer_name: offer_name || 'Unknown',
-                reward_name: reward_name || 'CNX',
-                reward_value: Number(reward_value) || baseAmt,
                 base_amount: baseAmt,
                 bonus_amount: bonusAmt,
                 amount: totalAmt,
-                payout_usd: Number(payout) || 0,
-                currency: 'CNX',
                 status: numericStatus === 1 ? 'completed' : 'chargeback',
-                user_ip: userIp || clientIp,
-                country: country || 'unknown',
-                debug: debug === '1',
                 timestamp: serverTimestamp()
             });
         });
-        if (numericStatus === 1) {
-            await giveReferralBonus(subId, baseAmt, taskType);
-        }
-        await logAction('offerwall_completed', subId, { transId, baseAmount: baseAmt, bonus: bonusAmt, totalAmount: totalAmt, status });
+        if (numericStatus === 1) await giveReferralBonus(subId, baseAmt, taskType);
+        await logAction('offerwall_completed', subId, { transId, totalAmt });
         res.status(200).send('ok');
     } catch (err) {
         logger.error('Postback error', { error: err.message });
@@ -364,10 +294,10 @@ async function postback(req, res) {
 }
 
 async function auth(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     const { initData, ref } = req.body;
     if (!initData) return res.status(400).json({ error: 'Missing initData' });
-    if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid Telegram data signature' });
+    if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid signature' });
     let user;
     try {
         const urlParams = new URLSearchParams(initData);
@@ -384,21 +314,14 @@ async function auth(req, res) {
                 telegram_id: userId,
                 username: user.username || null,
                 first_name: user.first_name || null,
-                last_name: user.last_name || null,
-                photo_url: user.photo_url || null,
                 balance: 0,
                 doge_balance: 0,
                 total_earned: 0,
-                total_doge_earned: 0,
-                total_offerwall_earned: 0,
-                total_promo_earned: 0,
                 total_claims: 0,
                 total_withdrawals: 0,
                 referrals: 0,
                 referral_earnings: 0,
                 referral_balance: 0,
-                promo_earnings: 0,
-                promo_used_count: 0,
                 referred_by: ref || null,
                 banned: false,
                 is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
@@ -415,23 +338,11 @@ async function auth(req, res) {
                         referral_balance: increment(REFERRAL_SIGNUP_BONUS),
                         referral_earnings: increment(REFERRAL_SIGNUP_BONUS)
                     });
-                    await db.collection('referrals').add({
-                        referrer_id: String(ref),
-                        referred_id: userId,
-                        bonus: REFERRAL_SIGNUP_BONUS,
-                        currency: 'CNX',
-                        type: 'signup',
-                        timestamp: serverTimestamp()
-                    });
                 }
             }
-            await logAction('user_register', userId, { username: user.username, ref });
+            await logAction('user_register', userId, { ref });
         } else {
             if (doc.data().banned) return res.status(403).json({ error: 'User banned' });
-            const updates = {};
-            if (user.photo_url) updates.photo_url = user.photo_url;
-            if (user.username) updates.username = user.username;
-            if (Object.keys(updates).length) await userRef.update(updates);
         }
         const token = jwt.sign({ userId, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
         res.json({ success: true, user_id: userId, username: user.username, token, isNew });
@@ -442,7 +353,7 @@ async function auth(req, res) {
 }
 
 async function getMe(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
         const doc = await db.collection('users').doc(userId).get();
@@ -452,7 +363,6 @@ async function getMe(req, res) {
             telegram_id: d.telegram_id,
             username: d.username,
             first_name: d.first_name,
-            photo_url: d.photo_url,
             balance: d.balance || 0,
             doge_balance: d.doge_balance || 0,
             total_earned: d.total_earned || 0,
@@ -462,8 +372,6 @@ async function getMe(req, res) {
             referrals: d.referrals || 0,
             referral_earnings: d.referral_earnings || 0,
             referral_balance: d.referral_balance || 0,
-            promo_earnings: d.promo_earnings || d.total_promo_earned || 0,
-            promo_used_count: d.promo_used_count || 0,
             last_claim: d.last_claim ? d.last_claim.toMillis() : null,
             banned: d.banned || false,
             is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID)
@@ -474,7 +382,7 @@ async function getMe(req, res) {
 }
 
 async function getBalance(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const doc = await db.collection('users').doc(String(req.user.userId)).get();
         if (!doc.exists) return res.json({ balance: 0, doge_balance: 0, referral_balance: 0 });
@@ -485,10 +393,8 @@ async function getBalance(req, res) {
             referral_balance: d.referral_balance || 0,
             total_earned: d.total_earned || 0,
             total_claims: d.total_claims || 0,
-            total_withdrawals: d.total_withdrawals || 0,
             referrals: d.referrals || 0,
             referral_earnings: d.referral_earnings || 0,
-            total_offerwall_earned: d.total_offerwall_earned || 0,
             last_claim: d.last_claim ? d.last_claim.toMillis() : null
         });
     } catch (err) {
@@ -497,7 +403,7 @@ async function getBalance(req, res) {
 }
 
 async function getReferral(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
         const doc = await db.collection('users').doc(userId).get();
@@ -534,7 +440,6 @@ async function giveReferralBonus(userId, amount, type) {
             referrer: referrerId,
             referred: userId,
             amount: bonusAmount,
-            originalAmount: amount,
             type: type || 'unknown',
             timestamp: serverTimestamp()
         });
@@ -544,7 +449,7 @@ async function giveReferralBonus(userId, amount, type) {
 }
 
 async function collectReferralBonus(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     const userId = String(req.user.userId);
     const userRef = db.collection('users').doc(userId);
     try {
@@ -554,22 +459,22 @@ async function collectReferralBonus(req, res) {
             if (!doc.exists) throw new Error('User not found');
             const d = doc.data();
             const rb = d.referral_balance || 0;
-            if (rb <= 0) throw new Error('No referral balance to collect');
+            if (rb <= 0) throw new Error('No referral balance');
             collected = rb;
             t.update(userRef, { balance: increment(rb), referral_balance: increment(-rb) });
         });
         await logAction('referral_collected', userId, { amount: collected });
         res.json({ success: true, amount: collected });
     } catch (err) {
-        res.status(400).json({ error: err.message || 'Failed to collect referral bonus' });
+        res.status(400).json({ error: err.message });
     }
 }
 
 async function claim(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     const userId = String(req.user.userId);
     const { captchaAnswer } = req.body;
-    if (!captchaAnswer) return res.status(400).json({ error: 'Captcha answer required', captchaRequired: true });
+    if (!captchaAnswer) return res.status(400).json({ error: 'Captcha required', captchaRequired: true });
     const captchaResult = verifyCaptcha(userId, captchaAnswer);
     if (!captchaResult.valid) return res.status(403).json({ error: captchaResult.error, captchaRequired: true });
     const userRef = db.collection('users').doc(userId);
@@ -583,7 +488,7 @@ async function claim(req, res) {
             if (d.banned) throw new Error('User banned');
             const lastClaim = d.last_claim ? d.last_claim.toMillis() : 0;
             if (now - lastClaim < FAUCET_COOLDOWN) {
-                throw new Error(`Cooldown active|${FAUCET_COOLDOWN - (now - lastClaim)}`);
+                throw new Error(`Cooldown|${FAUCET_COOLDOWN - (now - lastClaim)}`);
             }
             newBalance = (d.balance || 0) + FAUCET_REWARD;
             t.update(userRef, {
@@ -598,7 +503,7 @@ async function claim(req, res) {
         res.json({ success: true, amount: FAUCET_REWARD, balance: newBalance });
     } catch (err) {
         const msg = err.message || '';
-        if (msg.includes('Cooldown active')) {
+        if (msg.includes('Cooldown')) {
             const wait = parseInt(msg.split('|')[1]) || FAUCET_COOLDOWN;
             return res.status(429).json({ error: 'Cooldown active', wait });
         }
@@ -609,7 +514,7 @@ async function claim(req, res) {
 }
 
 async function swap(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     const userId = String(req.user.userId);
     const { amount, direction } = req.body;
     const amt = Number(amount);
@@ -631,7 +536,7 @@ async function swap(req, res) {
             }
         });
         await db.collection('swaps').add({ user_id: userId, amount: amt, direction, timestamp: serverTimestamp() });
-        res.json({ success: true, message: 'Swap completed' });
+        res.json({ success: true });
     } catch (err) {
         if (err.message === 'User not found') return res.status(404).json({ error: 'User not found' });
         if (err.message === 'User banned') return res.status(403).json({ error: 'User banned' });
@@ -641,7 +546,7 @@ async function swap(req, res) {
 }
 
 async function withdraw(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     const userId = String(req.user.userId);
     const { faucetpay_email, amount } = req.body;
     const amt = Number(amount);
@@ -661,30 +566,18 @@ async function withdraw(req, res) {
         const ref = await db.collection('withdrawals').add({
             user_id: userId, faucetpay_email, amount: amt, status: 'pending', timestamp: serverTimestamp()
         });
-        res.json({ success: true, id: ref.id, message: 'Withdrawal submitted' });
+        res.json({ success: true, id: ref.id });
     } catch (err) {
-        if (err.message === 'User not found') return res.status(404).json({ error: 'User not found' });
-        if (err.message === 'User banned') return res.status(403).json({ error: 'User banned' });
         if (err.message?.includes('Insufficient') || err.message?.includes('Minimum')) return res.status(400).json({ error: err.message });
         res.status(500).json({ error: 'Withdrawal failed' });
     }
 }
 
 async function getWithdrawHistory(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
         const snapshot = await db.collection('withdrawals').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
-        res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
-}
-
-async function getRecentWithdrawals(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
-    try {
-        const snapshot = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(25).get();
         res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
     } catch (err) {
         res.status(500).json({ error: 'Failed' });
@@ -696,15 +589,14 @@ async function getDogePrice(req, res) {
         if (Date.now() - dogePriceCache.lastUpdate > 60000) await fetchDogePrice();
         res.json({ price: dogePriceCache.price, change_24h: dogePriceCache.change, lastUpdate: dogePriceCache.lastUpdate });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch price' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
 const activeCaptchas = new Map();
-const MAX_CAPTCHAS = 5000;
 
 function generateMathCaptcha(userId) {
-    if (activeCaptchas.size > MAX_CAPTCHAS) {
+    if (activeCaptchas.size > 5000) {
         const firstKey = activeCaptchas.keys().next().value;
         activeCaptchas.delete(firstKey);
     }
@@ -717,27 +609,25 @@ function generateMathCaptcha(userId) {
 
 function verifyCaptcha(userId, userAnswer) {
     const captcha = activeCaptchas.get(userId);
-    if (!captcha) return { valid: false, error: 'No active captcha. Refresh the page.' };
+    if (!captcha) return { valid: false, error: 'No active captcha' };
     if (Date.now() > captcha.expiresAt) {
         activeCaptchas.delete(userId);
-        return { valid: false, error: 'Captcha expired. Get a new one.' };
+        return { valid: false, error: 'Captcha expired' };
     }
     if (parseInt(userAnswer) !== captcha.answer) {
         activeCaptchas.delete(userId);
-        return { valid: false, error: 'Wrong answer. Try a new captcha.' };
+        return { valid: false, error: 'Wrong answer' };
     }
     activeCaptchas.delete(userId);
     return { valid: true };
 }
 
-function cleanupExpiredCaptchas() {
+setInterval(() => {
     const now = Date.now();
     for (const [userId, captcha] of activeCaptchas) {
         if (now > captcha.expiresAt) activeCaptchas.delete(userId);
     }
-}
-
-setInterval(cleanupExpiredCaptchas, 60000);
+}, 60000);
 
 async function getCaptcha(req, res) {
     try {
@@ -745,7 +635,7 @@ async function getCaptcha(req, res) {
         const captcha = generateMathCaptcha(userId);
         res.json({ success: true, question: captcha.question, n1: captcha.n1, n2: captcha.n2 });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to generate captcha' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
@@ -757,7 +647,7 @@ async function verifyCaptchaEndpoint(req, res) {
         const result = verifyCaptcha(userId, answer);
         res.json(result);
     } catch (err) {
-        res.status(500).json({ error: 'Verification failed' });
+        res.status(500).json({ error: 'Failed' });
     }
 }
 
@@ -770,7 +660,7 @@ function validatePromoCode(code) {
 }
 
 async function redeemPromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const code = validatePromoCode(req.body.code);
         if (!code) return res.status(400).json({ error: 'Invalid code' });
@@ -784,12 +674,8 @@ async function redeemPromo(req, res) {
             const expTs = promo.expiresAt.toDate ? promo.expiresAt.toDate() : new Date(promo.expiresAt);
             if (expTs < new Date()) return res.status(400).json({ error: 'Code expired' });
         }
-        if ((promo.usedCount || 0) >= (promo.usageLimit || promo.maxUses || 0)) {
-            return res.status(400).json({ error: 'Code usage limit reached' });
-        }
-        if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) {
-            return res.status(400).json({ error: 'You already used this code' });
-        }
+        if ((promo.usedCount || 0) >= (promo.usageLimit || promo.maxUses || 0)) return res.status(400).json({ error: 'Code usage limit reached' });
+        if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'You already used this code' });
         const userRef = db.collection('users').doc(userId);
         const field = (promo.coin === 'DOGE') ? 'doge_balance' : 'balance';
         const totalField = (promo.coin === 'DOGE') ? 'total_doge_earned' : 'total_earned';
@@ -837,7 +723,7 @@ async function redeemPromo(req, res) {
 }
 
 async function getPromoHistory(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
         const snap = await db.collection('promo_uses').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
@@ -859,7 +745,7 @@ async function getPromoHistory(req, res) {
 }
 
 async function adminListPromos(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const snap = await db.collection('promoCodes').orderBy('createdAt', 'desc').get();
         const list = snap.docs.map(d => {
@@ -882,7 +768,7 @@ async function adminListPromos(req, res) {
 }
 
 async function adminCreatePromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const code = validatePromoCode(req.body.code);
         const { coin = 'CNX' } = req.body;
@@ -907,7 +793,7 @@ async function adminCreatePromo(req, res) {
 }
 
 async function adminTogglePromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const code = validatePromoCode(req.body.code);
         const enabled = !!req.body.enabled;
@@ -920,7 +806,7 @@ async function adminTogglePromo(req, res) {
 }
 
 async function adminDeletePromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const code = validatePromoCode(req.body.code);
         if (!code) return res.status(400).json({ error: 'Invalid code' });
@@ -933,7 +819,7 @@ async function adminDeletePromo(req, res) {
 }
 
 async function adminGetUsers(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const snap = await db.collection('users').orderBy('created_at', 'desc').limit(200).get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), created_at: d.data().created_at?.toMillis() })));
@@ -943,7 +829,7 @@ async function adminGetUsers(req, res) {
 }
 
 async function adminGetWithdrawals(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const snap = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(200).get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
@@ -953,7 +839,7 @@ async function adminGetWithdrawals(req, res) {
 }
 
 async function adminApproveWithdrawal(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const id = req.body.id;
         if (!id) return res.status(400).json({ error: 'id required' });
@@ -966,7 +852,7 @@ async function adminApproveWithdrawal(req, res) {
 }
 
 async function adminRejectWithdrawal(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const id = req.body.id;
         if (!id) return res.status(400).json({ error: 'id required' });
@@ -990,7 +876,7 @@ async function adminRejectWithdrawal(req, res) {
 }
 
 async function adminBanUser(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ error: 'userId required' });
@@ -1003,7 +889,7 @@ async function adminBanUser(req, res) {
 }
 
 async function adminUnbanUser(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ error: 'userId required' });
@@ -1016,7 +902,7 @@ async function adminUnbanUser(req, res) {
 }
 
 async function adminAddBalance(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const { userId, amount, currency } = req.body;
         if (!userId || !amount) return res.status(400).json({ error: 'userId and amount required' });
@@ -1030,7 +916,7 @@ async function adminAddBalance(req, res) {
 }
 
 async function adminGetLogs(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
@@ -1040,7 +926,7 @@ async function adminGetLogs(req, res) {
 }
 
 async function adminGetStats(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const [usersSnap, wdSnap, offerSnap, claimsSnap] = await Promise.all([
             db.collection('users').get(),
@@ -1064,7 +950,7 @@ async function adminGetStats(req, res) {
 }
 
 async function adminGetDashboard(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const today = startOfTodayTs();
         const weekAgo = startOfDayMinus(7);
@@ -1096,7 +982,7 @@ async function adminGetDashboard(req, res) {
 }
 
 async function adminGetSettings(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const doc = await db.collection('settings').doc('global').get();
         res.json(doc.exists ? doc.data() : {});
@@ -1106,7 +992,7 @@ async function adminGetSettings(req, res) {
 }
 
 async function adminUpdateSettings(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         await db.collection('settings').doc('global').set(req.body, { merge: true });
         res.json({ success: true });
@@ -1116,7 +1002,7 @@ async function adminUpdateSettings(req, res) {
 }
 
 async function adminBroadcast(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const { message, target } = req.body;
         if (!message) return res.status(400).json({ error: 'message required' });
@@ -1130,7 +1016,7 @@ async function adminBroadcast(req, res) {
 }
 
 async function getGlobalStats(req, res) {
-    if (!db) return res.status(503).json({ error: 'Database not available' });
+    if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const usersSnap = await db.collection('users').get();
         const totalUsers = usersSnap.size;
@@ -1176,7 +1062,6 @@ app.post('/api/claim', claimLimiter, jwtAuth, claim);
 app.post('/api/swap', jwtAuth, swap);
 app.post('/api/withdraw', withdrawLimiter, jwtAuth, withdraw);
 app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
-app.get('/api/withdrawals/recent', getRecentWithdrawals);
 app.get('/api/referral', jwtAuth, getReferral);
 app.post('/api/referral/collect', jwtAuth, collectReferralBonus);
 app.get('/api/doge-price', getDogePrice);
@@ -1220,7 +1105,28 @@ app.use((err, req, res, next) => {
 module.exports = app;
 
 if (require.main === module) {
-    app.listen(PORT, () => {
-        logger.info(`Coinix backend listening on port ${PORT}`);
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+        logger.info(`Coinix backend listening on port ${port}`);
     });
+}
+
+function setupSecurity(app) {
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+                fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+                imgSrc: ["'self'", "data:", "https:", "blob:"],
+                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me"],
+                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: []
+            }
+        },
+        crossOriginEmbedderPolicy: false,
+        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
+    }));
 }
