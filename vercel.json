@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/ping",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/loading\\.png",
+      "dest": "/public/loading.png"
+    },
+    {
+      "src": "/coinix\\.png",
+      "dest": "/public/coinix.png"
+    },
+    {
+      "src": "/doge\\.png",
+      "dest": "/public/doge.png"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
+  ]
+}
