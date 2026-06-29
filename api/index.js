@@ -65,7 +65,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
 const JWT_SECRET = process.env.JWT_SECRET || (() => {
     console.error('[CONFIG] JWT_SECRET env variable is missing! Using ephemeral secret.');
-    return require('crypto').randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString('hex');
 })();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
@@ -80,10 +80,10 @@ function validateCriticalConfig() {
     if (!BOT_TOKEN) missing.push('BOT_TOKEN');
     if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
     if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON && !process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-        missing.push('FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_BASE64');
+        missing.push('FIREBASE_SERVICE_ACCOUNT_JSON or BASE64');
     }
     if (missing.length) {
-        console.error('[CONFIG] ❌ MISSING REQUIRED ENV VARS:', missing.join(', '));
+        console.error('[CONFIG] ❌ MISSING:', missing.join(', '));
     } else {
         console.log('[CONFIG] ✅ All critical env vars present');
     }
@@ -108,12 +108,12 @@ function setupSecurity(app) {
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org", "https://translate.google.com", "https://translate.googleapis.com"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://translate.google.com"],
                 fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
                 imgSrc: ["'self'", "data:", "https:", "blob:"],
-                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me"],
-                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
+                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://translate.googleapis.com"],
+                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://translate.google.com"],
                 objectSrc: ["'none'"],
                 upgradeInsecureRequests: []
             }
@@ -134,9 +134,8 @@ const promoLimiter = rateLimit({ windowMs: 3600000, max: 30 });
 const postbackLimiter = rateLimit({ windowMs: 60000, max: 60 });
 
 // ============================================
-// AUTH MIDDLEWARE
+// AUTH MIDDLEWARE (RAW STRING PARSING)
 // ============================================
-// ⭐ DÜZELTME: URLSearchParams decode yaptığı için hash bozuluyordu. Raw string parsing kullanıldı.
 function validateTelegramInitData(initData) {
     if (!initData || !BOT_TOKEN) return false;
     try {
@@ -152,7 +151,7 @@ function validateTelegramInitData(initData) {
             if (key === 'hash') {
                 hash = value;
             } else {
-                params[key] = value; // Raw value, NO decoding
+                params[key] = value;
             }
         }
         if (!hash) return false;
@@ -161,7 +160,7 @@ function validateTelegramInitData(initData) {
             const authDate = parseInt(params.auth_date, 10);
             const now = Math.floor(Date.now() / 1000);
             if (!isNaN(authDate) && Math.abs(now - authDate) > 300) {
-                logger.warn('Init data auth_date too old or in future', { authDate, now });
+                logger.warn('Init data auth_date too old', { authDate, now });
                 return false;
             }
         }
@@ -188,13 +187,12 @@ function jwtAuth(req, res, next) {
     try {
         req.user = jwt.verify(token, JWT_SECRET);
         next();
-    } catch (e) { 
-        return res.status(403).json({ error: 'Invalid token' }); 
+    } catch (e) {
+        return res.status(403).json({ error: 'Invalid token' });
     }
 }
 
 function adminAuth(req, res, next) {
-    // ⭐ DÜZELTME: Frontend query param yerine header kullanacak şekilde güncellenecek.
     const key = req.headers['x-admin-key'];
     if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) {
         return res.status(403).json({ error: 'Forbidden' });
@@ -260,7 +258,7 @@ async function fetchDogePrice() {
         }
         return dogePriceCache;
     } catch (err) {
-        logger.error('Doge price fetch error', { error: err.message });
+        logger.error('Doge price error', { error: err.message });
         return dogePriceCache;
     }
 }
@@ -286,7 +284,6 @@ async function getPTCAds(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        // ⭐ DÜZELTME: api parametresi APP_ID olmalı ve action=ptc eklenmeli
         const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&action=ptc&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
@@ -310,7 +307,6 @@ async function getShortlinks(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        // ⭐ DÜZELTME: slapi.php yerine api.php ve action=shortlink
         const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&action=shortlink&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
@@ -330,7 +326,6 @@ async function getGames(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
-        // ⭐ DÜZELTME: getOfferwallUrl ile aynı URL'i dönüyordu. Games endpoint'i ayrıldı.
         const url = `https://offerwall.me/games/${OFFERWALL_APP_ID}/${userId}`;
         res.json({ success: true, url, user_id: userId });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
@@ -425,7 +420,6 @@ async function auth(req, res) {
     
     let user;
     try {
-        // ⭐ DÜZELTME: user JSON string'i decode edilmeli
         const pairs = initData.split('&');
         let userStr = '';
         for (const pair of pairs) {
@@ -439,8 +433,8 @@ async function auth(req, res) {
             }
         }
         user = JSON.parse(userStr);
-    } catch (e) { 
-        return res.status(400).json({ error: 'Bad user data' }); 
+    } catch (e) {
+        return res.status(400).json({ error: 'Bad user data' });
     }
     
     if (!user || !user.id) return res.status(400).json({ error: 'No user data' });
@@ -461,7 +455,6 @@ async function auth(req, res) {
                 is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
                 last_claim: null, created_at: serverTimestamp()
             };
-            // ⭐ DÜZELTME: new User yerine newUser objesi kaydedilmeli
             await userRef.set(newUser);
             
             if (ref && ref !== userId) {
@@ -796,7 +789,7 @@ async function redeemPromo(req, res) {
             if (expTs < new Date()) return res.status(400).json({ error: 'Code expired' });
         }
         if ((promo.usedCount || 0) >= (promo.usageLimit || promo.maxUses || 0)) return res.status(400).json({ error: 'Code usage limit reached' });
-        if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'You already used this code' });
+        if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'Already used' });
         
         const userRef = db.collection('users').doc(userId);
         const field = (promo.coin === 'DOGE') ? 'doge_balance' : 'balance';
@@ -817,7 +810,7 @@ async function redeemPromo(req, res) {
                 if (expTs < new Date()) throw new Error('Code expired');
             }
             if ((fp.usedCount || 0) >= (fp.usageLimit || fp.maxUses || 0)) throw new Error('Code usage limit reached');
-            if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('You already used this code');
+            if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('Already used');
             
             t.update(userRef, {
                 [field]: increment(reward),
@@ -1026,7 +1019,7 @@ async function adminGetStats(req, res) {
         res.json({
             totalUsers: usersSnap.size,
             totalWithdrawals: wdSnap.size,
-            // ⭐ DÜZELTME: Frontend ile uyumlu olması için totalPaid_doge olarak dönüldü
+            totalPaid: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
             totalPaid_doge: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
             totalOfferwall: offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
             totalClaims: claimsSnap.size,
@@ -1141,7 +1134,7 @@ app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
 app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
 
 // ============================================
-// ⭐ STATIC FILE SERVING (Render)
+// STATIC FILE SERVING
 // ============================================
 const publicPath = path.join(__dirname, '..');
 console.log('[Static] Serving files from:', publicPath);
@@ -1155,7 +1148,7 @@ app.use(express.static(publicPath, {
 }));
 
 // ============================================
-// ⭐ SPA FALLBACK
+// SPA FALLBACK
 // ============================================
 app.get('*', (req, res) => {
     if (req.path.startsWith('/api/')) {
@@ -1190,7 +1183,7 @@ if (require.main === module) {
     });
 
     // ============================================
-    // ⭐ KEEP-ALIVE
+    // KEEP-ALIVE
     // ============================================
     if (process.env.NODE_ENV === 'production' && APP_URL) {
         const PING_INTERVAL_MS = 14 * 60 * 1000;
