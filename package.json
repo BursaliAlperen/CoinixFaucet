@@ -5,12 +5,10 @@
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
-    "dev": "nodemon api/index.js",
-    "build": "echo 'No build step required'"
+    "dev": "nodemon api/index.js"
   },
   "engines": {
-    "node": "22.x",
-    "npm": ">=10.0.0"
+    "node": "22.x"
   },
   "dependencies": {
     "compression": "^1.8.1",
@@ -21,8 +19,5 @@
     "firebase-admin": "^12.7.0",
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.3"
   }
 }
