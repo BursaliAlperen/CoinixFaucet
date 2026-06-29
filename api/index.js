@@ -62,14 +62,34 @@ const logger = {
 // ============================================
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+    console.error('[CONFIG] JWT_SECRET env variable is missing! Using ephemeral secret (tokens will be invalidated on restart).');
+    return require('crypto').randomBytes(32).toString('hex');
+})();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
 const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
-const APP_URL = process.env.APP_URL || 'https://coinixfaucet-teri.onrender.com';
+const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
 const PORT = process.env.PORT || 10000;
+
+// ⭐ Kritik eksik config'leri başlangıçta logla
+function validateCriticalConfig() {
+    const missing = [];
+    if (!BOT_TOKEN) missing.push('BOT_TOKEN');
+    if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON && !process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+        missing.push('FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_BASE64');
+    }
+    if (missing.length) {
+        console.error('[CONFIG] ❌ MISSING REQUIRED ENV VARS:', missing.join(', '));
+        console.error('[CONFIG] Auth and data operations will fail until these are set.');
+    } else {
+        console.log('[CONFIG] ✅ All critical env vars present');
+    }
+}
+validateCriticalConfig();
 
 // ============================================
 // FAUCET / PROMO CONFIG
@@ -122,12 +142,31 @@ function validateTelegramInitData(initData) {
         const urlParams = new URLSearchParams(initData);
         const hash = urlParams.get('hash');
         if (!hash) return false;
+
+        // ⭐ Replay attack koruması: auth_date 5 dakikadan eski veya gelecekse reddet
+        const authDateStr = urlParams.get('auth_date');
+        if (authDateStr) {
+            const authDate = parseInt(authDateStr, 10);
+            const now = Math.floor(Date.now() / 1000);
+            if (!isNaN(authDate) && Math.abs(now - authDate) > 300) {
+                logger.warn('Init data auth_date too old or in future', { authDate, now, drift: now - authDate });
+                return false;
+            }
+        }
+
         urlParams.delete('hash');
-        urlParams.sort();
-        const dataCheckString = Array.from(urlParams.entries()).map(([k, v]) => `${k}=${v}`).join('\n');
+        // Telegram spec: data-check-string = alphabetically sorted entries joined by '\n'
+        const entries = Array.from(urlParams.entries()).sort(([a], [b]) => a.localeCompare(b));
+        const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n');
+        // secret_key = HMAC-SHA256(key="WebAppData", message=bot_token) as bytes
         const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
+        // check = HMAC-SHA256(key=secret_key, message=data_check_string) as hex
         const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
-        return hash === checkHash;
+        // Constant-time compare (timing attack koruması)
+        const a = Buffer.from(hash, 'hex');
+        const b = Buffer.from(checkHash, 'hex');
+        if (a.length !== b.length || a.length === 0) return false;
+        return crypto.timingSafeEqual(a, b);
     } catch (e) {
         logger.error('Init data validation error', { error: e.message });
         return false;
@@ -143,10 +182,23 @@ function jwtAuth(req, res, next) {
     } catch (e) { return res.status(403).json({ error: 'Invalid token' }); }
 }
 
+// Admin koruması: iki faktör — header'da admin_key VE JWT'de is_admin=true olmalı
 function adminAuth(req, res, next) {
-    const key = req.query.admin_key || req.headers['x-admin-key'];
-    if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) return res.status(403).json({ error: 'Forbidden' });
-    next();
+    const key = req.headers['x-admin-key'];
+    if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+    // İkinci katman: geçerli bir admin JWT de gerekli
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(403).json({ error: 'Admin token required' });
+    try {
+        const payload = jwt.verify(token, JWT_SECRET);
+        if (!payload.is_admin) return res.status(403).json({ error: 'Admin only' });
+        req.user = payload;
+        next();
+    } catch (e) {
+        return res.status(403).json({ error: 'Invalid admin token' });
+    }
 }
 
 // ============================================
@@ -386,8 +438,9 @@ async function auth(req, res) {
         } else {
             if (doc.data().banned) return res.status(403).json({ error: 'User banned' });
         }
-        const token = jwt.sign({ userId, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ success: true, user_id: userId, username: user.username, token, isNew });
+        const isAdmin = String(userId) === String(ADMIN_TELEGRAM_ID);
+        const token = jwt.sign({ userId, username: user.username, is_admin: isAdmin }, JWT_SECRET, { expiresIn: '7d' });
+        res.json({ success: true, user_id: userId, username: user.username, token, isNew, is_admin: isAdmin });
     } catch (err) {
         logger.error('Auth error', { error: err.message });
         res.status(500).json({ error: 'Auth failed' });
@@ -985,92 +1038,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ============================================
-// 🔍 DEBUG ENDPOINTS (TEST İÇİN)
-// ============================================
-app.get('/debug/env', (req, res) => {
-    const token = process.env.BOT_TOKEN;
-    res.json({
-        botTokenExists: !!token,
-        botTokenLength: token ? token.length : 0,
-        botTokenFirst10: token ? token.substring(0, 10) + '...' : 'MISSING',
-        botTokenLast10: token ? '...' + token.substring(token.length - 10) : 'MISSING',
-        hasLeadingSpace: token ? token.startsWith(' ') : false,
-        hasTrailingSpace: token ? token.endsWith(' ') : false,
-        hasNewLine: token ? (token.includes('\n') || token.includes('\r')) : false,
-        expectedLength: 46,
-        allBotEnv: {
-            BOT_TOKEN: token ? `${token.substring(0, 10)}...` : 'MISSING',
-            BOT_USERNAME: process.env.BOT_USERNAME || 'MISSING',
-            JWT_SECRET: process.env.JWT_SECRET ? `${process.env.JWT_SECRET.substring(0, 5)}...` : 'MISSING'
-        }
-    });
-});
-
-app.post('/debug/auth-test', (req, res) => {
-    const { initData } = req.body;
-    const token = process.env.BOT_TOKEN;
-    
-    if (!initData) return res.status(400).json({ error: 'Missing initData in body' });
-    if (!token) return res.status(400).json({ error: 'BOT_TOKEN env is missing' });
-    
-    try {
-        const urlParams = new URLSearchParams(initData);
-        const hash = urlParams.get('hash');
-        
-        if (!hash) {
-            return res.status(400).json({ 
-                error: 'Missing hash in initData',
-                initDataPreview: initData.substring(0, 200)
-            });
-        }
-        
-        urlParams.delete('hash');
-        urlParams.sort();
-        
-        const dataCheckString = Array.from(urlParams.entries())
-            .map(([k, v]) => `${k}=${v}`)
-            .join('\n');
-        
-        const secretKey = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
-        const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
-        
-        let user = null;
-        try {
-            user = JSON.parse(urlParams.get('user'));
-        } catch (e) {
-            user = { parseError: e.message };
-        }
-        
-        res.json({
-            success: hash === checkHash,
-            match: hash === checkHash,
-            receivedHash: hash,
-            computedHash: checkHash,
-            hashesMatch: hash === checkHash,
-            tokenLength: token.length,
-            tokenPreview: `${token.substring(0, 10)}...`,
-            dataCheckStringLength: dataCheckString.length,
-            user: user,
-            initDataKeys: Array.from(new URLSearchParams(initData).keys())
-        });
-    } catch (e) {
-        res.status(500).json({ error: e.message, stack: e.stack });
-    }
-});
-
-app.get('/debug/firebase', (req, res) => {
-    res.json({
-        firebaseInitialized: firebaseInitialized,
-        dbExists: !!db,
-        serviceAccountExists: !!serviceAccount,
-        timestamp: new Date().toISOString()
-    });
-});
-// ============================================
-// 🔍 DEBUG ENDPOINTS SONU
-// ============================================
-
-// ============================================
 // ROUTES
 // ============================================
 app.get('/ping', (req, res) => res.status(200).send('OK'));
@@ -1094,8 +1061,10 @@ app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
 app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
 app.get('/api/offerwall/games', jwtAuth, getGames);
-app.post('/api/postback', postback);
-app.post('/api/offerwall-postback', postback);
+// Postback rate limit (sahte imza denemelerini engelle)
+const postbackLimiter = rateLimit({ windowMs: 60000, max: 60 });
+app.post('/api/postback', postbackLimiter, postback);
+app.post('/api/offerwall-postback', postbackLimiter, postback);
 app.post('/api/promo/redeem', promoLimiter, jwtAuth, redeemPromo);
 app.get('/api/promo/history', jwtAuth, getPromoHistory);
 app.get('/api/stats/global', getGlobalStats);
@@ -1148,23 +1117,79 @@ app.get('*', (req, res) => {
     });
 });
 
-// Error handler
+// Error handler — production'da stack trace sızdırma
 app.use((err, req, res, next) => {
     logger.error('Express error', { error: err.message, path: req.path });
-    res.status(500).json({ error: 'Internal server error' });
+    if (process.env.NODE_ENV === 'production') {
+        res.status(500).json({ error: 'Internal server error' });
+    } else {
+        res.status(500).json({ error: 'Internal server error', debug: err.message });
+    }
 });
 
 module.exports = app;
 
 if (require.main === module) {
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
         logger.info(`Coinix backend listening on port ${PORT}`);
         logger.info(`Static path: ${publicPath}`);
         logger.info(`App URL: ${APP_URL}`);
     });
-    
-    // ⭐ KEEP-ALIVE PING (Render free tier spin-down önleme)
-    setInterval(() => {
-        fetch(`${APP_URL}/ping`).catch(() => {});
-    }, 14 * 60 * 1000);
+
+    // ============================================
+    // ⭐ KEEP-ALIVE (Render free tier 15dk spin-down önleme)
+    // ============================================
+    // Birden fazla endpoint'i sırayla ping'le, başarısızlıkları logla,
+    // sadece production'da çalıştır.
+    if (process.env.NODE_ENV === 'production' && APP_URL) {
+        const PING_INTERVAL_MS = 14 * 60 * 1000; // 14 dakika
+        const PING_ENDPOINTS = ['/ping', '/api/health'];
+        let pingIndex = 0;
+        let consecutiveFailures = 0;
+
+        const keepAlivePing = async () => {
+            const endpoint = PING_ENDPOINTS[pingIndex % PING_ENDPOINTS.length];
+            pingIndex++;
+            const url = `${APP_URL}${endpoint}`;
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000);
+                const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+                clearTimeout(timeout);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                consecutiveFailures = 0;
+                logger.debug(`[KeepAlive] OK ${endpoint}`);
+            } catch (e) {
+                consecutiveFailures++;
+                logger.warn(`[KeepAlive] FAIL ${endpoint} (${consecutiveFailures}): ${e.message}`);
+                if (consecutiveFailures >= 3) {
+                    logger.error(`[KeepAlive] ${consecutiveFailures} consecutive failures — service may be unhealthy`);
+                }
+            }
+        };
+
+        // İlk ping 30 saniye sonra, sonra her 14 dakikada
+        setTimeout(() => {
+            keepAlivePing();
+            setInterval(keepAlivePing, PING_INTERVAL_MS);
+        }, 30 * 1000);
+
+        logger.info('[KeepAlive] enabled (interval: 14m)');
+    } else {
+        logger.info('[KeepAlive] disabled (NODE_ENV != production or APP_URL missing)');
+    }
+
+    // ============================================
+    // Graceful shutdown
+    // ============================================
+    const shutdown = (signal) => {
+        logger.info(`${signal} received, shutting down gracefully…`);
+        server.close(() => {
+            logger.info('HTTP server closed');
+            process.exit(0);
+        });
+        setTimeout(() => process.exit(1), 10000).unref();
+    };
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 }
