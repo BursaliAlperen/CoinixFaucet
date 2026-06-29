@@ -68,7 +68,7 @@ const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
 const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
-const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
+const APP_URL = process.env.APP_URL || 'https://coinixfaucet-teri.onrender.com';
 const PORT = process.env.PORT || 10000;
 
 // ============================================
@@ -983,6 +983,92 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ============================================
+// 🔍 DEBUG ENDPOINTS (TEST İÇİN)
+// ============================================
+app.get('/debug/env', (req, res) => {
+    const token = process.env.BOT_TOKEN;
+    res.json({
+        botTokenExists: !!token,
+        botTokenLength: token ? token.length : 0,
+        botTokenFirst10: token ? token.substring(0, 10) + '...' : 'MISSING',
+        botTokenLast10: token ? '...' + token.substring(token.length - 10) : 'MISSING',
+        hasLeadingSpace: token ? token.startsWith(' ') : false,
+        hasTrailingSpace: token ? token.endsWith(' ') : false,
+        hasNewLine: token ? (token.includes('\n') || token.includes('\r')) : false,
+        expectedLength: 46,
+        allBotEnv: {
+            BOT_TOKEN: token ? `${token.substring(0, 10)}...` : 'MISSING',
+            BOT_USERNAME: process.env.BOT_USERNAME || 'MISSING',
+            JWT_SECRET: process.env.JWT_SECRET ? `${process.env.JWT_SECRET.substring(0, 5)}...` : 'MISSING'
+        }
+    });
+});
+
+app.post('/debug/auth-test', (req, res) => {
+    const { initData } = req.body;
+    const token = process.env.BOT_TOKEN;
+    
+    if (!initData) return res.status(400).json({ error: 'Missing initData in body' });
+    if (!token) return res.status(400).json({ error: 'BOT_TOKEN env is missing' });
+    
+    try {
+        const urlParams = new URLSearchParams(initData);
+        const hash = urlParams.get('hash');
+        
+        if (!hash) {
+            return res.status(400).json({ 
+                error: 'Missing hash in initData',
+                initDataPreview: initData.substring(0, 200)
+            });
+        }
+        
+        urlParams.delete('hash');
+        urlParams.sort();
+        
+        const dataCheckString = Array.from(urlParams.entries())
+            .map(([k, v]) => `${k}=${v}`)
+            .join('\n');
+        
+        const secretKey = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+        const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+        
+        let user = null;
+        try {
+            user = JSON.parse(urlParams.get('user'));
+        } catch (e) {
+            user = { parseError: e.message };
+        }
+        
+        res.json({
+            success: hash === checkHash,
+            match: hash === checkHash,
+            receivedHash: hash,
+            computedHash: checkHash,
+            hashesMatch: hash === checkHash,
+            tokenLength: token.length,
+            tokenPreview: `${token.substring(0, 10)}...`,
+            dataCheckStringLength: dataCheckString.length,
+            user: user,
+            initDataKeys: Array.from(new URLSearchParams(initData).keys())
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message, stack: e.stack });
+    }
+});
+
+app.get('/debug/firebase', (req, res) => {
+    res.json({
+        firebaseInitialized: firebaseInitialized,
+        dbExists: !!db,
+        serviceAccountExists: !!serviceAccount,
+        timestamp: new Date().toISOString()
+    });
+});
+// ============================================
+// 🔍 DEBUG ENDPOINTS SONU
+// ============================================
 
 // ============================================
 // ROUTES
