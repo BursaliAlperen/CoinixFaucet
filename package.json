@@ -1,31 +1,14 @@
 {
   "name": "coinix-faucet",
   "version": "3.1.0",
-  "description": "COINIX Faucet - Earn CNX & DOGE (Telegram Mini App)",
+  "description": "COINIX Faucet - Earn CNX & DOGE",
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
-    "dev": "nodemon api/index.js",
-    "build": "echo 'No build step required'",
-    "lint": "eslint .",
-    "test": "echo \"No tests yet\" && exit 0"
+    "dev": "nodemon api/index.js"
   },
-  "keywords": [
-    "telegram",
-    "bot",
-    "faucet",
-    "crypto",
-    "doge",
-    "cnx",
-    "firebase",
-    "firestore",
-    "mini-app"
-  ],
-  "author": "COINIX Team",
-  "license": "MIT",
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": "20.x"
   },
   "dependencies": {
     "compression": "^1.7.4",
@@ -36,9 +19,5 @@
     "firebase-admin": "^12.0.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.3",
-    "eslint": "^8.56.0"
   }
 }
