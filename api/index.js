@@ -1,4 +1,4 @@
-backend_code = r'''require('dotenv').config();
+'''require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -234,7 +234,7 @@ function adminAuth(req, res, next) {
         req.user = payload;
         next();
     } catch (e) {
-        return res.status(403).json({ error: 'Invalid admin token' });
+        return lid admin token' });
     }
 }
 
