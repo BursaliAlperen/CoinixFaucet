@@ -2,42 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>COINIX Faucet - Earn CNX & DOGE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* ===== TEMA DEĞİŞKENLERİ ===== */
         :root {
-            --bg-color: #0f172a;
-            --surface-color: #1e293b;
-            --surface-2-color: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
+            --bg-color: #f1f5f9;
+            --surface-color: #ffffff;
+            --surface-2-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
             --accent-color: #f59e0b;
             --accent-hover: #d97706;
             --accent-text: #0f172a;
             --success-color: #10b981;
             --danger-color: #ef4444;
             --warning-color: #f59e0b;
-            --border-color: #334155;
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-            --glass-bg: rgba(30, 41, 59, 0.6);
-            --glass-border: rgba(148, 163, 184, 0.1);
+            --border-color: #cbd5e1;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(100, 116, 139, 0.2);
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
             --nav-height: 60px;
+            --sidebar-width: 260px;
         }
 
         .dark-mode {
-            --bg-color: #020617;
-            --surface-color: #0f172a;
-            --surface-2-color: #1e293b;
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --surface-2-color: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-text: #0f172a;
+            --border-color: #334155;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(148, 163, 184, 0.1);
         }
+
+        /* ===== GOOGLE TRANSLATE BARINI GİZLE ===== */
+        .skiptranslate { display: none !important; }
+        body { top: 0 !important; }
+        .goog-te-banner-frame { display: none !important; }
+        #google_translate_element { display: none !important; }
+        .goog-logo-link { display: none !important; }
+        .goog-te-gadget { color: transparent !important; }
+        .goog-te-gadget .goog-te-combo { display: none !important; }
 
         * {
             box-sizing: border-box;
@@ -54,1014 +72,723 @@
             overflow-x: hidden;
             min-height: 100vh;
             padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        .icon {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
-        }
+        .icon { width: 24px; height: 24px; flex-shrink: 0; }
 
+        /* ===== LOADING ===== */
         #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.3s, visibility 0.3s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; transition: opacity 0.4s, visibility 0.4s;
         }
-
         #loading-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
+            opacity: 0; visibility: hidden; pointer-events: none;
         }
+        #loading-screen img { width: 80px; height: 80px; margin-bottom: 20px; animation: pulse 2s infinite; }
+        #loading-screen p { color: var(--text-secondary); font-size: 14px; }
 
-        #loading-screen img {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            animation: pulse 2s infinite;
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        #loading-screen p {
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes loading {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
+        /* ===== HEADER ===== */
         .app-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
             background: var(--surface-color);
             border-bottom: 1px solid var(--border-color);
             padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: background 0.3s;
         }
-
-        .app-header .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 18px;
+        .app-header .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+        .app-header .logo img { width: 32px; height: 32px; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .header-balance { display: flex; align-items: center; gap: 6px; background: var(--surface-2-color); padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+        .header-balance img { width: 18px; height: 18px; }
+        .theme-toggle {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: var(--surface-2-color); border: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-primary);
+            transition: all 0.2s;
         }
+        .theme-toggle:hover { background: var(--accent-color); color: var(--accent-text); transform: rotate(15deg); }
+        .theme-toggle svg { width: 18px; height: 18px; }
 
-        .app-header .logo img {
-            width: 32px;
-            height: 32px;
-        }
+        /* ===== LAYOUT ===== */
+        .app-layout { display: flex; min-height: 100vh; }
+        .main-area { flex: 1; min-width: 0; }
 
-        .header-balance {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--surface-2-color);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
 
-        .header-balance img {
-            width: 18px;
-            height: 18px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .page {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .page.active {
-            display: block;
-        }
-
+        /* ===== CARDS ===== */
         .card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 16px;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            position: relative; z-index: 1;
         }
-
+        .card:hover { box-shadow: var(--shadow-md); }
         .card-glass {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            margin-bottom: 16px;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px;
         }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .card-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
 
-        .card-clickable {
-            cursor: pointer;
-            touch-action: manipulation;
-        }
+        /* ===== STATS ===== */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-box { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px; text-align: center; transition: transform 0.2s; }
+        .stat-box:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .stat-label img { width: 14px; height: 14px; }
+        .stat-value { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .stat-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-        .card-clickable:active {
-            transform: scale(0.98);
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-subtitle {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .stat-box {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .stat-label img {
-            width: 14px;
-            height: 14px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .stat-sub {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
+        /* ===== BUTTONS ===== */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-            user-select: none;
-            -webkit-user-select: none;
-            width: 100%;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+            border: none; cursor: pointer; transition: all 0.2s ease;
+            user-select: none; -webkit-user-select: none; width: 100%;
+            position: relative; z-index: 10;
         }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn:not(:disabled):active { transform: scale(0.97); }
+        .btn-primary { background: var(--accent-color); color: var(--accent-text); }
+        .btn-primary:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); }
+        .btn-secondary { background: var(--surface-2-color); color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-secondary:hover:not(:disabled) { background: var(--border-color); }
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-danger { background: var(--danger-color); color: white; }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background: var(--accent-color);
-            color: var(--accent-text);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: var(--accent-hover);
-        }
-
-        .btn-secondary {
-            background: var(--surface-2-color);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--border-color);
-        }
-
-        .btn-success {
-            background: var(--success-color);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger-color);
-            color: white;
-        }
-
-        .input-group {
-            margin-bottom: 16px;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
+        /* ===== INPUTS ===== */
+        .input-group { margin-bottom: 16px; position: relative; z-index: 5; }
+        .input-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
         .input-field {
-            width: 100%;
-            padding: 12px 14px;
-            background: var(--surface-2-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; padding: 12px 14px; background: var(--surface-2-color);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-size: 14px; outline: none; transition: border-color 0.2s;
         }
+        .input-field:focus { border-color: var(--accent-color); }
 
-        .input-field:focus {
-            border-color: var(--accent-color);
-        }
-
+        /* ===== BOTTOM NAV (Mobil) ===== */
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            position: fixed; bottom: 0; left: 0; right: 0;
             height: calc(var(--nav-height) + var(--safe-area-bottom));
-            background: var(--surface-color);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding-bottom: var(--safe-area-bottom);
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: var(--surface-color); border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: var(--safe-area-bottom); z-index: 100;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
-
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 12px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 10px;
-            font-weight: 500;
-            transition: color 0.2s;
-            cursor: pointer;
-            touch-action: manipulation;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 8px 12px; color: var(--text-secondary); text-decoration: none;
+            font-size: 10px; font-weight: 500; transition: color 0.2s; cursor: pointer;
         }
+        .nav-item.active { color: var(--accent-color); }
+        .nav-item svg { width: 22px; height: 22px; }
 
-        .nav-item.active {
-            color: var(--accent-color);
+        /* ===== SIDEBAR (PC) ===== */
+        .sidebar {
+            display: none; width: var(--sidebar-width);
+            background: var(--surface-color); border-right: 1px solid var(--border-color);
+            padding: 20px 12px; position: fixed; top: 0; bottom: 0; left: 0;
+            z-index: 99; overflow-y: auto;
         }
-
-        .nav-item svg {
-            width: 22px;
-            height: 22px;
+        .sidebar .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; padding: 8px 12px; margin-bottom: 24px; }
+        .sidebar .logo img { width: 32px; height: 32px; }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; color: var(--text-secondary); text-decoration: none;
+            font-size: 14px; font-weight: 500; border-radius: var(--radius-sm);
+            cursor: pointer; transition: all 0.2s; margin-bottom: 4px;
         }
+        .sidebar-item:hover { background: var(--surface-2-color); color: var(--text-primary); }
+        .sidebar-item.active { background: var(--accent-color); color: var(--accent-text); }
+        .sidebar-item svg { width: 20px; height: 20px; }
 
-        .faucet-timer {
-            text-align: center;
-            padding: 20px;
-            background: var(--surface-2-color);
-            border-radius: var(--radius-md);
-            margin-bottom: 16px;
-        }
+        /* ===== FAUCET ===== */
+        .faucet-timer { text-align: center; padding: 20px; background: var(--surface-2-color); border-radius: var(--radius-md); margin-bottom: 16px; }
+        .faucet-timer .time { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-color); }
+        .faucet-timer .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .captcha-box { background: var(--surface-2-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; }
+        .captcha-question { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 12px; color: var(--accent-color); }
 
-        .faucet-timer .time {
-            font-size: 32px;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            color: var(--accent-color);
-        }
-
-        .faucet-timer .label {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .captcha-box {
-            background: var(--surface-2-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-
-        .captcha-question {
-            font-size: 18px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 12px;
-            color: var(--accent-color);
-        }
-
+        /* ===== OFFERWALL ===== */
         .offerwall-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-color);
-            z-index: 1000;
-            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color); z-index: 1000;
+            display: none; pointer-events: none;
         }
+        .offerwall-container.active { display: flex; flex-direction: column; pointer-events: auto; }
+        .offerwall-header { padding: 12px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .offerwall-frame { flex: 1; width: 100%; border: none; }
 
-        .offerwall-container.active {
-            display: flex;
-            flex-direction: column;
-        }
+        /* ===== LIST ===== */
+        .list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface-2-color); border-radius: var(--radius-sm); margin-bottom: 8px; }
+        .list-item-info { flex: 1; }
+        .list-item-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .list-item-sub { font-size: 12px; color: var(--text-secondary); }
+        .list-item-value { font-size: 14px; font-weight: 700; color: var(--success-color); }
 
-        .offerwall-header {
-            padding: 12px 20px;
-            background: var(--surface-color);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .offerwall-frame {
-            flex: 1;
-            width: 100%;
-            border: none;
-        }
-
-        .list-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            background: var(--surface-2-color);
-            border-radius: var(--radius-sm);
-            margin-bottom: 8px;
-        }
-
-        .list-item-info {
-            flex: 1;
-        }
-
-        .list-item-title {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .list-item-sub {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .list-item-value {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--success-color);
-        }
-
+        /* ===== TOAST ===== */
         .toast {
-            position: fixed;
-            bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px);
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: var(--shadow-md);
-            z-index: 9998;
-            opacity: 0;
-            transition: all 0.3s ease;
-            max-width: 90%;
+            position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px);
+            left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 12px 20px;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: var(--shadow-md); z-index: 9998; opacity: 0;
+            transition: all 0.3s ease; max-width: 90%;
         }
-
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         .toast.success { border-left: 4px solid var(--success-color); }
         .toast.error { border-left: 4px solid var(--danger-color); }
         .toast.warning { border-left: 4px solid var(--warning-color); }
 
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        .admin-table th, .admin-table td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .admin-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            font-size: 11px;
-        }
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .admin-table th, .admin-table td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .admin-table th { font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 11px; }
 
         .text-center { text-align: center; }
-        .mt-10 { margin-top: 10px; }
-        .mt-20 { margin-top: 20px; }
-        .mb-10 { margin-bottom: 10px; }
-        .mb-20 { margin-bottom: 20px; }
-        .flex { display: flex; }
-        .gap-10 { gap: 10px; }
-        .hidden { display: none !important; }
+        .mt-10 { margin-top: 10px; } .mt-20 { margin-top: 20px; }
+        .mb-10 { margin-bottom: 10px; } .mb-20 { margin-bottom: 20px; }
+        .flex { display: flex; } .gap-10 { gap: 10px; } .hidden { display: none !important; }
 
-        .skeleton {
-            background: linear-gradient(90deg, var(--surface-2-color) 25%, var(--border-color) 50%, var(--surface-2-color) 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-            border-radius: var(--radius-sm);
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success-color); }
-        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger-color); }
-        .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning-color); }
-
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
+        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .quick-action-btn {
-            background: var(--surface-2-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            touch-action: manipulation;
+            background: var(--surface-2-color); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 16px; text-align: center;
+            cursor: pointer; transition: all 0.2s;
         }
+        .quick-action-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--accent-color); }
+        .quick-action-btn svg { width: 28px; height: 28px; margin-bottom: 8px; color: var(--accent-color); }
+        .quick-action-btn span { display: block; font-size: 13px; font-weight: 600; }
 
-        .quick-action-btn:active {
-            transform: scale(0.98);
-        }
-
-        .quick-action-btn svg {
-            width: 28px;
-            height: 28px;
-            margin-bottom: 8px;
-            color: var(--accent-color);
-        }
-
-        .quick-action-btn span {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .percent-btns {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
+        .percent-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
         .percent-btn {
-            padding: 8px;
-            background: var(--surface-2-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            touch-action: manipulation;
+            padding: 8px; background: var(--surface-2-color); border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
         }
+        .percent-btn:hover { background: var(--accent-color); color: var(--accent-text); border-color: var(--accent-color); }
 
-        .percent-btn:active {
-            background: var(--accent-color);
-            color: var(--accent-text);
-        }
-
-        .faq-item {
-            background: var(--surface-2-color);
-            border-radius: var(--radius-sm);
-            margin-bottom: 8px;
-            overflow: hidden;
-        }
-
-        .faq-question {
-            padding: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            touch-action: manipulation;
-        }
-
-        .faq-answer {
-            padding: 0 14px;
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            color: var(--text-secondary);
-            font-size: 13px;
-        }
-
-        .faq-item.open .faq-answer {
-            padding: 0 14px 14px;
-            max-height: 200px;
-        }
-
-        .faq-item.open .faq-question svg {
-            transform: rotate(180deg);
-        }
+        .faq-item { background: var(--surface-2-color); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; }
+        .faq-question { padding: 14px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .faq-question:hover { background: var(--border-color); }
+        .faq-answer { padding: 0 14px; max-height: 0; overflow: hidden; transition: all 0.3s ease; color: var(--text-secondary); font-size: 13px; }
+        .faq-item.open .faq-answer { padding: 0 14px 14px; max-height: 200px; }
+        .faq-item.open .faq-question svg { transform: rotate(180deg); }
 
         .earn-card {
-            background: var(--surface-2-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            touch-action: manipulation;
+            background: var(--surface-2-color); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .earn-card:hover { transform: translateX(4px); border-color: var(--accent-color); box-shadow: var(--shadow-md); }
+        .earn-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .earn-card-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .earn-card-badge { background: rgba(245, 158, 11, 0.2); color: var(--accent-color); padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .earn-card-desc { font-size: 13px; color: var(--text-secondary); }
+
+        /* ===== DİL SEÇİCİ (Sol Alt Köşe) ===== */
+        .lang-switcher {
+            position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 20px);
+            left: 20px; z-index: 500;
+        }
+        .lang-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-primary);
+            box-shadow: var(--shadow-md); transition: all 0.2s;
+        }
+        .lang-btn:hover { background: var(--accent-color); color: var(--accent-text); transform: scale(1.1); }
+        .lang-btn svg { width: 20px; height: 20px; }
+        .lang-dropdown {
+            position: absolute; bottom: 54px; left: 0;
+            background: var(--surface-color); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+            min-width: 160px; padding: 6px;
+            display: none; animation: fadeIn 0.2s ease;
+        }
+        .lang-dropdown.open { display: block; }
+        .lang-option {
+            padding: 10px 14px; font-size: 13px; cursor: pointer;
+            border-radius: var(--radius-sm); display: flex; align-items: center; gap: 10px;
+            transition: background 0.2s;
+        }
+        .lang-option:hover { background: var(--surface-2-color); }
+        .lang-option.active { background: var(--accent-color); color: var(--accent-text); }
+
+        /* ===== PC (Desktop) ===== */
+        @media (min-width: 1024px) {
+            body { padding-bottom: 20px; }
+            .sidebar { display: block; }
+            .main-area { margin-left: var(--sidebar-width); }
+            .bottom-nav { display: none; }
+            .app-header { display: none; }
+            .container { padding: 30px 40px; max-width: 1000px; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .quick-actions { grid-template-columns: repeat(4, 1fr); }
+            .lang-switcher { bottom: 20px; }
+            .toast { bottom: 20px; }
         }
 
-        .earn-card:active {
-            transform: scale(0.98);
+        /* ===== TABLET ===== */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .container { max-width: 90%; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .quick-actions { grid-template-columns: repeat(4, 1fr); }
         }
 
-        .earn-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
+        /* ===== DEMO MOD EKRANI ===== */
+        .demo-screen {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color); z-index: 9998;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 40px; text-align: center;
         }
-
-        .earn-card-title {
-            font-size: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .earn-card-badge {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--accent-color);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .earn-card-desc {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
+        .demo-screen.active { display: flex; }
+        .demo-screen h1 { font-size: 24px; margin-bottom: 12px; }
+        .demo-screen p { color: var(--text-secondary); margin-bottom: 24px; max-width: 400px; }
+        .demo-btn { max-width: 300px; }
     </style>
 </head>
 <body>
     <div id="loading-screen">
-        <img src="/loading.png" alt="Loading">
-        <p>Initializing COINIX...</p>
+        <img src="/loading.png" alt="Loading" onerror="this.style.display='none'">
+        <p id="loading-text">Initializing COINIX...</p>
+    </div>
+
+    <div id="demo-screen" class="demo-screen">
+        <div style="width: 80px; height: 80px; background: var(--accent-color); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 36px;">💻</div>
+        <h1>Open in Telegram</h1>
+        <p>This app works best inside Telegram. Open the bot and launch the WebApp for the full experience.</p>
+        <button class="btn btn-primary demo-btn mb-10" onclick="enableDemoMode()">Enable PC Demo Mode</button>
+        <button class="btn btn-secondary demo-btn" onclick="window.open('https://t.me/CoinixBot', '_blank')">Open Telegram Bot</button>
     </div>
 
     <div id="toast"></div>
 
-    <header class="app-header">
-        <div class="logo">
-            <img src="/coinix.png" alt="COINIX">
-            <span>COINIX</span>
+    <div class="app-layout">
+        <!-- PC SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="/coinix.png" alt="COINIX" onerror="this.style.background='var(--accent-color)'; this.style.borderRadius='8px';">
+                <span>COINIX</span>
+            </div>
+            <div class="sidebar-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span>Dashboard</span>
+            </div>
+            <div class="sidebar-item" data-page="faucet" onclick="navigateTo('faucet')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Faucet</span>
+            </div>
+            <div class="sidebar-item" data-page="earn" onclick="navigateTo('earn')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>Earn Zone</span>
+            </div>
+            <div class="sidebar-item" data-page="promo" onclick="navigateTo('promo')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+                <span>Promo Codes</span>
+            </div>
+            <div class="sidebar-item" data-page="swap" onclick="navigateTo('swap')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <span>Swap</span>
+            </div>
+            <div class="sidebar-item" data-page="withdraw" onclick="navigateTo('withdraw')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <span>Withdraw</span>
+            </div>
+            <div class="sidebar-item" data-page="faq" onclick="navigateTo('faq')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>FAQ</span>
+            </div>
+            <div class="sidebar-item" data-page="admin" onclick="navigateTo('admin')" style="display:none;" id="sidebar-admin">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span>Admin Panel</span>
+            </div>
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <div class="sidebar-item" onclick="toggleTheme()">
+                    <svg id="sidebar-theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    <span id="sidebar-theme-text">Dark Mode</span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-area">
+            <header class="app-header">
+                <div class="logo">
+                    <img src="/coinix.png" alt="COINIX" onerror="this.style.background='var(--accent-color)'; this.style.borderRadius='8px';">
+                    <span>COINIX</span>
+                </div>
+                <div class="header-right">
+                    <div class="header-balance">
+                        <img src="/coinix.png" alt="CNX" onerror="this.style.background='var(--accent-color)'; this.style.borderRadius='50%';">
+                        <span id="header-balance-cnx">0.00</span>
+                    </div>
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                        <svg id="header-theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="container">
+                <!-- DASHBOARD -->
+                <div id="page-dashboard" class="page active">
+                    <div class="card-glass">
+                        <div class="card-title" data-i18n="welcome">Welcome back!</div>
+                        <div class="card-subtitle" id="welcome-name" data-i18n="welcome_sub">Start earning CNX & DOGE today</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label"><img src="/coinix.png" alt="" onerror="this.style.display='none'"> CNX Balance</div>
+                            <div class="stat-value" id="dash-cnx-balance">0.00</div>
+                            <div class="stat-sub" id="dash-cnx-usd">~ $0.0000</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label"><img src="/dogecoin.png" alt="" onerror="this.style.display='none'"> DOGE Balance</div>
+                            <div class="stat-value" id="dash-doge-balance">0.00</div>
+                            <div class="stat-sub" id="dash-doge-usd">~ $0.0000</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Today Earnings</div>
+                            <div class="stat-value" id="dash-today-earned">0.00</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Referrals</div>
+                            <div class="stat-value" id="dash-referrals">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Quick Actions</div>
+                        <div class="quick-actions">
+                            <div class="quick-action-btn" onclick="navigateTo('faucet')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Claim Free Faucet</span>
+                            </div>
+                            <div class="quick-action-btn" onclick="navigateTo('earn')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                <span>Earn Zone</span>
+                            </div>
+                            <div class="quick-action-btn" onclick="navigateTo('swap')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                <span>Swap</span>
+                            </div>
+                            <div class="quick-action-btn" onclick="navigateTo('withdraw')">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                <span>Withdraw</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Live Earnings Breakdown</div>
+                        <div class="list-item">
+                            <div class="list-item-info">
+                                <div class="list-item-title">Faucet Claims</div>
+                                <div class="list-item-sub">Today's activity</div>
+                            </div>
+                            <div class="list-item-value" id="dash-faucet-today">0</div>
+                        </div>
+                        <div class="list-item">
+                            <div class="list-item-info">
+                                <div class="list-item-title">Offer Earnings</div>
+                                <div class="list-item-sub">PTC, Games, Shortlinks</div>
+                            </div>
+                            <div class="list-item-value" id="dash-offer-earned">0.00</div>
+                        </div>
+                        <div class="list-item">
+                            <div class="list-item-info">
+                                <div class="list-item-title">Promo Rewards</div>
+                                <div class="list-item-sub">Redeemed codes</div>
+                            </div>
+                            <div class="list-item-value" id="dash-promo-earned">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAUCET -->
+                <div id="page-faucet" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">Free Faucet</div>
+                        <div class="card-subtitle">Claim 1 CNX every 3 minutes</div>
+                        <div class="faucet-timer">
+                            <div class="time" id="faucet-timer">03:00</div>
+                            <div class="label">Next claim available in</div>
+                        </div>
+                        <div class="captcha-box">
+                            <div class="card-title">Anti-Bot Verification</div>
+                            <div class="captcha-question" id="captcha-question">? + ? =</div>
+                            <input type="number" class="input-field" id="captcha-answer" placeholder="Your answer">
+                            <button class="btn btn-secondary mt-10" onclick="refreshCaptcha()">New Question</button>
+                        </div>
+                        <button class="btn btn-primary" id="btn-claim-faucet" onclick="claimFaucet()">CLAIM CNX</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Statistics</div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-label">Total Claims</div>
+                                <div class="stat-value" id="faucet-total-claims">0</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Total Earned</div>
+                                <div class="stat-value" id="faucet-total-earned">0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EARN -->
+                <div id="page-earn" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">Earn Zone</div>
+                        <div class="card-subtitle">Complete tasks and earn CNX instantly (+20% bonus on PTC, Shortlinks and Games)</div>
+                    </div>
+                    <div class="earn-card" onclick="loadOfferwall('ptc')">
+                        <div class="earn-card-header">
+                            <div class="earn-card-title">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                PTC Ads
+                            </div>
+                            <span class="earn-card-badge">+20%</span>
+                        </div>
+                        <div class="earn-card-desc">View paid ads and click links to earn CNX instantly.</div>
+                    </div>
+                    <div class="earn-card" onclick="loadOfferwall('shortlinks')">
+                        <div class="earn-card-header">
+                            <div class="earn-card-title">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                Shortlinks
+                            </div>
+                            <span class="earn-card-badge">+20%</span>
+                        </div>
+                        <div class="earn-card-desc">Visit shortened URLs and complete short tasks.</div>
+                    </div>
+                    <div class="earn-card" onclick="loadOfferwall('games')">
+                        <div class="earn-card-header">
+                            <div class="earn-card-title">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Games
+                            </div>
+                            <span class="earn-card-badge">+20%</span>
+                        </div>
+                        <div class="earn-card-desc">Install and play mobile games to reach milestones.</div>
+                    </div>
+                    <div class="earn-card" onclick="loadOfferwall('offerwall')">
+                        <div class="earn-card-header">
+                            <div class="earn-card-title">
+                                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                Offers & Visits
+                            </div>
+                        </div>
+                        <div class="earn-card-desc">Visit websites and complete offerwall surveys.</div>
+                    </div>
+                </div>
+
+                <!-- PROMO -->
+                <div id="page-promo" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">Promo Codes</div>
+                        <div class="card-subtitle">Redeem codes for free CNX & DOGE.</div>
+                        <div class="input-group">
+                            <label class="input-label">Enter Promo Code</label>
+                            <input type="text" class="input-field" id="promo-code-input" placeholder="CODE123">
+                        </div>
+                        <button class="btn btn-primary" onclick="redeemPromo()">Redeem Code</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Redemption History</div>
+                        <div id="promo-history-list">
+                            <div class="text-center" style="padding: 20px; color: var(--text-secondary);">No codes redeemed yet.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SWAP -->
+                <div id="page-swap" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">Swap CNX to DOGE</div>
+                        <div class="card-subtitle">Convert instantly at 1:1 rate, zero fees</div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-label">CNX Balance</div>
+                                <div class="stat-value" id="swap-cnx-balance">0.00</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">DOGE Balance</div>
+                                <div class="stat-value" id="swap-doge-balance">0.00</div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">From (CNX)</label>
+                            <input type="number" class="input-field" id="swap-amount-input" placeholder="0.00" oninput="updateSwapEstimate()">
+                        </div>
+                        <div class="percent-btns">
+                            <button class="percent-btn" onclick="setSwapPercent(25)">25%</button>
+                            <button class="percent-btn" onclick="setSwapPercent(50)">50%</button>
+                            <button class="percent-btn" onclick="setSwapPercent(75)">75%</button>
+                            <button class="percent-btn" onclick="setSwapPercent(100)">MAX</button>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">To (Estimated DOGE)</label>
+                            <input type="number" class="input-field" id="swap-estimate-input" readonly>
+                        </div>
+                        <button class="btn btn-primary" onclick="executeSwap()">Swap Now</button>
+                    </div>
+                </div>
+
+                <!-- WITHDRAW -->
+                <div id="page-withdraw" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">Withdraw DOGE</div>
+                        <div class="card-subtitle">Send DOGE to your FaucetPay email</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Referral Earnings</div>
+                        <div class="flex gap-10" style="align-items: center;">
+                            <div style="flex: 1;">
+                                <div class="stat-value" id="wd-referral-balance">0.00 CNX</div>
+                            </div>
+                            <button class="btn btn-secondary" style="width: auto;" onclick="collectReferral()">Collect</button>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">DOGE Balance</div>
+                            <div class="stat-value" id="wd-doge-balance">0.00</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">CNX Balance</div>
+                            <div class="stat-value" id="wd-cnx-balance">0.00</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="input-group">
+                            <label class="input-label">FaucetPay Email</label>
+                            <input type="email" class="input-field" id="wd-email-input" placeholder="your@email.com">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Amount (DOGE)</label>
+                            <input type="number" class="input-field" id="wd-amount-input" placeholder="0.10" step="0.01">
+                        </div>
+                        <div class="percent-btns">
+                            <button class="percent-btn" onclick="setWdAmount(0.5)">0.5</button>
+                            <button class="percent-btn" onclick="setWdAmount(1)">1</button>
+                            <button class="percent-btn" onclick="setWdAmount(5)">5</button>
+                            <button class="percent-btn" onclick="setWdPercent(100)">MAX</button>
+                        </div>
+                        <button class="btn btn-primary" onclick="executeWithdraw()">Withdraw</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Withdrawal History</div>
+                        <div id="withdraw-history-list">
+                            <div class="text-center" style="padding: 20px; color: var(--text-secondary);">No withdrawals yet.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADMIN -->
+                <div id="page-admin" class="page hidden">
+                    <div class="card-glass">
+                        <div class="card-title">Admin Panel</div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-value" id="admin-total-users">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Total Paid</div>
+                            <div class="stat-value" id="admin-total-paid">0.00</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Create Promo Code</div>
+                        <div class="input-group">
+                            <label class="input-label">Code</label>
+                            <input type="text" class="input-field" id="admin-promo-code" placeholder="WELCOME2024">
+                        </div>
+                        <div class="stats-grid">
+                            <div class="input-group">
+                                <label class="input-label">Coin</label>
+                                <select class="input-field" id="admin-promo-coin">
+                                    <option value="CNX">CNX</option>
+                                    <option value="DOGE">DOGE</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Reward</label>
+                                <input type="number" class="input-field" id="admin-promo-reward" placeholder="10">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Usage Limit</label>
+                            <input type="number" class="input-field" id="admin-promo-limit" placeholder="100">
+                        </div>
+                        <button class="btn btn-primary" onclick="adminCreatePromo()">Create Promo</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Broadcast Message</div>
+                        <div class="input-group">
+                            <label class="input-label">Message</label>
+                            <textarea class="input-field" id="admin-broadcast-msg" rows="3" placeholder="Type your message..."></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="adminBroadcast()">Send Broadcast</button>
+                    </div>
+                </div>
+
+                <!-- FAQ -->
+                <div id="page-faq" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">Frequently Asked Questions</div>
+                    </div>
+                    <div class="faq-item" onclick="this.classList.toggle('open')">
+                        <div class="faq-question">
+                            <span>How do I earn CNX?</span>
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="faq-answer">Claiming the faucet every 3 minutes (1 CNX), completing Offerwall tasks (PTC, games, shortlinks), and inviting friends.</div>
+                    </div>
+                    <div class="faq-item" onclick="this.classList.toggle('open')">
+                        <div class="faq-question">
+                            <span>How do I withdraw?</span>
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="faq-answer">Earn CNX, swap to DOGE (1:1), then go to Withdraw page. Enter FaucetPay email and DOGE amount. Minimum is 0.10 DOGE.</div>
+                    </div>
+                    <div class="faq-item" onclick="this.classList.toggle('open')">
+                        <div class="faq-question">
+                            <span>What is CNX worth?</span>
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="faq-answer">100 CNX = 1 USD. The USD value updates in real-time based on the DOGE price.</div>
+                    </div>
+                    <div class="faq-item" onclick="this.classList.toggle('open')">
+                        <div class="faq-question">
+                            <span>How does referral bonus work?</span>
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div class="faq-answer">You earn 50 CNX instantly per signup + 20% lifetime commission on all their faucet and offerwall earnings.</div>
+                    </div>
+                </div>
+            </main>
         </div>
-        <div class="header-balance">
-            <img src="/coinix.png" alt="CNX">
-            <span id="header-balance-cnx">0.00</span>
-        </div>
-    </header>
+    </div>
 
-    <main class="container">
-        <div id="page-dashboard" class="page active">
-            <div class="card-glass">
-                <div class="card-title">Welcome back!</div>
-                <div class="card-subtitle" id="welcome-name">Start earning CNX & DOGE today</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label"><img src="/coinix.png" alt=""> CNX Balance</div>
-                    <div class="stat-value" id="dash-cnx-balance">0.00</div>
-                    <div class="stat-sub" id="dash-cnx-usd">~ $0.0000</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label"><img src="/dogecoin.png" alt=""> DOGE Balance</div>
-                    <div class="stat-value" id="dash-doge-balance">0.00</div>
-                    <div class="stat-sub" id="dash-doge-usd">~ $0.0000</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Today Earnings</div>
-                    <div class="stat-value" id="dash-today-earned">0.00</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Referrals</div>
-                    <div class="stat-value" id="dash-referrals">0</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Quick Actions</div>
-                <div class="quick-actions">
-                    <div class="quick-action-btn" onclick="navigateTo('faucet')">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Claim Free Faucet</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="navigateTo('earn')">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        <span>Earn Zone (Offerwall)</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="navigateTo('swap')">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                        <span>Swap</span>
-                    </div>
-                    <div class="quick-action-btn" onclick="navigateTo('withdraw')">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        <span>Withdraw</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Live Earnings Breakdown</div>
-                <div class="list-item">
-                    <div class="list-item-info">
-                        <div class="list-item-title">Faucet Claims</div>
-                        <div class="list-item-sub">Today's activity</div>
-                    </div>
-                    <div class="list-item-value" id="dash-faucet-today">0</div>
-                </div>
-                <div class="list-item">
-                    <div class="list-item-info">
-                        <div class="list-item-title">Offer Earnings</div>
-                        <div class="list-item-sub">PTC, Games, Shortlinks</div>
-                    </div>
-                    <div class="list-item-value" id="dash-offer-earned">0.00</div>
-                </div>
-                <div class="list-item">
-                    <div class="list-item-info">
-                        <div class="list-item-title">Promo Rewards</div>
-                        <div class="list-item-sub">Redeemed codes</div>
-                    </div>
-                    <div class="list-item-value" id="dash-promo-earned">0.00</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="page-faucet" class="page">
-            <div class="card-glass">
-                <div class="card-title">Free Faucet</div>
-                <div class="card-subtitle">Claim 1 CNX every 3 minutes</div>
-                <div class="faucet-timer">
-                    <div class="time" id="faucet-timer">03:00</div>
-                    <div class="label">Next claim available in</div>
-                </div>
-                <div class="captcha-box" id="captcha-box">
-                    <div class="card-title">Anti-Bot Verification</div>
-                    <div class="captcha-question" id="captcha-question">? + ? =</div>
-                    <input type="number" class="input-field" id="captcha-answer" placeholder="Your answer">
-                    <button class="btn btn-secondary mt-10" onclick="refreshCaptcha()">New Question</button>
-                </div>
-                <button class="btn btn-primary" id="btn-claim-faucet" onclick="claimFaucet()">CLAIM CNX</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Statistics</div>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-label">Total Claims</div>
-                        <div class="stat-value" id="faucet-total-claims">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label">Total Earned</div>
-                        <div class="stat-value" id="faucet-total-earned">0.00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="page-earn" class="page">
-            <div class="card-glass">
-                <div class="card-title">Earn Zone</div>
-                <div class="card-subtitle">Complete tasks and earn CNX instantly (+20% bonus on PTC, Shortlinks and Games)</div>
-            </div>
-
-            <div class="earn-card" onclick="loadOfferwall('ptc')">
-                <div class="earn-card-header">
-                    <div class="earn-card-title">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                        PTC Ads
-                    </div>
-                    <span class="earn-card-badge">+20%</span>
-                </div>
-                <div class="earn-card-desc">View paid ads and click links to earn CNX instantly.</div>
-            </div>
-
-            <div class="earn-card" onclick="loadOfferwall('shortlinks')">
-                <div class="earn-card-header">
-                    <div class="earn-card-title">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                        Shortlinks
-                    </div>
-                    <span class="earn-card-badge">+20%</span>
-                </div>
-                <div class="earn-card-desc">Visit shortened URLs and complete short tasks.</div>
-            </div>
-
-            <div class="earn-card" onclick="loadOfferwall('games')">
-                <div class="earn-card-header">
-                    <div class="earn-card-title">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Games
-                    </div>
-                    <span class="earn-card-badge">+20%</span>
-                </div>
-                <div class="earn-card-desc">Install and play mobile games to reach milestones.</div>
-            </div>
-
-            <div class="earn-card" onclick="loadOfferwall('offerwall')">
-                <div class="earn-card-header">
-                    <div class="earn-card-title">
-                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                        Offers & Visits
-                    </div>
-                </div>
-                <div class="earn-card-desc">Visit websites and complete offerwall surveys.</div>
-            </div>
-        </div>
-
-        <div id="page-promo" class="page">
-            <div class="card-glass">
-                <div class="card-title">Promo Codes</div>
-                <div class="card-subtitle">Redeem codes for free CNX & DOGE. Find codes in our community channel.</div>
-                <div class="input-group">
-                    <label class="input-label">Enter Promo Code</label>
-                    <input type="text" class="input-field" id="promo-code-input" placeholder="CODE123">
-                </div>
-                <button class="btn btn-primary" onclick="redeemPromo()">Redeem Code</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Redemption History</div>
-                <div id="promo-history-list">
-                    <div class="text-center" style="padding: 20px; color: var(--text-secondary);">No codes redeemed yet.</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="page-swap" class="page">
-            <div class="card-glass">
-                <div class="card-title">Swap CNX to DOGE</div>
-                <div class="card-subtitle">Convert instantly at 1:1 rate, zero fees</div>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-label"><img src="/coinix.png" alt=""> CNX Balance</div>
-                        <div class="stat-value" id="swap-cnx-balance">0.00</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-label"><img src="/dogecoin.png" alt=""> DOGE Balance</div>
-                        <div class="stat-value" id="swap-doge-balance">0.00</div>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">From (CNX)</label>
-                    <input type="number" class="input-field" id="swap-amount-input" placeholder="0.00" oninput="updateSwapEstimate()">
-                </div>
-                <div class="percent-btns">
-                    <button class="percent-btn" onclick="setSwapPercent(25)">25%</button>
-                    <button class="percent-btn" onclick="setSwapPercent(50)">50%</button>
-                    <button class="percent-btn" onclick="setSwapPercent(75)">75%</button>
-                    <button class="percent-btn" onclick="setSwapPercent(100)">MAX</button>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">To (Estimated DOGE)</label>
-                    <input type="number" class="input-field" id="swap-estimate-input" readonly>
-                </div>
-                <div class="card-subtitle text-center">Rate: 1:1 - No fees</div>
-                <button class="btn btn-primary" onclick="executeSwap()">Swap Now</button>
-            </div>
-        </div>
-
-        <div id="page-withdraw" class="page">
-            <div class="card-glass">
-                <div class="card-title">Withdraw DOGE</div>
-                <div class="card-subtitle">Send DOGE to your FaucetPay email</div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Referral Earnings</div>
-                <div class="flex gap-10" style="align-items: center;">
-                    <div style="flex: 1;">
-                        <div class="stat-value" id="wd-referral-balance">0.00 CNX</div>
-                    </div>
-                    <button class="btn btn-secondary" style="width: auto;" onclick="collectReferral()">Collect to Main Balance</button>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label"><img src="/dogecoin.png" alt=""> DOGE Balance</div>
-                    <div class="stat-value" id="wd-doge-balance">0.00</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label"><img src="/coinix.png" alt=""> CNX Balance</div>
-                    <div class="stat-value" id="wd-cnx-balance">0.00</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="input-group">
-                    <label class="input-label">FaucetPay Email</label>
-                    <input type="email" class="input-field" id="wd-email-input" placeholder="your@email.com">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Amount (DOGE)</label>
-                    <input type="number" class="input-field" id="wd-amount-input" placeholder="0.10" step="0.01">
-                </div>
-                <div class="percent-btns">
-                    <button class="percent-btn" onclick="setWdAmount(0.5)">0.5</button>
-                    <button class="percent-btn" onclick="setWdAmount(1)">1</button>
-                    <button class="percent-btn" onclick="setWdAmount(5)">5</button>
-                    <button class="percent-btn" onclick="setWdPercent(100)">MAX</button>
-                </div>
-                <button class="btn btn-primary" onclick="executeWithdraw()">Withdraw to FaucetPay</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Withdrawal History</div>
-                <div id="withdraw-history-list">
-                    <div class="text-center" style="padding: 20px; color: var(--text-secondary);">No withdrawals yet.</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="page-admin" class="page hidden">
-            <div class="card-glass">
-                <div class="card-title">Admin Panel</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Total Users</div>
-                    <div class="stat-value" id="admin-total-users">0</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Total Paid (DOGE)</div>
-                    <div class="stat-value" id="admin-total-paid">0.00</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Create Promo Code</div>
-                <div class="input-group">
-                    <label class="input-label">Code</label>
-                    <input type="text" class="input-field" id="admin-promo-code" placeholder="WELCOME2024">
-                </div>
-                <div class="stats-grid">
-                    <div class="input-group">
-                        <label class="input-label">Coin</label>
-                        <select class="input-field" id="admin-promo-coin">
-                            <option value="CNX">CNX</option>
-                            <option value="DOGE">DOGE</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Reward</label>
-                        <input type="number" class="input-field" id="admin-promo-reward" placeholder="10">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Usage Limit</label>
-                    <input type="number" class="input-field" id="admin-promo-limit" placeholder="100">
-                </div>
-                <button class="btn btn-primary" onclick="adminCreatePromo()">Create Promo</button>
-            </div>
-
-            <div class="card">
-                <div class="card-title">Broadcast Message</div>
-                <div class="input-group">
-                    <label class="input-label">Message</label>
-                    <textarea class="input-field" id="admin-broadcast-msg" rows="3" placeholder="Type your message..."></textarea>
-                </div>
-                <button class="btn btn-primary" onclick="adminBroadcast()">Send Broadcast</button>
-            </div>
-        </div>
-
-        <div id="page-faq" class="page">
-            <div class="card-glass">
-                <div class="card-title">Frequently Asked Questions</div>
-            </div>
-
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-                <div class="faq-question">
-                    <span>How do I earn CNX?</span>
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-                <div class="faq-answer">Claiming the faucet every 3 minutes (1 CNX), completing Offerwall tasks (PTC, games, shortlinks), and inviting friends.</div>
-            </div>
-
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-                <div class="faq-question">
-                    <span>How do I withdraw?</span>
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-                <div class="faq-answer">Earn CNX, swap to DOGE (1:1), then go to Withdraw page. Enter FaucetPay email and DOGE amount. Minimum is 0.10 DOGE.</div>
-            </div>
-
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-                <div class="faq-question">
-                    <span>What is CNX worth?</span>
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-                <div class="faq-answer">100 CNX = 1 USD. The USD value updates in real-time based on the DOGE price.</div>
-            </div>
-
-            <div class="faq-item" onclick="this.classList.toggle('open')">
-                <div class="faq-question">
-                    <span>How does referral bonus work?</span>
-                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
-                <div class="faq-answer">You earn 50 CNX instantly per signup + 20% lifetime commission on all their faucet and offerwall earnings.</div>
-            </div>
-        </div>
-    </main>
-
+    <!-- BOTTOM NAV (Mobile/Tablet) -->
     <nav class="bottom-nav">
         <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -1075,10 +802,6 @@
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             <span>Earn</span>
         </div>
-        <div class="nav-item" data-page="promo" onclick="navigateTo('promo')">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
-            <span>Promo</span>
-        </div>
         <div class="nav-item" data-page="swap" onclick="navigateTo('swap')">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
             <span>Swap</span>
@@ -1089,6 +812,7 @@
         </div>
     </nav>
 
+    <!-- OFFERWALL OVERLAY -->
     <div class="offerwall-container" id="offerwall-frame-container">
         <div class="offerwall-header">
             <div class="card-title">Loading Tasks...</div>
@@ -1096,6 +820,39 @@
         </div>
         <iframe class="offerwall-frame" id="offerwall-iframe"></iframe>
     </div>
+
+    <!-- DİL SEÇİCİ -->
+    <div class="lang-switcher">
+        <div class="lang-dropdown" id="lang-dropdown">
+            <div class="lang-option active" data-lang="en" onclick="changeLanguage('en')">🇬🇧 English</div>
+            <div class="lang-option" data-lang="tr" onclick="changeLanguage('tr')">🇹🇷 Türkçe</div>
+            <div class="lang-option" data-lang="ru" onclick="changeLanguage('ru')">🇷🇺 Русский</div>
+            <div class="lang-option" data-lang="ar" onclick="changeLanguage('ar')">🇸🇦 العربية</div>
+            <div class="lang-option" data-lang="es" onclick="changeLanguage('es')">🇪🇸 Español</div>
+            <div class="lang-option" data-lang="de" onclick="changeLanguage('de')">🇩🇪 Deutsch</div>
+            <div class="lang-option" data-lang="fr" onclick="changeLanguage('fr')">🇫🇷 Français</div>
+            <div class="lang-option" data-lang="pt" onclick="changeLanguage('pt')">🇵🇹 Português</div>
+            <div class="lang-option" data-lang="hi" onclick="changeLanguage('hi')">🇮🇳 हिन्दी</div>
+            <div class="lang-option" data-lang="zh-CN" onclick="changeLanguage('zh-CN')">🇨🇳 中文</div>
+        </div>
+        <button class="lang-btn" onclick="toggleLangDropdown(event)" title="Change Language">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </button>
+    </div>
+
+    <!-- GOOGLE TRANSLATE (GİZLİ) -->
+    <div id="google_translate_element"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'tr,ru,ar,es,de,fr,pt,hi,zh-CN',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script>
         const API_BASE = window.location.origin;
@@ -1105,39 +862,123 @@
         let dogePrice = { price: 0, change: 0 };
         let faucetTimerInterval = null;
         let nextClaimTime = 0;
+        let demoMode = false;
         const FAUCET_COOLDOWN = 180000;
 
-        if (tg) {
-            tg.ready();
-            tg.expand();
-            if (tg.colorScheme === 'dark') {
+        // ===== TEMA YÖNETİMİ =====
+        function initTheme() {
+            const saved = localStorage.getItem('coinix_theme');
+            if (saved === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else if (saved === 'light') {
+                document.body.classList.remove('dark-mode');
+            } else if (tg && tg.colorScheme === 'dark') {
                 document.body.classList.add('dark-mode');
             }
-            tg.onEvent('themeChanged', () => {
-                if (tg.colorScheme === 'dark') {
-                    document.body.classList.add('dark-mode');
-                } else {
-                    document.body.classList.remove('dark-mode');
-                }
-            });
+            updateThemeIcons();
         }
 
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            toast.className = 'toast ' + type;
-            toast.innerHTML = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('coinix_theme', isDark ? 'dark' : 'light');
+            updateThemeIcons();
         }
 
-        async function apiRequest(endpoint, method = 'GET', body = null, isAdmin = false) {
-            const headers = { 'Content-Type': 'application/json' };
-            if (authToken) {
-                headers['Authorization'] = 'Bearer ' + authToken;
+        function updateThemeIcons() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const sunIcon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>';
+            const moonIcon = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
+            
+            const headerIcon = document.getElementById('header-theme-icon');
+            const sidebarIcon = document.getElementById('sidebar-theme-icon');
+            const sidebarText = document.getElementById('sidebar-theme-text');
+            
+            if (headerIcon) headerIcon.innerHTML = isDark ? sunIcon : moonIcon;
+            if (sidebarIcon) sidebarIcon.innerHTML = isDark ? sunIcon : moonIcon;
+            if (sidebarText) sidebarText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        }
+
+        // ===== DİL YÖNETİMİ =====
+        function toggleLangDropdown(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('lang-dropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('lang-dropdown');
+            if (dropdown && !e.target.closest('.lang-switcher')) {
+                dropdown.classList.remove('open');
             }
+        });
+
+        function changeLanguage(lang) {
+            const select = document.querySelector('.goog-te-combo');
+            if (select) {
+                select.value = lang;
+                select.dispatchEvent(new Event('change'));
+            }
+            
+            document.querySelectorAll('.lang-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.lang === lang);
+            });
+            
+            localStorage.setItem('coinix_lang', lang);
+            document.getElementById('lang-dropdown').classList.remove('open');
+            
+            // Google'ın üst barını tekrar gizle
+            setTimeout(() => {
+                const skiptranslate = document.querySelector('.skiptranslate');
+                if (skiptranslate) skiptranslate.style.display = 'none';
+                document.body.style.top = '0';
+            }, 500);
+            
+            showToast('Language changed!', 'success');
+        }
+
+        // ===== DEMO MODE =====
+        function enableDemoMode() {
+            demoMode = true;
+            userData = {
+                telegram_id: '123456789',
+                username: 'demo_user',
+                first_name: 'Demo',
+                balance: 1250.50,
+                doge_balance: 42.75,
+                total_earned: 3500,
+                total_claims: 87,
+                total_withdrawals: 5,
+                total_offerwall_earned: 850,
+                referrals: 12,
+                referral_earnings: 320,
+                referral_balance: 45,
+                last_claim: Date.now() - 60000,
+                is_admin: false,
+                banned: false
+            };
+            dogePrice = { price: 0.1245, change: 2.5 };
+            document.getElementById('demo-screen').classList.remove('active');
+            document.getElementById('loading-screen').classList.add('hidden');
+            updateUI();
+            initFaucetTimer();
+            showToast('Demo mode enabled', 'success');
+        }
+
+        // ===== API =====
+        async function apiRequest(endpoint, method = 'GET', body = null, isAdmin = false) {
+            if (demoMode) {
+                if (endpoint === '/api/doge-price') return dogePrice;
+                if (endpoint === '/api/me') return userData;
+                if (endpoint === '/api/captcha') return { question: '5 + 3 = ?', n1: 5, n2: 3 };
+                if (endpoint === '/api/claim') { userData.balance += 1; return { amount: 1, balance: userData.balance }; }
+                if (endpoint === '/api/withdrawals') return [];
+                if (endpoint === '/api/promo/history') return { history: [], totalBonus: 0, count: 0 };
+                return { success: true };
+            }
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
             if (isAdmin) {
                 const adminKey = localStorage.getItem('admin_key') || '';
                 headers['x-admin-key'] = adminKey;
@@ -1148,22 +989,17 @@
 
             try {
                 const response = await fetch(API_BASE + endpoint, {
-                    method,
-                    headers,
+                    method, headers,
                     body: body ? JSON.stringify(body) : null,
                     signal: controller.signal
                 });
                 clearTimeout(timeout);
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Request failed');
-                }
+                if (!response.ok) throw new Error(data.error || 'Request failed');
                 return data;
             } catch (err) {
                 clearTimeout(timeout);
-                if (err.name === 'AbortError') {
-                    throw new Error('Request timeout');
-                }
+                if (err.name === 'AbortError') throw new Error('Request timeout');
                 throw err;
             }
         }
@@ -1172,9 +1008,17 @@
             return Number(num || 0).toFixed(decimals);
         }
 
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.className = 'toast ' + type;
+            toast.innerHTML = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
         function updateUI() {
             if (!userData) return;
-
             const cnxBalance = formatNumber(userData.balance || 0);
             const dogeBalance = formatNumber(userData.doge_balance || 0);
             const dogePriceUsd = dogePrice.price || 0;
@@ -1196,20 +1040,19 @@
             setEl('dash-faucet-today', userData.total_claims || 0);
             setEl('dash-offer-earned', formatNumber(userData.total_offerwall_earned || 0));
             setEl('dash-promo-earned', formatNumber(userData.promo_earnings || 0));
-
             setEl('faucet-total-claims', userData.total_claims || 0);
             setEl('faucet-total-earned', formatNumber(userData.total_earned || 0));
-
             setEl('swap-cnx-balance', cnxBalance);
             setEl('swap-doge-balance', dogeBalance);
-
             setEl('wd-referral-balance', formatNumber(userData.referral_balance || 0) + ' CNX');
             setEl('wd-doge-balance', dogeBalance);
             setEl('wd-cnx-balance', cnxBalance);
 
             if (userData.is_admin) {
                 const adminPage = document.getElementById('page-admin');
+                const sidebarAdmin = document.getElementById('sidebar-admin');
                 if (adminPage) adminPage.classList.remove('hidden');
+                if (sidebarAdmin) sidebarAdmin.style.display = 'flex';
             }
 
             if (userData.first_name) {
@@ -1218,19 +1061,28 @@
         }
 
         async function initAuth() {
+            initTheme();
+            
+            const savedLang = localStorage.getItem('coinix_lang');
+            if (savedLang) {
+                setTimeout(() => changeLanguage(savedLang), 1000);
+            }
+            
             try {
                 if (!authToken) {
                     const initData = tg?.initData || '';
                     const ref = tg?.initDataUnsafe?.start_param?.replace('ref_', '') || '';
                     
-                    if (!initData) {
-                        throw new Error('Telegram WebApp not available');
+                    if (!initData || !tg) {
+                        // PC tarayıcısında demo mod öner
+                        document.getElementById('loading-screen').classList.add('hidden');
+                        document.getElementById('demo-screen').classList.add('active');
+                        return;
                     }
 
                     const authData = await apiRequest('/api/auth', 'POST', { initData, ref });
                     authToken = authData.token;
                     localStorage.setItem('coinix_token', authToken);
-
                     if (authData.is_admin) {
                         localStorage.setItem('admin_key', authData.token);
                     }
@@ -1238,15 +1090,10 @@
 
                 await fetchUserData();
                 await fetchDogePrice();
-                
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) loadingScreen.classList.add('hidden');
+                document.getElementById('loading-screen').classList.add('hidden');
             } catch (err) {
-                console.error('Init auth error:', err);
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.innerHTML = '<p style="color: var(--danger-color);">Error: ' + err.message + '</p>';
-                }
+                console.error('Init error:', err);
+                document.getElementById('loading-text').textContent = 'Error: ' + err.message + '. Please refresh.';
                 localStorage.removeItem('coinix_token');
             }
         }
@@ -1258,7 +1105,7 @@
                 initFaucetTimer();
             } catch (err) {
                 console.error('Fetch user error:', err);
-                if (err.message.includes('Invalid token') || err.message.includes('Missing token')) {
+                if (err.message.includes('Invalid token')) {
                     localStorage.removeItem('coinix_token');
                     authToken = null;
                 }
@@ -1267,74 +1114,47 @@
 
         async function fetchDogePrice() {
             try {
-                const data = await apiRequest('/api/doge-price');
-                dogePrice = data;
+                dogePrice = await apiRequest('/api/doge-price');
                 updateUI();
-            } catch (err) {
-                console.error('Fetch doge price error:', err);
-            }
+            } catch (err) { console.error('Doge price error:', err); }
         }
 
         function navigateTo(pageId) {
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item, .sidebar-item').forEach(n => n.classList.remove('active'));
 
             const targetPage = document.getElementById('page-' + pageId);
-            if (targetPage) {
-                targetPage.classList.add('active');
-            }
+            if (targetPage) targetPage.classList.add('active');
 
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(n => n.classList.remove('active'));
+            const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"], .sidebar-item[data-page="${pageId}"]`);
+            if (activeNav) activeNav.classList.add('active');
 
-            const activeNav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
-            if (activeNav) {
-                activeNav.classList.add('active');
-            }
-
-            if (pageId === 'faucet') {
-                refreshCaptcha();
-            } else if (pageId === 'withdraw') {
-                loadWithdrawHistory();
-            } else if (pageId === 'promo') {
-                loadPromoHistory();
-            } else if (pageId === 'admin') {
-                loadAdminStats();
-            }
+            if (pageId === 'faucet') refreshCaptcha();
+            else if (pageId === 'withdraw') loadWithdrawHistory();
+            else if (pageId === 'promo') loadPromoHistory();
+            else if (pageId === 'admin') loadAdminStats();
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function initFaucetTimer() {
             if (!userData) return;
-            
             const lastClaim = userData.last_claim || 0;
             const elapsed = Date.now() - lastClaim;
             const remaining = Math.max(0, FAUCET_COOLDOWN - elapsed);
             nextClaimTime = Date.now() + remaining;
-
-            if (faucetTimerInterval) {
-                clearInterval(faucetTimerInterval);
-            }
-
+            if (faucetTimerInterval) clearInterval(faucetTimerInterval);
             updateTimerDisplay();
             faucetTimerInterval = setInterval(updateTimerDisplay, 1000);
         }
 
         function updateTimerDisplay() {
-            const now = Date.now();
-            const diff = Math.max(0, nextClaimTime - now);
-            
+            const diff = Math.max(0, nextClaimTime - Date.now());
             const minutes = Math.floor(diff / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
-            
             const timerEl = document.getElementById('faucet-timer');
             const btnEl = document.getElementById('btn-claim-faucet');
-            
-            if (timerEl) {
-                timerEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-            }
-
+            if (timerEl) timerEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
             if (btnEl) {
                 if (diff > 0) {
                     btnEl.disabled = true;
@@ -1344,7 +1164,6 @@
                     btnEl.textContent = 'CLAIM CNX';
                 }
             }
-
             if (diff <= 0 && faucetTimerInterval) {
                 clearInterval(faucetTimerInterval);
                 faucetTimerInterval = null;
@@ -1354,30 +1173,20 @@
         async function refreshCaptcha() {
             try {
                 const data = await apiRequest('/api/captcha');
-                const questionEl = document.getElementById('captcha-question');
-                const answerEl = document.getElementById('captcha-answer');
-                if (questionEl) questionEl.textContent = data.question;
-                if (answerEl) answerEl.value = '';
-            } catch (err) {
-                console.error('Refresh captcha error:', err);
-            }
+                const q = document.getElementById('captcha-question');
+                const a = document.getElementById('captcha-answer');
+                if (q) q.textContent = data.question;
+                if (a) a.value = '';
+            } catch (err) { console.error(err); }
         }
 
         async function claimFaucet() {
             const answerEl = document.getElementById('captcha-answer');
             const btnEl = document.getElementById('btn-claim-faucet');
-            
             if (!answerEl || !btnEl) return;
-            
             const answer = answerEl.value.trim();
-            if (!answer) {
-                showToast('Please enter captcha answer', 'error');
-                return;
-            }
-
-            btnEl.disabled = true;
-            btnEl.textContent = 'Claiming...';
-
+            if (!answer) { showToast('Please enter captcha answer', 'error'); return; }
+            btnEl.disabled = true; btnEl.textContent = 'Claiming...';
             try {
                 const data = await apiRequest('/api/claim', 'POST', { captchaAnswer: answer });
                 showToast('Claimed ' + data.amount + ' CNX!', 'success');
@@ -1395,24 +1204,14 @@
         async function loadOfferwall(type) {
             const container = document.getElementById('offerwall-frame-container');
             const iframe = document.getElementById('offerwall-iframe');
-            
             if (!container || !iframe) return;
-
             container.classList.add('active');
-
             try {
                 const data = await apiRequest('/api/offerwall/' + type);
-                if (data.url) {
-                    iframe.src = data.url;
-                } else if (type === 'ptc' && data.ads) {
-                    iframe.srcdoc = '<html><body><h2>PTC Ads</h2><p>' + data.total + ' ads available</p></body></html>';
-                } else if (type === 'shortlinks' && data.shortlinks) {
-                    iframe.srcdoc = '<html><body><h2>Shortlinks</h2><p>' + data.total + ' links available</p></body></html>';
-                } else {
-                    iframe.srcdoc = '<html><body><h2>Loading...</h2></body></html>';
-                }
+                if (data.url) iframe.src = data.url;
+                else iframe.srcdoc = '<html><body style="background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><div>Loading...</div></body></html>';
             } catch (err) {
-                showToast('Failed to load offerwall: ' + err.message, 'error');
+                showToast('Failed: ' + err.message, 'error');
                 closeOfferwall();
             }
         }
@@ -1427,169 +1226,118 @@
         async function redeemPromo() {
             const inputEl = document.getElementById('promo-code-input');
             if (!inputEl) return;
-
             const code = inputEl.value.trim();
-            if (!code) {
-                showToast('Please enter a promo code', 'error');
-                return;
-            }
-
+            if (!code) { showToast('Please enter a promo code', 'error'); return; }
             try {
                 const data = await apiRequest('/api/promo/redeem', 'POST', { code });
                 showToast('Redeemed ' + data.reward + ' ' + data.coin + '!', 'success');
                 inputEl.value = '';
                 await fetchUserData();
                 await loadPromoHistory();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+            } catch (err) { showToast(err.message, 'error'); }
         }
 
         async function loadPromoHistory() {
             const listEl = document.getElementById('promo-history-list');
             if (!listEl) return;
-
             try {
                 const data = await apiRequest('/api/promo/history');
                 if (data.history && data.history.length > 0) {
-                    listEl.innerHTML = data.history.map(h => 
-                        '<div class="list-item">' +
-                        '<div class="list-item-info">' +
-                        '<div class="list-item-title">' + h.code + '</div>' +
-                        '<div class="list-item-sub">' + (h.usedAt ? new Date(h.usedAt).toLocaleDateString() : '') + '</div>' +
-                        '</div>' +
-                        '<div class="list-item-value">+' + h.reward + ' ' + h.coin + '</div>' +
-                        '</div>'
+                    listEl.innerHTML = data.history.map(h =>
+                        `<div class="list-item">
+                            <div class="list-item-info">
+                                <div class="list-item-title">${h.code}</div>
+                                <div class="list-item-sub">${h.usedAt ? new Date(h.usedAt).toLocaleDateString() : ''}</div>
+                            </div>
+                            <div class="list-item-value">+${h.reward} ${h.coin}</div>
+                        </div>`
                     ).join('');
                 } else {
                     listEl.innerHTML = '<div class="text-center" style="padding: 20px; color: var(--text-secondary);">No codes redeemed yet.</div>';
                 }
-            } catch (err) {
-                console.error('Load promo history error:', err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         function updateSwapEstimate() {
-            const inputEl = document.getElementById('swap-amount-input');
-            const estimateEl = document.getElementById('swap-estimate-input');
-            if (!inputEl || !estimateEl) return;
-
-            const amount = parseFloat(inputEl.value) || 0;
-            estimateEl.value = amount.toFixed(2);
+            const input = document.getElementById('swap-amount-input');
+            const estimate = document.getElementById('swap-estimate-input');
+            if (!input || !estimate) return;
+            const amount = parseFloat(input.value) || 0;
+            estimate.value = amount.toFixed(2);
         }
 
         function setSwapPercent(percent) {
-            const inputEl = document.getElementById('swap-amount-input');
-            if (!inputEl || !userData) return;
-
-            const balance = userData.balance || 0;
-            const amount = (balance * percent) / 100;
-            inputEl.value = amount.toFixed(2);
+            const input = document.getElementById('swap-amount-input');
+            if (!input || !userData) return;
+            const amount = ((userData.balance || 0) * percent) / 100;
+            input.value = amount.toFixed(2);
             updateSwapEstimate();
         }
 
         async function executeSwap() {
-            const inputEl = document.getElementById('swap-amount-input');
-            if (!inputEl) return;
-
-            const amount = parseFloat(inputEl.value);
-            if (!amount || amount <= 0) {
-                showToast('Please enter a valid amount', 'error');
-                return;
-            }
-
-            if (amount > (userData.balance || 0)) {
-                showToast('Insufficient CNX balance', 'error');
-                return;
-            }
-
+            const input = document.getElementById('swap-amount-input');
+            if (!input) return;
+            const amount = parseFloat(input.value);
+            if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
+            if (amount > (userData.balance || 0)) { showToast('Insufficient CNX', 'error'); return; }
             try {
                 await apiRequest('/api/swap', 'POST', { amount, direction: 'cnx-to-doge' });
-                showToast('Swapped ' + amount + ' CNX to DOGE!', 'success');
-                inputEl.value = '';
+                showToast('Swapped ' + amount + ' CNX!', 'success');
+                input.value = '';
                 document.getElementById('swap-estimate-input').value = '';
                 await fetchUserData();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+            } catch (err) { showToast(err.message, 'error'); }
         }
 
         function setWdAmount(amount) {
-            const inputEl = document.getElementById('wd-amount-input');
-            if (inputEl) inputEl.value = amount;
+            const input = document.getElementById('wd-amount-input');
+            if (input) input.value = amount;
         }
 
         function setWdPercent(percent) {
-            const inputEl = document.getElementById('wd-amount-input');
-            if (!inputEl || !userData) return;
-
-            const balance = userData.doge_balance || 0;
-            const amount = (balance * percent) / 100;
-            inputEl.value = amount.toFixed(2);
+            const input = document.getElementById('wd-amount-input');
+            if (!input || !userData) return;
+            const amount = ((userData.doge_balance || 0) * percent) / 100;
+            input.value = amount.toFixed(2);
         }
 
         async function executeWithdraw() {
-            const emailEl = document.getElementById('wd-email-input');
+            const email = document.getElementById('wd-email-input');
             const amountEl = document.getElementById('wd-amount-input');
-            if (!emailEl || !amountEl) return;
-
-            const email = emailEl.value.trim();
+            if (!email || !amountEl) return;
+            const emailVal = email.value.trim();
             const amount = parseFloat(amountEl.value);
-
-            if (!email || !email.includes('@')) {
-                showToast('Please enter a valid FaucetPay email', 'error');
-                return;
-            }
-
-            if (!amount || amount <= 0) {
-                showToast('Please enter a valid amount', 'error');
-                return;
-            }
-
-            if (amount < 0.1) {
-                showToast('Minimum withdrawal is 0.10 DOGE', 'error');
-                return;
-            }
-
-            if (amount > (userData.doge_balance || 0)) {
-                showToast('Insufficient DOGE balance', 'error');
-                return;
-            }
-
+            if (!emailVal.includes('@')) { showToast('Invalid email', 'error'); return; }
+            if (!amount || amount < 0.1) { showToast('Min 0.10 DOGE', 'error'); return; }
+            if (amount > (userData.doge_balance || 0)) { showToast('Insufficient DOGE', 'error'); return; }
             try {
-                await apiRequest('/api/withdraw', 'POST', { faucetpay_email: email, amount });
-                showToast('Withdrawal request submitted!', 'success');
-                emailEl.value = '';
-                amountEl.value = '';
+                await apiRequest('/api/withdraw', 'POST', { faucetpay_email: emailVal, amount });
+                showToast('Withdrawal submitted!', 'success');
+                email.value = ''; amountEl.value = '';
                 await fetchUserData();
                 await loadWithdrawHistory();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+            } catch (err) { showToast(err.message, 'error'); }
         }
 
         async function loadWithdrawHistory() {
             const listEl = document.getElementById('withdraw-history-list');
             if (!listEl) return;
-
             try {
                 const data = await apiRequest('/api/withdrawals');
                 if (data && data.length > 0) {
-                    listEl.innerHTML = data.map(w => 
-                        '<div class="list-item">' +
-                        '<div class="list-item-info">' +
-                        '<div class="list-item-title">' + w.faucetpay_email + '</div>' +
-                        '<div class="list-item-sub">' + (w.timestamp ? new Date(w.timestamp).toLocaleDateString() : '') + ' - ' + w.status + '</div>' +
-                        '</div>' +
-                        '<div class="list-item-value">' + w.amount + ' DOGE</div>' +
-                        '</div>'
+                    listEl.innerHTML = data.map(w =>
+                        `<div class="list-item">
+                            <div class="list-item-info">
+                                <div class="list-item-title">${w.faucetpay_email}</div>
+                                <div class="list-item-sub">${w.timestamp ? new Date(w.timestamp).toLocaleDateString() : ''} - ${w.status}</div>
+                            </div>
+                            <div class="list-item-value">${w.amount} DOGE</div>
+                        </div>`
                     ).join('');
                 } else {
                     listEl.innerHTML = '<div class="text-center" style="padding: 20px; color: var(--text-secondary);">No withdrawals yet.</div>';
                 }
-            } catch (err) {
-                console.error('Load withdraw history error:', err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function collectReferral() {
@@ -1597,80 +1345,51 @@
                 const data = await apiRequest('/api/referral/collect', 'POST');
                 showToast('Collected ' + data.amount + ' CNX!', 'success');
                 await fetchUserData();
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+            } catch (err) { showToast(err.message, 'error'); }
         }
 
         async function loadAdminStats() {
             try {
                 const data = await apiRequest('/api/admin/stats', 'GET', null, true);
-                const setEl = (id, val) => {
-                    const el = document.getElementById(id);
-                    if (el) el.textContent = val;
-                };
-                setEl('admin-total-users', data.totalUsers || 0);
-                setEl('admin-total-paid', formatNumber(data.totalPaid_doge || 0));
-            } catch (err) {
-                console.error('Load admin stats error:', err);
-                showToast('Failed to load admin stats', 'error');
-            }
+                document.getElementById('admin-total-users').textContent = data.totalUsers || 0;
+                document.getElementById('admin-total-paid').textContent = formatNumber(data.totalPaid || data.totalPaid_doge || 0);
+            } catch (err) { showToast('Failed to load stats', 'error'); }
         }
 
         async function adminCreatePromo() {
-            const codeEl = document.getElementById('admin-promo-code');
-            const coinEl = document.getElementById('admin-promo-coin');
-            const rewardEl = document.getElementById('admin-promo-reward');
-            const limitEl = document.getElementById('admin-promo-limit');
-
-            if (!codeEl || !coinEl || !rewardEl || !limitEl) return;
-
-            const code = codeEl.value.trim();
-            const coin = coinEl.value;
-            const reward = parseFloat(rewardEl.value);
-            const usageLimit = parseInt(limitEl.value);
-
-            if (!code) {
-                showToast('Please enter a promo code', 'error');
-                return;
-            }
-
-            if (!reward || reward <= 0) {
-                showToast('Please enter a valid reward', 'error');
-                return;
-            }
-
+            const code = document.getElementById('admin-promo-code').value.trim();
+            const coin = document.getElementById('admin-promo-coin').value;
+            const reward = parseFloat(document.getElementById('admin-promo-reward').value);
+            const limit = parseInt(document.getElementById('admin-promo-limit').value);
+            if (!code || !reward) { showToast('Fill all fields', 'error'); return; }
             try {
-                await apiRequest('/api/admin/promo/create', 'POST', { code, coin, reward, usageLimit }, true);
-                showToast('Promo code created!', 'success');
-                codeEl.value = '';
-                rewardEl.value = '';
-                limitEl.value = '';
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+                await apiRequest('/api/admin/promo/create', 'POST', { code, coin, reward, usageLimit: limit }, true);
+                showToast('Promo created!', 'success');
+                document.getElementById('admin-promo-code').value = '';
+                document.getElementById('admin-promo-reward').value = '';
+                document.getElementById('admin-promo-limit').value = '';
+            } catch (err) { showToast(err.message, 'error'); }
         }
 
         async function adminBroadcast() {
-            const msgEl = document.getElementById('admin-broadcast-msg');
-            if (!msgEl) return;
-
-            const message = msgEl.value.trim();
-            if (!message) {
-                showToast('Please enter a message', 'error');
-                return;
-            }
-
+            const msg = document.getElementById('admin-broadcast-msg').value.trim();
+            if (!msg) { showToast('Enter message', 'error'); return; }
             try {
-                await apiRequest('/api/admin/broadcast', 'POST', { message }, true);
+                await apiRequest('/api/admin/broadcast', 'POST', { message: msg }, true);
                 showToast('Broadcast sent!', 'success');
-                msgEl.value = '';
-            } catch (err) {
-                showToast(err.message, 'error');
-            }
+                document.getElementById('admin-broadcast-msg').value = '';
+            } catch (err) { showToast(err.message, 'error'); }
+        }
+
+        if (tg) {
+            try {
+                tg.ready();
+                tg.expand();
+            } catch (e) { console.warn('Telegram init error:', e); }
         }
 
         window.addEventListener('DOMContentLoaded', initAuth);
     </script>
 </body>
 </html>
+
