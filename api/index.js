@@ -23,11 +23,11 @@ let Timestamp = null;
 try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
         serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
-        console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_JSON');
+        console.log('[Firebase] Using FIREBASE_SERVICE_ACCOUNT_JSON');
     } else if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
         const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
         serviceAccount = JSON.parse(decoded);
-        console.log('Firebase: Using FIREBASE_SERVICE_ACCOUNT_BASE64');
+        console.log('[Firebase] Using FIREBASE_SERVICE_ACCOUNT_BASE64');
     }
     if (serviceAccount) {
         admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -37,12 +37,12 @@ try {
         serverTimestamp = () => FieldValue.serverTimestamp();
         increment = (n) => FieldValue.increment(n);
         firebaseInitialized = true;
-        console.log('Firebase initialized successfully');
+        console.log('[Firebase] Initialized successfully');
     } else {
-        console.warn('Firebase: No credentials found');
+        console.warn('[Firebase] Running WITHOUT database');
     }
 } catch (e) {
-    console.error('Firebase init error:', e.message);
+    console.error('[Firebase] Init error:', e.message);
     firebaseInitialized = false;
     db = null;
 }
@@ -68,8 +68,8 @@ const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
 const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
-const APP_URL = process.env.APP_URL || 'https://coinixfaucet-production.up.railway.app';
-const PORT = process.env.PORT || 3000;
+const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
+const PORT = process.env.PORT || 10000;
 
 // ============================================
 // FAUCET / PROMO CONFIG
@@ -82,7 +82,7 @@ const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'shortlinks', 'game', 'games', 'visit', 'visits'];
 
 // ============================================
-// SECURITY (Helmet) - ÖNCE TANIMLA
+// SECURITY (Helmet)
 // ============================================
 function setupSecurity(app) {
     app.use(helmet({
@@ -128,7 +128,10 @@ function validateTelegramInitData(initData) {
         const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
         const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
         return hash === checkHash;
-    } catch (e) { return false; }
+    } catch (e) {
+        logger.error('Init data validation error', { error: e.message });
+        return false;
+    }
 }
 
 function jwtAuth(req, res, next) {
@@ -180,7 +183,10 @@ let dogePriceCache = { price: 0, change: 0, lastUpdate: 0 };
 
 async function fetchDogePrice() {
     try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd&include_24hr_change=true');
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd&include_24hr_change=true', { signal: controller.signal });
+        clearTimeout(timeout);
         if (!response.ok) return dogePriceCache;
         const data = await response.json();
         if (data?.dogecoin?.usd != null) {
@@ -198,6 +204,7 @@ async function fetchDogePrice() {
 }
 
 fetchDogePrice();
+setInterval(fetchDogePrice, 120000);
 
 // ============================================
 // OFFERWALL.ME
@@ -208,9 +215,7 @@ async function getOfferwallUrl(req, res) {
         const userId = String(req.user.userId);
         const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
         res.json({ success: true, url, user_id: userId });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function getPTCAds(req, res) {
@@ -233,9 +238,7 @@ async function getPTCAds(req, res) {
             url: ad.url || ''
         }));
         res.json({ success: true, ads, total: ads.length });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function getShortlinks(req, res) {
@@ -257,9 +260,7 @@ async function getShortlinks(req, res) {
             url: link.url || ''
         }));
         res.json({ success: true, shortlinks, total: shortlinks.length });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function getGames(req, res) {
@@ -268,9 +269,7 @@ async function getGames(req, res) {
         const userId = String(req.user.userId);
         const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
         res.json({ success: true, url });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 // ============================================
@@ -363,17 +362,13 @@ async function auth(req, res) {
         const isNew = !doc.exists;
         if (isNew) {
             const newUser = {
-                telegram_id: userId,
-                username: user.username || null,
-                first_name: user.first_name || null,
+                telegram_id: userId, username: user.username || null, first_name: user.first_name || null,
                 balance: 0, doge_balance: 0, total_earned: 0,
                 total_claims: 0, total_withdrawals: 0,
                 referrals: 0, referral_earnings: 0, referral_balance: 0,
-                referred_by: ref || null,
-                banned: false,
+                referred_by: ref || null, banned: false,
                 is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
-                last_claim: null,
-                created_at: serverTimestamp()
+                last_claim: null, created_at: serverTimestamp()
             };
             await userRef.set(newUser);
             if (ref && ref !== userId) {
@@ -422,9 +417,7 @@ async function getMe(req, res) {
             banned: d.banned || false,
             is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID)
         });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
 
 async function getBalance(req, res) {
@@ -441,9 +434,7 @@ async function getBalance(req, res) {
             referral_earnings: d.referral_earnings || 0,
             last_claim: d.last_claim ? d.last_claim.toMillis() : null
         });
-    } catch (err) {
-        res.status(500).json({ error: 'Server error' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
 
 async function getReferral(req, res) {
@@ -455,9 +446,7 @@ async function getReferral(req, res) {
         const d = doc.data();
         const link = `https://t.me/${BOT_USERNAME}?startapp=ref_${userId}`;
         res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings || 0, referral_balance: d.referral_balance || 0 });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function giveReferralBonus(userId, amount, type) {
@@ -484,9 +473,7 @@ async function giveReferralBonus(userId, amount, type) {
             referrer: referrerId, referred: userId, amount: bonusAmount,
             type: type || 'unknown', timestamp: serverTimestamp()
         });
-    } catch (e) {
-        logger.error('Referral bonus error', { error: e.message });
-    }
+    } catch (e) { logger.error('Referral bonus error', { error: e.message }); }
 }
 
 async function collectReferralBonus(req, res) {
@@ -506,9 +493,7 @@ async function collectReferralBonus(req, res) {
         });
         await logAction('referral_collected', userId, { amount: collected });
         res.json({ success: true, amount: collected });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
+    } catch (err) { res.status(400).json({ error: err.message }); }
 }
 
 async function claim(req, res) {
@@ -620,18 +605,14 @@ async function getWithdrawHistory(req, res) {
         const userId = String(req.user.userId);
         const snapshot = await db.collection('withdrawals').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
         res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function getDogePrice(req, res) {
     try {
         if (Date.now() - dogePriceCache.lastUpdate > 60000) await fetchDogePrice();
         res.json({ price: dogePriceCache.price, change_24h: dogePriceCache.change, lastUpdate: dogePriceCache.lastUpdate });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 // ============================================
@@ -678,9 +659,7 @@ async function getCaptcha(req, res) {
         const userId = String(req.user.userId);
         const captcha = generateMathCaptcha(userId);
         res.json({ success: true, question: captcha.question, n1: captcha.n1, n2: captcha.n2 });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function verifyCaptchaEndpoint(req, res) {
@@ -689,9 +668,7 @@ async function verifyCaptchaEndpoint(req, res) {
         const { answer } = req.body;
         if (!answer) return res.status(400).json({ valid: false, error: 'Answer required' });
         res.json(verifyCaptcha(userId, answer));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 // ============================================
@@ -771,16 +748,11 @@ async function getPromoHistory(req, res) {
         const snap = await db.collection('promo_uses').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
         const history = snap.docs.map(d => {
             const data = d.data();
-            return {
-                id: d.id, code: data.code, reward: data.reward, coin: data.coin,
-                usedAt: data.timestamp?.toMillis ? data.timestamp.toMillis() : null
-            };
+            return { id: d.id, code: data.code, reward: data.reward, coin: data.coin, usedAt: data.timestamp?.toMillis ? data.timestamp.toMillis() : null };
         });
         const totalBonus = history.reduce((s, h) => s + (h.reward || 0), 0);
         res.json({ history, totalBonus, count: history.length });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
 // ============================================
@@ -801,9 +773,7 @@ async function adminListPromos(req, res) {
             };
         });
         res.json(list);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
 async function adminCreatePromo(req, res) {
@@ -826,9 +796,7 @@ async function adminCreatePromo(req, res) {
         });
         await logAction('promo_create', req.user.userId, { code, coin, reward, usageLimit });
         res.json({ success: true, code, coin, reward, usageLimit });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
 async function adminTogglePromo(req, res) {
@@ -838,9 +806,7 @@ async function adminTogglePromo(req, res) {
         if (!code) return res.status(400).json({ error: 'Invalid code' });
         await db.collection('promoCodes').doc(code).update({ enabled: !!req.body.enabled });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
 async function adminDeletePromo(req, res) {
@@ -851,9 +817,7 @@ async function adminDeletePromo(req, res) {
         await db.collection('promoCodes').doc(code).delete();
         await logAction('promo_delete', req.user.userId, { code });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
 async function adminGetUsers(req, res) {
@@ -861,9 +825,7 @@ async function adminGetUsers(req, res) {
     try {
         const snap = await db.collection('users').orderBy('created_at', 'desc').limit(200).get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), created_at: d.data().created_at?.toMillis() })));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminGetWithdrawals(req, res) {
@@ -871,9 +833,7 @@ async function adminGetWithdrawals(req, res) {
     try {
         const snap = await db.collection('withdrawals').orderBy('timestamp', 'desc').limit(200).get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminApproveWithdrawal(req, res) {
@@ -884,9 +844,7 @@ async function adminApproveWithdrawal(req, res) {
         await db.collection('withdrawals').doc(id).update({ status: 'approved', approved_at: serverTimestamp() });
         await logAction('withdrawal_approved', req.user.userId, { id });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminRejectWithdrawal(req, res) {
@@ -901,16 +859,12 @@ async function adminRejectWithdrawal(req, res) {
         if (wdData.status === 'approved') return res.status(400).json({ error: 'Already approved' });
         await db.runTransaction(async (t) => {
             const u = await t.get(db.collection('users').doc(String(wdData.user_id)));
-            if (u.exists) {
-                t.update(u.ref, { doge_balance: increment(wdData.amount || 0) });
-            }
+            if (u.exists) t.update(u.ref, { doge_balance: increment(wdData.amount || 0) });
             t.update(wdRef, { status: 'rejected', rejected_at: serverTimestamp() });
         });
         await logAction('withdrawal_rejected', req.user.userId, { id });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminBanUser(req, res) {
@@ -921,9 +875,7 @@ async function adminBanUser(req, res) {
         await db.collection('users').doc(String(userId)).update({ banned: true });
         await logAction('user_ban', req.user.userId, { bannedUser: String(userId) });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminUnbanUser(req, res) {
@@ -934,9 +886,7 @@ async function adminUnbanUser(req, res) {
         await db.collection('users').doc(String(userId)).update({ banned: false });
         await logAction('user_unban', req.user.userId, { unbannedUser: String(userId) });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminAddBalance(req, res) {
@@ -948,9 +898,7 @@ async function adminAddBalance(req, res) {
         await db.collection('users').doc(String(userId)).update({ [field]: increment(Number(amount)) });
         await logAction('admin_add_balance', req.user.userId, { userId: String(userId), amount, currency });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminGetLogs(req, res) {
@@ -958,9 +906,7 @@ async function adminGetLogs(req, res) {
     try {
         const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
         res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminGetStats(req, res) {
@@ -972,49 +918,15 @@ async function adminGetStats(req, res) {
             db.collection('offerwall_completions').get(),
             db.collection('logs').where('action', '==', 'faucet_claim').get().catch(() => ({ size: 0, docs: [] }))
         ]);
-        const totalUsers = usersSnap.size;
-        const totalWithdrawals = wdSnap.size;
-        const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        const totalOfferwall = offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        const totalClaims = claimsSnap.size;
-        const bannedUsers = usersSnap.docs.filter(d => d.data().banned).length;
         res.json({
-            totalUsers, totalWithdrawals, totalPaid, totalOfferwall, totalClaims, bannedUsers,
-            totalOfferwall_earnings: totalOfferwall, totalPaid_doge: totalPaid
+            totalUsers: usersSnap.size,
+            totalWithdrawals: wdSnap.size,
+            totalPaid: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
+            totalOfferwall: offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0),
+            totalClaims: claimsSnap.size,
+            bannedUsers: usersSnap.docs.filter(d => d.data().banned).length
         });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
-}
-
-async function adminGetDashboard(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try {
-        const today = startOfTodayTs();
-        const weekAgo = startOfDayMinus(7);
-        const [promoToday, claimsToday, refBonusToday, offerToday, newUsersWeek, claimsWeek, offerWeek, wdWeek] = await Promise.all([
-            db.collection('promo_uses').where('timestamp', '>=', today).get().catch(() => ({ docs: [] })),
-            db.collection('logs').where('action', '==', 'faucet_claim').where('timestamp', '>=', today).get().catch(() => ({ size: 0 })),
-            db.collection('referralBonuses').where('timestamp', '>=', today).get().catch(() => ({ docs: [] })),
-            db.collection('offerwall_completions').where('timestamp', '>=', today).where('status', '==', 'completed').get().catch(() => ({ docs: [] })),
-            db.collection('users').where('created_at', '>=', weekAgo).get().catch(() => ({ size: 0 })),
-            db.collection('logs').where('action', '==', 'faucet_claim').where('timestamp', '>=', weekAgo).get().catch(() => ({ docs: [] })),
-            db.collection('offerwall_completions').where('timestamp', '>=', weekAgo).where('status', '==', 'completed').get().catch(() => ({ docs: [] })),
-            db.collection('withdrawals').where('timestamp', '>=', weekAgo).get().catch(() => ({ docs: [] }))
-        ]);
-        const promoRewards = promoToday.docs.reduce((s, d) => s + (d.data().reward || 0), 0);
-        const referralIncome = refBonusToday.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        const offerEarnings = offerToday.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        const earned7d = claimsWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
-                        + offerWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        const withdrawals7d = wdWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        res.json({
-            promoRewards, promoCount: promoToday.size, todayClaims: claimsToday.size,
-            referralIncome, offerEarnings, newUsers7d: newUsersWeek.size, earned7d, withdrawals7d
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminGetSettings(req, res) {
@@ -1022,9 +934,7 @@ async function adminGetSettings(req, res) {
     try {
         const doc = await db.collection('settings').doc('global').get();
         res.json(doc.exists ? doc.data() : {});
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminUpdateSettings(req, res) {
@@ -1032,9 +942,7 @@ async function adminUpdateSettings(req, res) {
     try {
         await db.collection('settings').doc('global').set(req.body, { merge: true });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function adminBroadcast(req, res) {
@@ -1046,62 +954,35 @@ async function adminBroadcast(req, res) {
             message, target: target || 'all', sentBy: req.user.userId, timestamp: serverTimestamp()
         });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 async function getGlobalStats(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const usersSnap = await db.collection('users').get();
-        const totalUsers = usersSnap.size;
-        const activeToday = usersSnap.docs.filter(d => {
-            const lc = d.data().last_claim;
-            return lc && (Date.now() - lc.toMillis() < 86400000);
-        }).length;
         const wdSnap = await db.collection('withdrawals').get();
-        const totalPaid = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
-        res.json({ totalUsers, activeToday, totalPaid });
-    } catch (err) {
-        res.status(500).json({ error: 'Failed' });
-    }
+        res.json({
+            totalUsers: usersSnap.size,
+            activeToday: usersSnap.docs.filter(d => d.data().last_claim && (Date.now() - d.data().last_claim.toMillis() < 86400000)).length,
+            totalPaid: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
+        });
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 // ============================================
-// EXPRESS APP SETUP
+// EXPRESS APP
 // ============================================
 const app = express();
 
-process.on('unhandledRejection', (err) => {
-    logger.error('Unhandled Rejection', { error: err.message, stack: err.stack });
-});
-
-process.on('uncaughtException', (err) => {
-    logger.error('Uncaught Exception', { error: err.message, stack: err.stack });
-});
+process.on('unhandledRejection', (err) => logger.error('Unhandled Rejection', { error: err.message }));
+process.on('uncaughtException', (err) => logger.error('Uncaught Exception', { error: err.message }));
 
 setupSecurity(app);
 app.use(cors({ origin: true, credentials: true }));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// ============================================
-// ⭐ KRİTİK: STATIC FILE SERVING (Railway için)
-// ============================================
-// api/index.js'den bir üst dizine çık → kök dizin
-const publicPath = path.join(__dirname, '..');
-console.log('[Static] Serving files from:', publicPath);
-
-app.use(express.static(publicPath, {
-    maxAge: '1d',
-    setHeaders: (res, p) => {
-        if (p.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        }
-    }
-}));
 
 // ============================================
 // ROUTES
@@ -1134,7 +1015,6 @@ app.get('/api/promo/history', jwtAuth, getPromoHistory);
 app.get('/api/stats/global', getGlobalStats);
 
 app.get('/api/admin/stats', adminAuth, adminGetStats);
-app.get('/api/admin/dashboard', adminAuth, adminGetDashboard);
 app.get('/api/admin/users', adminAuth, adminGetUsers);
 app.get('/api/admin/withdrawals', adminAuth, adminGetWithdrawals);
 app.post('/api/admin/approve-withdrawal', adminAuth, adminApproveWithdrawal);
@@ -1152,25 +1032,32 @@ app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
 app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
 
 // ============================================
-// ⭐ SPA FALLBACK - TÜM NON-API İSTEKLERİ index.html'E YÖNLENDİR
+// ⭐ STATIC FILE SERVING (Render)
+// ============================================
+const publicPath = path.join(__dirname, '..');
+console.log('[Static] Serving files from:', publicPath);
+
+app.use(express.static(publicPath, {
+    maxAge: '1d',
+    setHeaders: (res, p) => {
+        if (p.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    }
+}));
+
+// ============================================
+// ⭐ SPA FALLBACK
 // ============================================
 app.get('*', (req, res) => {
-    // API istekleri buraya gelmez (önceki route'lar yakalar)
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'API endpoint not found' });
     }
     const indexPath = path.join(publicPath, 'index.html');
-    console.log(`[SPA] Serving: ${indexPath}`);
     res.sendFile(indexPath, (err) => {
         if (err) {
             logger.error('index.html not found', { path: indexPath, error: err.message });
-            res.status(404).send(`
-                <h1>App not found</h1>
-                <p>Expected index.html at: ${indexPath}</p>
-                <p>Public path: ${publicPath}</p>
-                <p>Error: ${err.message}</p>
-                <p>Check that index.html is in the ROOT directory of your repo (not in /public/ or any subfolder).</p>
-            `);
+            res.status(404).send('App not found');
         }
     });
 });
@@ -1184,9 +1071,14 @@ app.use((err, req, res, next) => {
 module.exports = app;
 
 if (require.main === module) {
-    const port = process.env.PORT || 3000;
-    app.listen(port, '0.0.0.0', () => {
-        logger.info(`Coinix backend listening on port ${port}`);
+    app.listen(PORT, '0.0.0.0', () => {
+        logger.info(`Coinix backend listening on port ${PORT}`);
         logger.info(`Static path: ${publicPath}`);
+        logger.info(`App URL: ${APP_URL}`);
     });
+    
+    // ⭐ KEEP-ALIVE PING (Render free tier spin-down önleme)
+    setInterval(() => {
+        fetch(`${APP_URL}/ping`).catch(() => {});
+    }, 14 * 60 * 1000);
 }
