@@ -7,6 +7,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>COINIX Faucet - Earn CNX & DOGE</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- RICHADS PUSH STYLE -->
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+        window.TelegramAdsController = new TelegramAdsController();
+        window.TelegramAdsController.initialize({
+            pubId: "988708",
+            appId: "7950",
+        });
+    </script>
+
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -68,12 +79,10 @@
 
         body { padding-bottom: calc(var(--nav-height) + var(--safe-area-bottom) + 16px); }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--surface-3-color); border-radius: 3px; }
 
-        /* Loading Screen */
         #loading-screen {
             position: fixed; inset: 0; background: var(--bg-color);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -94,7 +103,6 @@
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245,158,11,0); }
         }
 
-        /* Demo Screen */
         .demo-screen {
             position: fixed; inset: 0; background: var(--bg-color);
             z-index: 9998; display: none; flex-direction: column;
@@ -103,7 +111,6 @@
         .demo-screen.active { display: flex; }
         .demo-icon { width: 80px; height: 80px; color: var(--accent-color); margin-bottom: 24px; }
 
-        /* App Header */
         .app-header {
             position: sticky; top: 0; z-index: 100;
             background: var(--surface-color); border-bottom: 1px solid var(--border-color);
@@ -135,16 +142,13 @@
             align-items: center; justify-content: center;
         }
 
-        /* Layout */
         .app-layout { display: flex; min-height: 100vh; }
         .main-area { flex: 1; min-width: 0; }
         .container { max-width: 800px; margin: 0 auto; padding: 16px; }
 
-        /* Pages */
         .page { display: none; animation: fadeIn 0.35s ease; }
         .page.active { display: block; }
 
-        /* Cards */
         .card {
             background: var(--surface-color); border: 1px solid var(--border-color);
             border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;
@@ -162,7 +166,6 @@
         .card-title svg { width: 20px; height: 20px; color: var(--accent-color); }
         .card-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5; }
 
-        /* Stats */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
         .stat-box {
             background: var(--surface-color); border: 1px solid var(--border-color);
@@ -179,7 +182,6 @@
         .stat-value { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
         .stat-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
-        /* Buttons */
         .btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px;
@@ -201,7 +203,6 @@
         .btn-danger { background: var(--danger-color); color: #fff; }
         .btn-sm { padding: 8px 14px; font-size: 12px; width: auto; }
 
-        /* Inputs */
         .input-group { margin-bottom: 16px; }
         .input-label {
             display: block; font-size: 12px; font-weight: 600;
@@ -218,7 +219,6 @@
         .input-field::placeholder { color: var(--text-secondary); opacity: 0.6; }
         textarea.input-field { resize: vertical; min-height: 80px; }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             height: calc(var(--nav-height) + var(--safe-area-bottom));
@@ -236,7 +236,6 @@
         .nav-item svg { width: 24px; height: 24px; transition: transform 0.2s; }
         .nav-item.active svg { transform: scale(1.1); }
 
-        /* Sidebar */
         .sidebar {
             display: none; width: var(--sidebar-width);
             background: var(--surface-color); border-right: 1px solid var(--border-color);
@@ -259,7 +258,6 @@
         .sidebar-item svg { width: 20px; height: 20px; }
         .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-color); }
 
-        /* Faucet */
         .faucet-timer {
             text-align: center; padding: 24px;
             background: var(--surface-2-color); border-radius: var(--radius-md);
@@ -278,7 +276,6 @@
             margin-bottom: 16px; color: var(--accent-color); letter-spacing: 1px;
         }
 
-        /* Offerwall */
         .offerwall-container {
             position: fixed; inset: 0; background: var(--bg-color);
             z-index: 1000; display: none; flex-direction: column;
@@ -292,7 +289,6 @@
         }
         .offerwall-frame { flex: 1; width: 100%; border: none; background: var(--bg-color); }
 
-        /* Lists */
         .list-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 14px; background: var(--surface-2-color);
@@ -308,7 +304,6 @@
             font-size: 14px;
         }
 
-        /* Toast */
         .toast {
             position: fixed; bottom: calc(var(--nav-height) + 24px);
             left: 50%; transform: translateX(-50%) translateY(120px);
@@ -330,7 +325,6 @@
         .toast.warning svg { color: var(--warning-color); }
         .toast.info svg { color: var(--info-color); }
 
-        /* Quick Actions */
         .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .quick-action-btn {
             background: var(--surface-2-color); border: 1px solid var(--border-color);
@@ -341,7 +335,6 @@
         .quick-action-btn svg { width: 28px; height: 28px; margin-bottom: 10px; color: var(--accent-color); }
         .quick-action-btn span { display: block; font-size: 13px; font-weight: 700; }
 
-        /* Percent Buttons */
         .percent-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
         .percent-btn {
             padding: 10px; background: var(--surface-2-color);
@@ -351,7 +344,6 @@
         }
         .percent-btn:hover { background: var(--accent-color); color: var(--accent-text); border-color: var(--accent-color); }
 
-        /* FAQ */
         .faq-item {
             background: var(--surface-2-color); border-radius: var(--radius-sm);
             margin-bottom: 8px; overflow: hidden; cursor: pointer;
@@ -371,7 +363,6 @@
         .faq-item.open .faq-answer { padding: 0 16px 16px; max-height: 300px; }
         .faq-item.open .faq-question svg { transform: rotate(180deg); }
 
-        /* Earn Cards */
         .earn-card {
             background: var(--surface-2-color); border: 1px solid var(--border-color);
             border-radius: var(--radius-md); padding: 18px; margin-bottom: 12px;
@@ -386,7 +377,6 @@
             padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
         }
 
-        /* Referrals */
         .referral-link-box {
             display: flex; gap: 8px; align-items: center;
             background: var(--surface-2-color); padding: 10px 14px;
@@ -414,7 +404,6 @@
         .ref-user-row .name { font-size: 14px; font-weight: 700; }
         .ref-user-row .meta { font-size: 12px; color: var(--text-secondary); }
 
-        /* Admin */
         .admin-tabs {
             display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px;
         }
@@ -456,7 +445,6 @@
         .status-approved { background: rgba(16,185,129,0.15); color: var(--success-color); }
         .status-rejected { background: rgba(239,68,68,0.15); color: var(--danger-color); }
 
-        /* Notifications */
         .notif-item {
             display: flex; align-items: flex-start; gap: 12px;
             padding: 14px; background: var(--surface-2-color);
@@ -474,7 +462,6 @@
         .notif-msg { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
         .notif-time { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
 
-        /* Transaction History */
         .tx-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 14px; background: var(--surface-2-color);
@@ -498,7 +485,6 @@
         .tx-amount.negative { color: var(--danger-color); }
         .tx-time { font-size: 11px; color: var(--text-secondary); margin-top: 2px; text-align: right; }
 
-        /* Modals */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.6);
             z-index: 2000; display: none; align-items: center; justify-content: center;
@@ -521,14 +507,12 @@
             display: flex; gap: 10px; justify-content: flex-end;
         }
 
-        /* Banner slot */
         #richads-banner-slot {
             position: fixed; bottom: calc(var(--nav-height) + var(--safe-area-bottom));
             left: 0; right: 0; z-index: 50; display: flex; justify-content: center; pointer-events: none;
         }
         #richads-banner { pointer-events: auto; }
 
-        /* Responsive */
         @media (min-width: 1024px) {
             body { padding-bottom: 16px; }
             .sidebar { display: flex; }
@@ -540,7 +524,6 @@
             .toast, #richads-banner-slot { bottom: 20px; }
         }
 
-        /* Utility */
         .text-center { text-align: center; }
         .text-secondary { color: var(--text-secondary); }
         .mb-1 { margin-bottom: 4px; }
@@ -852,6 +835,19 @@
                         </div>
                         <div style="font-size:13px;color:var(--text-secondary);">Complete surveys, install apps, and more.</div>
                     </div>
+                    
+                    <!-- RICHADS VIDEO AD BUTTON -->
+                    <div class="card" style="margin-top:12px;">
+                        <div class="card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Watch Video Ad
+                        </div>
+                        <div class="card-subtitle">Watch a short video and support COINIX</div>
+                        <button class="btn btn-primary" data-action="show-video-ad">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right:6px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Play Video Ad
+                        </button>
+                    </div>
                 </div>
 
                 <!-- PROMO -->
@@ -1055,7 +1051,7 @@
                 </div>
 
                 <!-- ADMIN -->
-                <div id="page-admin" class="page hidden">
+                <div id="page-admin" class="page">
                     <div class="card-glass">
                         <div class="card-title">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -1090,7 +1086,6 @@
                         <button class="admin-tab" data-admin-tab="withdraws">Withdraws</button>
                     </div>
 
-                    <!-- Users Tab -->
                     <div class="admin-panel active" id="admin-panel-users">
                         <div class="card">
                             <div class="card-title">Users (<span id="admin-users-count">0</span>)</div>
@@ -1101,7 +1096,6 @@
                         </div>
                     </div>
 
-                    <!-- Broadcast Tab -->
                     <div class="admin-panel" id="admin-panel-broadcast">
                         <div class="card">
                             <div class="card-title">Broadcast Message</div>
@@ -1127,7 +1121,6 @@
                         </div>
                     </div>
 
-                    <!-- Promos Tab -->
                     <div class="admin-panel" id="admin-panel-promos">
                         <div class="card">
                             <div class="card-title">Create Promo Code</div>
@@ -1160,7 +1153,6 @@
                         </div>
                     </div>
 
-                    <!-- Withdraws Tab -->
                     <div class="admin-panel" id="admin-panel-withdraws">
                         <div class="card">
                             <div class="card-title">Withdrawal Requests (<span id="admin-wd-count">0</span>)</div>
@@ -1262,6 +1254,21 @@
         <div id="richads-banner"></div>
     </div>
 
+    <!-- RICHADS INTERSTITIAL BANNER (AUTO) -->
+    <script>
+        // Interstitial banner otomatik olarak initialize sonrası tetiklenir
+        // RichAds zaten head'de initialize edildi, burada ekstra bir şey yapmaya gerek yok
+        // Ancak API destekliyorsa showAd ile tetikleyebiliriz:
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.TelegramAdsController && window.TelegramAdsController.showAd) {
+                try {
+                    // Interstitial banner otomatik çıkış
+                    window.TelegramAdsController.showAd({ type: 'interstitial' });
+                } catch(e) { console.log('Interstitial not ready yet'); }
+            }
+        });
+    </script>
+
     <script>
         // ============================================
         // CONFIG & STATE
@@ -1350,6 +1357,7 @@
                 case 'load-games': loadOfferwall('games'); break;
                 case 'load-offerwall': loadOfferwall('offerwall'); break;
                 case 'mark-all-read': markAllNotificationsRead(); break;
+                case 'show-video-ad': showVideoAd(); break;
                 case 'admin-toggle-promo': adminTogglePromo(el.dataset.code, el.dataset.enabled !== '1'); break;
                 case 'admin-delete-promo': adminDeletePromo(el.dataset.code); break;
                 case 'admin-approve-wd': adminApproveWd(el.dataset.id); break;
@@ -1357,6 +1365,35 @@
                 case 'admin-ban-user': openBanModal(el.dataset.id); break;
                 case 'admin-add-balance': openAddBalanceModal(el.dataset.id); break;
                 case 'admin-view-user': openUserDetailModal(el.dataset.id); break;
+            }
+        }
+
+        // ============================================
+        // RICHADS VIDEO AD
+        // ============================================
+        function showVideoAd() {
+            if (!window.TelegramAdsController) {
+                showToast('Ad controller not ready', 'warning');
+                return;
+            }
+            try {
+                // Video/Rewarded ad gösterimi
+                if (window.TelegramAdsController.showAd) {
+                    window.TelegramAdsController.showAd({ 
+                        type: 'rewarded',
+                        onReward: function() {
+                            showToast('Ad completed! Thanks for supporting COINIX.', 'success');
+                        },
+                        onError: function(err) {
+                            console.warn('Ad error:', err);
+                            showToast('Ad failed to load. Try again later.', 'error');
+                        }
+                    });
+                } else {
+                    showToast('Video ads not available in this region.', 'warning');
+                }
+            } catch(e) {
+                showToast('Ad error: ' + e.message, 'error');
             }
         }
 
