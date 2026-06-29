@@ -9,6 +9,9 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const admin = require('firebase-admin');
 
+// ============================================
+// FIREBASE INIT
+// ============================================
 let serviceAccount = null;
 let firebaseInitialized = false;
 let db = null;
@@ -35,6 +38,8 @@ try {
         increment = (n) => FieldValue.increment(n);
         firebaseInitialized = true;
         console.log('Firebase initialized successfully');
+    } else {
+        console.warn('Firebase: No credentials found');
     }
 } catch (e) {
     console.error('Firebase init error:', e.message);
@@ -42,21 +47,33 @@ try {
     db = null;
 }
 
+// ============================================
+// LOGGER
+// ============================================
 const logger = {
     info: (msg, meta = {}) => console.log(`[INFO] ${msg}`, meta),
     error: (msg, meta = {}) => console.error(`[ERROR] ${msg}`, meta),
+    debug: (msg, meta = {}) => console.log(`[DEBUG] ${msg}`, meta),
     warn: (msg, meta = {}) => console.warn(`[WARN] ${msg}`, meta)
 };
 
+// ============================================
+// CONFIG
+// ============================================
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me';
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
 const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
+const APP_URL = process.env.APP_URL || 'https://coinixfaucet-production.up.railway.app';
+const PORT = process.env.PORT || 3000;
 
+// ============================================
+// FAUCET / PROMO CONFIG
+// ============================================
 const FAUCET_COOLDOWN = 180000;
 const FAUCET_REWARD = 1.0;
 const REFERRAL_SIGNUP_BONUS = 50;
@@ -64,12 +81,41 @@ const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'shortlinks', 'game', 'games', 'visit', 'visits'];
 
+// ============================================
+// SECURITY (Helmet) - ÖNCE TANIMLA
+// ============================================
+function setupSecurity(app) {
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+                fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+                imgSrc: ["'self'", "data:", "https:", "blob:"],
+                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me"],
+                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
+                objectSrc: ["'none'"],
+                upgradeInsecureRequests: []
+            }
+        },
+        crossOriginEmbedderPolicy: false,
+        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
+    }));
+}
+
+// ============================================
+// RATE LIMITERS
+// ============================================
 const generalLimiter = rateLimit({ windowMs: 60000, max: 120 });
 const authLimiter = rateLimit({ windowMs: 300000, max: 20 });
 const claimLimiter = rateLimit({ windowMs: 60000, max: 30 });
 const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10 });
 const promoLimiter = rateLimit({ windowMs: 3600000, max: 30 });
 
+// ============================================
+// AUTH MIDDLEWARE
+// ============================================
 function validateTelegramInitData(initData) {
     if (!initData || !BOT_TOKEN) return false;
     try {
@@ -100,6 +146,9 @@ function adminAuth(req, res, next) {
     next();
 }
 
+// ============================================
+// UTILS
+// ============================================
 async function logAction(action, userId, details = {}) {
     if (!db) return;
     try {
@@ -124,6 +173,9 @@ function startOfDayMinus(days) {
     return Timestamp ? Timestamp.fromDate(d) : d;
 }
 
+// ============================================
+// DOGE PRICE CACHE
+// ============================================
 let dogePriceCache = { price: 0, change: 0, lastUpdate: 0 };
 
 async function fetchDogePrice() {
@@ -147,6 +199,9 @@ async function fetchDogePrice() {
 
 fetchDogePrice();
 
+// ============================================
+// OFFERWALL.ME
+// ============================================
 async function getOfferwallUrl(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
@@ -173,13 +228,10 @@ async function getPTCAds(req, res) {
         const ads = (data.data || []).map(ad => ({
             id: ad.id || String(Math.random()),
             title: ad.title || 'Ad',
-            description: ad.description || '',
             reward: Number(ad.reward) || 0,
             duration: ad.duration || 30,
-            url: ad.url || '',
-            thumbnail: ad.thumbnail || ''
+            url: ad.url || ''
         }));
-        await logAction('ptc_ads_loaded', userId, { count: ads.length });
         res.json({ success: true, ads, total: ads.length });
     } catch (err) {
         res.status(500).json({ error: 'Failed' });
@@ -202,8 +254,7 @@ async function getShortlinks(req, res) {
             id: link.id || String(Math.random()),
             name: link.name || 'Link',
             reward: Number(link.reward) || 0,
-            url: link.url || '',
-            remaining_views: link.remaining_views || 0
+            url: link.url || ''
         }));
         res.json({ success: true, shortlinks, total: shortlinks.length });
     } catch (err) {
@@ -222,12 +273,14 @@ async function getGames(req, res) {
     }
 }
 
+// ============================================
+// POSTBACK
+// ============================================
 const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
 
 function isOfferwallIP(ip) {
     if (!ip) return false;
-    const normalized = ip.toLowerCase();
-    return OFFERWALL_IPS.some(a => normalized === a.toLowerCase());
+    return OFFERWALL_IPS.some(a => ip.toLowerCase() === a.toLowerCase());
 }
 
 async function postback(req, res) {
@@ -273,13 +326,9 @@ async function postback(req, res) {
                 }
             }
             t.set(db.collection('offerwall_completions').doc(transId), {
-                user_id: subId,
-                trans_id: transId,
-                task_type: taskType,
+                user_id: subId, trans_id: transId, task_type: taskType,
                 offer_name: offer_name || 'Unknown',
-                base_amount: baseAmt,
-                bonus_amount: bonusAmt,
-                amount: totalAmt,
+                base_amount: baseAmt, bonus_amount: bonusAmt, amount: totalAmt,
                 status: numericStatus === 1 ? 'completed' : 'chargeback',
                 timestamp: serverTimestamp()
             });
@@ -293,6 +342,9 @@ async function postback(req, res) {
     }
 }
 
+// ============================================
+// AUTH
+// ============================================
 async function auth(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     const { initData, ref } = req.body;
@@ -314,14 +366,9 @@ async function auth(req, res) {
                 telegram_id: userId,
                 username: user.username || null,
                 first_name: user.first_name || null,
-                balance: 0,
-                doge_balance: 0,
-                total_earned: 0,
-                total_claims: 0,
-                total_withdrawals: 0,
-                referrals: 0,
-                referral_earnings: 0,
-                referral_balance: 0,
+                balance: 0, doge_balance: 0, total_earned: 0,
+                total_claims: 0, total_withdrawals: 0,
+                referrals: 0, referral_earnings: 0, referral_balance: 0,
                 referred_by: ref || null,
                 banned: false,
                 is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
@@ -352,6 +399,9 @@ async function auth(req, res) {
     }
 }
 
+// ============================================
+// USER ENDPOINTS
+// ============================================
 async function getMe(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
@@ -360,13 +410,9 @@ async function getMe(req, res) {
         if (!doc.exists) return res.status(404).json({ error: 'User not found' });
         const d = doc.data();
         res.json({
-            telegram_id: d.telegram_id,
-            username: d.username,
-            first_name: d.first_name,
-            balance: d.balance || 0,
-            doge_balance: d.doge_balance || 0,
-            total_earned: d.total_earned || 0,
-            total_claims: d.total_claims || 0,
+            telegram_id: d.telegram_id, username: d.username, first_name: d.first_name,
+            balance: d.balance || 0, doge_balance: d.doge_balance || 0,
+            total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
             total_withdrawals: d.total_withdrawals || 0,
             total_offerwall_earned: d.total_offerwall_earned || 0,
             referrals: d.referrals || 0,
@@ -388,11 +434,9 @@ async function getBalance(req, res) {
         if (!doc.exists) return res.json({ balance: 0, doge_balance: 0, referral_balance: 0 });
         const d = doc.data();
         res.json({
-            balance: d.balance || 0,
-            doge_balance: d.doge_balance || 0,
+            balance: d.balance || 0, doge_balance: d.doge_balance || 0,
             referral_balance: d.referral_balance || 0,
-            total_earned: d.total_earned || 0,
-            total_claims: d.total_claims || 0,
+            total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
             referrals: d.referrals || 0,
             referral_earnings: d.referral_earnings || 0,
             last_claim: d.last_claim ? d.last_claim.toMillis() : null
@@ -437,11 +481,8 @@ async function giveReferralBonus(userId, amount, type) {
             });
         });
         await db.collection('referralBonuses').add({
-            referrer: referrerId,
-            referred: userId,
-            amount: bonusAmount,
-            type: type || 'unknown',
-            timestamp: serverTimestamp()
+            referrer: referrerId, referred: userId, amount: bonusAmount,
+            type: type || 'unknown', timestamp: serverTimestamp()
         });
     } catch (e) {
         logger.error('Referral bonus error', { error: e.message });
@@ -593,6 +634,9 @@ async function getDogePrice(req, res) {
     }
 }
 
+// ============================================
+// CAPTCHA
+// ============================================
 const activeCaptchas = new Map();
 
 function generateMathCaptcha(userId) {
@@ -644,13 +688,15 @@ async function verifyCaptchaEndpoint(req, res) {
         const userId = String(req.user.userId);
         const { answer } = req.body;
         if (!answer) return res.status(400).json({ valid: false, error: 'Answer required' });
-        const result = verifyCaptcha(userId, answer);
-        res.json(result);
+        res.json(verifyCaptcha(userId, answer));
     } catch (err) {
         res.status(500).json({ error: 'Failed' });
     }
 }
 
+// ============================================
+// PROMO CODES
+// ============================================
 function validatePromoCode(code) {
     if (!code) return null;
     const trimmed = String(code).trim().toUpperCase();
@@ -707,18 +753,14 @@ async function redeemPromo(req, res) {
             });
             const useRef = db.collection('promo_uses').doc();
             t.set(useRef, {
-                user_id: userId,
-                code,
-                reward,
-                coin: promo.coin,
+                user_id: userId, code, reward, coin: promo.coin,
                 timestamp: serverTimestamp()
             });
         });
         await logAction('promo_redeem', userId, { code, reward, coin: promo.coin });
         res.json({ success: true, code, reward, coin: promo.coin });
     } catch (err) {
-        const m = err.message || 'Failed to redeem';
-        return res.status(400).json({ error: m });
+        return res.status(400).json({ error: err.message || 'Failed to redeem' });
     }
 }
 
@@ -730,10 +772,7 @@ async function getPromoHistory(req, res) {
         const history = snap.docs.map(d => {
             const data = d.data();
             return {
-                id: d.id,
-                code: data.code,
-                reward: data.reward,
-                coin: data.coin,
+                id: d.id, code: data.code, reward: data.reward, coin: data.coin,
                 usedAt: data.timestamp?.toMillis ? data.timestamp.toMillis() : null
             };
         });
@@ -744,6 +783,9 @@ async function getPromoHistory(req, res) {
     }
 }
 
+// ============================================
+// ADMIN ENDPOINTS
+// ============================================
 async function adminListPromos(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
@@ -751,14 +793,11 @@ async function adminListPromos(req, res) {
         const list = snap.docs.map(d => {
             const data = d.data();
             return {
-                code: d.id,
-                coin: data.coin || 'CNX',
-                reward: data.reward || 0,
-                usageLimit: data.usageLimit || data.maxUses || 0,
-                usedCount: data.usedCount || 0,
+                code: d.id, coin: data.coin || 'CNX', reward: data.reward || 0,
+                usageLimit: data.usageLimit || 0, usedCount: data.usedCount || 0,
                 enabled: data.enabled !== false,
                 createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : null,
-                expiresAt: data.expiresAt?.toMillis ? data.expiresAt.toMillis() : (data.expiresAt ? new Date(data.expiresAt).getTime() : null)
+                expiresAt: data.expiresAt?.toMillis ? data.expiresAt.toMillis() : null
             };
         });
         res.json(list);
@@ -773,9 +812,9 @@ async function adminCreatePromo(req, res) {
         const code = validatePromoCode(req.body.code);
         const { coin = 'CNX' } = req.body;
         const reward = Number(req.body.reward);
-        const usageLimit = req.body.usageLimit ? parseInt(req.body.usageLimit) : (req.body.maxUses ? parseInt(req.body.maxUses) : 100);
+        const usageLimit = req.body.usageLimit ? parseInt(req.body.usageLimit) : 100;
         const expiresAt = req.body.expiresAt || null;
-        if (!code) return res.status(400).json({ error: 'Invalid code (3-32 chars, A-Z 0-9 _ -)' });
+        if (!code) return res.status(400).json({ error: 'Invalid code' });
         if (!reward || reward <= 0 || isNaN(reward)) return res.status(400).json({ error: 'Invalid reward' });
         if (!['CNX', 'DOGE'].includes(coin)) return res.status(400).json({ error: 'Coin must be CNX or DOGE' });
         const promoRef = db.collection('promoCodes').doc(code);
@@ -796,9 +835,8 @@ async function adminTogglePromo(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const code = validatePromoCode(req.body.code);
-        const enabled = !!req.body.enabled;
         if (!code) return res.status(400).json({ error: 'Invalid code' });
-        await db.collection('promoCodes').doc(code).update({ enabled });
+        await db.collection('promoCodes').doc(code).update({ enabled: !!req.body.enabled });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -954,9 +992,8 @@ async function adminGetDashboard(req, res) {
     try {
         const today = startOfTodayTs();
         const weekAgo = startOfDayMinus(7);
-        const [promoToday, promoCountToday, claimsToday, refBonusToday, offerToday, newUsersWeek, claimsWeek, offerWeek, wdWeek] = await Promise.all([
+        const [promoToday, claimsToday, refBonusToday, offerToday, newUsersWeek, claimsWeek, offerWeek, wdWeek] = await Promise.all([
             db.collection('promo_uses').where('timestamp', '>=', today).get().catch(() => ({ docs: [] })),
-            db.collection('promo_uses').where('timestamp', '>=', today).get().catch(() => ({ size: 0 })),
             db.collection('logs').where('action', '==', 'faucet_claim').where('timestamp', '>=', today).get().catch(() => ({ size: 0 })),
             db.collection('referralBonuses').where('timestamp', '>=', today).get().catch(() => ({ docs: [] })),
             db.collection('offerwall_completions').where('timestamp', '>=', today).where('status', '==', 'completed').get().catch(() => ({ docs: [] })),
@@ -969,11 +1006,10 @@ async function adminGetDashboard(req, res) {
         const referralIncome = refBonusToday.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         const offerEarnings = offerToday.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         const earned7d = claimsWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
-                        + offerWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
-                        + promoToday.docs.reduce((s, d) => s + (d.data().reward || 0), 0);
+                        + offerWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         const withdrawals7d = wdWeek.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         res.json({
-            promoRewards, promoCount: promoCountToday.size, todayClaims: claimsToday.size,
+            promoRewards, promoCount: promoToday.size, todayClaims: claimsToday.size,
             referralIncome, offerEarnings, newUsers7d: newUsersWeek.size, earned7d, withdrawals7d
         });
     } catch (err) {
@@ -1032,6 +1068,9 @@ async function getGlobalStats(req, res) {
     }
 }
 
+// ============================================
+// EXPRESS APP SETUP
+// ============================================
 const app = express();
 
 process.on('unhandledRejection', (err) => {
@@ -1048,6 +1087,25 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// ============================================
+// ⭐ KRİTİK: STATIC FILE SERVING (Railway için)
+// ============================================
+// api/index.js'den bir üst dizine çık → kök dizin
+const publicPath = path.join(__dirname, '..');
+console.log('[Static] Serving files from:', publicPath);
+
+app.use(express.static(publicPath, {
+    maxAge: '1d',
+    setHeaders: (res, p) => {
+        if (p.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    }
+}));
+
+// ============================================
+// ROUTES
+// ============================================
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 app.get('/api/health', (req, res) => res.json({ ok: true, db: firebaseInitialized, ts: Date.now() }));
 
@@ -1093,40 +1151,42 @@ app.post('/api/admin/promo/create', adminAuth, adminCreatePromo);
 app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
 app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
 
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ error: 'API endpoint not found' });
+// ============================================
+// ⭐ SPA FALLBACK - TÜM NON-API İSTEKLERİ index.html'E YÖNLENDİR
+// ============================================
+app.get('*', (req, res) => {
+    // API istekleri buraya gelmez (önceki route'lar yakalar)
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    const indexPath = path.join(publicPath, 'index.html');
+    console.log(`[SPA] Serving: ${indexPath}`);
+    res.sendFile(indexPath, (err) => {
+        if (err) {
+            logger.error('index.html not found', { path: indexPath, error: err.message });
+            res.status(404).send(`
+                <h1>App not found</h1>
+                <p>Expected index.html at: ${indexPath}</p>
+                <p>Public path: ${publicPath}</p>
+                <p>Error: ${err.message}</p>
+                <p>Check that index.html is in the ROOT directory of your repo (not in /public/ or any subfolder).</p>
+            `);
+        }
+    });
 });
 
+// Error handler
 app.use((err, req, res, next) => {
-    logger.error('Express error', { error: err.message, path: req.path, method: req.method });
-    res.status(500).json({ error: 'Internal server error', message: err.message });
+    logger.error('Express error', { error: err.message, path: req.path });
+    res.status(500).json({ error: 'Internal server error' });
 });
 
 module.exports = app;
 
 if (require.main === module) {
     const port = process.env.PORT || 3000;
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
         logger.info(`Coinix backend listening on port ${port}`);
+        logger.info(`Static path: ${publicPath}`);
     });
-}
-
-function setupSecurity(app) {
-    app.use(helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-                fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-                imgSrc: ["'self'", "data:", "https:", "blob:"],
-                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me"],
-                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-                objectSrc: ["'none'"],
-                upgradeInsecureRequests: []
-            }
-        },
-        crossOriginEmbedderPolicy: false,
-        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
-    }));
 }
