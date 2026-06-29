@@ -453,7 +453,7 @@ async function getGames(req, res) {
 }
 
 // ============================================
-// POSTBACK (secure, with bonus + referral commission)
+// POSTBACK (SECURE - OFFERWALL.ME)
 // ============================================
 
 const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
