@@ -93,10 +93,10 @@ validateCriticalConfig();
 // ============================================
 // FAUCET / PROMO / SWAP CONFIG
 // ============================================
-const FAUCET_COOLDOWN = 180000; // 3 minutes
-const FAUCET_REWARD = 0.20; // 0.20 CNX = $0.20
-const CNX_USD_VALUE = 0.01; // 1 CNX = $0.01
-const REFERRAL_SIGNUP_BONUS = 1; // 1 CNX per ref
+const FAUCET_COOLDOWN = 180000;
+const FAUCET_REWARD = 0.20;
+const CNX_USD_VALUE = 0.01;
+const REFERRAL_SIGNUP_BONUS = 1;
 const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'offer', 'task', 'game'];
@@ -139,7 +139,7 @@ const swapLimiter = rateLimit({ windowMs: 60000, max: 20, standardHeaders: true,
 // NONCE / REPLAY GUARD
 // ============================================
 const usedNonces = new Map();
-const NONCE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
+const NONCE_MAX_AGE = 5 * 60 * 1000;
 
 function validateNonce(nonce, timestamp) {
     if (!nonce || !timestamp) return { valid: false, error: 'Nonce and timestamp required' };
@@ -195,7 +195,7 @@ function validateTelegramInitData(initData) {
         }
 
         const entries = Object.keys(params).sort().map(k => `${k}=${params[k]}`);
-        const dataCheckString = entries.join('\n');
+        const dataCheckString = entries.join('\\n');
         
         const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
         const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
@@ -234,7 +234,7 @@ function adminAuth(req, res, next) {
         req.user = payload;
         next();
     } catch (e) {
-        return lid admin token' });
+        return res.status(403).json({ error: 'Invalid admin token' });
     }
 }
 
@@ -294,6 +294,13 @@ function startOfDayMinus(days) {
     return Timestamp ? Timestamp.fromDate(d) : d;
 }
 
+function tsToMillis(ts) {
+    if (!ts) return null;
+    if (ts.toMillis) return ts.toMillis();
+    if (ts instanceof Date) return ts.getTime();
+    return null;
+}
+
 // ============================================
 // TELEGRAM BOT API HELPERS
 // ============================================
@@ -314,13 +321,13 @@ async function sendTelegramMessage(chatId, text, parseMode = 'HTML') {
 
 async function notifyAdminNewUser(userData, ref) {
     if (!ADMIN_TELEGRAM_ID) return;
-    const text = `🆕 <b>New User Registered</b>\n\n` +
-        `👤 ID: <code>${userData.telegram_id}</code>\n` +
-        `📝 Username: ${userData.username ? '@' + userData.username : 'N/A'}\n` +
-        `📛 First Name: ${userData.first_name || 'N/A'}\n` +
-        `🔗 Referral: ${ref || 'None'}\n` +
-        `🌍 Country: ${userData.country || 'Unknown'}\n` +
-        `⏰ Time: ${new Date().toISOString()}`;
+    const text = `New User Registered\\n\\n` +
+        `ID: ${userData.telegram_id}\\n` +
+        `Username: ${userData.username ? '@' + userData.username : 'N/A'}\\n` +
+        `First Name: ${userData.first_name || 'N/A'}\\n` +
+        `Referral: ${ref || 'None'}\\n` +
+        `Country: ${userData.country || 'Unknown'}\\n` +
+        `Time: ${new Date().toISOString()}`;
     await sendTelegramMessage(ADMIN_TELEGRAM_ID, text);
 }
 
@@ -334,7 +341,6 @@ async function broadcastToUsers(message) {
             if (!user.telegram_id || user.banned) continue;
             const res = await sendTelegramMessage(user.telegram_id, message, 'Markdown');
             if (res.ok) sent++; else failed++;
-            // Rate limit respect: 30 msg/s
             await new Promise(r => setTimeout(r, 35));
         }
     } catch (e) {
@@ -357,7 +363,7 @@ async function sendMissYouMessages() {
         for (const doc of snap.docs) {
             const user = doc.data();
             if (user.banned || !user.telegram_id) continue;
-            const text = "We miss you ❤️\n\nCome back and claim your reward!\nA bonus of $0.01 is waiting for you.";
+            const text = "We miss you!\\n\\nCome back and claim your reward!\\nA bonus of $0.01 is waiting for you.";
             const res = await sendTelegramMessage(user.telegram_id, text);
             if (res.ok) {
                 await doc.ref.update({ inactivity_reminder_sent: true });
@@ -421,7 +427,6 @@ async function getPTCAds(req, res) {
         if (!OFFERWALL_APP_ID || !OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        // FIXED: api = APP_ID, token = API_TOKEN
         const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         
         const controller = new AbortController();
@@ -457,7 +462,6 @@ async function getShortlinks(req, res) {
         if (!OFFERWALL_APP_ID || !OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        // FIXED: api = APP_ID, token = API_TOKEN
         const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         
         const controller = new AbortController();
@@ -597,7 +601,6 @@ async function auth(req, res) {
     if (!initData) return res.status(400).json({ error: 'Missing initData' });
     if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid signature' });
     
-    // Replay guard
     if (nonce && timestamp) {
         const nonceCheck = validateNonce(nonce, timestamp);
         if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
@@ -626,12 +629,10 @@ async function auth(req, res) {
     const userId = String(user.id);
     const userRef = db.collection('users').doc(userId);
 
-    // Self-referral guard
     if (ref && ref === userId) {
         return res.status(400).json({ error: 'Self referral not allowed' });
     }
 
-    // Device fingerprint guard
     if (device_fp) {
         try {
             const deviceId = String(device_fp).slice(0, 64);
@@ -686,36 +687,42 @@ async function auth(req, res) {
                 const refRef = db.collection('users').doc(String(ref));
                 const refDoc = await refRef.get();
                 if (refDoc.exists && !refDoc.data().banned) {
-                    await db.runTransaction(async (t) => {
-                        const rdoc = await t.get(refRef);
-                        if (!rdoc.exists) return;
-                        const rdata = rdoc.data();
-                        // Prevent duplicate referral bonus for same referred user
-                        const existingRef = await db.collection('referralBonuses').where('referred', '==', userId).where('type', '==', 'signup').limit(1).get();
-                        if (!existingRef.empty) return;
-                        
-                        t.update(refRef, {
-                            referrals: increment(1),
-                            referral_balance: increment(REFERRAL_SIGNUP_BONUS),
-                            referral_earnings: increment(REFERRAL_SIGNUP_BONUS)
+                    // Check for existing signup bonus FIRST (outside transaction)
+                    const existingRef = await db.collection('referralBonuses')
+                        .where('referred', '==', userId)
+                        .where('type', '==', 'signup')
+                        .limit(1)
+                        .get();
+                    
+                    if (existingRef.empty) {
+                        await db.runTransaction(async (t) => {
+                            const rdoc = await t.get(refRef);
+                            if (!rdoc.exists) return;
+                            t.update(refRef, {
+                                referrals: increment(1),
+                                referral_balance: increment(REFERRAL_SIGNUP_BONUS),
+                                referral_earnings: increment(REFERRAL_SIGNUP_BONUS)
+                            });
+                            const rbRef = db.collection('referralBonuses').doc();
+                            t.set(rbRef, {
+                                referrer: String(ref), referred: userId, amount: REFERRAL_SIGNUP_BONUS,
+                                type: 'signup', timestamp: serverTimestamp()
+                            });
                         });
-                        const rbRef = db.collection('referralBonuses').doc();
-                        t.set(rbRef, {
-                            referrer: String(ref), referred: userId, amount: REFERRAL_SIGNUP_BONUS,
-                            type: 'signup', timestamp: serverTimestamp()
-                        });
-                    });
+                    }
                 }
             }
             await logAction('user_register', userId, { ref });
             await logTransaction(userId, 'signup', 0, 'CNX', 'Account created', { ref });
-            
-            // Notify admin
             await notifyAdminNewUser(newUser, ref);
         } else {
             if (doc.data().banned) return res.status(403).json({ error: 'User banned' });
-            // Update last active
-            await userRef.update({ last_active: serverTimestamp(), username: user.username || doc.data().username, first_name: user.first_name || doc.data().first_name, photo_url: user.photo_url || doc.data().photo_url });
+            await userRef.update({ 
+                last_active: serverTimestamp(), 
+                username: user.username || doc.data().username, 
+                first_name: user.first_name || doc.data().first_name, 
+                photo_url: user.photo_url || doc.data().photo_url 
+            });
         }
         
         const isAdmin = String(userId) === String(ADMIN_TELEGRAM_ID);
@@ -748,8 +755,8 @@ async function getMe(req, res) {
             referrals: d.referrals || 0,
             referral_earnings: d.referral_earnings || 0,
             referral_balance: d.referral_balance || 0,
-            last_claim: d.last_claim ? d.last_claim.toMillis() : null,
-            last_opened: d.last_opened ? d.last_opened.toMillis() : null,
+            last_claim: tsToMillis(d.last_claim),
+            last_opened: tsToMillis(d.last_opened),
             banned: d.banned || false,
             is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID)
         });
@@ -768,7 +775,7 @@ async function getBalance(req, res) {
             total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
             referrals: d.referrals || 0,
             referral_earnings: d.referral_earnings || 0,
-            last_claim: d.last_claim ? d.last_claim.toMillis() : null
+            last_claim: tsToMillis(d.last_claim)
         });
     } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
@@ -779,7 +786,6 @@ async function getTodayEarnings(req, res) {
         const userId = String(req.user.userId);
         const startOfDay = startOfTodayTs();
         
-        // Faucet claims today
         const faucetSnap = await db.collection('transactions')
             .where('user_id', '==', userId)
             .where('type', '==', 'faucet_claim')
@@ -787,7 +793,6 @@ async function getTodayEarnings(req, res) {
             .get();
         const faucetTotal = faucetSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         
-        // Offerwall today
         const offerSnap = await db.collection('transactions')
             .where('user_id', '==', userId)
             .where('type', '==', 'offerwall')
@@ -795,7 +800,6 @@ async function getTodayEarnings(req, res) {
             .get();
         const offerTotal = offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         
-        // Promo today
         const promoSnap = await db.collection('transactions')
             .where('user_id', '==', userId)
             .where('type', '==', 'promo')
@@ -837,7 +841,7 @@ async function getReferralList(req, res) {
                 username: x.username || null,
                 photo_url: x.photo_url || null,
                 total_earned: x.total_earned || 0,
-                created_at: x.created_at?.toMillis ? x.created_at.toMillis() : null
+                created_at: tsToMillis(x.created_at)
             };
         });
         res.json({ count: list.length, list });
@@ -914,9 +918,8 @@ async function updateActivity(req, res) {
         
         const updates = { last_opened: serverTimestamp(), last_active: serverTimestamp() };
         
-        // Return bonus: if away for 3+ days and not yet claimed
         if (lastOpened && (now - lastOpened) >= threeDays && !d.return_bonus_claimed) {
-            updates.balance = increment(1); // 1 CNX = $0.01
+            updates.balance = increment(1);
             updates.return_bonus_claimed = true;
             updates.total_earned = increment(1);
             bonusGranted = true;
@@ -924,7 +927,6 @@ async function updateActivity(req, res) {
             await createNotification(userId, 'Welcome Back!', 'You received 1 CNX ($0.01) for coming back!', 'reward');
         }
         
-        // Reset inactivity reminder flag when user opens app
         if (d.inactivity_reminder_sent) {
             updates.inactivity_reminder_sent = false;
         }
@@ -996,7 +998,6 @@ async function claim(req, res) {
     const { captchaAnswer, nonce, timestamp } = req.body;
     if (!captchaAnswer) return res.status(400).json({ error: 'Captcha required', captchaRequired: true });
     
-    // Replay guard
     if (nonce && timestamp) {
         const nonceCheck = validateNonce(nonce, timestamp);
         if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
@@ -1018,7 +1019,6 @@ async function claim(req, res) {
             if (now - lastClaim < FAUCET_COOLDOWN) {
                 throw new Error(`Cooldown|${FAUCET_COOLDOWN - (now - lastClaim)}`);
             }
-            // Duplicate claim guard: check if a claim was made in this exact second
             const recentClaims = await db.collection('transactions')
                 .where('user_id', '==', userId)
                 .where('type', '==', 'faucet_claim')
@@ -1068,13 +1068,11 @@ async function swap(req, res) {
     if (!amt || amt <= 0 || isNaN(amt)) return res.status(400).json({ error: 'Invalid amount' });
     if (!direction || !['cnx-to-doge', 'doge-to-cnx'].includes(direction)) return res.status(400).json({ error: 'Invalid direction' });
     
-    // Replay guard
     if (nonce && timestamp) {
         const nonceCheck = validateNonce(nonce, timestamp);
         if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
     }
     
-    // Ensure price is fresh
     if (Date.now() - dogePriceCache.lastUpdate > 300000) {
         await fetchDogePrice();
     }
@@ -1091,7 +1089,6 @@ async function swap(req, res) {
             const d = doc.data();
             if (d.banned) throw new Error('User banned');
             
-            // Duplicate swap guard
             const recentSwaps = await db.collection('transactions')
                 .where('user_id', '==', userId)
                 .where('type', '==', 'swap')
@@ -1102,7 +1099,6 @@ async function swap(req, res) {
             
             if (direction === 'cnx-to-doge') {
                 if ((d.balance || 0) < amt) throw new Error('Insufficient CNX');
-                // Formula: DOGE = (CNX * 0.01 USD) / Current DOGE Price
                 const usdValue = amt * CNX_USD_VALUE;
                 resultAmount = Math.round((usdValue / dogePriceCache.price) * 1e8) / 1e8;
                 if (resultAmount <= 0) throw new Error('Swap amount too small');
@@ -1161,7 +1157,6 @@ async function withdraw(req, res) {
     if (!amt || amt <= 0 || isNaN(amt)) return res.status(400).json({ error: 'Invalid amount' });
     if (!faucetpay_email || !faucetpay_email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
     
-    // Replay guard
     if (nonce && timestamp) {
         const nonceCheck = validateNonce(nonce, timestamp);
         if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
@@ -1177,7 +1172,6 @@ async function withdraw(req, res) {
             if ((d.doge_balance || 0) < amt) throw new Error('Insufficient DOGE');
             if (amt < 0.1) throw new Error('Minimum 0.10 DOGE');
             
-            // Duplicate withdraw guard
             const recentWds = await db.collection('transactions')
                 .where('user_id', '==', userId)
                 .where('type', '==', 'withdraw')
@@ -1211,7 +1205,7 @@ async function getWithdrawHistory(req, res) {
     try {
         const userId = String(req.user.userId);
         const snapshot = await db.collection('withdrawals').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
-        res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
+        res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: tsToMillis(d.data().timestamp) })));
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -1310,7 +1304,7 @@ async function getPromoHistory(req, res) {
         const snap = await db.collection('promo_uses').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
         const history = snap.docs.map(d => {
             const data = d.data();
-            return { id: d.id, code: data.code, reward: data.reward, coin: data.coin, usedAt: data.timestamp?.toMillis ? data.timestamp.toMillis() : null };
+            return { id: d.id, code: data.code, reward: data.reward, coin: data.coin, usedAt: tsToMillis(data.timestamp) };
         });
         const totalBonus = history.reduce((s, h) => s + (h.reward || 0), 0);
         res.json({ history, totalBonus, count: history.length });
@@ -1334,7 +1328,7 @@ async function getNotifications(req, res) {
             return {
                 id: d.id, title: data.title, message: data.message,
                 type: data.type, read: data.read || false,
-                timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : null
+                timestamp: tsToMillis(data.timestamp)
             };
         });
         const unreadCount = list.filter(n => !n.read).length;
@@ -1346,7 +1340,7 @@ async function markNotificationsRead(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
-        const { ids } = req.body; // array of ids, or empty for all
+        const { ids } = req.body;
         if (ids && Array.isArray(ids) && ids.length > 0) {
             const batch = db.batch();
             for (const id of ids.slice(0, 10)) {
@@ -1354,7 +1348,6 @@ async function markNotificationsRead(req, res) {
             }
             await batch.commit();
         } else {
-            // Mark all as read (limit 50)
             const snap = await db.collection('notifications')
                 .where('user_id', '==', userId)
                 .where('read', '==', false)
@@ -1381,9 +1374,6 @@ async function getTransactionHistory(req, res) {
             .orderBy('timestamp', 'desc')
             .limit(parseInt(limit) || 50);
         if (type) {
-            // Firestore requires composite index for multiple where + orderBy
-            // For simplicity, we filter in memory if type is provided without index
-            // But let's try with a simpler query if index exists
             query = db.collection('transactions')
                 .where('user_id', '==', userId)
                 .where('type', '==', type)
@@ -1397,7 +1387,7 @@ async function getTransactionHistory(req, res) {
                 id: d.id, type: data.type, amount: data.amount,
                 currency: data.currency, description: data.description,
                 metadata: data.metadata || {},
-                timestamp: data.timestamp?.toMillis ? data.timestamp.toMillis() : null
+                timestamp: tsToMillis(data.timestamp)
             };
         });
         res.json({ list, count: list.length });
@@ -1417,8 +1407,8 @@ async function adminListPromos(req, res) {
                 code: d.id, coin: data.coin || 'CNX', reward: data.reward || 0,
                 usageLimit: data.usageLimit || 0, usedCount: data.usedCount || 0,
                 enabled: data.enabled !== false,
-                createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : null,
-                expiresAt: data.expiresAt?.toMillis ? data.expiresAt.toMillis() : null
+                createdAt: tsToMillis(data.createdAt),
+                expiresAt: tsToMillis(data.expiresAt)
             };
         });
         res.json(list);
@@ -1474,7 +1464,7 @@ async function adminDeletePromo(req, res) {
 async function adminGetUsers(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
-        const { search, banned, sortBy = 'created_at', order = 'desc', page = 1, limit = 50 } = req.query;
+        const { search, banned, sortBy = 'created_at', order = 'desc', limit = 50 } = req.query;
         let query = db.collection('users').orderBy(sortBy, order === 'asc' ? 'asc' : 'desc');
         
         if (banned === 'true') {
@@ -1486,8 +1476,8 @@ async function adminGetUsers(req, res) {
         const snap = await query.limit(parseInt(limit) || 50).get();
         let users = snap.docs.map(d => ({
             id: d.id, ...d.data(),
-            created_at: d.data().created_at?.toMillis ? d.data().created_at.toMillis() : null,
-            last_active: d.data().last_active?.toMillis ? d.data().last_active.toMillis() : null
+            created_at: tsToMillis(d.data().created_at),
+            last_active: tsToMillis(d.data().last_active)
         }));
         
         if (search) {
@@ -1511,7 +1501,6 @@ async function adminGetUserDetail(req, res) {
         if (!doc.exists) return res.status(404).json({ error: 'User not found' });
         const d = doc.data();
         
-        // Recent transactions
         const txSnap = await db.collection('transactions')
             .where('user_id', '==', userId)
             .orderBy('timestamp', 'desc')
@@ -1519,10 +1508,9 @@ async function adminGetUserDetail(req, res) {
             .get();
         const transactions = txSnap.docs.map(d => ({
             id: d.id, ...d.data(),
-            timestamp: d.data().timestamp?.toMillis ? d.data().timestamp.toMillis() : null
+            timestamp: tsToMillis(d.data().timestamp)
         }));
         
-        // Recent logs
         const logSnap = await db.collection('logs')
             .where('user_id', '==', userId)
             .orderBy('timestamp', 'desc')
@@ -1530,11 +1518,11 @@ async function adminGetUserDetail(req, res) {
             .get();
         const logs = logSnap.docs.map(d => ({
             id: d.id, ...d.data(),
-            timestamp: d.data().timestamp?.toMillis ? d.data().timestamp.toMillis() : null
+            timestamp: tsToMillis(d.data().timestamp)
         }));
         
         res.json({
-            user: { id: doc.id, ...d, created_at: d.created_at?.toMillis ? d.created_at.toMillis() : null },
+            user: { id: doc.id, ...d, created_at: tsToMillis(d.created_at) },
             transactions, logs
         });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
@@ -1547,7 +1535,7 @@ async function adminGetWithdrawals(req, res) {
         let query = db.collection('withdrawals').orderBy('timestamp', 'desc');
         if (status) query = query.where('status', '==', status);
         const snap = await query.limit(200).get();
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: tsToMillis(d.data().timestamp) })));
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -1636,7 +1624,7 @@ async function adminGetLogs(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toMillis() })));
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: tsToMillis(d.data().timestamp) })));
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -1648,6 +1636,7 @@ async function adminGetStats(req, res) {
         const oneDayAgo = Timestamp.fromDate(new Date(now - 24 * 60 * 60 * 1000));
         const sevenDaysAgo = Timestamp.fromDate(new Date(now - 7 * 24 * 60 * 60 * 1000));
         const todayStart = startOfTodayTs();
+        const todayStartMs = tsToMillis(todayStart);
         
         const usersSnap = await db.collection('users').get();
         const wdSnap = await db.collection('withdrawals').get();
@@ -1658,11 +1647,22 @@ async function adminGetStats(req, res) {
         
         const users = usersSnap.docs;
         const totalUsers = users.length;
-        const todaysUsers = users.filter(d => d.data().created_at && d.data().created_at.toMillis && d.data().created_at.toMillis() >= todayStart.toMillis()).length;
-        const onlineUsers = users.filter(d => d.data().last_active && d.data().last_active.toMillis && d.data().last_active.toMillis() >= fiveMinAgo.toMillis()).length;
-        const activeUsers = users.filter(d => d.data().last_active && d.data().last_active.toMillis && d.data().last_active.toMillis() >= oneDayAgo.toMillis()).length;
-        const dailyActiveUsers = activeUsers;
-        const weeklyActiveUsers = users.filter(d => d.data().last_active && d.data().last_active.toMillis && d.data().last_active.toMillis() >= sevenDaysAgo.toMillis()).length;
+        const todaysUsers = users.filter(d => {
+            const ms = tsToMillis(d.data().created_at);
+            return ms && ms >= todayStartMs;
+        }).length;
+        const onlineUsers = users.filter(d => {
+            const ms = tsToMillis(d.data().last_active);
+            return ms && ms >= fiveMinAgo.toMillis();
+        }).length;
+        const activeUsers = users.filter(d => {
+            const ms = tsToMillis(d.data().last_active);
+            return ms && ms >= oneDayAgo.toMillis();
+        }).length;
+        const weeklyActiveUsers = users.filter(d => {
+            const ms = tsToMillis(d.data().last_active);
+            return ms && ms >= sevenDaysAgo.toMillis();
+        }).length;
         
         const pendingWithdraws = wdSnap.docs.filter(d => d.data().status === 'pending').length;
         const approvedWithdraws = wdSnap.docs.filter(d => d.data().status === 'approved').length;
@@ -1673,10 +1673,7 @@ async function adminGetStats(req, res) {
         const totalPromoEarnings = promoSnap.docs.reduce((s, d) => s + (d.data().reward || 0), 0);
         const totalWithdrawals = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         const totalSwaps = swapsSnap.size;
-        
-        // Total revenue approximation: offerwall earnings (we keep a portion) + other metrics
-        // For faucet, revenue is negative (we pay users). For offerwall, we earn from network.
-        const totalRevenue = totalOfferwallEarnings * 0.3; // approximate 30% margin
+        const totalRevenue = totalOfferwallEarnings * 0.3;
         
         res.json({
             totalUsers, todaysUsers, onlineUsers,
@@ -1688,7 +1685,7 @@ async function adminGetStats(req, res) {
             totalWithdrawals,
             totalSwaps,
             totalRevenue: Math.round(totalRevenue * 1e8) / 1e8,
-            activeUsers, dailyActiveUsers, weeklyActiveUsers,
+            activeUsers, dailyActiveUsers: activeUsers, weeklyActiveUsers,
             bannedUsers: users.filter(d => d.data().banned).length
         });
     } catch (err) {
@@ -1884,9 +1881,6 @@ if (require.main === module) {
         logger.info(`App URL: ${APP_URL}`);
     });
 
-    // ============================================
-    // INACTIVE USER JOB
-    // ============================================
     if (firebaseInitialized && BOT_TOKEN) {
         const scheduleInactiveScan = () => {
             const now = new Date();
@@ -1915,9 +1909,6 @@ if (require.main === module) {
         scheduleInactiveScan();
     }
 
-    // ============================================
-    // KEEP-ALIVE
-    // ============================================
     if (process.env.NODE_ENV === 'production' && APP_URL) {
         const PING_INTERVAL_MS = 14 * 60 * 1000;
         const PING_ENDPOINTS = ['/ping', '/api/health'];
@@ -1955,9 +1946,8 @@ if (require.main === module) {
         logger.info('[KeepAlive] disabled');
     }
 
-    // Graceful shutdown
     const shutdown = (signal) => {
-        logger.info(`${signal} received, shutting down gracefully…`);
+        logger.info(`${signal} received, shutting down gracefully...`);
         server.close(() => {
             logger.info('HTTP server closed');
             process.exit(0);
@@ -1972,4 +1962,4 @@ if (require.main === module) {
 with open('/mnt/agents/output/index.js', 'w', encoding='utf-8') as f:
     f.write(backend_code)
 
-print("Backend written successfully. Size:", len(backend_code))
+print("Backend written. Size:", len(backend_code))
