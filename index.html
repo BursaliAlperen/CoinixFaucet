@@ -38,22 +38,7 @@
             pointer-events: auto !important;
         }
 
-        /* KÖKTEN ÇÖZÜM: GOOGLE TRANSLATE'İ DOM'DAN SİL (Üst bar görünmeyecek) */
-        .skiptranslate, .goog-te-banner-frame, #google_translate_element, 
-        iframe[src*="translate"], .goog-logo-link, .goog-te-gadget, .goog-te-combo, #goog-gt-tv,
-        .goog-te-balloon-frame {
-            display: none !important;
-            visibility: hidden !important;
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-            width: 0 !important;
-            height: 0 !important;
-            overflow: hidden !important;
-            pointer-events: none !important;
-            z-index: -9999 !important;
-            opacity: 0 !important;
-        }
+        /* Google Translate tamamen kaldırıldı */
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -172,6 +157,30 @@
         .demo-screen { position: fixed; inset: 0; background: var(--bg-color); z-index: 9998; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
         .demo-screen.active { display: flex; }
 
+        /* ADMIN TABS */
+        .admin-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+        .admin-tab { padding: 10px 12px; background: var(--surface-2-color); border: 1px solid var(--border-color); border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-primary); }
+        .admin-tab.active { background: var(--accent-color); color: var(--accent-text); border-color: var(--accent-color); }
+        .admin-panel { animation: fadeIn 0.3s ease; }
+        .admin-user-row { display:flex; align-items:center; gap:10px; padding:10px; background:var(--surface-2-color); border-radius:var(--radius-sm); margin-bottom:8px; }
+        .admin-user-avatar { width:36px; height:36px; border-radius:50%; background:var(--accent-color); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--accent-text); flex-shrink:0; overflow:hidden; }
+        .admin-user-avatar img { width:100%; height:100%; object-fit:cover; }
+        .admin-user-info { flex:1; min-width:0; }
+        .admin-user-name { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .admin-user-meta { font-size:11px; color:var(--text-secondary); }
+        .admin-user-actions { display:flex; gap:4px; }
+        .admin-user-actions button { width:auto; padding:6px 10px; font-size:11px; }
+
+        .referral-link-box { display:flex; gap:8px; align-items:center; background:var(--surface-2-color); padding:10px; border-radius:var(--radius-sm); margin-bottom:12px; }
+        .referral-link-box input { flex:1; background:transparent; border:none; color:var(--text-primary); font-size:12px; outline:none; min-width:0; }
+        .referral-link-box button { width:auto; padding:6px 14px; font-size:12px; }
+
+        .ref-user-row { display:flex; align-items:center; gap:10px; padding:10px; background:var(--surface-2-color); border-radius:var(--radius-sm); margin-bottom:8px; }
+        .ref-user-row .avatar { width:32px; height:32px; border-radius:50%; background:var(--accent-color); color:var(--accent-text); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+        .ref-user-row .info { flex:1; min-width:0; }
+        .ref-user-row .name { font-size:13px; font-weight:600; }
+        .ref-user-row .meta { font-size:11px; color:var(--text-secondary); }
+
         @media (min-width: 1024px) {
             body { padding-bottom: 20px; }
             .sidebar { display: block; }
@@ -191,10 +200,11 @@
     </div>
 
     <div id="demo-screen" class="demo-screen">
-        <h1>Open in Telegram</h1>
-        <p>This app works best inside Telegram WebApp.</p>
-        <button class="btn btn-primary" style="max-width:300px;margin-bottom:10px;" data-action="enable-demo">Enable PC Demo Mode</button>
-        <button class="btn btn-secondary" style="max-width:300px;" data-action="open-telegram">Open Telegram Bot</button>
+        <h1>📱 Mobil cihazlardan giriniz</h1>
+        <p>Bu uygulama sadece Telegram mobil uygulaması içinden açılabilir.</p>
+        <p style="font-size:13px;color:var(--text-secondary);max-width:400px;margin:10px auto;">Lütfen telefonunuzdan Telegram'ı açıp bot üzerinden uygulamayı başlatın.</p>
+        <button class="btn btn-primary" style="max-width:300px;margin-bottom:10px;margin-top:10px;" data-action="open-telegram">Telegram Bot'u Aç</button>
+        <button class="btn btn-secondary" style="max-width:300px;" data-action="enable-demo">PC Demo Modu (test)</button>
     </div>
 
     <div id="toast"></div>
@@ -229,6 +239,10 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 <span>Withdraw</span>
             </div>
+            <div class="sidebar-item" data-nav="referrals">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <span>Referrals</span>
+            </div>
             <div class="sidebar-item" data-nav="faq">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>FAQ</span>
@@ -248,9 +262,14 @@
 
         <div class="main-area">
             <header class="app-header">
-                <div class="logo">
-                    <img src="/coinix.png" alt="" onerror="this.style.display='none'">
-                    <span>COINIX</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button id="header-admin-btn" data-nav="admin" style="display:none;width:36px;height:36px;border-radius:50%;background:var(--surface-2-color);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-primary);" title="Admin Panel">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                    <div class="logo">
+                        <img src="/coinix.png" alt="" onerror="this.style.display='none'">
+                        <span>COINIX</span>
+                    </div>
                 </div>
                 <div class="header-right">
                     <div class="header-balance">
@@ -386,25 +405,113 @@
 
                 <!-- ADMIN (Sadece admin kullanıcılar için) -->
                 <div id="page-admin" class="page" style="display:none;">
-                    <div class="card-glass"><div class="card-title">Admin Panel</div></div>
+                    <div class="card-glass">
+                        <div class="card-title">⚙️ Admin Panel</div>
+                        <div class="card-subtitle">Users, broadcasts, promo codes & withdrawals</div>
+                    </div>
+
+                    <!-- Üst istatistik -->
                     <div class="stats-grid">
-                        <div class="stat-box"><div class="stat-label">Total Users</div><div class="stat-value" id="admin-total-users">0</div></div>
+                        <div class="stat-box"><div class="stat-label">Users</div><div class="stat-value" id="admin-total-users">0</div></div>
                         <div class="stat-box"><div class="stat-label">Total Paid</div><div class="stat-value" id="admin-total-paid">0.00</div></div>
+                        <div class="stat-box"><div class="stat-label">Withdrawals</div><div class="stat-value" id="admin-total-wd">0</div></div>
+                        <div class="stat-box"><div class="stat-label">Offerwall</div><div class="stat-value" id="admin-total-offerwall">0.00</div></div>
                     </div>
-                    <div class="card">
-                        <div class="card-title">Create Promo</div>
-                        <div class="input-group"><label class="input-label">Code</label><input type="text" class="input-field" id="admin-promo-code" placeholder="WELCOME2024"></div>
-                        <div class="stats-grid">
-                            <div class="input-group"><label class="input-label">Coin</label><select class="input-field" id="admin-promo-coin"><option value="CNX">CNX</option><option value="DOGE">DOGE</option></select></div>
-                            <div class="input-group"><label class="input-label">Reward</label><input type="number" class="input-field" id="admin-promo-reward" placeholder="10"></div>
+
+                    <!-- TAB BAR -->
+                    <div class="admin-tabs">
+                        <button class="admin-tab active" data-admin-tab="users">👥 Users</button>
+                        <button class="admin-tab" data-admin-tab="broadcast">📣 Broadcast</button>
+                        <button class="admin-tab" data-admin-tab="promos">🎟️ Promos</button>
+                        <button class="admin-tab" data-admin-tab="withdraws">💸 Withdraws</button>
+                    </div>
+
+                    <!-- USERS TAB -->
+                    <div class="admin-panel active" id="admin-panel-users">
+                        <div class="card">
+                            <div class="card-title">Users (<span id="admin-users-count">0</span>)</div>
+                            <div class="input-group"><input type="text" class="input-field" id="admin-users-search" placeholder="Search by name, username, ID..."></div>
+                            <div id="admin-users-list" style="max-height:60vh;overflow-y:auto;"></div>
                         </div>
-                        <div class="input-group"><label class="input-label">Usage Limit</label><input type="number" class="input-field" id="admin-promo-limit" placeholder="100"></div>
-                        <button class="btn btn-primary" data-action="admin-create-promo">Create</button>
+                    </div>
+
+                    <!-- BROADCAST TAB -->
+                    <div class="admin-panel" id="admin-panel-broadcast" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">Broadcast to all users</div>
+                            <div class="card-subtitle">Sends via Telegram bot to all non-banned users.</div>
+                            <div class="input-group"><label class="input-label">Message (Markdown)</label><textarea class="input-field" id="admin-broadcast-msg" rows="4"></textarea></div>
+                            <button class="btn btn-primary" data-action="admin-broadcast">📣 Send Broadcast</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Send DM to specific user</div>
+                            <div class="card-subtitle">Direct message via Telegram bot.</div>
+                            <div class="input-group"><label class="input-label">Target User ID</label><input type="text" class="input-field" id="admin-dm-userid" placeholder="Telegram ID"></div>
+                            <div class="input-group"><label class="input-label">Message</label><textarea class="input-field" id="admin-dm-msg" rows="3"></textarea></div>
+                            <button class="btn btn-primary" data-action="admin-send-dm">✉️ Send DM</button>
+                        </div>
+                    </div>
+
+                    <!-- PROMOS TAB -->
+                    <div class="admin-panel" id="admin-panel-promos" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">Create Promo Code</div>
+                            <div class="input-group"><label class="input-label">Code</label><input type="text" class="input-field" id="admin-promo-code" placeholder="WELCOME2024"></div>
+                            <div class="stats-grid">
+                                <div class="input-group"><label class="input-label">Coin</label><select class="input-field" id="admin-promo-coin"><option value="CNX">CNX</option><option value="DOGE">DOGE</option></select></div>
+                                <div class="input-group"><label class="input-label">Reward</label><input type="number" class="input-field" id="admin-promo-reward" placeholder="10"></div>
+                            </div>
+                            <div class="input-group"><label class="input-label">Usage Limit</label><input type="number" class="input-field" id="admin-promo-limit" placeholder="100"></div>
+                            <button class="btn btn-primary" data-action="admin-create-promo">➕ Create</button>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Active Promo Codes (<span id="admin-promos-count">0</span>)</div>
+                            <div id="admin-promos-list" style="max-height:50vh;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+
+                    <!-- WITHDRAWS TAB -->
+                    <div class="admin-panel" id="admin-panel-withdraws" style="display:none;">
+                        <div class="card">
+                            <div class="card-title">Withdrawal Requests (<span id="admin-wd-count">0</span>)</div>
+                            <div id="admin-wd-list" style="max-height:60vh;overflow-y:auto;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ -->
+                <div id="page-referrals" class="page">
+                    <div class="card-glass">
+                        <div class="card-title">🤝 Referrals</div>
+                        <div class="card-subtitle">Earn <b>+1 CNX</b> for every friend who joins + <b>20% lifetime</b> commission on their earnings.</div>
                     </div>
                     <div class="card">
-                        <div class="card-title">Broadcast</div>
-                        <div class="input-group"><label class="input-label">Message</label><textarea class="input-field" id="admin-broadcast-msg" rows="3"></textarea></div>
-                        <button class="btn btn-primary" data-action="admin-broadcast">Send</button>
+                        <div class="card-title">Your Referral Link</div>
+                        <div class="referral-link-box">
+                            <input type="text" id="referral-link-input" readonly value="Loading...">
+                            <button class="btn btn-secondary" data-action="copy-referral">Copy</button>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-box"><div class="stat-label">Total Referrals</div><div class="stat-value" id="referral-stat-count">0</div></div>
+                            <div class="stat-box"><div class="stat-label">Referral Earnings</div><div class="stat-value" id="referral-stat-earned">0.00</div></div>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;">
+                            <div style="flex:1;"><div class="stat-value" id="referral-balance-display">0.00 CNX</div><div class="card-subtitle">Pending commission</div></div>
+                            <button class="btn btn-secondary" style="width:auto;" data-action="collect-referral">Collect</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Your Referrals (<span id="referral-list-count">0</span>)</div>
+                        <div id="referral-list"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">How it works</div>
+                        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">
+                            1. Share your unique link with friends.<br>
+                            2. They tap <b>Start</b> in the COINIX Telegram bot.<br>
+                            3. You instantly receive <b>+1 CNX</b>.<br>
+                            4. Plus <b>20%</b> of every offer/faucet earning they make, forever.
+                        </div>
                     </div>
                 </div>
 
@@ -438,6 +545,7 @@
         <div class="nav-item" data-nav="earn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg><span>Earn</span></div>
         <div class="nav-item" data-nav="swap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg><span>Swap</span></div>
         <div class="nav-item" data-nav="withdraw"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Withdraw</span></div>
+        <div class="nav-item" data-nav="referrals"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Refs</span></div>
     </nav>
 
     <div class="offerwall-container" id="offerwall-frame-container">
@@ -448,37 +556,58 @@
         <iframe class="offerwall-frame" id="offerwall-iframe"></iframe>
     </div>
 
-    <div class="lang-switcher">
-        <div class="lang-dropdown" id="lang-dropdown">
-            <div class="lang-option active" data-lang="en">🇬🇧 English</div>
-            <div class="lang-option" data-lang="tr">🇹🇷 Türkçe</div>
-            <div class="lang-option" data-lang="ru">🇷🇺 Русский</div>
-            <div class="lang-option" data-lang="ar">🇸🇦 العربية</div>
-            <div class="lang-option" data-lang="es">🇪🇸 Español</div>
-        </div>
-        <button class="lang-btn" data-action="toggle-lang"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
-    </div>
+    <!-- Google Translate kaldırıldı -->
 
-    <div id="google_translate_element"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'tr,ru,ar,es', autoDisplay: false}, 'google_translate_element');
-            setTimeout(() => {
-                document.querySelectorAll('.skiptranslate, .goog-te-banner-frame, iframe[src*="translate"]').forEach(el => el.remove());
-                document.body.style.top = '0';
-            }, 500);
-        }
+    <!-- RichAds Push + Banner -->
+    <div id="richads-banner-slot" style="position:fixed;bottom:calc(var(--nav-height) + var(--safe-area-bottom));left:0;right:0;z-index:50;display:flex;justify-content:center;pointer-events:none;">
+      <div id="richads-banner" style="pointer-events:auto;"></div>
+    </div>
+    <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
+    <script>
+      window.TelegramAdsController = new TelegramAdsController();
+      window.TelegramAdsController.initialize({
+        pubId: "988708",
+        appId: "7950"
+      });
+      // Banner embed: otomatik göster (script yüklendikten sonra)
+      window.addEventListener('load', function() {
+        try {
+          if (window.TelegramAdsController && typeof window.TelegramAdsController.showBanner === 'function') {
+            window.TelegramAdsController.showBanner('richads-banner');
+          }
+        } catch(e) { console.warn('RichAds banner:', e.message); }
+      });
+      // Push notification: tarayıcı izinli ise otomatik tetikle (kullanıcı etkileşimi sonrası)
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          try {
+            if (window.TelegramAdsController && typeof window.TelegramAdsController.showPush === 'function') {
+              window.TelegramAdsController.showPush();
+            }
+          } catch(e) { console.warn('RichAds push:', e.message); }
+        }, 3000);
+      });
     </script>
-    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script>
         const API_BASE = window.location.origin;
         const tg = window.Telegram?.WebApp;
         let authToken = localStorage.getItem('coinix_token');
         let userData = null, dogePrice = { price: 0 }, faucetTimerInterval = null, nextClaimTime = 0, demoMode = false;
+        let referralLink = '', adminUsersCache = [], adminPromosCache = [], adminWdCache = [];
         const FAUCET_COOLDOWN = 180000;
 
-        // EVENT DELEGATION
+        // === DEVICE FINGERPRINT (aynı cihazdan farklı hesap engeli) ===
+        function getDeviceFP() {
+            let fp = localStorage.getItem('coinix_device_fp');
+            if (!fp) {
+                fp = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36) + '_' + navigator.userAgent.length.toString(36);
+                localStorage.setItem('coinix_device_fp', fp);
+            }
+            return fp;
+        }
+
+        // === EVENT DELEGATION ===
         document.addEventListener('click', function(e) {
             const nav = e.target.closest('[data-nav]');
             if (nav) { navigateTo(nav.dataset.nav); return; }
@@ -491,10 +620,11 @@
                     case 'execute-swap': executeSwap(); break;
                     case 'execute-withdraw': executeWithdraw(); break;
                     case 'collect-referral': collectReferral(); break;
+                    case 'copy-referral': copyReferral(); break;
                     case 'admin-create-promo': adminCreatePromo(); break;
                     case 'admin-broadcast': adminBroadcast(); break;
+                    case 'admin-send-dm': adminSendDM(); break;
                     case 'toggle-theme': toggleTheme(); break;
-                    case 'toggle-lang': document.getElementById('lang-dropdown').classList.toggle('open'); break;
                     case 'close-offerwall': closeOfferwall(); break;
                     case 'enable-demo': enableDemoMode(); break;
                     case 'open-telegram': window.open('https://t.me/CoinixBot', '_blank'); break;
@@ -505,6 +635,8 @@
                 }
                 return;
             }
+            const tab = e.target.closest('[data-admin-tab]');
+            if (tab) { switchAdminTab(tab.dataset.adminTab); return; }
             const sp = e.target.closest('[data-swap-percent]');
             if (sp) { setSwapPercent(parseInt(sp.dataset.swapPercent)); return; }
             const wa = e.target.closest('[data-wd-amount]');
@@ -513,12 +645,12 @@
             if (wp) { document.getElementById('wd-amount-input').value = ((userData.doge_balance||0)*parseInt(wp.dataset.wdPercent)/100).toFixed(2); return; }
             const faq = e.target.closest('.faq-item');
             if (faq) { faq.classList.toggle('open'); return; }
-            const lo = e.target.closest('[data-lang]');
-            if (lo) { changeLanguage(lo.dataset.lang); return; }
         });
 
-        document.addEventListener('input', (e) => { if (e.target.id === 'swap-amount-input') updateSwapEstimate(); });
-        document.addEventListener('click', (e) => { if (!e.target.closest('.lang-switcher')) document.getElementById('lang-dropdown').classList.remove('open'); });
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'swap-amount-input') updateSwapEstimate();
+            if (e.target.id === 'admin-users-search') { renderAdminUsers(e.target.value); }
+        });
 
         function toggleTheme() { document.body.classList.toggle('dark-mode'); localStorage.setItem('coinix_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); updateThemeIcons(); }
         function updateThemeIcons() {
@@ -529,12 +661,12 @@
             document.getElementById('sidebar-theme-icon').innerHTML = isDark ? sun : moon;
             document.getElementById('sidebar-theme-text').textContent = isDark ? 'Light Mode' : 'Dark Mode';
         }
-        function changeLanguage(lang) { const s = document.querySelector('.goog-te-combo'); if (s) { s.value = lang; s.dispatchEvent(new Event('change')); } document.querySelectorAll('.lang-option').forEach(o => o.classList.toggle('active', o.dataset.lang === lang)); document.getElementById('lang-dropdown').classList.remove('open'); setTimeout(() => { document.querySelectorAll('.skiptranslate, .goog-te-banner-frame').forEach(el => el.remove()); document.body.style.top = '0'; }, 500); }
 
         function enableDemoMode() {
             demoMode = true;
-            userData = { balance: 1250, doge_balance: 42, total_earned: 3500, total_claims: 87, referrals: 12, referral_balance: 45, last_claim: Date.now() - 60000, is_admin: true };
+            userData = { balance: 1250, doge_balance: 42, total_earned: 3500, total_claims: 87, referrals: 12, referral_balance: 45, last_claim: Date.now() - 60000, is_admin: true, telegram_id: 'demo', first_name: 'Demo', username: 'demo' };
             dogePrice = { price: 0.1245 };
+            referralLink = 'https://t.me/CoinixBot?start=ref_demo';
             document.getElementById('demo-screen').classList.remove('active');
             document.getElementById('loading-screen').classList.add('hidden');
             updateUI(); initFaucetTimer();
@@ -549,7 +681,12 @@
                 if (endpoint === '/api/offerwall/ptc') return { ads: [{id:'1',title:'Visit Ad',description:'Stay 30s',reward:0.5,duration:30,url:'#'}], total: 1 };
                 if (endpoint === '/api/offerwall/shortlinks') return { shortlinks: [{id:'1',name:'Short Link',reward:1.2,url:'#',remaining_views:85}], total: 1 };
                 if (endpoint.includes('/api/offerwall/')) return { url: 'https://offerwall.me/demo' };
-                if (endpoint === '/api/admin/stats') return { totalUsers: 150, totalPaid_doge: 42.5 };
+                if (endpoint === '/api/referral') return { link: referralLink, referrals: userData.referrals, earnings: userData.referral_balance, referral_balance: userData.referral_balance };
+                if (endpoint === '/api/referral/list') return { count: 3, list: [{id:'111',first_name:'Alice',username:'alice',photo_url:null,total_earned:50,created_at:Date.now()-86400000},{id:'222',first_name:'Bob',username:'bob',photo_url:null,total_earned:120,created_at:Date.now()-172800000},{id:'333',first_name:'Carol',username:null,photo_url:null,total_earned:8,created_at:Date.now()-3600000}] };
+                if (endpoint === '/api/admin/stats') return { totalUsers: 150, totalPaid_doge: 42.5, totalWithdrawals: 12, totalOfferwall: 220 };
+                if (endpoint === '/api/admin/users') return [{id:'111',first_name:'Alice',username:'alice',balance:50,doge_balance:0,total_earned:50,created_at:Date.now()-86400000,banned:false},{id:'222',first_name:'Bob',username:'bob',balance:120,doge_balance:5,total_earned:200,created_at:Date.now()-172800000,banned:false}];
+                if (endpoint === '/api/admin/withdrawals') return [{id:'wd1',user_id:'222',faucetpay_email:'bob@ex.com',amount:1.5,status:'pending',timestamp:Date.now()-3600000}];
+                if (endpoint === '/api/admin/promo/list') return [{code:'WELCOME',coin:'CNX',reward:5,usageLimit:100,usedCount:12,enabled:true}];
                 return { success: true };
             }
             const headers = { 'Content-Type': 'application/json' };
@@ -564,6 +701,8 @@
         const fmt = (n, d=2) => Number(n||0).toFixed(d);
         function showToast(msg, type='success') { const t = document.getElementById('toast'); t.className = 'toast ' + type; t.innerHTML = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
 
+        function escapeHtml(s) { return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
         function updateUI() {
             if (!userData) return;
             const c = fmt(userData.balance), d = fmt(userData.doge_balance);
@@ -575,11 +714,18 @@
             set('wd-doge-balance', d); set('wd-cnx-balance', c); set('wd-referral-balance', fmt(userData.referral_balance||0) + ' CNX');
             set('faucet-total-claims', userData.total_claims||0); set('faucet-total-earned', fmt(userData.total_earned||0));
             set('dash-faucet-today', userData.total_claims||0);
-            
-            // ⭐ ADMIN PANEL GÖSTER/GİZLE
+            set('referral-stat-count', userData.referrals||0);
+            set('referral-stat-earned', fmt(userData.referral_earnings||0));
+            set('referral-balance-display', fmt(userData.referral_balance||0) + ' CNX');
+
+            // ADMIN PANEL GÖSTER
             if (userData.is_admin) {
-                document.getElementById('page-admin').style.display = 'block';
-                document.getElementById('sidebar-admin').style.display = 'flex';
+                const ab = document.getElementById('header-admin-btn');
+                if (ab) ab.style.display = 'flex';
+                const sb = document.getElementById('sidebar-admin');
+                if (sb) sb.style.display = 'flex';
+                const pa = document.getElementById('page-admin');
+                if (pa) pa.style.display = 'block';
             }
             if (userData.first_name) set('welcome-name', 'Welcome, ' + userData.first_name + '!');
         }
@@ -590,15 +736,23 @@
             try {
                 if (!authToken) {
                     if (!tg?.initData) { document.getElementById('loading-screen').classList.add('hidden'); document.getElementById('demo-screen').classList.add('active'); return; }
-                    const auth = await apiRequest('/api/auth', 'POST', { initData: tg.initData, ref: tg.initDataUnsafe?.start_param?.replace('ref_', '') });
+                    const refParam = (tg.initDataUnsafe?.start_param || '').replace(/^ref_/, '');
+                    const auth = await apiRequest('/api/auth', 'POST', {
+                        initData: tg.initData,
+                        ref: refParam,
+                        device_fp: getDeviceFP()
+                    });
                     authToken = auth.token; localStorage.setItem('coinix_token', authToken);
                     if (auth.is_admin) localStorage.setItem('admin_key', auth.token);
                 }
                 userData = await apiRequest('/api/me');
                 dogePrice = await apiRequest('/api/doge-price');
                 updateUI(); initFaucetTimer();
+                loadReferralData();
                 document.getElementById('loading-screen').classList.add('hidden');
-            } catch (err) { document.getElementById('loading-screen').innerHTML = '<p style="color:red">Error: ' + err.message + '</p>'; }
+            } catch (err) {
+                document.getElementById('loading-screen').innerHTML = '<p style="color:red;padding:20px;text-align:center;">' + escapeHtml(err.message) + '</p>';
+            }
         }
 
         function navigateTo(id) {
@@ -609,7 +763,8 @@
             if (id === 'faucet') refreshCaptcha();
             else if (id === 'withdraw') loadWithdrawHistory();
             else if (id === 'promo') loadPromoHistory();
-            else if (id === 'admin') loadAdminStats();
+            else if (id === 'referrals') loadReferralData();
+            else if (id === 'admin') loadAdminData();
             window.scrollTo(0, 0);
         }
 
@@ -632,38 +787,227 @@
         async function claimFaucet() { const ans = document.getElementById('captcha-answer').value.trim(); if (!ans) return showToast('Enter answer', 'error'); const b = document.getElementById('btn-claim-faucet'); b.disabled = true; try { const d = await apiRequest('/api/claim', 'POST', { captchaAnswer: ans }); showToast('+' + d.amount + ' CNX', 'success'); userData = await apiRequest('/api/me'); updateUI(); initFaucetTimer(); refreshCaptcha(); } catch(e) { showToast(e.message, 'error'); refreshCaptcha(); } finally { b.disabled = false; updateTimerDisplay(); } }
 
         function generateAdsHTML(items, title) {
-            if (!items || !items.length) return '<html><body style="background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh;">No ' + title + ' available.</body></html>';
-            return '<!DOCTYPE html><html><head><style>body{background:#0f172a;color:#f1f5f9;font-family:sans-serif;padding:20px;}a{display:block;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:12px;text-decoration:none;color:#f1f5f9;}</style></head><body><h2 style="color:#f59e0b;">' + title + '</h2>' + items.map(i => '<a href="' + i.url + '" target="_blank"><strong>' + (i.title||i.name) + '</strong><br><span style="color:#f59e0b;">+' + i.reward + ' CNX</span></a>').join('') + '</body></html>';
+            if (!items || !items.length) return '<html><body style="background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:20px;">No ' + title + ' available right now.<br><br><a href="javascript:window.close()" style="color:#f59e0b;">Close</a></body></html>';
+            return '<!DOCTYPE html><html><head><style>body{background:#0f172a;color:#f1f5f9;font-family:sans-serif;padding:20px;margin:0;}h2{color:#f59e0b;margin-bottom:16px;}a{display:block;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:12px;text-decoration:none;color:#f1f5f9;}a:hover{border-color:#f59e0b;}.r{color:#f59e0b;font-weight:600;}.d{color:#94a3b8;font-size:13px;margin-top:4px;}</style></head><body><h2>' + title + '</h2>' + items.map(i => '<a href="' + i.url + '" target="_blank"><div><strong>' + escapeHtml(i.title||i.name) + '</strong><div class="d">' + escapeHtml(i.description||'') + '</div></div><div class="r">+' + i.reward + ' CNX</div></a>').join('') + '</body></html>';
         }
 
         async function loadOfferwall(type) {
-            document.getElementById('offerwall-frame-container').classList.add('active');
+            const container = document.getElementById('offerwall-frame-container');
+            container.classList.add('active');
             document.getElementById('offerwall-title').textContent = type === 'ptc' ? 'PTC Ads' : type === 'shortlinks' ? 'Shortlinks' : type === 'games' ? 'Games' : 'Offerwall';
             const iframe = document.getElementById('offerwall-iframe');
             try {
+                showToast('Loading ' + type + '...', 'success');
                 const res = await apiRequest('/api/offerwall/' + type);
-                if (type === 'ptc' && res.ads) iframe.srcdoc = generateAdsHTML(res.ads, 'PTC Ads');
-                else if (type === 'shortlinks' && res.shortlinks) iframe.srcdoc = generateAdsHTML(res.shortlinks, 'Shortlinks');
+                if (type === 'ptc' && res.ads && res.ads.length) { iframe.srcdoc = generateAdsHTML(res.ads, 'PTC Ads'); }
+                else if (type === 'shortlinks' && res.shortlinks && res.shortlinks.length) { iframe.srcdoc = generateAdsHTML(res.shortlinks, 'Shortlinks'); }
                 else if (res.url) { iframe.srcdoc = ''; iframe.src = res.url; }
-            } catch(e) { showToast(e.message, 'error'); closeOfferwall(); }
+                else { iframe.srcdoc = generateAdsHTML([], type); }
+            } catch(e) {
+                console.error('loadOfferwall error', e);
+                showToast(e.message || 'Failed to load', 'error');
+                iframe.srcdoc = '<html><body style="background:#0f172a;color:#f1f5f9;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;padding:20px;text-align:center;">Failed to load.<br>' + escapeHtml(e.message) + '<br><br><a href="javascript:parent.postMessage({action:\'close-offerwall\'},\'*\')" style="color:#f59e0b;">Close</a></body></html>';
+            }
         }
         function closeOfferwall() { document.getElementById('offerwall-frame-container').classList.remove('active'); const f = document.getElementById('offerwall-iframe'); f.src = ''; f.srcdoc = ''; }
 
         async function redeemPromo() { const code = document.getElementById('promo-code-input').value.trim(); if (!code) return; try { const d = await apiRequest('/api/promo/redeem', 'POST', { code }); showToast('+' + d.reward + ' ' + d.coin, 'success'); userData = await apiRequest('/api/me'); updateUI(); loadPromoHistory(); } catch(e) { showToast(e.message, 'error'); } }
-        async function loadPromoHistory() { try { const d = await apiRequest('/api/promo/history'); document.getElementById('promo-history-list').innerHTML = d.history && d.history.length ? d.history.map(h => '<div class="list-item"><div><div class="list-item-title">' + h.code + '</div></div><div class="list-item-value">+' + h.reward + ' ' + h.coin + '</div></div>').join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No codes yet.</div>'; } catch(e){} }
+        async function loadPromoHistory() { try { const d = await apiRequest('/api/promo/history'); document.getElementById('promo-history-list').innerHTML = d.history && d.history.length ? d.history.map(h => '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(h.code) + '</div></div><div class="list-item-value">+' + h.reward + ' ' + h.coin + '</div></div>').join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No codes yet.</div>'; } catch(e){} }
 
-        function updateSwapEstimate() { document.getElementById('swap-estimate-input')?.value; }
+        function updateSwapEstimate() { /* no-op */ }
         function setSwapPercent(p) { document.getElementById('swap-amount-input').value = ((userData.balance||0)*p/100).toFixed(2); }
         async function executeSwap() { const a = parseFloat(document.getElementById('swap-amount-input').value); if (!a || a > (userData.balance||0)) return showToast('Invalid', 'error'); try { await apiRequest('/api/swap', 'POST', { amount: a, direction: 'cnx-to-doge' }); showToast('Swapped!', 'success'); userData = await apiRequest('/api/me'); updateUI(); } catch(e) { showToast(e.message, 'error'); } }
 
         async function executeWithdraw() { const e = document.getElementById('wd-email-input').value; const a = parseFloat(document.getElementById('wd-amount-input').value); if (!e.includes('@') || a < 0.1) return showToast('Invalid', 'error'); try { await apiRequest('/api/withdraw', 'POST', { faucetpay_email: e, amount: a }); showToast('Success!', 'success'); userData = await apiRequest('/api/me'); updateUI(); loadWithdrawHistory(); } catch(e) { showToast(e.message, 'error'); } }
-        async function loadWithdrawHistory() { try { const d = await apiRequest('/api/withdrawals'); document.getElementById('withdraw-history-list').innerHTML = d && d.length ? d.map(w => '<div class="list-item"><div><div class="list-item-title">' + w.faucetpay_email + '</div><div class="list-item-sub">' + w.status + '</div></div><div class="list-item-value">' + w.amount + ' DOGE</div></div>').join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No withdrawals yet.</div>'; } catch(e){} }
+        async function loadWithdrawHistory() { try { const d = await apiRequest('/api/withdrawals'); document.getElementById('withdraw-history-list').innerHTML = d && d.length ? d.map(w => '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(w.faucetpay_email) + '</div><div class="list-item-sub">' + w.status + '</div></div><div class="list-item-value">' + w.amount + ' DOGE</div></div>').join('') : '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No withdrawals yet.</div>'; } catch(e){} }
 
-        async function collectReferral() { try { const d = await apiRequest('/api/referral/collect', 'POST'); showToast('+' + d.amount, 'success'); userData = await apiRequest('/api/me'); updateUI(); } catch(e) { showToast(e.message, 'error'); } }
+        async function collectReferral() { try { const d = await apiRequest('/api/referral/collect', 'POST'); showToast('+' + (d.amount||0) + ' CNX', 'success'); userData = await apiRequest('/api/me'); updateUI(); loadReferralData(); } catch(e) { showToast(e.message, 'error'); } }
 
-        async function loadAdminStats() { try { const d = await apiRequest('/api/admin/stats', 'GET', null, true); document.getElementById('admin-total-users').textContent = d.totalUsers||0; document.getElementById('admin-total-paid').textContent = fmt(d.totalPaid_doge||d.totalPaid||0); } catch(e) { showToast('Failed', 'error'); } }
-        async function adminCreatePromo() { try { await apiRequest('/api/admin/promo/create', 'POST', { code: document.getElementById('admin-promo-code').value, coin: document.getElementById('admin-promo-coin').value, reward: parseFloat(document.getElementById('admin-promo-reward').value), usageLimit: parseInt(document.getElementById('admin-promo-limit').value) }, true); showToast('Created!', 'success'); } catch(e) { showToast(e.message, 'error'); } }
-        async function adminBroadcast() { try { await apiRequest('/api/admin/broadcast', 'POST', { message: document.getElementById('admin-broadcast-msg').value }, true); showToast('Sent!', 'success'); } catch(e) { showToast(e.message, 'error'); } }
+        // === REFERRALS PAGE ===
+        async function loadReferralData() {
+            try {
+                const ref = await apiRequest('/api/referral');
+                referralLink = ref.link || '';
+                const inp = document.getElementById('referral-link-input');
+                if (inp) inp.value = referralLink;
+                const list = await apiRequest('/api/referral/list');
+                document.getElementById('referral-list-count').textContent = list.count || 0;
+                const target = document.getElementById('referral-list');
+                if (!list.list || !list.list.length) {
+                    target.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No referrals yet. Share your link!</div>';
+                } else {
+                    target.innerHTML = list.list.map(r => {
+                        const initial = (r.first_name || r.username || '?').charAt(0).toUpperCase();
+                        const avatar = r.photo_url ? '<img src="' + escapeHtml(r.photo_url) + '" onerror="this.style.display=\'none\'">' : initial;
+                        const date = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
+                        return '<div class="ref-user-row"><div class="avatar">' + avatar + '</div><div class="info"><div class="name">' + escapeHtml(r.first_name || r.username || ('User ' + r.id)) + '</div><div class="meta">' + escapeHtml(r.username ? '@' + r.username : 'id: ' + r.id) + ' • joined ' + date + '</div></div><div style="font-size:12px;font-weight:600;">+' + fmt(r.total_earned) + ' CNX</div></div>';
+                    }).join('');
+                }
+            } catch (e) { console.warn('loadReferralData', e); }
+        }
+        async function copyReferral() {
+            try {
+                await navigator.clipboard.writeText(referralLink);
+                showToast('Link copied!', 'success');
+            } catch(e) {
+                const inp = document.getElementById('referral-link-input');
+                inp.select(); document.execCommand('copy'); showToast('Link copied!', 'success');
+            }
+        }
+
+        // === ADMIN PANEL ===
+        function switchAdminTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tabId));
+            document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+            const panel = document.getElementById('admin-panel-' + tabId);
+            if (panel) panel.style.display = 'block';
+            // lazy-load each tab
+            if (tabId === 'users') loadAdminUsers();
+            else if (tabId === 'promos') loadAdminPromos();
+            else if (tabId === 'withdraws') loadAdminWithdrawals();
+        }
+
+        async function loadAdminData() {
+            try {
+                const d = await apiRequest('/api/admin/stats', 'GET', null, true);
+                document.getElementById('admin-total-users').textContent = d.totalUsers||0;
+                document.getElementById('admin-total-paid').textContent = fmt(d.totalPaid_doge||d.totalPaid||0);
+                document.getElementById('admin-total-wd').textContent = d.totalWithdrawals||0;
+                document.getElementById('admin-total-offerwall').textContent = fmt(d.totalOfferwall||0);
+            } catch(e) { showToast('Admin stats failed', 'error'); }
+            loadAdminUsers();
+        }
+
+        async function loadAdminUsers() {
+            try {
+                adminUsersCache = await apiRequest('/api/admin/users', 'GET', null, true);
+                renderAdminUsers('');
+            } catch(e) { console.warn(e); }
+        }
+        function renderAdminUsers(filter) {
+            const list = document.getElementById('admin-users-list');
+            const count = document.getElementById('admin-users-count');
+            if (!adminUsersCache || !adminUsersCache.length) {
+                list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No users yet.</div>';
+                count.textContent = '0';
+                return;
+            }
+            const q = (filter||'').toLowerCase().trim();
+            const filtered = q ? adminUsersCache.filter(u => {
+                return (u.first_name||'').toLowerCase().includes(q) ||
+                       (u.username||'').toLowerCase().includes(q) ||
+                       String(u.id||'').includes(q);
+            }) : adminUsersCache;
+            count.textContent = filtered.length;
+            list.innerHTML = filtered.map(u => {
+                const initial = (u.first_name || u.username || '?').charAt(0).toUpperCase();
+                const banned = u.banned ? ' <span style="color:#ef4444;font-size:10px;">BANNED</span>' : '';
+                return '<div class="admin-user-row"><div class="admin-user-avatar">' + initial + '</div><div class="admin-user-info"><div class="admin-user-name">' + escapeHtml(u.first_name || u.username || ('User ' + u.id)) + banned + '</div><div class="admin-user-meta">@' + escapeHtml(u.username||'-') + ' • ' + escapeHtml(String(u.id)) + '</div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;">' + fmt(u.balance) + ' CNX</div><div style="font-size:11px;color:var(--text-secondary);">' + fmt(u.doge_balance) + ' DOGE</div></div></div>';
+            }).join('') || '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No match.</div>';
+        }
+
+        async function loadAdminPromos() {
+            try {
+                adminPromosCache = await apiRequest('/api/admin/promo/list', 'GET', null, true);
+                const list = document.getElementById('admin-promos-list');
+                const count = document.getElementById('admin-promos-count');
+                count.textContent = adminPromosCache.length || 0;
+                if (!adminPromosCache.length) {
+                    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No promo codes.</div>';
+                    return;
+                }
+                list.innerHTML = adminPromosCache.map(p => {
+                    const pct = p.usageLimit ? Math.round((p.usedCount/p.usageLimit)*100) : 0;
+                    return '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(p.code) + '</div><div class="list-item-sub">' + p.reward + ' ' + p.coin + ' • ' + p.usedCount + '/' + p.usageLimit + ' (' + pct + '%)' + (p.enabled===false?' • DISABLED':'') + '</div></div><div class="admin-user-actions"><button class="btn btn-secondary" data-action="admin-toggle-promo" data-code="' + escapeHtml(p.code) + '" data-enabled="' + (p.enabled===false?'1':'0') + '">' + (p.enabled===false?'Enable':'Disable') + '</button><button class="btn btn-secondary" data-action="admin-delete-promo" data-code="' + escapeHtml(p.code) + '" style="background:var(--danger-color);color:white;">Del</button></div></div>';
+                }).join('');
+            } catch(e) {}
+        }
+
+        async function loadAdminWithdrawals() {
+            try {
+                adminWdCache = await apiRequest('/api/admin/withdrawals', 'GET', null, true);
+                const list = document.getElementById('admin-wd-list');
+                const count = document.getElementById('admin-wd-count');
+                count.textContent = adminWdCache.length || 0;
+                if (!adminWdCache.length) {
+                    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-secondary);">No withdrawals.</div>';
+                    return;
+                }
+                list.innerHTML = adminWdCache.map(w => {
+                    const date = w.timestamp ? new Date(w.timestamp).toLocaleString() : '';
+                    const status = w.status || 'pending';
+                    const statusColor = status === 'approved' ? '#10b981' : status === 'rejected' ? '#ef4444' : '#f59e0b';
+                    const actions = status === 'pending' ?
+                        '<div class="admin-user-actions"><button class="btn btn-secondary" data-action="admin-approve-wd" data-id="' + escapeHtml(w.id) + '" style="background:#10b981;color:white;">✓</button><button class="btn btn-secondary" data-action="admin-reject-wd" data-id="' + escapeHtml(w.id) + '" style="background:#ef4444;color:white;">✗</button></div>' :
+                        '<span style="font-size:11px;color:' + statusColor + ';">' + status + '</span>';
+                    return '<div class="list-item"><div><div class="list-item-title">' + escapeHtml(w.faucetpay_email||'') + '</div><div class="list-item-sub">' + escapeHtml(String(w.user_id)) + ' • ' + date + '</div></div><div style="text-align:right;"><div class="list-item-value">' + w.amount + ' DOGE</div>' + actions + '</div></div>';
+                }).join('');
+            } catch(e) {}
+        }
+
+        async function adminCreatePromo() {
+            try {
+                await apiRequest('/api/admin/promo/create', 'POST', {
+                    code: document.getElementById('admin-promo-code').value,
+                    coin: document.getElementById('admin-promo-coin').value,
+                    reward: parseFloat(document.getElementById('admin-promo-reward').value),
+                    usageLimit: parseInt(document.getElementById('admin-promo-limit').value)
+                }, true);
+                showToast('Promo created!', 'success');
+                loadAdminPromos();
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+        async function adminBroadcast() {
+            const msg = document.getElementById('admin-broadcast-msg').value.trim();
+            if (!msg) return showToast('Message empty', 'error');
+            if (!confirm('Broadcast to ALL users via Telegram bot?')) return;
+            try {
+                showToast('Sending...', 'success');
+                const r = await apiRequest('/api/admin/broadcast', 'POST', { message: msg }, true);
+                if (r.bot) showToast('Sent to ' + r.bot.sent + ' users (' + r.bot.failed + ' failed)', 'success');
+                else showToast('Logged (bot not running)', 'success');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+        async function adminSendDM() {
+            const uid = document.getElementById('admin-dm-userid').value.trim();
+            const msg = document.getElementById('admin-dm-msg').value.trim();
+            if (!uid || !msg) return showToast('User ID & message required', 'error');
+            try {
+                const r = await apiRequest('/api/admin/send-dm', 'POST', { userId: uid, message: msg }, true);
+                if (r.bot_sent) showToast('DM sent!', 'success');
+                else showToast('Logged. Bot error: ' + (r.bot_error||'unknown'), 'error');
+            } catch(e) { showToast(e.message, 'error'); }
+        }
+
+        // === GLOBAL CLICK HANDLER for admin list buttons ===
+        document.addEventListener('click', async function(e) {
+            const a = e.target.closest('[data-action]');
+            if (!a) return;
+            const action = a.dataset.action;
+            if (action === 'admin-toggle-promo') {
+                try {
+                    await apiRequest('/api/admin/promo/toggle', 'POST', { code: a.dataset.code, enabled: a.dataset.enabled !== '1' }, true);
+                    loadAdminPromos();
+                } catch(e) { showToast(e.message, 'error'); }
+            } else if (action === 'admin-delete-promo') {
+                if (!confirm('Delete promo ' + a.dataset.code + '?')) return;
+                try {
+                    await apiRequest('/api/admin/promo/delete', 'POST', { code: a.dataset.code }, true);
+                    loadAdminPromos();
+                } catch(e) { showToast(e.message, 'error'); }
+            } else if (action === 'admin-approve-wd') {
+                try {
+                    await apiRequest('/api/admin/approve-withdrawal', 'POST', { id: a.dataset.id }, true);
+                    loadAdminWithdrawals();
+                } catch(e) { showToast(e.message, 'error'); }
+            } else if (action === 'admin-reject-wd') {
+                if (!confirm('Reject this withdrawal? Amount will be refunded.')) return;
+                try {
+                    await apiRequest('/api/admin/reject-withdrawal', 'POST', { id: a.dataset.id }, true);
+                    loadAdminWithdrawals();
+                } catch(e) { showToast(e.message, 'error'); }
+            }
+        });
 
         if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
         window.addEventListener('DOMContentLoaded', initAuth);
