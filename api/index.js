@@ -64,7 +64,7 @@ const logger = {
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
 const JWT_SECRET = process.env.JWT_SECRET || (() => {
-    console.error('[CONFIG] JWT_SECRET env variable is missing! Using ephemeral secret.');
+    console.error('[CONFIG] JWT_SECRET missing! Using ephemeral secret.');
     return crypto.randomBytes(32).toString('hex');
 })();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
@@ -266,13 +266,13 @@ fetchDogePrice();
 setInterval(fetchDogePrice, 120000);
 
 // ============================================
-// OFFERWALL.ME
+// OFFERWALL.ME (DÜZELTİLMİŞ)
 // ============================================
 async function getOfferwallUrl(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
-        const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
+        const url = `https://offerwall.me/offerwall/${OFFERWALL_API_TOKEN}/${userId}`;
         res.json({ success: true, url, user_id: userId });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
@@ -284,20 +284,32 @@ async function getPTCAds(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&action=ptc&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
-        const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_API_TOKEN}&id=${userId}&ip=${userIp}&country=${country}`;
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+        clearTimeout(timeout);
+        
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
         const data = await response.json();
-        if (data.status !== 200) return res.json({ success: false, ads: [] });
+        if (data.status !== 200) return res.json({ success: false, ads: [], message: data.message });
+        
         const ads = (data.data || []).map(ad => ({
             id: ad.id || String(Math.random()),
             title: ad.title || 'Ad',
+            description: ad.description || '',
             reward: Number(ad.reward) || 0,
             duration: ad.duration || 30,
-            url: ad.url || ''
+            url: ad.url || '',
+            type: ad.type || 1,
+            max: ad.max || 0
         }));
         res.json({ success: true, ads, total: ads.length });
-    } catch (err) { res.status(500).json({ error: 'Failed' }); }
+    } catch (err) { 
+        logger.error('PTC Ads error', { error: err.message });
+        res.status(500).json({ error: 'Failed' }); 
+    }
 }
 
 async function getShortlinks(req, res) {
@@ -307,32 +319,43 @@ async function getShortlinks(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&action=shortlink&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
-        const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+        const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_API_TOKEN}&id=${userId}&ip=${userIp}&country=${country}`;
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+        clearTimeout(timeout);
+        
         if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
         const data = await response.json();
-        if (data.status !== 200) return res.json({ success: false, shortlinks: [] });
+        if (data.status !== 200) return res.json({ success: false, shortlinks: [], message: data.message });
+        
         const shortlinks = (data.data || []).map(link => ({
             id: link.id || String(Math.random()),
             name: link.name || 'Link',
             reward: Number(link.reward) || 0,
-            url: link.url || ''
+            url: link.url || '',
+            remaining_views: link.remaining_views || 0,
+            daily_limit: link.daily_limit || 0
         }));
         res.json({ success: true, shortlinks, total: shortlinks.length });
-    } catch (err) { res.status(500).json({ error: 'Failed' }); }
+    } catch (err) { 
+        logger.error('Shortlinks error', { error: err.message });
+        res.status(500).json({ error: 'Failed' }); 
+    }
 }
 
 async function getGames(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
     try {
         const userId = String(req.user.userId);
-        const url = `https://offerwall.me/games/${OFFERWALL_APP_ID}/${userId}`;
+        const url = `https://offerwall.me/games/${OFFERWALL_API_TOKEN}/${userId}`;
         res.json({ success: true, url, user_id: userId });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
 // ============================================
-// POSTBACK
+// POSTBACK (DÜZELTİLMİŞ)
 // ============================================
 const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
 
@@ -346,7 +369,12 @@ async function postback(req, res) {
         const clientIp = getClientIP(req);
         if (!isOfferwallIP(clientIp)) return res.status(403).send('ERROR: Invalid source');
         
-        const { subId, transId, reward, signature, status = '1', offer_name, offer_type } = req.body;
+        const { 
+            subId, transId, reward, signature, status = '1', 
+            offer_name, offer_type, reward_name, reward_value,
+            payout, userIp, country, debug 
+        } = req.body;
+        
         if (!subId || !transId || !reward || !signature) return res.status(400).send('ERROR: Missing params');
         
         const expectedSig = crypto.createHash('md5').update(`${subId}${transId}${reward}${OFFERWALL_SECRET_KEY}`).digest('hex');
@@ -394,6 +422,12 @@ async function postback(req, res) {
             t.set(db.collection('offerwall_completions').doc(transId), {
                 user_id: subId, trans_id: transId, task_type: taskType,
                 offer_name: offer_name || 'Unknown',
+                reward_name: reward_name || null,
+                reward_value: reward_value || null,
+                payout: payout || null,
+                user_ip: userIp || clientIp,
+                country: country || null,
+                debug: debug || null,
                 base_amount: baseAmt, bonus_amount: bonusAmt, amount: totalAmt,
                 status: numericStatus === 1 ? 'completed' : 'chargeback',
                 timestamp: serverTimestamp()
@@ -401,7 +435,7 @@ async function postback(req, res) {
         });
         
         if (numericStatus === 1) await giveReferralBonus(subId, baseAmt, taskType);
-        await logAction('offerwall_completed', subId, { transId, totalAmt });
+        await logAction('offerwall_completed', subId, { transId, totalAmt, offer_name, country, debug });
         res.status(200).send('ok');
     } catch (err) {
         logger.error('Postback error', { error: err.message });
