@@ -75,6 +75,9 @@ const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
 const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
 const PORT = process.env.PORT || 10000;
 
+// === Telegram bot (opsiyonel, sadece BOT_TOKEN varsa) ===
+const botModule = (() => { try { return require('./bot.js'); } catch (e) { console.warn('[Bot] bot.js yüklenemedi:', e.message); return null; } })();
+
 function validateCriticalConfig() {
     const missing = [];
     if (!BOT_TOKEN) missing.push('BOT_TOKEN');
@@ -95,7 +98,7 @@ validateCriticalConfig();
 // ============================================
 const FAUCET_COOLDOWN = 180000;
 const FAUCET_REWARD = 1.0;
-const REFERRAL_SIGNUP_BONUS = 50;
+const REFERRAL_SIGNUP_BONUS = 1; // 1 CNX per ref (was 50)
 const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'shortlinks', 'game', 'games', 'visit', 'visits'];
@@ -107,13 +110,13 @@ function setupSecurity(app) {
     app.use(helmet({
         contentSecurityPolicy: {
             directives: {
-                defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me"],
-                scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org", "https://translate.google.com", "https://translate.googleapis.com"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://translate.google.com"],
+                defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://richinfo.co", "https://*.richinfo.co"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org", "https://richinfo.co", "https://*.richinfo.co"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://richinfo.co", "https://*.richinfo.co"],
                 fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
                 imgSrc: ["'self'", "data:", "https:", "blob:"],
-                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://translate.googleapis.com"],
-                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://translate.google.com"],
+                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://richinfo.co", "https://*.richinfo.co"],
+                frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://richinfo.co", "https://*.richinfo.co"],
                 objectSrc: ["'none'"],
                 upgradeInsecureRequests: []
             }
@@ -284,7 +287,8 @@ async function getPTCAds(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_API_TOKEN}&id=${userId}&ip=${userIp}&country=${country}`;
+        // docs: api, id, ip, token, country (token = API_TOKEN)
+        const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_API_TOKEN}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
@@ -319,7 +323,8 @@ async function getShortlinks(req, res) {
         if (!OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
         const userIp = getClientIP(req);
         const country = req.headers['cf-ipcountry'] || 'US';
-        const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_API_TOKEN}&id=${userId}&ip=${userIp}&country=${country}`;
+        // docs: api, id, ip, token, country (token = API_TOKEN)
+        const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_API_TOKEN}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
         
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
@@ -377,8 +382,12 @@ async function postback(req, res) {
         
         if (!subId || !transId || !reward || !signature) return res.status(400).send('ERROR: Missing params');
         
-        const expectedSig = crypto.createHash('md5').update(`${subId}${transId}${reward}${OFFERWALL_SECRET_KEY}`).digest('hex');
-        if (signature !== expectedSig) return res.status(403).send('ERROR: Signature mismatch');
+        // offerwall.me docs: MD5(subId.transId.reward.secretkey)
+        const expectedSig = crypto.createHash('md5').update(`${subId}.${transId}.${reward}.${OFFERWALL_SECRET_KEY}`).digest('hex');
+        if (signature !== expectedSig) {
+            logger.warn('Postback signature mismatch', { subId, transId, reward });
+            return res.status(403).send('ERROR: Signature mismatch');
+        }
         
         const userRef = db.collection('users').doc(subId);
         const doc = await userRef.get();
@@ -448,7 +457,7 @@ async function postback(req, res) {
 // ============================================
 async function auth(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
-    const { initData, ref } = req.body;
+    const { initData, ref, device_fp } = req.body;
     if (!initData) return res.status(400).json({ error: 'Missing initData' });
     if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid signature' });
     
@@ -474,6 +483,25 @@ async function auth(req, res) {
     if (!user || !user.id) return res.status(400).json({ error: 'No user data' });
     const userId = String(user.id);
     const userRef = db.collection('users').doc(userId);
+
+    // === DEVICE FINGERPRINT GUARD ===
+    // Bir cihazdan (browser/webapp fingerprint) sadece bir telegram hesabı açılabilir.
+    if (device_fp) {
+        try {
+            const deviceId = String(device_fp).slice(0, 64);
+            const deviceRef = db.collection('devices').doc(deviceId);
+            const deviceDoc = await deviceRef.get();
+            if (deviceDoc.exists) {
+                const boundTo = deviceDoc.data().telegram_id;
+                if (boundTo && String(boundTo) !== userId) {
+                    return res.status(403).json({ error: 'Bu cihazdan başka bir hesap açılamaz.' });
+                }
+            } else {
+                // yeni cihaz, bağlayalım
+                await deviceRef.set({ telegram_id: userId, first_seen: serverTimestamp(), ua: req.headers['user-agent'] || null });
+            }
+        } catch (e) { logger.warn('Device FP check error', { error: e.message }); }
+    }
     
     try {
         const doc = await userRef.get();
@@ -566,9 +594,37 @@ async function getReferral(req, res) {
         const doc = await db.collection('users').doc(userId).get();
         if (!doc.exists) return res.status(404).json({ error: 'User not found' });
         const d = doc.data();
-        const link = `https://t.me/${BOT_USERNAME}?startapp=ref_${userId}`;
+        const link = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
         res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings || 0, referral_balance: d.referral_balance || 0 });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function getReferralList(req, res) {
+    if (!db) return res.status(503).json({ error: 'DB not available' });
+    try {
+        const userId = String(req.user.userId);
+        // Bu user'ı referans eden kişileri (referred_by == userId) getir
+        const snap = await db.collection('users')
+            .where('referred_by', '==', userId)
+            .orderBy('created_at', 'desc')
+            .limit(100)
+            .get();
+        const list = snap.docs.map(d => {
+            const x = d.data();
+            return {
+                id: d.id,
+                first_name: x.first_name || null,
+                username: x.username || null,
+                photo_url: x.photo_url || null,
+                total_earned: x.total_earned || 0,
+                created_at: x.created_at?.toMillis ? x.created_at.toMillis() : null
+            };
+        });
+        res.json({ count: list.length, list });
+    } catch (err) {
+        logger.error('getReferralList error', { error: err.message });
+        res.status(500).json({ error: 'Failed' });
+    }
 }
 
 async function giveReferralBonus(userId, amount, type) {
@@ -1086,7 +1142,50 @@ async function adminBroadcast(req, res) {
         await db.collection('broadcasts').add({
             message, target: target || 'all', sentBy: req.user.userId, timestamp: serverTimestamp()
         });
-        res.json({ success: true });
+
+        // Bot üzerinden tüm userlara gönder (best-effort)
+        let botResult = null;
+        if (botModule && botModule.getBot()) {
+            try {
+                botResult = await botModule.broadcastToUsers(db, message);
+            } catch (e) {
+                logger.warn('Broadcast bot send error', { error: e.message });
+            }
+        }
+
+        res.json({ success: true, bot: botResult });
+    } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminSendDM(req, res) {
+    if (!db) return res.status(503).json({ error: 'DB not available' });
+    try {
+        const { userId, message } = req.body;
+        if (!userId || !message) return res.status(400).json({ error: 'userId and message required' });
+
+        const target = await db.collection('users').doc(String(userId)).get();
+        if (!target.exists) return res.status(404).json({ error: 'User not found' });
+
+        await db.collection('admin_dms').add({
+            user_id: String(userId),
+            message,
+            sent_by: req.user.userId,
+            timestamp: serverTimestamp()
+        });
+
+        let botSent = false, botError = null;
+        if (botModule && botModule.getBot()) {
+            try {
+                await botModule.sendAdminDM(String(userId), message);
+                botSent = true;
+            } catch (e) {
+                botError = e.message;
+                logger.warn('Admin DM bot send error', { userId, error: e.message });
+            }
+        }
+
+        await logAction('admin_dm', req.user.userId, { targetUser: String(userId), botSent, botError });
+        res.json({ success: true, bot_sent: botSent, bot_error: botError });
     } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -1134,6 +1233,7 @@ app.post('/api/swap', jwtAuth, swap);
 app.post('/api/withdraw', withdrawLimiter, jwtAuth, withdraw);
 app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
 app.get('/api/referral', jwtAuth, getReferral);
+app.get('/api/referral/list', jwtAuth, getReferralList);
 app.post('/api/referral/collect', jwtAuth, collectReferralBonus);
 app.get('/api/doge-price', getDogePrice);
 
@@ -1162,6 +1262,7 @@ app.get('/api/admin/logs', adminAuth, adminGetLogs);
 app.get('/api/admin/settings', adminAuth, adminGetSettings);
 app.post('/api/admin/settings', adminAuth, adminUpdateSettings);
 app.post('/api/admin/broadcast', adminAuth, adminBroadcast);
+app.post('/api/admin/send-dm', adminAuth, adminSendDM);
 app.get('/api/admin/promo/list', adminAuth, adminListPromos);
 app.post('/api/admin/promo/create', adminAuth, adminCreatePromo);
 app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
@@ -1215,6 +1316,44 @@ if (require.main === module) {
         logger.info(`Static path: ${publicPath}`);
         logger.info(`App URL: ${APP_URL}`);
     });
+
+    // ============================================
+    // TELEGRAM BOT + INACTIVE USER JOB
+    // ============================================
+    if (firebaseInitialized && botModule) {
+        try {
+            botModule.initBot(db, { REFERRAL_SIGNUP_BONUS });
+            // her gün saat 10:00 UTC'de inaktif user taraması
+            const scheduleInactiveScan = () => {
+                const now = new Date();
+                const nextRun = new Date(now);
+                nextRun.setUTCHours(10, 0, 0, 0);
+                if (nextRun <= now) nextRun.setUTCDate(nextRun.getUTCDate() + 1);
+                const msUntilRun = nextRun.getTime() - now.getTime();
+                console.log(`[Bot] inactive scan scheduled in ${Math.round(msUntilRun / 60000)} minutes`);
+                setTimeout(async () => {
+                    try {
+                        const r = await botModule.sendMissYouMessages(db);
+                        console.log(`[Bot] inactive scan done: sent=${r.sent}, expired=${r.expired}`);
+                    } catch (e) {
+                        console.error('[Bot] inactive scan error:', e.message);
+                    }
+                    // sonraki gün için tekrar kur
+                    setInterval(async () => {
+                        try {
+                            const r = await botModule.sendMissYouMessages(db);
+                            console.log(`[Bot] inactive scan done: sent=${r.sent}, expired=${r.expired}`);
+                        } catch (e) {
+                            console.error('[Bot] inactive scan error:', e.message);
+                        }
+                    }, 24 * 60 * 60 * 1000);
+                }, msUntilRun);
+            };
+            scheduleInactiveScan();
+        } catch (e) {
+            console.error('[Bot] init error:', e.message);
+        }
+    }
 
     // ============================================
     // KEEP-ALIVE
