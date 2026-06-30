@@ -36,4 +36,4 @@ export const COIN_META = {
 
 export const RECAPTCHA_SITE_KEY = '6LctET4tAAAAAAGcqEdyQbF_gcTH57Dnxztlv2hN';
 
-console.log('🔥 Firebase initialized · 5 coins loaded');
+console.log('🔥 Firebase initialized');
