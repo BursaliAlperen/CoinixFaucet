@@ -7,6 +7,7 @@ import admin from 'firebase-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -179,9 +180,29 @@ app.set('trust proxy', 1);
 app.use(vpnMiddleware);
 
 // ============================================
-// 📁 STATIC DOSYALAR (FRONTEND)
+// 📁 STATIC DOSYALAR (FRONTEND) - DÜZELTİLDİ
 // ============================================
-app.use(express.static(join(__dirname, 'frontend')));
+const frontendPath = join(__dirname, 'frontend');
+console.log(`📁 Frontend path: ${frontendPath}`);
+
+// frontend klasörünün varlığını kontrol et
+if (!fs.existsSync(frontendPath)) {
+  console.error(`❌ Frontend klasörü bulunamadı: ${frontendPath}`);
+  process.exit(1);
+}
+
+// Statik dosyaları sun
+app.use(express.static(frontendPath));
+
+// Admin paneli için özel rota
+app.get('/admin', (req, res) => {
+  const adminPath = join(frontendPath, 'admin.html');
+  if (fs.existsSync(adminPath)) {
+    res.sendFile(adminPath);
+  } else {
+    res.status(404).send('Admin page not found');
+  }
+});
 
 // ============================================
 // 🔒 RATE LIMITERS
@@ -1157,7 +1178,12 @@ app.get('/api/admin/users', verifyAdmin, async (req, res) => {
 // ============================================
 // API olmayan tüm istekler için index.html (SPA desteği)
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'frontend', 'index.html'));
+  const indexPath = join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend not found. Please check deployment.');
+  }
 });
 
 app.use((err, req, res, next) => {
@@ -1189,7 +1215,7 @@ app.listen(PORT, () => {
   console.log(`🎟️ Promo Codes: ENABLED`);
   console.log(`🛡️ VPN Protection: ENABLED`);
   console.log(`💖 Keep-alive: Active`);
-  console.log(`📁 Serving frontend from ${join(__dirname, 'frontend')}`);
+  console.log(`📁 Serving frontend from ${frontendPath}`);
   startSelfPing();
 });
 
