@@ -9,11 +9,44 @@ import {
   increment, runTransaction, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ️ Render backend URL'ini buraya yaz
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
-  : 'https://coinixfaucet-backend.onrender.com'; // Kendi backend URL'n
+// ============ ADBLOCK DETECTION ============
+async function detectAdBlock() {
+  try {
+    const response = await fetch('/ads.js', { method: 'HEAD', cache: 'no-store' });
+    if (!response.ok || response.status === 404) {
+      showAdBlockWarning();
+      return true;
+    }
+    return false;
+  } catch (e) {
+    showAdBlockWarning();
+    return true;
+  }
+}
 
+function showAdBlockWarning() {
+  const existing = document.getElementById('adblock-warning');
+  if (existing) return;
+  const div = document.createElement('div');
+  div.id = 'adblock-warning';
+  div.className = 'fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-lg p-6';
+  div.innerHTML = `
+    <div class="glass-card p-8 rounded-3xl max-w-md w-full text-center border border-red-500/30">
+      <div class="text-6xl mb-4">🛡️</div>
+      <h2 class="text-2xl font-bold mb-2">AdBlock Tespit Edildi</h2>
+      <p class="text-zinc-400 text-sm mb-6">CoinixFaucet, reklam gelirleriyle ayakta kalıyor. Lütfen AdBlock'u devre dışı bırak ve sayfayı yenile.</p>
+      <button onclick="location.reload()" class="btn-primary w-full">Sayfayı Yenile</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+}
+
+// ============ API URL ============
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://coinixfaucet-backend.onrender.com';
+
+// ============ HELPERS ============
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
 const fmt = (n, d = 4) => Number(n || 0).toFixed(d);
@@ -85,8 +118,8 @@ function renderLandingCoins() {
     card.innerHTML = `
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:${m.color}20;border:1px solid ${m.color}40">
-            <img src="coins/${coin.toLowerCase()}.svg" class="w-8 h-8" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
+          <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background:${m.color}20;border:2px solid ${m.color}40">
+            <img src="/coins/${coin.toLowerCase()}.svg" class="w-8 h-8 rounded-full" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
           </div>
           <div><div class="font-bold text-lg">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
         </div>
@@ -132,7 +165,7 @@ async function loadLiveWithdraws() {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td class="p-4"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm">${escapeHtml(t.username || 'User')}</span></div></td>
-        <td class="p-4"><div class="flex items-center gap-2"><img src="coins/${(t.coin || 'btc').toLowerCase()}.svg" class="w-5 h-5" onerror="this.style.display='none'"/><span class="text-sm font-medium">${t.coin}</span></div></td>
+        <td class="p-4"><div class="flex items-center gap-2"><img src="/coins/${(t.coin || 'btc').toLowerCase()}.svg" class="w-5 h-5 rounded-full" onerror="this.style.display='none'"/><span class="text-sm font-medium">${t.coin}</span></div></td>
         <td class="p-4 font-mono text-sm text-green-400">${fmt(t.amount)}</td>
         <td class="p-4 text-sm text-zinc-400">${fmtUSD(t.usdValue)}</td>
         <td class="p-4 text-xs text-zinc-500">${timeAgo(t.createdAt)}</td>
@@ -496,8 +529,8 @@ function renderWithdraw() {
     card.innerHTML = `
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background:${m.color}20">
-            <img src="coins/${coin.toLowerCase()}.svg" class="w-7 h-7" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
+          <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background:${m.color}20;border:2px solid ${m.color}40">
+            <img src="/coins/${coin.toLowerCase()}.svg" class="w-7 h-7 rounded-full" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
           </div>
           <div><div class="font-bold">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
         </div>
@@ -588,6 +621,10 @@ function renderSettings() {
   });
 }
 
+// ============ ADBLOCK DETECTION ON START ============
+detectAdBlock();
+
+// ============ INIT ============
 lucide.createIcons();
 initLanding();
 console.log('⚡ CoinixFaucet ready · Backend:', API_URL);
