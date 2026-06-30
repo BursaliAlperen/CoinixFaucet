@@ -24,16 +24,25 @@ export const COL = {
   global: 'global'
 };
 
-export const COINS = ['BTC', 'DOGE', 'DGB', 'FEY', 'POL'];
+// CNX = $0.01 (Faucet coin)
+// 5 coin: PEPE, DOGE, DGB, FEY, POL
+export const COINS = ['PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
 
 export const COIN_META = {
-  BTC:  { name: 'Bitcoin',   color: '#F7931A', min: 0.03, reward: [0.00000001, 0.00000050], usd: 65000 },
-  DOGE: { name: 'Dogecoin',  color: '#C2A633', min: 0.03, reward: [100, 500],               usd: 0.15 },
-  DGB:  { name: 'DigiByte',  color: '#006AD2', min: 0.03, reward: [50, 200],                usd: 0.01 },
-  FEY:  { name: 'Feyrr',     color: '#7C3AED', min: 0.03, reward: [10, 100],                usd: 0.05 },
-  POL:  { name: 'Polygon',   color: '#8247E5', min: 0.03, reward: [0.01, 0.1],              usd: 0.5 }
+  PEPE: { name: 'Pepe',      color: '#4CAF50', min: 0.03, usd: 0.000008, icon: 'pepe.png' },
+  DOGE: { name: 'Dogecoin',  color: '#C2A633', min: 0.03, usd: 0.15,     icon: 'doge.png' },
+  DGB:  { name: 'DigiByte',  color: '#006AD2', min: 0.03, usd: 0.01,     icon: 'dgb.png' },
+  FEY:  { name: 'Feyrr',     color: '#7C3AED', min: 0.03, usd: 0.05,     icon: 'fey.png' },
+  POL:  { name: 'Polygon',   color: '#8247E5', min: 0.03, usd: 0.5,      icon: 'pol.png' }
+};
+
+export const CNX_META = {
+  name: 'CNX',
+  color: '#F59E0B',
+  usd: 0.01,
+  icon: 'cnx.png'
 };
 
 export const RECAPTCHA_SITE_KEY = '6LctET4tAAAAAAGcqEdyQbF_gcTH57Dnxztlv2hN';
 
-console.log('🔥 Firebase initialized');
+console.log('🔥 CoinixFaucet v2.0 initialized');
