@@ -8,6 +8,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { UAParser } from 'ua-parser-js';
 
 dotenv.config();
 
@@ -15,7 +16,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // ============================================
-// 🔥 FIREBASE ADMIN INIT
+// 🔥 FIREBASE ADMIN INIT (Secret File)
 // ============================================
 if (!admin.apps.length) {
   try {
@@ -43,7 +44,7 @@ const auth = admin.auth();
 // 🔒 CONSTANTS (CNX = $0.01)
 // ============================================
 const COIN_PRICES = {
-  CNX: 0.01,      // 1 CNX = $0.01
+  CNX: 0.01,
   PEPE: 0.000008,
   DOGE: 0.15,
   DGB: 0.01,
@@ -52,7 +53,7 @@ const COIN_PRICES = {
 };
 
 const COIN_REWARDS = {
-  CNX: { min: 1, max: 10 },           // $0.01 - $0.10
+  CNX: { min: 1, max: 10 },
   PEPE: { min: 10000, max: 100000 },
   DOGE: { min: 100, max: 500 },
   DGB:  { min: 50, max: 200 },
@@ -64,10 +65,10 @@ const VALID_COINS = ['PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
 const WITHDRAW_MINIMUM_USD = 0.03;
 const CLAIM_COOLDOWN_MS = 60000;
 const REFERRAL_RATE = 0.20;
-const CNX_RATE = 0.01; // 1 CNX = $0.01
+const CNX_RATE = 0.01;
 
 // ============================================
-// 🛡️ VPN/PROXY DETECTION
+// 🛡️ VPN/PROXY DETECTION (ipwho.is)
 // ============================================
 const vpnCache = new Map();
 const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -95,6 +96,7 @@ async function checkVPNProxy(ip) {
       isProxy: security.proxy,
       isTor: security.tor,
       isHosting: security.hosting,
+      isRelay: security.relay,
       country: data.country,
       isp: data.connection?.isp,
       reason: security.tor ? 'Tor' : security.vpn ? 'VPN' : security.proxy ? 'Proxy' : security.hosting ? 'Hosting' : security.relay ? 'Relay' : 'clean'
@@ -106,15 +108,30 @@ async function checkVPNProxy(ip) {
       vpnCache.delete(oldest[0]);
     }
 
-    if (isVPN) console.warn(`🚫 VPN/Proxy: ${ip} | ${result.reason}`);
+    if (isVPN) {
+      console.warn(`🚫 VPN/Proxy: ${ip} | ${result.reason} | ${result.isp || 'unknown'} | ${result.country || 'unknown'}`);
+      
+      // Block IP in database
+      try {
+        await db.collection('blocked_ips').doc(ip.replace(/\./g, '_')).set({
+          ip,
+          reason: result.reason,
+          isp: result.isp,
+          country: result.country,
+          blockedAt: FieldValue.serverTimestamp(),
+          expiresAt: new Date(Date.now() + 3600000)
+        });
+      } catch (e) { console.error('Block IP error:', e.message); }
+    }
 
     return result;
   } catch (error) {
     console.error('VPN check error:', error.message);
-    return { isVPN: false, reason: 'error' };
+    return { isVPN: false, reason: 'error', error: error.message };
   }
 }
 
+// VPN Middleware
 const vpnMiddleware = async (req, res, next) => {
   const exemptPaths = ['/api/health', '/api/keep-alive', '/api/admin', '/api/check-vpn', '/api/offerwall'];
   if (exemptPaths.some(p => req.path.startsWith(p))) return next();
@@ -129,22 +146,11 @@ const vpnMiddleware = async (req, res, next) => {
   const vpnResult = await checkVPNProxy(clientIP);
 
   if (vpnResult.isVPN) {
-    try {
-      await db.collection('blocked_ips').doc(clientIP.replace(/\./g, '_')).set({
-        ip: clientIP,
-        reason: vpnResult.reason,
-        isp: vpnResult.isp,
-        country: vpnResult.country,
-        blockedAt: FieldValue.serverTimestamp(),
-        expiresAt: new Date(Date.now() + 3600000)
-      });
-    } catch (e) { console.error('Block IP error:', e.message); }
-
     return res.status(403).json({
       success: false,
       blocked: true,
       reason: vpnResult.reason,
-      message: 'VPN/Proxy/Tor not allowed'
+      message: 'VPN/Proxy/Tor/Hosting not allowed. Use residential connection.'
     });
   }
 
@@ -159,7 +165,11 @@ const vpnMiddleware = async (req, res, next) => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(helmet({ 
+  contentSecurityPolicy: false, 
+  crossOriginEmbedderPolicy: false,
+  referrerPolicy: { policy: 'same-origin' }
+}));
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://coinixfaucet.mine.bz'],
   credentials: true
@@ -171,8 +181,23 @@ app.use(vpnMiddleware);
 // ============================================
 // 🔒 RATE LIMITERS
 // ============================================
-const claimLimiter = rateLimit({ windowMs: 60000, max: 2, message: { success: false, message: 'Too many claims' } });
-const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10, message: { success: false, message: 'Too many withdrawals' } });
+const claimLimiter = rateLimit({ 
+  windowMs: 60000, 
+  max: 2, 
+  message: { success: false, message: 'Too many claims. Wait 60 seconds.' } 
+});
+
+const withdrawLimiter = rateLimit({ 
+  windowMs: 3600000, 
+  max: 10, 
+  message: { success: false, message: 'Too many withdrawals.' } 
+});
+
+const authLimiter = rateLimit({
+  windowMs: 900000,
+  max: 5,
+  message: { success: false, message: 'Too many attempts. Try again later.' }
+});
 
 // ============================================
 // 🔐 AUTH MIDDLEWARE
@@ -180,50 +205,90 @@ const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10, message: { succe
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ success: false, message: 'No token' });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
     const token = authHeader.split(' ')[1];
     const decoded = await auth.verifyIdToken(token);
-    req.user = { uid: decoded.uid, email: decoded.email, emailVerified: decoded.email_verified };
+    req.user = { 
+      uid: decoded.uid, 
+      email: decoded.email, 
+      emailVerified: decoded.email_verified 
+    };
     next();
   } catch (error) {
-    res.status(401).json({ success: false, message: 'Invalid token' });
+    console.error('Auth error:', error.message);
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 };
 
 const requireEmailVerified = (req, res, next) => {
-  if (!req.user.emailVerified) return res.status(403).json({ success: false, message: 'Email verification required' });
+  if (!req.user.emailVerified) {
+    return res.status(403).json({ success: false, message: 'Email verification required' });
+  }
   next();
 };
 
 const verifyAdmin = (req, res, next) => {
   const key = req.headers['x-admin-key'];
-  if (!process.env.ADMIN_SECRET_KEY) return res.status(500).json({ success: false, message: 'Admin not configured' });
-  if (key !== process.env.ADMIN_SECRET_KEY) return res.status(401).json({ success: false, message: 'Invalid admin key' });
+  if (!process.env.ADMIN_SECRET_KEY) {
+    return res.status(500).json({ success: false, message: 'Admin not configured' });
+  }
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    console.warn('⚠️ Unauthorized admin access from', req.clientIP || req.ip);
+    return res.status(401).json({ success: false, message: 'Invalid admin key' });
+  }
   next();
 };
 
 // ============================================
 // 💖 HEALTH + KEEP-ALIVE
 // ============================================
-app.get('/api/keep-alive', (req, res) => res.json({ success: true, status: 'alive', timestamp: new Date().toISOString(), uptime: process.uptime() }));
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.0.0' }));
+app.get('/api/keep-alive', (req, res) => {
+  res.json({ 
+    success: true, 
+    status: 'alive', 
+    timestamp: new Date().toISOString(), 
+    uptime: process.uptime() 
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(), 
+    version: '2.0.0' 
+  });
+});
 
 // ============================================
 // 🛡️ VPN CHECK
 // ============================================
 app.get('/api/check-vpn', async (req, res) => {
   try {
-    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.headers['x-real-ip'] || req.ip;
-    if (!clientIP || clientIP === '127.0.0.1') return res.json({ success: true, isVPN: false, reason: 'localhost' });
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+                     req.headers['x-real-ip'] || 
+                     req.ip;
+    
+    if (!clientIP || clientIP === '127.0.0.1') {
+      return res.json({ success: true, isVPN: false, reason: 'localhost' });
+    }
+
     const result = await checkVPNProxy(clientIP);
-    res.json({ success: true, isVPN: result.isVPN, reason: result.reason, country: result.country, isp: result.isp });
+    res.json({ 
+      success: true, 
+      isVPN: result.isVPN, 
+      reason: result.reason, 
+      country: result.country, 
+      isp: result.isp 
+    });
   } catch (error) {
     res.json({ success: true, isVPN: false, reason: 'error' });
   }
 });
 
 // ============================================
-// 💰 PRICES (CNX = $0.01)
+// 💰 PRICES
 // ============================================
 app.get('/api/prices', (req, res) => {
   res.json({
@@ -238,43 +303,51 @@ app.get('/api/prices', (req, res) => {
 });
 
 // ============================================
-// 👤 USER PROFILE (CNX + USD)
+// 👤 USER PROFILE
 // ============================================
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
     const doc = await db.collection('users').doc(req.user.uid).get();
-    if (!doc.exists) return res.status(404).json({ success: false, message: 'Not found' });
+    if (!doc.exists) return res.status(404).json({ success: false, message: 'User not found' });
+    
     const data = doc.data();
-    
-    // Calculate CNX balance in USD
     const cnxUSD = (data.cnx || 0) * CNX_RATE;
-    
-    // Calculate coin balances in USD
-    const coinsUSD = VALID_COINS.reduce((sum, coin) => sum + ((data.balances[coin] || 0) * COIN_PRICES[coin]), 0);
-    
-    // Total USD
+    const coinsUSD = VALID_COINS.reduce((sum, coin) => 
+      sum + ((data.balances[coin] || 0) * COIN_PRICES[coin]), 0
+    );
     const totalUSD = cnxUSD + coinsUSD;
 
     res.json({
       success: true,
       user: {
-        uid: data.uid, username: data.username, email: data.email,
-        emailVerified: req.user.emailVerified, country: data.country,
-        timezone: data.timezone, faucetpayEmail: data.faucetpayEmail,
-        referralCode: data.referralCode, referredBy: data.referredBy,
+        uid: data.uid, 
+        username: data.username, 
+        email: data.email,
+        emailVerified: req.user.emailVerified, 
+        country: data.country,
+        timezone: data.timezone, 
+        faucetpayEmail: data.faucetpayEmail,
+        referralCode: data.referralCode, 
+        referredBy: data.referredBy,
         balances: data.balances,
         cnx: data.cnx || 0,
         cnxUSD,
         coinsUSD,
         totalUSD,
-        totalWithdrawn: data.totalWithdrawn, referralEarnings: data.referralEarnings,
-        referralCount: data.referralCount, totalClaims: data.totalClaims,
-        lastClaimAt: data.lastClaimAt, dailyStreak: data.dailyStreak,
-        highestStreak: data.highestStreak, level: data.level, xp: data.xp
+        totalWithdrawn: data.totalWithdrawn, 
+        referralEarnings: data.referralEarnings,
+        referralCount: data.referralCount, 
+        totalClaims: data.totalClaims,
+        lastClaimAt: data.lastClaimAt, 
+        dailyStreak: data.dailyStreak,
+        highestStreak: data.highestStreak, 
+        level: data.level, 
+        xp: data.xp
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error' });
+    console.error('Get user error:', error);
+    res.status(500).json({ success: false, message: 'Internal error' });
   }
 });
 
@@ -285,20 +358,26 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
   try {
     const { recaptchaToken } = req.body;
 
-    // reCAPTCHA
-    if (recaptchaToken && process.env.RECAPTCHA_API_KEY) {
+    // reCAPTCHA Enterprise verification
+    if (recaptchaToken && process.env.RECAPTCHA_SECRET_KEY) {
       try {
         const recaptchaRes = await fetch(
-          `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID || 'coinixfaucet'}/assessments?key=${process.env.RECAPTCHA_API_KEY}`,
+          `https://www.google.com/recaptcha/api/siteverify`,
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event: { token: recaptchaToken, expectedAction: 'claim', siteKey: process.env.RECAPTCHA_SITE_KEY } })
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
           }
         );
-        const assessment = await recaptchaRes.json();
-        if ((assessment.riskAnalysis?.score || 0) < 0.3) return res.status(403).json({ success: false, message: 'Bot detected' });
-      } catch (e) { console.log('reCAPTCHA skipped:', e.message); }
+        const recaptchaData = await recaptchaRes.json();
+        
+        if (!recaptchaData.success || recaptchaData.score < 0.5) {
+          console.warn('reCAPTCHA failed:', recaptchaData);
+          return res.status(403).json({ success: false, message: 'Bot detected' });
+        }
+      } catch (e) { 
+        console.log('reCAPTCHA verification skipped:', e.message); 
+      }
     }
 
     const userRef = db.collection('users').doc(req.user.uid);
@@ -310,10 +389,10 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
 
     if (now - (userData.lastClaimAt || 0) < CLAIM_COOLDOWN_MS) {
       const remaining = Math.ceil((CLAIM_COOLDOWN_MS - (now - userData.lastClaimAt)) / 1000);
-      return res.status(429).json({ success: false, message: `Wait ${remaining}s` });
+      return res.status(429).json({ success: false, message: `Wait ${remaining} seconds` });
     }
 
-    // CNX faucet (1-10 CNX = $0.01-$0.10)
+    // Random CNX amount (1-10)
     const rewardRange = COIN_REWARDS.CNX;
     const cnxAmount = Math.floor(rewardRange.min + Math.random() * (rewardRange.max - rewardRange.min + 1));
     const usdValue = +(cnxAmount * CNX_RATE).toFixed(4);
@@ -322,7 +401,10 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
       const freshDoc = await transaction.get(userRef);
       if (!freshDoc.exists) throw new Error('User not found');
       const freshData = freshDoc.data();
-      if (now - (freshData.lastClaimAt || 0) < CLAIM_COOLDOWN_MS) throw new Error('Cooldown');
+      
+      if (now - (freshData.lastClaimAt || 0) < CLAIM_COOLDOWN_MS) {
+        throw new Error('Cooldown not passed');
+      }
       
       transaction.update(userRef, {
         cnx: FieldValue.increment(cnxAmount),
@@ -332,22 +414,37 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
       });
     });
 
+    // Record claim
     await db.collection('claims').add({
-      userId: req.user.uid, coin: 'CNX', amount: cnxAmount, usdValue,
+      userId: req.user.uid, 
+      coin: 'CNX', 
+      amount: cnxAmount, 
+      usdValue,
       createdAt: FieldValue.serverTimestamp()
     });
+
+    // Record transaction
     await db.collection('transactions').add({
-      userId: req.user.uid, type: 'claim', coin: 'CNX', amount: cnxAmount, usdValue,
-      status: 'completed', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid, 
+      type: 'claim', 
+      coin: 'CNX', 
+      amount: cnxAmount, 
+      usdValue,
+      status: 'completed', 
+      createdAt: FieldValue.serverTimestamp()
     });
 
-    // Referral bonus (20% in CNX)
+    // Referral bonus (20%)
     if (userData.referredBy) {
-      const refSnap = await db.collection('users').where('referralCode', '==', userData.referredBy).limit(1).get();
+      const refSnap = await db.collection('users')
+        .where('referralCode', '==', userData.referredBy)
+        .limit(1).get();
+      
       if (!refSnap.empty) {
         const refDoc = refSnap.docs[0];
         const refData = refDoc.data();
         const refBonus = Math.floor(cnxAmount * REFERRAL_RATE);
+        
         await db.collection('users').doc(refDoc.id).update({
           cnx: FieldValue.increment(refBonus),
           referralEarnings: FieldValue.increment(refBonus * CNX_RATE)
@@ -355,7 +452,7 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
       }
     }
 
-    // Global stats
+    // Update global stats
     await db.collection('global').doc('stats').set({
       totalClaims: FieldValue.increment(1),
       totalPaid: FieldValue.increment(usdValue),
@@ -376,9 +473,15 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
   try {
     const { fromCoin, toCoin, amount } = req.body;
     
-    if (fromCoin !== 'CNX') return res.status(400).json({ success: false, message: 'Can only swap from CNX' });
-    if (!VALID_COINS.includes(toCoin)) return res.status(400).json({ success: false, message: 'Invalid coin' });
-    if (amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
+    if (fromCoin !== 'CNX') {
+      return res.status(400).json({ success: false, message: 'Can only swap from CNX' });
+    }
+    if (!VALID_COINS.includes(toCoin)) {
+      return res.status(400).json({ success: false, message: 'Invalid target coin' });
+    }
+    if (amount <= 0 || !Number.isFinite(amount)) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
 
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
@@ -387,7 +490,9 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
     const userData = userDoc.data();
     const cnxBalance = userData.cnx || 0;
     
-    if (cnxBalance < amount) return res.status(400).json({ success: false, message: 'Insufficient CNX' });
+    if (cnxBalance < amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient CNX balance' });
+    }
 
     // Calculate: CNX → USD → Target Coin
     const usdValue = amount * CNX_RATE;
@@ -398,7 +503,9 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
       if (!freshDoc.exists) throw new Error('User not found');
       const freshData = freshDoc.data();
       
-      if ((freshData.cnx || 0) < amount) throw new Error('Insufficient CNX');
+      if ((freshData.cnx || 0) < amount) {
+        throw new Error('Insufficient CNX balance');
+      }
       
       const newBalances = { ...freshData.balances };
       newBalances[toCoin] = (newBalances[toCoin] || 0) + targetAmount;
@@ -409,10 +516,14 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
       });
     });
 
+    // Record transaction
     await db.collection('transactions').add({
-      userId: req.user.uid, type: 'swap',
-      fromCoin: 'CNX', fromAmount: amount,
-      toCoin, toAmount: targetAmount,
+      userId: req.user.uid, 
+      type: 'swap',
+      fromCoin: 'CNX', 
+      fromAmount: amount,
+      toCoin, 
+      toAmount: targetAmount,
       usdValue,
       status: 'completed',
       createdAt: FieldValue.serverTimestamp()
@@ -427,6 +538,7 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
       usdValue
     });
   } catch (error) {
+    console.error('Swap error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -441,38 +553,58 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
       return res.status(400).json({ success: false, message: 'Invalid coin' });
     }
     const coinUpper = coin.toUpperCase();
+    
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
-    if (!userDoc.exists) return res.status(404).json({ success: false, message: 'Not found' });
+    if (!userDoc.exists) return res.status(404).json({ success: false, message: 'User not found' });
 
     const userData = userDoc.data();
     if (!userData.faucetpayEmail) {
-      return res.status(400).json({ success: false, message: 'Set FaucetPay email first' });
+      return res.status(400).json({ success: false, message: 'Please set your FaucetPay email in settings first' });
     }
 
     const balance = userData.balances[coinUpper] || 0;
     const balanceUSD = balance * COIN_PRICES[coinUpper];
+    
     if (balanceUSD < WITHDRAW_MINIMUM_USD) {
-      return res.status(400).json({ success: false, message: `Min $${WITHDRAW_MINIMUM_USD}` });
+      return res.status(400).json({ 
+        success: false, 
+        message: `Minimum withdrawal is $${WITHDRAW_MINIMUM_USD}. Your balance: $${balanceUSD.toFixed(4)}` 
+      });
     }
 
     await db.runTransaction(async (tx) => {
       const fresh = await tx.get(userRef);
       const data = fresh.data();
       const b = data.balances[coinUpper] || 0;
-      if (b * COIN_PRICES[coinUpper] < WITHDRAW_MINIMUM_USD) throw new Error('Insufficient');
+      
+      if (b * COIN_PRICES[coinUpper] < WITHDRAW_MINIMUM_USD) {
+        throw new Error('Insufficient balance');
+      }
+      
       const newBal = { ...data.balances };
       newBal[coinUpper] = 0;
-      tx.update(userRef, { balances: newBal, totalWithdrawn: FieldValue.increment(b * COIN_PRICES[coinUpper]) });
+      
+      tx.update(userRef, { 
+        balances: newBal, 
+        totalWithdrawn: FieldValue.increment(b * COIN_PRICES[coinUpper]) 
+      });
     });
 
+    // Record withdrawal
     const txRef = await db.collection('transactions').add({
-      userId: req.user.uid, type: 'withdraw', coin: coinUpper,
-      amount: balance, usdValue: balanceUSD,
-      destination: userData.faucetpayEmail, username: userData.username,
-      status: 'completed', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid, 
+      type: 'withdraw', 
+      coin: coinUpper,
+      amount: balance, 
+      usdValue: balanceUSD,
+      destination: userData.faucetpayEmail, 
+      username: userData.username,
+      status: 'pending', 
+      createdAt: FieldValue.serverTimestamp()
     });
 
+    // Update global stats
     await db.collection('global').doc('stats').set({
       totalWithdrawals: FieldValue.increment(1),
       totalWithdrawnAmount: FieldValue.increment(balanceUSD),
@@ -480,11 +612,16 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
     }, { merge: true });
 
     res.json({
-      success: true, transactionId: txRef.id,
-      amount: balance, coin: coinUpper,
-      destination: userData.faucetpayEmail, status: 'completed'
+      success: true, 
+      transactionId: txRef.id,
+      amount: balance, 
+      coin: coinUpper,
+      destination: userData.faucetpayEmail, 
+      status: 'pending',
+      message: 'Withdrawal submitted. Funds will arrive in your FaucetPay account shortly.'
     });
   } catch (error) {
+    console.error('Withdraw error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -494,14 +631,27 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
 // ============================================
 app.post('/api/offerwall', async (req, res) => {
   try {
-    const { user_id, amount, offer_id, status } = req.body;
+    const { user_id, amount, offer_id, status, tx_id, secret } = req.body;
     
-    if (status !== 'completed') return res.status(400).json({ success: false, message: 'Offer not completed' });
+    // Verify secret key
+    if (secret !== process.env.OFFERWALL_SECRET_KEY) {
+      console.warn('⚠️ Invalid Offerwall secret key attempt');
+      return res.status(401).json({ success: false, message: 'Invalid secret' });
+    }
     
-    // Find user by offerwall user ID (stored in referralCode or custom field)
-    const userSnap = await db.collection('users').where('offerwallId', '==', user_id).limit(1).get();
+    if (status !== 'completed') {
+      return res.status(400).json({ success: false, message: 'Offer not completed' });
+    }
     
-    if (userSnap.empty) return res.status(404).json({ success: false, message: 'User not found' });
+    // Find user by offerwall user ID
+    const userSnap = await db.collection('users')
+      .where('offerwallId', '==', user_id)
+      .limit(1).get();
+    
+    if (userSnap.empty) {
+      console.warn('Offerwall user not found:', user_id);
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
     
     const userDoc = userSnap.docs[0];
     const userData = userDoc.data();
@@ -520,9 +670,12 @@ app.post('/api/offerwall', async (req, res) => {
       amount: cnxAmount,
       usdValue: amount,
       offerId: offer_id,
+      txId: tx_id,
       status: 'completed',
       createdAt: FieldValue.serverTimestamp()
     });
+    
+    console.log(`✅ Offerwall: Added ${cnxAmount} CNX to ${userData.username} for offer ${offer_id}`);
     
     res.json({ success: true, message: `Added ${cnxAmount} CNX` });
   } catch (error) {
@@ -538,13 +691,17 @@ app.get('/api/dashboard', verifyToken, async (req, res) => {
   try {
     const doc = await db.collection('users').doc(req.user.uid).get();
     if (!doc.exists) return res.status(404).json({ success: false, message: 'Not found' });
-    const data = doc.data();
     
+    const data = doc.data();
     const cnxUSD = (data.cnx || 0) * CNX_RATE;
-    const coinsUSD = VALID_COINS.reduce((sum, coin) => sum + ((data.balances[coin] || 0) * COIN_PRICES[coin]), 0);
+    const coinsUSD = VALID_COINS.reduce((sum, coin) => 
+      sum + ((data.balances[coin] || 0) * COIN_PRICES[coin]), 0
+    );
     const totalUSD = cnxUSD + coinsUSD;
 
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayStart = new Date(); 
+    todayStart.setHours(0, 0, 0, 0);
+    
     const claimsSnap = await db.collection('claims')
       .where('userId', '==', req.user.uid)
       .where('createdAt', '>=', todayStart).get();
@@ -568,6 +725,7 @@ app.get('/api/dashboard', verifyToken, async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Dashboard error:', error);
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
@@ -593,6 +751,7 @@ app.get('/api/stats', async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Stats error:', error);
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
@@ -602,18 +761,26 @@ app.get('/api/stats', async (req, res) => {
 // ============================================
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const snap = await db.collection('users').orderBy('totalClaims', 'desc').limit(100).get();
+    const snap = await db.collection('users')
+      .orderBy('totalClaims', 'desc')
+      .limit(100).get();
+    
     const leaderboard = [];
     snap.forEach((doc, i) => {
       const d = doc.data();
       leaderboard.push({
-        rank: i + 1, username: d.username, country: d.country,
-        totalClaims: d.totalClaims || 0, totalWithdrawn: d.totalWithdrawn || 0,
+        rank: i + 1, 
+        username: d.username, 
+        country: d.country,
+        totalClaims: d.totalClaims || 0, 
+        totalWithdrawn: d.totalWithdrawn || 0,
         level: d.level || 1
       });
     });
+    
     res.json({ success: true, leaderboard });
   } catch (error) {
+    console.error('Leaderboard error:', error);
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
@@ -625,16 +792,22 @@ app.put('/api/settings', verifyToken, async (req, res) => {
   try {
     const { username, country, timezone, faucetpayEmail, twoFA, notifications } = req.body;
     const updates = {};
+    
     if (username?.length >= 3) updates.username = username.trim();
     if (country) updates.country = country;
     if (timezone) updates.timezone = timezone;
     if (faucetpayEmail) updates.faucetpayEmail = faucetpayEmail.trim().toLowerCase();
     if (typeof twoFA === 'boolean') updates.twoFA = twoFA;
     if (typeof notifications === 'boolean') updates.notifications = notifications;
-    if (Object.keys(updates).length === 0) return res.status(400).json({ success: false });
+    
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid fields to update' });
+    }
+    
     await db.collection('users').doc(req.user.uid).update(updates);
-    res.json({ success: true, message: 'Saved' });
+    res.json({ success: true, message: 'Settings saved successfully' });
   } catch (error) {
+    console.error('Settings error:', error);
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
@@ -649,14 +822,18 @@ app.get('/api/transactions', verifyToken, async (req, res) => {
       .where('userId', '==', req.user.uid)
       .orderBy('createdAt', 'desc')
       .limit(Math.min(parseInt(limit) || 50, 100));
+    
     if (type && ['claim', 'withdraw', 'daily-bonus', 'referral', 'swap', 'offerwall'].includes(type)) {
       query = query.where('type', '==', type);
     }
+    
     const snap = await query.get();
     const txs = [];
     snap.forEach(d => txs.push({ id: d.id, ...d.data() }));
+    
     res.json({ success: true, transactions: txs });
   } catch (error) {
+    console.error('Transactions error:', error);
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
@@ -669,10 +846,15 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) return res.status(404).json({ success: false });
+    
     const data = userDoc.data();
     const today = new Date().toISOString().slice(0, 10);
     const last = data.lastDailyBonus ? new Date(data.lastDailyBonus).toISOString().slice(0, 10) : null;
-    if (last === today) return res.status(400).json({ success: false, message: 'Already claimed' });
+    
+    if (last === today) {
+      return res.status(400).json({ success: false, message: 'Already claimed today' });
+    }
+    
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const newStreak = last === yesterday ? (data.dailyStreak || 0) + 1 : 1;
     
@@ -691,13 +873,19 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
     });
     
     await db.collection('transactions').add({
-      userId: req.user.uid, type: 'daily-bonus', coin: 'CNX',
-      amount: cnxBonus, usdValue, day: newStreak,
-      status: 'completed', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid, 
+      type: 'daily-bonus', 
+      coin: 'CNX',
+      amount: cnxBonus, 
+      usdValue, 
+      day: newStreak,
+      status: 'completed', 
+      createdAt: FieldValue.serverTimestamp()
     });
     
     res.json({ success: true, day: newStreak, amount: cnxBonus, usdValue, newStreak });
   } catch (error) {
+    console.error('Daily bonus error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -711,22 +899,57 @@ app.post('/api/verify-recaptcha', async (req, res) => {
     if (!token) return res.status(400).json({ success: false, message: 'Token required' });
 
     const response = await fetch(
-      `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID || 'coinixfaucet'}/assessments?key=${process.env.RECAPTCHA_API_KEY}`,
+      `https://www.google.com/recaptcha/api/siteverify`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: { token, expectedAction: action || 'auth', siteKey: process.env.RECAPTCHA_SITE_KEY } })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`
       }
     );
+    
     const assessment = await response.json();
-    const score = assessment.riskAnalysis?.score || 0;
-    if (score >= 0.3) {
+    const score = assessment.score || 0;
+    
+    if (score >= 0.5) {
       res.json({ success: true, score });
     } else {
       res.status(400).json({ success: false, score, message: 'Bot detected' });
     }
   } catch (error) {
+    console.error('reCAPTCHA error:', error);
     res.status(500).json({ success: false, message: 'Error' });
+  }
+});
+
+// ============================================
+// 🌐 LIVE WITHDRAWS (Public)
+// ============================================
+app.get('/api/live-withdraws', async (req, res) => {
+  try {
+    const snap = await db.collection('transactions')
+      .where('type', '==', 'withdraw')
+      .where('status', '==', 'completed')
+      .orderBy('createdAt', 'desc')
+      .limit(30).get();
+
+    const withdrawals = [];
+    snap.forEach(d => {
+      const data = d.data();
+      withdrawals.push({
+        id: d.id,
+        username: data.username || ('User' + (data.userId || '').slice(0, 6)),
+        coin: data.coin, 
+        amount: data.amount, 
+        usdValue: data.usdValue,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        status: 'completed'
+      });
+    });
+
+    res.json({ success: true, withdrawals });
+  } catch (error) {
+    console.error('Live withdraws error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -813,35 +1036,6 @@ app.post('/api/admin/boost-stats', verifyAdmin, async (req, res) => {
 });
 
 // ============================================
-// 🌐 LIVE WITHDRAWS
-// ============================================
-app.get('/api/live-withdraws', async (req, res) => {
-  try {
-    const snap = await db.collection('transactions')
-      .where('type', '==', 'withdraw')
-      .where('status', '==', 'completed')
-      .orderBy('createdAt', 'desc')
-      .limit(30).get();
-
-    const withdrawals = [];
-    snap.forEach(d => {
-      const data = d.data();
-      withdrawals.push({
-        id: d.id,
-        username: data.username || ('User' + (data.userId || '').slice(0, 6)),
-        coin: data.coin, amount: data.amount, usdValue: data.usdValue,
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        status: 'completed'
-      });
-    });
-
-    res.json({ success: true, withdrawals });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ============================================
 // 🚫 404 + ERROR
 // ============================================
 app.use((req, res) => res.status(404).json({ success: false, message: 'Not found' }));
@@ -851,7 +1045,7 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================
-// 💖 SELF-PING
+// 💖 SELF-PING (Keep-Alive)
 // ============================================
 function startSelfPing() {
   setInterval(async () => {
@@ -862,7 +1056,7 @@ function startSelfPing() {
     } catch (err) {
       console.log('⚠️ Self-ping failed:', err.message);
     }
-  }, 14 * 60 * 1000);
+  }, 14 * 60 * 1000); // Every 14 minutes
 }
 
 // ============================================
@@ -871,11 +1065,12 @@ function startSelfPing() {
 app.listen(PORT, () => {
   console.log(`🚀 CoinixFaucet v2.0 running on port ${PORT}`);
   console.log(`🔐 Firebase: coinixfaucet`);
-  console.log(` CNX Faucet: 1 CNX = $0.01`);
+  console.log(`💰 CNX Faucet: 1 CNX = $0.01`);
   console.log(`💱 Swap: CNX → 5 Coins`);
   console.log(`🎁 Offerwall.me Ready`);
-  console.log(`🛡️ VPN Protection: ENABLED`);
-  console.log(`💖 Keep-alive: Active`);
+  console.log(`🛡️ VPN Protection: ENABLED (ipwho.is)`);
+  console.log(`🔐 reCAPTCHA: ${process.env.RECAPTCHA_SECRET_KEY ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`💖 Keep-alive: Active (self-ping every 14min)`);
   startSelfPing();
 });
 
