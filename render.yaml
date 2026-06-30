@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: "3000"
       - key: FIREBASE_PROJECT_ID
         value: coinixfaucet
       - key: RECAPTCHA_SITE_KEY
