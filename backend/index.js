@@ -182,10 +182,11 @@ app.use(vpnMiddleware);
 // ============================================
 // 📁 STATIC DOSYALAR (FRONTEND) - DÜZELTİLDİ
 // ============================================
-const frontendPath = join(__dirname, 'frontend');
+// Artık 'frontend' klasörü aramıyor, doğrudan proje kökünü kullanıyor
+const frontendPath = __dirname;
 console.log(`📁 Frontend path: ${frontendPath}`);
 
-// frontend klasörünün varlığını kontrol et
+// frontend klasörünün varlığını kontrol et (artık kök)
 if (!fs.existsSync(frontendPath)) {
   console.error(`❌ Frontend klasörü bulunamadı: ${frontendPath}`);
   process.exit(1);
