@@ -27,38 +27,29 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen" class="min-h-screen flex items-center justify-center p-6">
   <div class="card w-full max-w-md">
     <div class="text-center mb-6">
       <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-red-600 to-purple-600 flex items-center justify-center text-2xl font-black mb-4">🔐</div>
       <h1 class="text-2xl font-black">Admin Panel</h1>
-      <p class="text-sm text-zinc-400 mt-1">CoinixFaucet Admin</p>
+      <p class="text-sm text-zinc-400 mt-1">CoinixFaucet Control Center</p>
     </div>
     <div class="space-y-4">
-      <div>
-        <label class="text-xs text-zinc-400 block mb-1">Admin Secret Key</label>
-        <input type="password" id="adminKeyInput" class="input" placeholder="Enter admin secret key" />
-      </div>
+      <div><label class="text-xs text-zinc-400 block mb-1">Admin Secret Key</label><input type="password" id="adminKeyInput" class="input" placeholder="Enter admin secret key" /></div>
       <button onclick="adminLogin()" class="btn btn-primary w-full">Login</button>
     </div>
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard" class="hidden min-h-screen p-6 max-w-7xl mx-auto">
   <header class="flex items-center justify-between mb-8">
     <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-purple-600 flex items-center justify-center text-xl font-black">🔐</div>
-      <div>
-        <h1 class="text-2xl font-black">Admin Panel</h1>
-        <p class="text-xs text-zinc-400">CoinixFaucet Control Center</p>
-      </div>
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-purple-600 flex items-center justify-center text-xl font-black"></div>
+      <div><h1 class="text-2xl font-black">Admin Panel</h1><p class="text-xs text-zinc-400">CoinixFaucet Control Center</p></div>
     </div>
     <button onclick="logout()" class="btn btn-danger">Logout</button>
   </header>
 
-  <!-- STATS GRID -->
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="card"><div class="stat-label">Total Users</div><div class="stat-value" id="statUsers">—</div></div>
     <div class="card"><div class="stat-label">Total Claims</div><div class="stat-value" id="statClaims">—</div></div>
@@ -66,10 +57,9 @@
     <div class="card"><div class="stat-label">Withdrawals</div><div class="stat-value text-purple-400" id="statWithdrawals">0</div></div>
   </div>
 
-  <!-- BOOST STATS -->
   <div class="card mb-6">
     <h2 class="text-xl font-bold mb-4">📈 Boost Statistics</h2>
-    <p class="text-sm text-zinc-400 mb-4">Landing page istatistiklerini artır (gerçek data değil, gösterim için)</p>
+    <p class="text-sm text-zinc-400 mb-4">Landing page istatistiklerini artır</p>
     <div class="grid md:grid-cols-3 gap-4 mb-4">
       <div><label class="text-xs text-zinc-400 block mb-1">Add Claims</label><input type="number" id="boostClaims" class="input" value="1000" /></div>
       <div><label class="text-xs text-zinc-400 block mb-1">Add Paid (USD)</label><input type="number" id="boostPaid" class="input" value="500" /></div>
@@ -78,18 +68,12 @@
     <button onclick="boostStats()" class="btn btn-primary">🚀 Boost Stats</button>
   </div>
 
-  <!-- ADD FAKE WITHDRAWAL -->
   <div class="card mb-6">
     <h2 class="text-xl font-bold mb-4">💸 Add Fake Withdrawal</h2>
     <p class="text-sm text-zinc-400 mb-4">Landing page'de "Recent Withdrawals" tablosuna sahte çekim ekle</p>
     <div class="grid md:grid-cols-4 gap-4 mb-4">
       <div><label class="text-xs text-zinc-400 block mb-1">Username</label><input type="text" id="fakeUsername" class="input" placeholder="CryptoKing" /></div>
-      <div>
-        <label class="text-xs text-zinc-400 block mb-1">Coin</label>
-        <select id="fakeCoin" class="input">
-          <option>BTC</option><option>DOGE</option><option>DGB</option><option>FEY</option><option>POL</option>
-        </select>
-      </div>
+      <div><label class="text-xs text-zinc-400 block mb-1">Coin</label><select id="fakeCoin" class="input"><option>BTC</option><option>DOGE</option><option>DGB</option><option>FEY</option><option>POL</option></select></div>
       <div><label class="text-xs text-zinc-400 block mb-1">Amount</label><input type="number" id="fakeAmount" class="input" step="0.0001" placeholder="100.5" /></div>
       <div><label class="text-xs text-zinc-400 block mb-1">USD Value</label><input type="number" id="fakeUSD" class="input" step="0.01" placeholder="15.07" /></div>
     </div>
@@ -99,7 +83,6 @@
     </div>
   </div>
 
-  <!-- RECENT TRANSACTIONS -->
   <div class="card">
     <h2 class="text-xl font-bold mb-4">📋 Recent Transactions (All Users)</h2>
     <div id="txList" class="space-y-2 max-h-[500px] overflow-y-auto"></div>
@@ -107,10 +90,7 @@
 </div>
 
 <script>
-const API_URL = window.location.origin.replace(':5173', ':3000').replace('frontend', 'backend');
-// Render'da çalışıyorsa aynı origin, local'da backend port 3000
 const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
-
 let adminKey = localStorage.getItem('adminKey') || '';
 
 function toast(msg, type = 'info') {
@@ -122,13 +102,7 @@ function toast(msg, type = 'info') {
 }
 
 async function apiCall(endpoint, method = 'GET', body = null) {
-  const opts = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-admin-key': adminKey
-    }
-  };
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey } };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${API}${endpoint}`, opts);
   return await res.json();
@@ -137,32 +111,19 @@ async function apiCall(endpoint, method = 'GET', body = null) {
 async function adminLogin() {
   const key = document.getElementById('adminKeyInput').value;
   if (!key) return toast('Enter admin key', 'error');
-  
-  const res = await fetch(`${API}/api/admin/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-admin-key': key }
-  });
+  const res = await fetch(`${API}/api/admin/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-key': key } });
   const data = await res.json();
-  
   if (data.success) {
     adminKey = key;
     localStorage.setItem('adminKey', key);
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
-    loadStats();
-    loadTransactions();
+    loadStats(); loadTransactions();
     toast('Welcome, Admin!', 'success');
-  } else {
-    toast('Invalid admin key', 'error');
-  }
+  } else { toast('Invalid admin key', 'error'); }
 }
 
-function logout() {
-  adminKey = '';
-  localStorage.removeItem('adminKey');
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('loginScreen').classList.remove('hidden');
-}
+function logout() { adminKey = ''; localStorage.removeItem('adminKey'); document.getElementById('dashboard').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden'); }
 
 async function loadStats() {
   const data = await apiCall('/api/admin/stats');
@@ -177,36 +138,26 @@ async function loadStats() {
 async function loadTransactions() {
   const data = await apiCall('/api/admin/transactions');
   const list = document.getElementById('txList');
-  if (!data.success || !data.transactions.length) {
-    list.innerHTML = '<div class="text-zinc-500 text-center py-8">No transactions yet</div>';
-    return;
-  }
+  if (!data.success || !data.transactions.length) { list.innerHTML = '<div class="text-zinc-500 text-center py-8">No transactions yet</div>'; return; }
   list.innerHTML = data.transactions.map(t => `
     <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-      <div>
-        <div class="font-medium">${t.username || t.userId?.slice(0, 8)} · ${t.coin}</div>
-        <div class="text-xs text-zinc-500">${t.type} · ${t.amount} ${t.coin} · $${(t.usdValue || 0).toFixed(4)} ${t.isFake ? '· <span class="text-yellow-400">FAKE</span>' : ''}</div>
-      </div>
+      <div><div class="font-medium">${t.username || t.userId?.slice(0, 8)} · ${t.coin}</div><div class="text-xs text-zinc-500">${t.type} · ${t.amount} ${t.coin} · $${(t.usdValue || 0).toFixed(4)} ${t.isFake ? '· <span class="text-yellow-400">FAKE</span>' : ''}</div></div>
       <button onclick="deleteTx('${t.id}')" class="btn btn-danger text-xs px-3 py-1">Delete</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 async function deleteTx(id) {
   if (!confirm('Delete this transaction?')) return;
   const data = await apiCall(`/api/admin/transaction/${id}`, 'DELETE');
-  if (data.success) { toast('Deleted', 'success'); loadStats(); loadTransactions(); }
-  else toast('Failed', 'error');
+  if (data.success) { toast('Deleted', 'success'); loadStats(); loadTransactions(); } else toast('Failed', 'error');
 }
 
 async function boostStats() {
   const addClaims = parseInt(document.getElementById('boostClaims').value) || 0;
   const addPaid = parseFloat(document.getElementById('boostPaid').value) || 0;
   const addWithdrawals = parseInt(document.getElementById('boostWithdrawals').value) || 0;
-  
   const data = await apiCall('/api/admin/boost-stats', 'POST', { addClaims, addPaid, addWithdrawals });
-  if (data.success) { toast(data.message, 'success'); loadStats(); }
-  else toast('Failed', 'error');
+  if (data.success) { toast(data.message, 'success'); loadStats(); } else toast('Failed', 'error');
 }
 
 async function addFakeWithdrawal() {
@@ -214,30 +165,20 @@ async function addFakeWithdrawal() {
   const coin = document.getElementById('fakeCoin').value;
   const amount = document.getElementById('fakeAmount').value;
   const usdValue = document.getElementById('fakeUSD').value;
-  
   if (!username) return toast('Enter username', 'error');
-  
   const data = await apiCall('/api/admin/add-withdrawal', 'POST', { username, coin, amount, usdValue });
-  if (data.success) { toast(data.message, 'success'); loadStats(); loadTransactions(); }
-  else toast('Failed', 'error');
+  if (data.success) { toast(data.message, 'success'); loadStats(); loadTransactions(); } else toast('Failed', 'error');
 }
 
 async function addBulkWithdrawals() {
   const data = await apiCall('/api/admin/add-bulk-withdrawals', 'POST', { count: 20 });
-  if (data.success) { toast(data.message, 'success'); loadStats(); loadTransactions(); }
-  else toast('Failed', 'error');
+  if (data.success) { toast(data.message, 'success'); loadStats(); loadTransactions(); } else toast('Failed', 'error');
 }
 
-// Auto-login if key exists
 if (adminKey) {
   document.getElementById('adminKeyInput').value = adminKey;
   apiCall('/api/admin/stats').then(data => {
-    if (data.success) {
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
-      loadStats();
-      loadTransactions();
-    }
+    if (data.success) { document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('dashboard').classList.remove('hidden'); loadStats(); loadTransactions(); }
   });
 }
 </script>
