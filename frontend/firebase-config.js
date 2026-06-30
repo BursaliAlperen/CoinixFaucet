@@ -2,14 +2,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// KENDİ FIREBASE YAPILANDIRMANIZI GİRİN
+// Firebase Config - SİZİN VERDİĞİNİZ
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC_jba0EPxo-eN9Y3GRNkKyGQZS3wYXnE0",
+  authDomain: "coinixfaucet.firebaseapp.com",
+  projectId: "coinixfaucet",
+  storageBucket: "coinixfaucet.firebasestorage.app",
+  messagingSenderId: "894864862453",
+  appId: "1:894864862453:web:3f2da6e92ce63b3cc5e9bc",
+  measurementId: "G-8V69KZQN75"
 };
 
 const app = initializeApp(firebaseConfig);
