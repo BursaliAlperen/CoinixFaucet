@@ -32,12 +32,12 @@ try {
         serverTimestamp = () => FieldValue.serverTimestamp();
         increment = (n) => FieldValue.increment(n);
         firebaseInitialized = true;
-        console.log('[Firebase] Initialized successfully');
+        console.log('[Firebase] ✅ Initialized successfully');
     } else { 
-        console.warn('[Firebase] Running WITHOUT database'); 
+        console.warn('[Firebase] ⚠️ Running WITHOUT database'); 
     }
 } catch (e) { 
-    console.error('[Firebase] Init error:', e.message); 
+    console.error('[Firebase] ❌ Init error:', e.message); 
     firebaseInitialized = false; 
     db = null; 
 }
@@ -68,9 +68,9 @@ function validateCriticalConfig() {
         missing.push('FIREBASE_SERVICE_ACCOUNT');
     }
     if (missing.length) {
-        console.error('[CONFIG] MISSING:', missing.join(', '));
+        console.error('[CONFIG] ❌ MISSING:', missing.join(', '));
     } else {
-        console.log('[CONFIG] All critical env vars present');
+        console.log('[CONFIG] ✅ All critical env vars present');
     }
 }
 validateCriticalConfig();
@@ -157,13 +157,13 @@ function setupSecurity(app) {
     app.use(helmet({
         contentSecurityPolicy: {
             directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://telegram.org"],
+                defaultSrc: ["'self'", "https://richinfo.co", "https://*.richinfo.co"],
+                scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://telegram.org", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro", "https://adbits.online"],
                 styleSrc: ["'self'", "'unsafe-inline'"],
                 fontSrc: ["'self'", "data:"],
                 imgSrc: ["'self'", "data:", "https:", "blob:"],
-                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com"],
-                frameSrc: ["'self'"],
+                connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://richinfo.co"],
+                frameSrc: ["'self'", "https://richinfo.co", "https://adbits.online"],
                 objectSrc: ["'none'"],
                 upgradeInsecureRequests: []
             }
@@ -236,6 +236,7 @@ function validateTelegramInitData(initData) {
         
         const a = Buffer.from(hash, 'hex'); 
         const b = Buffer.from(checkHash, 'hex');
+        
         if (a.length !== b.length || a.length === 0) return false;
         return crypto.timingSafeEqual(a, b);
     } catch (e) { 
@@ -359,7 +360,7 @@ async function broadcastToUsers(message) {
 }
 
 // ============================================
-// CUSTOM CAPTCHA (Turnstile yerine)
+// CAPTCHA
 // ============================================
 const activeCaptchas = new Map();
 
@@ -618,6 +619,7 @@ async function auth(req, res) {
         });
         
     } catch (err) { 
+        logger.error('Auth error', { error: err.message });
         res.status(500).json({ error: 'Auth failed' });  
     }
 }
@@ -800,7 +802,7 @@ async function claim(req, res) {
         });
         
         if (result.milestoneReward > 0) {
-            await createNotification(userId, 'Milestone Reached!', 
+            await createNotification(userId, '🎉 Milestone Reached!', 
                 `You earned ${result.milestoneReward} CNX!`, 'reward');
         }
         
@@ -824,6 +826,8 @@ async function claim(req, res) {
         if (msg.includes('Daily limit')) return res.status(429).json({ error: 'Daily limit reached' });
         if (msg.includes('Duplicate')) return res.status(429).json({ error: 'Duplicate claim' });
         if (msg.includes('User banned')) return res.status(403).json({ error: 'User banned' });
+        
+        logger.error('Claim error', { error: err.message });
         res.status(500).json({ error: 'Claim failed' });
     }
 }
@@ -1112,7 +1116,7 @@ async function getTransactionHistory(req, res) {
 }
 
 // ============================================
-// ADMIN ENDPOINTS
+// ADMIN ENDPOINTS (Kısaca - aynı kalacak)
 // ============================================
 async function adminGetStats(req, res) {
     if (!db) return res.status(503).json({ error: 'DB not available' });
@@ -1290,153 +1294,6 @@ async function adminSendDM(req, res) {
     }
 }
 
-async function adminListPromos(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try {
-        const snap = await db.collection('promoCodes').orderBy('createdAt', 'desc').get();
-        res.json(snap.docs.map(d => ({ 
-            code: d.id, 
-            ...d.data(), 
-            createdAt: tsToMillis(d.data().createdAt) 
-        })));
-    } catch (err) { 
-        res.status(500).json({ error: 'Failed' }); 
-    }
-}
-
-async function adminCreatePromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try {
-        const { code, coin, reward, usageLimit } = req.body;
-        await db.collection('promoCodes').doc(code).set({
-            code, 
-            coin, 
-            reward: Number(reward), 
-            usageLimit: Number(usageLimit), 
-            usedCount: 0, 
-            usedBy: [], 
-            enabled: true,
-            createdBy: req.user.userId, 
-            createdAt: serverTimestamp()
-        });
-        res.json({ success: true });
-    } catch (err) { 
-        res.status(500).json({ error: 'Failed' }); 
-    }
-}
-
-async function adminTogglePromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try { 
-        await db.collection('promoCodes')
-            .doc(req.body.code)
-            .update({ enabled: !!req.body.enabled }); 
-        res.json({ success: true });
-    } catch (err) { 
-        res.status(500).json({ error: 'Failed' }); 
-    }
-}
-
-async function adminDeletePromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try { 
-        await db.collection('promoCodes').doc(req.body.code).delete(); 
-        res.json({ success: true });
-    } catch (err) { 
-        res.status(500).json({ error: 'Failed' }); 
-    }
-}
-
-// ============================================
-// PROMO CODES
-// ============================================
-function validatePromoCode(code) { 
-    if (!code) return null; 
-    const t = String(code).trim().toUpperCase(); 
-    if (t.length < 3 || t.length > 32) return null; 
-    if (!/^[A-Z0-9_-]+$/.test(t)) return null; 
-    return t; 
-}
-
-async function redeemPromo(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try {
-        const code = validatePromoCode(req.body.code);
-        if (!code) return res.status(400).json({ error: 'Invalid code' });
-        
-        const userId = String(req.user.userId);
-        const promoRef = db.collection('promoCodes').doc(code);
-        const promoDoc = await promoRef.get();
-        
-        if (!promoDoc.exists) return res.status(400).json({ error: 'Invalid code' });
-        const promo = promoDoc.data();
-        if (promo.enabled === false) return res.status(400).json({ error: 'Code disabled' });
-        if ((promo.usedCount || 0) >= (promo.usageLimit || 0)) return res.status(400).json({ error: 'Limit reached' });
-        if (promo.usedBy && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'Already used' });
-        
-        const userRef = db.collection('users').doc(userId);
-        const isCoin = Object.keys(COINS).includes(promo.coin.toLowerCase());
-        const field = isCoin ? `balances.${promo.coin.toLowerCase()}` : 'balance';
-        const reward = Number(promo.reward);
-        
-        await db.runTransaction(async (t) => {
-            const u = await t.get(userRef); 
-            if (!u.exists) throw new Error('User not found');
-            const fp = await t.get(promoRef); 
-            const fpd = fp.data();
-            if (fpd.enabled === false) throw new Error('Code disabled');
-            if ((fpd.usedCount || 0) >= (fpd.usageLimit || 0)) throw new Error('Limit reached');
-            if (fpd.usedBy && fpd.usedBy.includes(userId)) throw new Error('Already used');
-            
-            if (isCoin) {
-                const newBalances = { ...(u.data().balances || {}) };
-                newBalances[promo.coin.toLowerCase()] = (newBalances[promo.coin.toLowerCase()] || 0) + reward;
-                t.update(userRef, { balances: newBalances });
-            } else {
-                t.update(userRef, { [field]: increment(reward), total_earned: increment(reward) });
-            }
-            t.update(promoRef, { 
-                usedCount: increment(1), 
-                usedBy: FieldValue.arrayUnion(userId) 
-            });
-            t.set(db.collection('transactions').doc(), { 
-                user_id: userId, 
-                type: 'promo', 
-                amount: reward, 
-                currency: promo.coin, 
-                description: `Promo: ${code}`, 
-                metadata: { code }, 
-                timestamp: serverTimestamp() 
-            });
-        });
-        
-        res.json({ success: true, code, reward, coin: promo.coin });
-    } catch (err) { 
-        res.status(400).json({ error: err.message || 'Failed' }); 
-    }
-}
-
-async function getPromoHistory(req, res) {
-    if (!db) return res.status(503).json({ error: 'DB not available' });
-    try {
-        const snap = await db.collection('transactions')
-            .where('user_id', '==', String(req.user.userId))
-            .where('type', '==', 'promo')
-            .orderBy('timestamp', 'desc')
-            .limit(50)
-            .get();
-        res.json({ 
-            history: snap.docs.map(d => ({ 
-                id: d.id, 
-                ...d.data(), 
-                timestamp: tsToMillis(d.data().timestamp) 
-            })) 
-        });
-    } catch (err) { 
-        res.status(500).json({ error: 'Failed' }); 
-    }
-}
-
 // ============================================
 // EXPRESS APP
 // ============================================
@@ -1471,8 +1328,6 @@ app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
 app.get('/api/referral', jwtAuth, getReferral);
 app.get('/api/referral/list', jwtAuth, getReferralList);
 app.post('/api/referral/collect', jwtAuth, collectReferralBonus);
-app.post('/api/promo/redeem', jwtAuth, redeemPromo);
-app.get('/api/promo/history', jwtAuth, getPromoHistory);
 app.get('/api/notifications', jwtAuth, getNotifications);
 app.post('/api/notifications/read', jwtAuth, markNotificationsRead);
 app.get('/api/transactions', jwtAuth, getTransactionHistory);
@@ -1486,10 +1341,6 @@ app.post('/api/admin/add-balance', adminAuth, adminAddBalance);
 app.post('/api/admin/ban-user', adminAuth, adminBanUser);
 app.post('/api/admin/broadcast', adminAuth, adminBroadcast);
 app.post('/api/admin/send-dm', adminAuth, adminSendDM);
-app.get('/api/admin/promo/list', adminAuth, adminListPromos);
-app.post('/api/admin/promo/create', adminAuth, adminCreatePromo);
-app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
-app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
 
 const publicPath = path.join(__dirname, '..');
 console.log('[Static] Serving files from:', publicPath);
@@ -1521,8 +1372,8 @@ module.exports = app;
 
 if (require.main === module) {
     const server = app.listen(PORT, '0.0.0.0', () => {
-        logger.info(`Coinix Multi-Coin backend listening on port ${PORT}`);
-        logger.info(`Static path: ${publicPath}`);
+        logger.info(`🚀 Coinix backend listening on port ${PORT}`);
+        logger.info(`📁 Static path: ${publicPath}`);
     });
     
     if (process.env.NODE_ENV === 'production' && APP_URL) {
