@@ -1,5 +1,4 @@
 services:
-  # Backend Web Service
   - type: web
     name: coinixfaucet-backend
     runtime: node
@@ -27,27 +26,3 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         value: https://coinixfaucet.mine.bz
-
-  # Frontend Static Site
-  - type: web
-    name: coinixfaucet-frontend
-    runtime: static
-    region: frankfurt
-    plan: free
-    rootDir: frontend
-    buildCommand: ""
-    staticPublishPath: .
-    headers:
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /coins/*
-        name: Cache-Control
-        value: public, max-age=31536000, immutable
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
