@@ -116,7 +116,7 @@ console.log('📁 Frontend path:', frontendPath);
 app.use(express.static(frontendPath));
 
 // ============================================
-// 🗺️ SITEMAP.XML (YENİ EKLENDİ)
+// 🗺️ SITEMAP.XML
 // ============================================
 app.get('/sitemap.xml', (req, res) => {
     res.header('Content-Type', 'application/xml');
@@ -258,7 +258,7 @@ app.get('/api/prices', (req, res) => {
 });
 
 // ============================================
-// 👤 USER PROFILE (Admin email kontrolü ile)
+// 👤 USER PROFILE
 // ============================================
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
@@ -271,7 +271,6 @@ app.get('/api/user', verifyToken, async (req, res) => {
     );
     const totalUSD = cnxUSD + coinsUSD;
     
-    // Admin email kontrolü
     const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
     const isAdmin = adminEmails.includes(req.user.email.toLowerCase());
     
@@ -318,7 +317,6 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
   console.log('||| CLAIM REQUEST START |||');
   try {
     const { recaptchaToken } = req.body;
-    console.log('||| recaptchaToken:', recaptchaToken ? 'Gönderildi' : 'Yok');
 
     if (recaptchaToken && process.env.RECAPTCHA_SECRET_KEY) {
       try {
@@ -707,7 +705,7 @@ app.post('/api/verify-recaptcha', async (req, res) => {
 });
 
 // ============================================
-// 🌐 LIVE WITHDRAWS (Dik scroll)
+// 🌐 LIVE WITHDRAWS
 // ============================================
 app.get('/api/live-withdraws', async (req, res) => {
   try {
