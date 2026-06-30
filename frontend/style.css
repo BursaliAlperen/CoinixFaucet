@@ -1,438 +1,630 @@
-:root {
-  --bg: #09090B;
-  --card: #18181B;
-  --yellow: #F59E0B;
-  --orange: #F97316;
-  --purple: #7C3AED;
-  --green: #22C55E;
-  --cyan: #06B6D4;
-  --blue: #2563EB;
-}
+import { auth, db, COL, COINS, COIN_META, RECAPTCHA_SITE_KEY } from './firebase-config.js';
+import {
+  onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signOut, updatePassword, sendEmailVerification, sendPasswordResetEmail, reload
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where,
+  orderBy, limit, getDocs, onSnapshot, serverTimestamp,
+  increment, runTransaction, Timestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-* { -webkit-tap-highlight-color: transparent; }
-html { scroll-behavior: smooth; }
-html, body { background: var(--bg); }
-
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 8px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-
-/* GLASS */
-.glass-card {
-  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.6));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-
-.gradient-border { position: relative; }
-.gradient-border::before {
-  content: ''; position: absolute; inset: 0; padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(245,158,11,0.5), rgba(124,58,237,0.3), transparent);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* INPUTS */
-.input-field {
-  width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 0.875rem; color: white;
-  font-size: 0.875rem; transition: all 0.2s; outline: none;
-}
-.input-field:focus {
-  border-color: var(--yellow);
-  background: rgba(245,158,11,0.05);
-  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
-}
-.input-field[readonly] { opacity: 0.6; cursor: not-allowed; }
-.label { display: block; font-size: 0.75rem; font-weight: 500; color: rgb(161 161 170); margin-bottom: 0.375rem; }
-
-/* BUTTONS */
-.btn-primary {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, var(--yellow), var(--orange));
-  color: white; font-weight: 600; font-size: 0.875rem;
-  border-radius: 0.875rem; border: none; cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(245,158,11,0.4);
-}
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,158,11,0.6); }
-.btn-primary:active { transform: translateY(0); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-.btn-ghost {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(255,255,255,0.05); color: white;
-  font-weight: 600; font-size: 0.875rem;
-  border-radius: 0.875rem;
-  border: 1px solid rgba(255,255,255,0.1);
-  cursor: pointer; transition: all 0.2s;
-}
-.btn-ghost:hover { background: rgba(255,255,255,0.1); }
-
-.btn-danger {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #dc2626;
-  color: white; font-weight: 600; font-size: 0.75rem;
-  border-radius: 0.625rem; border: none; cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-danger:hover { background: #b91c1c; }
-
-.icon-btn {
-  width: 40px; height: 40px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px; cursor: pointer; color: white;
-  transition: all 0.2s;
-}
-.icon-btn:hover { background: rgba(255,255,255,0.1); }
-
-/* LANDING HEADER */
-.landing-header {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background: rgba(9,9,11,0.7);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.landing-nav-link {
-  padding: 0.5rem 1rem; border-radius: 0.625rem;
-  color: rgb(161 161 170); font-size: 0.875rem; font-weight: 500;
-  transition: all 0.2s; text-decoration: none;
-}
-.landing-nav-link:hover { color: white; background: rgba(255,255,255,0.05); }
-
-/* SIDEBAR NAV */
-.nav-link {
-  display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.625rem 0.875rem; border-radius: 0.75rem;
-  color: rgb(161 161 170); font-size: 0.875rem; font-weight: 500;
-  text-decoration: none; transition: all 0.2s; cursor: pointer;
-  background: transparent; border: none; width: 100%; text-align: left;
-}
-.nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
-.nav-link.active {
-  background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.1));
-  color: white; box-shadow: inset 0 0 0 1px rgba(245,158,11,0.3);
-}
-.nav-link svg { width: 18px; height: 18px; }
-
-.top-nav {
-  position: sticky; top: 0; z-index: 40;
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: rgba(9,9,11,0.8); backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-/* STAT CARDS */
-.stat-glass-card {
-  padding: 1.25rem;
-  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.5));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 1.25rem;
-  transition: all 0.3s;
-}
-.stat-glass-card:hover { transform: translateY(-4px); border-color: rgba(245,158,11,0.3); }
-.stat-icon {
-  width: 40px; height: 40px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 0.75rem;
-}
-.stat-icon svg { width: 20px; height: 20px; color: white; }
-.stat-icon.yellow { background: linear-gradient(135deg, #F59E0B, #D97706); }
-.stat-icon.purple { background: linear-gradient(135deg, #7C3AED, #5B21B6); }
-.stat-icon.green { background: linear-gradient(135deg, #22C55E, #15803D); }
-.stat-icon.cyan { background: linear-gradient(135deg, #06B6D4, #0E7490); }
-.stat-icon.blue { background: linear-gradient(135deg, #2563EB, #1E40AF); }
-.stat-glass-card .stat-label { font-size: 0.75rem; color: rgb(161 161 170); margin-bottom: 0.375rem; }
-.stat-glass-card .stat-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
-
-/* FEATURE CARD */
-.feature-card {
-  padding: 1.75rem;
-  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.5));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 1.5rem;
-  transition: all 0.3s;
-}
-.feature-card:hover { transform: translateY(-4px); border-color: rgba(245,158,11,0.3); }
-.feature-icon {
-  width: 48px; height: 48px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 1rem;
-}
-.feature-icon svg { width: 24px; height: 24px; color: white; }
-.feature-icon.yellow { background: linear-gradient(135deg, #F59E0B, #D97706); }
-.feature-icon.purple { background: linear-gradient(135deg, #7C3AED, #5B21B6); }
-.feature-icon.green { background: linear-gradient(135deg, #22C55E, #15803D); }
-.feature-icon.cyan { background: linear-gradient(135deg, #06B6D4, #0E7490); }
-.feature-icon.blue { background: linear-gradient(135deg, #2563EB, #1E40AF); }
-
-/* STEP CARD */
-.step-card {
-  padding: 2rem 1.5rem;
-  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.5));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 1.5rem;
-  text-align: center;
-  position: relative;
-  transition: all 0.3s;
-}
-.step-card:hover { transform: translateY(-4px); border-color: rgba(245,158,11,0.3); }
-.step-num { position: absolute; top: 1rem; right: 1rem; font-size: 0.75rem; font-weight: 800; color: rgba(245,158,11,0.5); }
-.step-icon {
-  width: 56px; height: 56px; border-radius: 16px;
-  background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.1));
-  border: 1px solid rgba(245,158,11,0.3);
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 1rem;
-}
-.step-icon svg { width: 28px; height: 28px; color: #fbbf24; }
-
-/* FAQ */
-.faq-item {
-  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.5));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 1rem;
-  padding: 1rem 1.25rem;
-  transition: all 0.2s;
-}
-.faq-item[open] { border-color: rgba(245,158,11,0.3); }
-.faq-item summary {
-  cursor: pointer; font-weight: 600; font-size: 0.95rem;
-  display: flex; justify-content: space-between; align-items: center;
-  list-style: none;
-}
-.faq-item summary::-webkit-details-marker { display: none; }
-.faq-item summary svg { transition: transform 0.2s; color: rgb(161 161 170); }
-.faq-item[open] summary svg { transform: rotate(180deg); color: var(--yellow); }
-.faq-item p { margin-top: 0.75rem; font-size: 0.875rem; color: rgb(161 161 170); line-height: 1.6; }
-
-/* LIVE WITHDRAWS */
-.live-withdraws-scroll {
-  max-height: 500px;
-  overflow-y: auto;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(245,158,11,0.3) transparent;
-}
-.live-withdraws-scroll::-webkit-scrollbar { width: 6px; }
-.live-withdraws-scroll::-webkit-scrollbar-track { background: transparent; }
-.live-withdraws-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #F59E0B, #7C3AED);
-  border-radius: 8px;
-}
-.live-withdraws-scroll table { min-width: 700px; }
-.live-withdraws-scroll tbody tr { animation: slideInRow 0.4s ease-out; }
-@keyframes slideInRow {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-/* AUTH MODAL */
-.auth-modal {
-  position: fixed; inset: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-}
-.auth-modal.hidden { display: none; }
-.auth-modal-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(12px);
-  animation: fadeIn 0.2s;
-}
-.auth-modal-content {
-  position: relative;
-  background: linear-gradient(180deg, rgba(24,24,27,0.95), rgba(15,15,18,0.95));
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 1.75rem;
-  padding: 2rem;
-  max-width: 440px; width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 25px 80px rgba(0,0,0,0.6);
-  animation: modalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes modalIn {
-  from { transform: scale(0.92) translateY(10px); opacity: 0; }
-  to { transform: scale(1) translateY(0); opacity: 1; }
-}
-.auth-tab { color: rgb(161 161 170); }
-.auth-tab.active {
-  background: linear-gradient(135deg, var(--yellow), var(--orange));
-  color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.4);
-}
-
-/* CLAIM BUTTON */
-.claim-btn {
-  width: 220px; height: 220px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(245,158,11,0.4), rgba(249,115,22,0.2));
-  border: 2px solid rgba(245,158,11,0.5);
-  cursor: pointer; position: relative; transition: all 0.3s;
-  box-shadow: 0 0 60px rgba(245,158,11,0.3);
-}
-.claim-btn:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 0 100px rgba(245,158,11,0.6);
-}
-.claim-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.claim-btn-inner {
-  position: absolute; inset: 10px; border-radius: 50%;
-  background: linear-gradient(135deg, #18181B, #09090B);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0.5rem; font-weight: 700; font-size: 1rem;
-}
-
-/* COIN CARDS */
-.coin-landing-card, .coin-card {
-  padding: 1.75rem;
-  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.5));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 1.5rem;
-  transition: all 0.3s;
-  position: relative; overflow: hidden;
-}
-.coin-landing-card:hover, .coin-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--coin-color, rgba(245,158,11,0.3));
-}
-
-/* TOAST */
-.toast {
-  pointer-events: auto;
-  padding: 0.875rem 1.25rem;
-  background: rgba(24,24,27,0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 1rem;
-  display: flex; align-items: center; gap: 0.75rem;
-  min-width: 280px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-  animation: slideIn 0.3s ease-out;
-}
-.toast.success { border-left: 3px solid var(--green); }
-.toast.error { border-left: 3px solid #ef4444; }
-.toast.info { border-left: 3px solid var(--cyan); }
-.toast.warning { border-left: 3px solid #f59e0b; }
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-/* STAT CARD (app) */
-.stat-card {
-  padding: 1.25rem;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 1rem;
-}
-.stat-label { font-size: 0.75rem; color: rgb(113 113 122); margin-bottom: 0.5rem; }
-.stat-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
-
-/* BADGES */
-.badge {
-  display: inline-flex; align-items: center; gap: 0.25rem;
-  padding: 0.25rem 0.625rem; border-radius: 999px;
-  font-size: 0.7rem; font-weight: 600;
-}
-.badge-green { background: rgba(34,197,94,0.15); color: #4ade80; }
-.badge-yellow { background: rgba(234,179,8,0.15); color: #facc15; }
-.badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
-.badge-purple { background: rgba(124,58,237,0.15); color: #a78bfa; }
-.badge-blue { background: rgba(37,99,235,0.15); color: #60a5fa; }
-
-/* TX FILTERS */
-.tx-filter {
-  padding: 0.5rem 1rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 0.75rem;
-  color: rgb(161 161 170); font-size: 0.8rem; font-weight: 500;
-  cursor: pointer; transition: all 0.2s;
-}
-.tx-filter.active {
-  background: linear-gradient(135deg, var(--yellow), var(--orange));
-  color: white; border-color: transparent;
-}
-
-/* ANIMATIONS */
-.animate-pulse-slow { animation: pulseSlow 6s ease-in-out infinite; }
-@keyframes pulseSlow {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
-}
-
-.reward-pop { animation: rewardPop 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes rewardPop {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.page-enter { animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-@keyframes pageEnter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* TABLE */
-table { border-collapse: collapse; }
-table td { padding: 1rem; font-size: 0.875rem; }
-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s; }
-table tbody tr:hover { background: rgba(255,255,255,0.03); }
-
-/* RESPONSIVE */
-@media (max-width: 1024px) {
-  .sidebar {
-    position: fixed; left: 0; top: 0; z-index: 50;
-    transform: translateX(-100%); transition: transform 0.3s;
+// ============ ADBLOCK DETECTION ============
+async function detectAdBlock() {
+  try {
+    const response = await fetch('/ads.js', { method: 'HEAD', cache: 'no-store' });
+    if (!response.ok || response.status === 404) {
+      showAdBlockWarning();
+      return true;
+    }
+    return false;
+  } catch (e) {
+    showAdBlockWarning();
+    return true;
   }
-  .sidebar.open { transform: translateX(0); }
 }
 
-/* SPINNER */
-.spinner {
-  width: 16px; height: 16px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+function showAdBlockWarning() {
+  const existing = document.getElementById('adblock-warning');
+  if (existing) return;
+  const div = document.createElement('div');
+  div.id = 'adblock-warning';
+  div.className = 'fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-lg p-6';
+  div.innerHTML = `
+    <div class="glass-card p-8 rounded-3xl max-w-md w-full text-center border border-red-500/30">
+      <div class="text-6xl mb-4">🛡️</div>
+      <h2 class="text-2xl font-bold mb-2">AdBlock Tespit Edildi</h2>
+      <p class="text-zinc-400 text-sm mb-6">CoinixFaucet, reklam gelirleriyle ayakta kalıyor. Lütfen AdBlock'u devre dışı bırak ve sayfayı yenile.</p>
+      <button onclick="location.reload()" class="btn-primary w-full">Sayfayı Yenile</button>
+    </div>
+  `;
+  document.body.appendChild(div);
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-/* PROMO CODE INPUT */
-.promo-input {
-  width: 100%; padding: 0.75rem 1rem;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 0.875rem; color: white;
-  font-size: 0.875rem; transition: all 0.2s; outline: none;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
+// ============ API URL ============
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://coinixfaucet-backend.onrender.com';
+
+// ============ HELPERS ============
+const $ = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+const fmt = (n, d = 4) => Number(n || 0).toFixed(d);
+const fmtUSD = n => '$' + Number(n || 0).toFixed(4);
+const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+const now = () => Date.now();
+const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+function toast(msg, type = 'info', duration = 3500) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : type === 'warning' ? 'alert-triangle' : 'info';
+  el.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><div class="flex-1 text-sm">${msg}</div>`;
+  $('#toastRoot').appendChild(el);
+  lucide.createIcons({ nodes: [el] });
+  setTimeout(() => { el.style.animation = 'slideIn 0.3s reverse'; setTimeout(() => el.remove(), 300); }, duration);
 }
-.promo-input:focus {
-  border-color: var(--yellow);
-  background: rgba(245,158,11,0.05);
-  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+
+function timeAgo(ts) {
+  if (!ts) return 'just now';
+  const t = ts.toDate ? ts.toDate().getTime() : new Date(ts).getTime();
+  const s = Math.floor((now() - t) / 1000);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago';
+  return Math.floor(s/86400) + 'd ago';
 }
+
+async function apiCall(endpoint, options = {}) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
+  const token = await user.getIdToken();
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers }
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message);
+  return data;
+}
+
+const state = { user: null, profile: null, unsubProfile: null, txFilter: 'all' };
+let recaptchaToken = null;
+
+// ========== LANDING ==========
+function initLanding() {
+  $$('.open-auth-btn, #openLoginBtn, #openSignupBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode || (btn.id === 'openSignupBtn' ? 'register' : 'login');
+      openAuthModal(mode);
+    });
+  });
+  renderLandingCoins();
+  loadLiveStats();
+  loadLiveWithdraws();
+  setInterval(loadLiveWithdraws, 10000);
+  setInterval(loadLiveStats, 30000);
+}
+
+function renderLandingCoins() {
+  const grid = $('#landingCoinsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  COINS.forEach(coin => {
+    const m = COIN_META[coin];
+    const card = document.createElement('div');
+    card.className = 'coin-landing-card';
+    card.style.setProperty('--coin-color', m.color + '40');
+    card.innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background:${m.color}20;border:2px solid ${m.color}40">
+            <img src="coins/${coin.toLowerCase()}.svg" class="w-8 h-8 rounded-full" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
+          </div>
+          <div><div class="font-bold text-lg">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
+        </div>
+        <span class="badge badge-green"><span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Active</span>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-zinc-500">Min Withdraw</span><span class="font-medium">$0.03</span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">Payout</span><span class="text-green-400 font-medium">Instant · FaucetPay</span></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+async function loadLiveStats() {
+  try {
+    const res = await fetch(`${API_URL}/api/stats`);
+    const data = await res.json();
+    if (data.success) {
+      $('#statUsers').textContent = (data.stats.totalUsers || 0).toLocaleString();
+      $('#statClaims').textContent = (data.stats.totalClaims || 0).toLocaleString();
+      $('#statPaid').textContent = fmtUSD(data.stats.totalPaid || 0);
+      $('#statAvg').textContent = fmtUSD(data.stats.totalClaims > 0 ? (data.stats.totalPaid / data.stats.totalClaims) : 0);
+      $('#statRef').textContent = fmtUSD((data.stats.totalPaid || 0) * 0.2);
+      $('#heroOnline').textContent = (Math.min(data.stats.totalUsers || 0, Math.floor((data.stats.totalUsers || 0) * 0.15) + 50)).toLocaleString();
+    }
+  } catch (e) { console.error('Stats error:', e); }
+}
+
+async function loadLiveWithdraws() {
+  const table = $('#withdrawsBody');
+  const loading = $('#withdrawsLoading');
+  if (!table) return;
+  try {
+    const res = await fetch(`${API_URL}/api/live-withdraws`);
+    const data = await res.json();
+    if (loading) loading.style.display = 'none';
+    table.innerHTML = '';
+    if (!data.success || !data.withdrawals.length) {
+      table.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-zinc-500">No withdrawals yet</td></tr>';
+      return;
+    }
+    data.withdrawals.forEach(t => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="p-4"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm">${escapeHtml(t.username || 'User')}</span></div></td>
+        <td class="p-4"><div class="flex items-center gap-2"><img src="coins/${(t.coin || 'btc').toLowerCase()}.svg" class="w-5 h-5 rounded-full" onerror="this.style.display='none'"/><span class="text-sm font-medium">${t.coin}</span></div></td>
+        <td class="p-4 font-mono text-sm text-green-400">${fmt(t.amount)}</td>
+        <td class="p-4 text-sm text-zinc-400">${fmtUSD(t.usdValue)}</td>
+        <td class="p-4 text-xs text-zinc-500">${timeAgo(t.createdAt)}</td>
+        <td class="p-4"><span class="badge badge-green">Completed</span></td>`;
+      table.appendChild(row);
+    });
+  } catch (e) {
+    console.error('Withdraws error:', e);
+    if (loading) { loading.textContent = 'Error loading'; loading.classList.add('text-red-400'); }
+  }
+}
+
+// ========== AUTH MODAL ==========
+let authMode = 'login';
+
+function openAuthModal(mode = 'login') {
+  authMode = mode;
+  updateAuthModalUI();
+  $('#authModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  if (typeof grecaptcha !== 'undefined') {
+    grecaptcha.enterprise.ready(async () => {
+      try {
+        recaptchaToken = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: mode === 'login' ? 'LOGIN' : 'REGISTER' });
+      } catch (e) { console.error('reCAPTCHA error:', e); }
+    });
+  }
+}
+
+function closeAuthModal() {
+  $('#authModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  recaptchaToken = null;
+}
+
+function updateAuthModalUI() {
+  $$('[data-auth-tab]').forEach(b => b.classList.toggle('active', b.dataset.authTab === authMode));
+  $('#usernameField').classList.toggle('hidden', authMode !== 'register');
+  $('#referralField').classList.toggle('hidden', authMode !== 'register');
+  $('#authBtnText').textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+  $('#authModalTitle').textContent = authMode === 'login' ? 'Welcome Back' : 'Create Account';
+  $('#authModalSubtitle').textContent = authMode === 'login' ? 'Sign in to continue' : 'Join thousands earning free crypto';
+  $('#forgotPasswordLink').classList.toggle('hidden', authMode !== 'login');
+}
+
+$('#closeAuthModal')?.addEventListener('click', closeAuthModal);
+$('.auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
+$$('[data-auth-tab]').forEach(btn => btn.addEventListener('click', () => { authMode = btn.dataset.authTab; updateAuthModalUI(); }));
+
+$('#openForgotPassword')?.addEventListener('click', () => { closeAuthModal(); $('#forgotPasswordModal').classList.remove('hidden'); });
+$('#closeForgotPassword')?.addEventListener('click', () => $('#forgotPasswordModal').classList.add('hidden'));
+$('#backToLogin')?.addEventListener('click', () => { $('#forgotPasswordModal').classList.add('hidden'); openAuthModal('login'); });
+
+$('#forgotPasswordForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = e.target.email.value.trim().toLowerCase();
+  const btn = $('#forgotPasswordSubmit'), txt = $('#forgotBtnText');
+  btn.disabled = true; txt.textContent = 'Sending...';
+  try {
+    await sendPasswordResetEmail(auth, email);
+    $('#forgotPasswordSuccess').classList.remove('hidden');
+    toast('Reset link sent to ' + email, 'success');
+    setTimeout(() => { $('#forgotPasswordModal').classList.add('hidden'); $('#forgotPasswordSuccess').classList.add('hidden'); }, 3000);
+  } catch (err) { toast(err.message, 'error'); }
+  finally { btn.disabled = false; txt.textContent = 'Send Reset Link'; }
+});
+
+$('#authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = fd.get('email').trim().toLowerCase();
+  const password = fd.get('password');
+  const btn = $('#authSubmit'), txt = $('#authBtnText');
+  btn.disabled = true; txt.textContent = 'Please wait...';
+
+  try {
+    if (authMode === 'login') {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      await reload(cred.user);
+      if (!cred.user.emailVerified) {
+        await signOut(auth);
+        toast('Verify your email first', 'warning');
+        showEmailVerificationModal(email);
+        closeAuthModal();
+        return;
+      }
+      toast('Welcome back!', 'success');
+      closeAuthModal();
+    } else {
+      const username = fd.get('username').trim();
+      const referral = fd.get('referral').trim().toUpperCase();
+      if (username.length < 3) throw new Error('Username 3+ chars');
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(cred.user, { url: 'https://coinixfaucet.mine.bz/' });
+      const refCode = uid();
+      const profile = {
+        uid: cred.user.uid, username, email,
+        country: 'Unknown', timezone: 'UTC', faucetpayEmail: '',
+        referralCode: refCode, referredBy: referral || null,
+        balances: Object.fromEntries(COINS.map(c => [c, 0])),
+        totalWithdrawn: 0, referralEarnings: 0, referralCount: 0,
+        totalClaims: 0, lastClaimAt: 0,
+        lastDailyBonus: 0, dailyStreak: 0, highestStreak: 0, claimedDays: [],
+        twoFA: false, notifications: true, level: 1, xp: 0,
+        createdAt: serverTimestamp()
+      };
+      await setDoc(doc(db, COL.users, cred.user.uid), profile);
+      if (referral) {
+        const snap = await getDocs(query(collection(db, COL.users), where('referralCode', '==', referral), limit(1)));
+        if (!snap.empty) {
+          await updateDoc(doc(db, COL.users, snap.docs[0].id), { referralCount: increment(1) });
+          await addDoc(collection(db, COL.referrals), { referrerId: snap.docs[0].id, referredId: cred.user.uid, createdAt: serverTimestamp() });
+        }
+      }
+      toast('Account created! Check email.', 'success');
+      closeAuthModal();
+      showEmailVerificationModal(email);
+      await signOut(auth);
+    }
+  } catch (err) {
+    const msg = err.code === 'auth/email-already-in-use' ? 'Email already registered' :
+                err.code === 'auth/invalid-credential' ? 'Invalid email or password' :
+                err.code === 'auth/weak-password' ? 'Password too weak' : err.message;
+    toast(msg, 'error');
+  } finally {
+    btn.disabled = false;
+    txt.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+  }
+});
+
+// ========== EMAIL VERIFICATION ==========
+function showEmailVerificationModal(email) {
+  $('#verificationEmail').textContent = email;
+  $('#emailVerificationModal').classList.remove('hidden');
+}
+function hideEmailVerificationModal() { $('#emailVerificationModal').classList.add('hidden'); }
+
+$('#checkVerificationBtn')?.addEventListener('click', () => {
+  hideEmailVerificationModal();
+  openAuthModal('login');
+  toast('Sign in to check verification', 'info');
+});
+
+$('#logoutFromVerification')?.addEventListener('click', async () => {
+  await signOut(auth);
+  hideEmailVerificationModal();
+});
+
+// ========== AUTH STATE ==========
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    state.user = user;
+    await reload(user);
+    if (!user.emailVerified) {
+      showEmailVerificationModal(user.email);
+      return;
+    }
+    const snap = await getDoc(doc(db, COL.users, user.uid));
+    if (!snap.exists()) { await signOut(auth); return; }
+    state.profile = snap.data();
+    state.unsubProfile?.();
+    state.unsubProfile = onSnapshot(doc(db, COL.users, user.uid), s => {
+      if (s.exists()) { state.profile = s.data(); updateTopBar(); }
+    });
+    $('#landingPage').classList.add('hidden');
+    $('#appShell').classList.remove('hidden');
+    lucide.createIcons();
+    router.init();
+  } else {
+    state.user = null; state.profile = null; state.unsubProfile?.();
+    $('#landingPage').classList.remove('hidden');
+    $('#appShell').classList.add('hidden');
+    hideEmailVerificationModal();
+  }
+});
+
+function updateTopBar() {
+  if (!state.profile) return;
+  const total = COINS.reduce((s, c) => s + (state.profile.balances[c] || 0) * (COIN_META[c].usd || 0), 0);
+  $('#topBalance').textContent = fmtUSD(total);
+  $('#profileName').textContent = state.profile.username;
+  $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
+}
+
+$('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
+
+// ========== ROUTER ==========
+const router = {
+  routes: {
+    dashboard: renderDashboard, faucet: renderFaucet, 'daily-bonus': renderDailyBonus,
+    leaderboard: renderLeaderboard, referrals: renderReferrals, withdraw: renderWithdraw,
+    transactions: renderTransactions, settings: renderSettings
+  },
+  init() {
+    window.addEventListener('hashchange', () => this.navigate());
+    $('#menuToggle')?.addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+    if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
+    else this.navigate();
+  },
+  go(h) { location.hash = h; },
+  navigate() {
+    const route = location.hash.replace('#/', '') || 'dashboard';
+    const fn = this.routes[route];
+    if (!fn) { this.go('#/dashboard'); return; }
+    $$('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.route === route));
+    const c = $('#pageContainer');
+    c.innerHTML = '';
+    const tpl = $(`#tpl-${route}`);
+    if (tpl) c.appendChild(tpl.content.cloneNode(true));
+    c.classList.remove('page-enter');
+    void c.offsetWidth;
+    c.classList.add('page-enter');
+    lucide.createIcons();
+    fn();
+  }
+};
+window.router = router;
+
+// ========== PAGES ==========
+async function renderDashboard() {
+  if (!state.profile) return;
+  try {
+    const data = await apiCall('/api/dashboard');
+    const s = data.stats;
+    const c = $('#pageContainer');
+    c.innerHTML = `
+      <div class="space-y-6">
+        <div class="relative overflow-hidden rounded-3xl p-8 gradient-border">
+          <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-cyan-500/20"></div>
+          <div class="relative">
+            <p class="text-sm text-zinc-400 mb-1">Welcome back,</p>
+            <h1 class="text-3xl sm:text-4xl font-bold mb-6">${escapeHtml(state.profile.username)}</h1>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="stat-card"><div class="stat-label">Main Balance</div><div class="stat-value">${fmtUSD(s.totalBalanceUSD)}</div></div>
+              <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value text-green-400">${fmtUSD(s.todayEarnings)}</div></div>
+              <div class="stat-card"><div class="stat-label">Referral</div><div class="stat-value text-purple-400">${fmtUSD(s.referralEarnings)}</div></div>
+              <div class="stat-card"><div class="stat-label">Withdrawn</div><div class="stat-value text-cyan-400">${fmtUSD(s.totalWithdrawn)}</div></div>
+            </div>
+            <div class="mt-6 flex flex-wrap gap-3">
+              <button onclick="router.go('#/faucet')" class="btn-primary"><i data-lucide="droplets" class="w-4 h-4"></i>Claim Now</button>
+              <button onclick="router.go('#/withdraw')" class="btn-ghost"><i data-lucide="wallet" class="w-4 h-4"></i>Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    lucide.createIcons();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+let faucetInterval = null;
+function renderFaucet() {
+  $('#claimBtn').addEventListener('click', handleClaim);
+  startCountdown();
+}
+
+function startCountdown() {
+  clearInterval(faucetInterval);
+  const btn = $('#claimBtn'), cd = $('#faucetCountdown');
+  const tick = () => {
+    const remain = Math.max(0, 60000 - (now() - (state.profile.lastClaimAt || 0)));
+    if (remain <= 0) { cd.textContent = '00:00'; btn.disabled = false; }
+    else {
+      const m = Math.floor(remain / 60000), s = Math.floor((remain % 60000) / 1000);
+      cd.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      btn.disabled = true;
+    }
+  };
+  tick();
+  faucetInterval = setInterval(tick, 1000);
+}
+
+async function handleClaim() {
+  const btn = $('#claimBtn');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try {
+    let token = null;
+    if (typeof grecaptcha !== 'undefined') {
+      token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' });
+    }
+    const data = await apiCall('/api/claim', { method: 'POST', body: JSON.stringify({ recaptchaToken: token }) });
+    toast(`Claimed ${fmt(data.amount)} ${data.coin}!`, 'success');
+    startCountdown();
+  } catch (e) {
+    toast(e.message, 'error');
+    btn.disabled = false;
+  }
+}
+
+function renderDailyBonus() {
+  const p = state.profile;
+  const c = $('#pageContainer');
+  c.innerHTML = `
+    <div class="space-y-6">
+      <div class="glass-card p-8 rounded-3xl gradient-border text-center">
+        <h1 class="text-3xl font-bold mb-4">Daily Bonus</h1>
+        <div class="text-6xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
+        <div class="text-zinc-400 mb-6">Day Streak · Best: ${p.highestStreak || 0}</div>
+        <button id="claimBonusBtn" class="btn-primary">🎁 Claim Daily Bonus</button>
+      </div>
+    </div>`;
+  $('#claimBonusBtn').addEventListener('click', async () => {
+    try {
+      const data = await apiCall('/api/daily-bonus', { method: 'POST' });
+      toast(`Day ${data.day} bonus: ${fmtUSD(data.reward)}`, 'success');
+      renderDailyBonus();
+    } catch (e) { toast(e.message, 'error'); }
+  });
+}
+
+async function renderLeaderboard() {
+  try {
+    const res = await fetch(`${API_URL}/api/leaderboard`);
+    const data = await res.json();
+    const c = $('#pageContainer');
+    if (!data.success) return;
+    c.innerHTML = `<div class="space-y-6"><h1 class="text-3xl font-bold">Leaderboard</h1><div class="glass-card rounded-3xl overflow-hidden divide-y divide-white/5">${data.leaderboard.map(u => `
+      <div class="flex items-center justify-between p-4">
+        <div class="flex items-center gap-4">
+          <div class="w-10 font-bold text-zinc-500 text-center">#${u.rank}</div>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center font-bold">${u.username[0].toUpperCase()}</div>
+          <div><div class="font-medium">${escapeHtml(u.username)}</div><div class="text-xs text-zinc-500">${u.country || 'Unknown'}</div></div>
+        </div>
+        <div class="text-right"><div class="font-bold">${u.totalClaims} claims</div><div class="text-xs text-zinc-500">${fmtUSD(u.totalWithdrawn)}</div></div>
+      </div>`).join('')}</div></div>`;
+  } catch (e) { toast('Error loading', 'error'); }
+}
+
+function renderReferrals() {
+  const p = state.profile;
+  const link = `${location.origin}?ref=${p.referralCode}`;
+  $('#pageContainer').innerHTML = `
+    <div class="space-y-6">
+      <h1 class="text-3xl font-bold">Referrals</h1>
+      <div class="glass-card p-8 rounded-3xl gradient-border text-center">
+        <div class="text-xs text-zinc-500 mb-2">Your Referral Code</div>
+        <div class="text-3xl font-black font-mono bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4">${p.referralCode}</div>
+        <div class="flex gap-2 max-w-lg mx-auto">
+          <input readonly value="${link}" class="input-field flex-1 text-center text-sm" />
+          <button onclick="navigator.clipboard.writeText('${link}').then(() => toast('Copied!', 'success'))" class="btn-primary">Copy</button>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500">Total</div><div class="text-3xl font-bold mt-2">${p.referralCount || 0}</div></div>
+        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500">Earned</div><div class="text-3xl font-bold mt-2 text-green-400">${fmtUSD(p.referralEarnings)}</div></div>
+        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500">Rate</div><div class="text-3xl font-bold mt-2 text-purple-400">20%</div></div>
+      </div>
+    </div>`;
+}
+
+function renderWithdraw() {
+  const grid = document.createElement('div');
+  grid.className = 'grid sm:grid-cols-2 lg:grid-cols-3 gap-4';
+  COINS.forEach(coin => {
+    const m = COIN_META[coin];
+    const bal = state.profile.balances[coin] || 0;
+    const balUSD = bal * m.usd;
+    const can = balUSD >= m.min;
+    const card = document.createElement('div');
+    card.className = 'coin-card';
+    card.innerHTML = `
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background:${m.color}20;border:2px solid ${m.color}40">
+            <img src="coins/${coin.toLowerCase()}.svg" class="w-7 h-7 rounded-full" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
+          </div>
+          <div><div class="font-bold">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
+        </div>
+        <span class="badge ${can ? 'badge-green' : 'badge-yellow'}">${can ? 'Ready' : 'Min $0.03'}</span>
+      </div>
+      <div class="space-y-2 mb-4">
+        <div class="flex justify-between text-sm"><span class="text-zinc-500">Balance</span><span class="font-mono">${fmt(bal)} ${coin}</span></div>
+        <div class="flex justify-between text-sm"><span class="text-zinc-500">USD</span><span>${fmtUSD(balUSD)}</span></div>
+      </div>
+      <button class="btn-primary w-full" ${!can ? 'disabled' : ''} onclick="doWithdraw('${coin}')">${can ? 'Withdraw' : 'Min $0.03 Required'}</button>`;
+    grid.appendChild(card);
+  });
+  $('#pageContainer').innerHTML = `<div class="space-y-6"><h1 class="text-3xl font-bold">Withdraw</h1><p class="text-zinc-400">Minimum $0.03 · Instant via FaucetPay</p><div id="withdrawGrid"></div></div>`;
+  $('#withdrawGrid').appendChild(grid);
+  lucide.createIcons();
+}
+
+window.doWithdraw = async (coin) => {
+  if (!state.profile.faucetpayEmail) {
+    toast('Set FaucetPay email in Settings first', 'warning');
+    router.go('#/settings');
+    return;
+  }
+  if (!confirm(`Withdraw all ${coin} balance to ${state.profile.faucetpayEmail}?`)) return;
+  try {
+    const data = await apiCall('/api/withdraw', { method: 'POST', body: JSON.stringify({ coin }) });
+    toast(`Withdrew ${fmt(data.amount)} ${data.coin}!`, 'success');
+    renderWithdraw();
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+async function renderTransactions() {
+  try {
+    const data = await apiCall('/api/transactions?limit=100');
+    const list = data.transactions.map(t => `
+      <div class="flex items-center justify-between p-4 hover:bg-white/5 transition">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+            <i data-lucide="${t.type === 'claim' ? 'droplets' : t.type === 'withdraw' ? 'arrow-up-right' : 'gift'}" class="w-5 h-5 ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}"></i>
+          </div>
+          <div><div class="text-sm font-medium capitalize">${t.type}</div><div class="text-xs text-zinc-500">${t.coin} · ${timeAgo(t.createdAt)}</div></div>
+        </div>
+        <div class="text-right"><div class="text-sm font-bold ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}">${t.type === 'withdraw' ? '-' : '+'}${fmt(t.amount)} ${t.coin}</div><span class="badge ${t.status === 'completed' ? 'badge-green' : 'badge-yellow'}">${t.status}</span></div>
+      </div>`).join('');
+    $('#pageContainer').innerHTML = `<div class="space-y-6"><h1 class="text-3xl font-bold">Transactions</h1><div class="glass-card rounded-3xl divide-y divide-white/5">${list || '<div class="p-8 text-center text-zinc-500">No transactions</div>'}</div></div>`;
+    lucide.createIcons();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+function renderSettings() {
+  const p = state.profile;
+  $('#pageContainer').innerHTML = `
+    <div class="space-y-6">
+      <h1 class="text-3xl font-bold">Settings</h1>
+      <form id="settingsForm" class="space-y-6">
+        <div class="glass-card p-6 rounded-3xl space-y-4">
+          <h3 class="font-semibold">Profile</h3>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div><label class="label">Username</label><input name="username" value="${escapeHtml(p.username)}" class="input-field" /></div>
+            <div><label class="label">Email</label><input value="${escapeHtml(p.email)}" class="input-field" readonly /></div>
+            <div><label class="label">Country</label><input name="country" value="${escapeHtml(p.country || '')}" class="input-field" /></div>
+            <div><label class="label">Timezone</label><input name="timezone" value="${escapeHtml(p.timezone || '')}" class="input-field" /></div>
+          </div>
+        </div>
+        <div class="glass-card p-6 rounded-3xl">
+          <h3 class="font-semibold mb-4">Payment</h3>
+          <label class="label">FaucetPay Email</label>
+          <input name="faucetpayEmail" type="email" value="${escapeHtml(p.faucetpayEmail || '')}" class="input-field" placeholder="your@faucetpay.email" />
+        </div>
+        <button type="submit" class="btn-primary">💾 Save Changes</button>
+      </form>
+    </div>`;
+  $('#settingsForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await apiCall('/api/settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          username: fd.get('username'),
+          country: fd.get('country'),
+          timezone: fd.get('timezone'),
+          faucetpayEmail: fd.get('faucetpayEmail')
+        })
+      });
+      toast('Saved!', 'success');
+    } catch (err) { toast(err.message, 'error'); }
+  });
+}
+
+// ============ ADBLOCK DETECTION ON START ============
+detectAdBlock();
+
+// ============ INIT ============
+lucide.createIcons();
+initLanding();
+console.log('⚡ CoinixFaucet ready · Backend:', API_URL);
