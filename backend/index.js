@@ -5,7 +5,6 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import admin from 'firebase-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -15,21 +14,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // ============================================
-// 🔥 FIREBASE ADMIN INIT (Secret File)
+// 🔥 FIREBASE ADMIN INIT (ENV üzerinden)
 // ============================================
 if (!admin.apps.length) {
   try {
-    const serviceAccountPath = process.env.RENDER
-      ? '/opt/render/project/src/firebaseserviceaccount.json'
-      : join(__dirname, 'firebaseserviceaccount.json');
-
-    const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!serviceAccountJson) {
+      console.error('❌ FIREBASE_SERVICE_ACCOUNT environment variable is not set!');
+      process.exit(1);
+    }
+    const serviceAccount = JSON.parse(serviceAccountJson);
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
 
-    console.log('✅ Firebase Admin initialized');
+    console.log('✅ Firebase Admin initialized (via env)');
   } catch (error) {
     console.error('❌ Firebase Admin init failed:', error.message);
     process.exit(1);
@@ -55,9 +55,9 @@ const COIN_REWARDS = {
   CNX: { min: 1, max: 10 },
   PEPE: { min: 10000, max: 100000 },
   DOGE: { min: 100, max: 500 },
-  DGB:  { min: 50, max: 200 },
-  FEY:  { min: 10, max: 100 },
-  POL:  { min: 0.01, max: 0.1 }
+  DGB: { min: 50, max: 200 },
+  FEY: { min: 10, max: 100 },
+  POL: { min: 0.01, max: 0.1 }
 };
 
 const VALID_COINS = ['PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
@@ -74,10 +74,14 @@ const vpnCache = new Map();
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 async function checkVPNProxy(ip) {
-  if (!ip || ip === '127.0.0.1' || ip === '::1') return { isVPN: false, reason: 'localhost' };
+  if (!ip || ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
+    return { isVPN: false, reason: 'localhost' };
+  }
 
   const cached = vpnCache.get(ip);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) return cached.result;
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.result;
+  }
 
   try {
     const response = await fetch(`https://ipwho.is/${ip}`, {
@@ -108,13 +112,16 @@ async function checkVPNProxy(ip) {
     }
 
     if (isVPN) {
-      console.warn(`🚫 VPN/Proxy: ${ip} | ${result.reason}`);
+      console.warn(`🚫 VPN/Proxy tespit edildi: ${ip} | ${result.reason}`);
       try {
         await db.collection('blocked_ips').doc(ip.replace(/\./g, '_')).set({
-          ip, reason: result.reason, isp: result.isp, country: result.country,
+          ip,
+          reason: result.reason,
+          isp: result.isp,
+          country: result.country,
           blockedAt: FieldValue.serverTimestamp(),
           expiresAt: new Date(Date.now() + 3600000)
-        });
+        }, { merge: true });
       } catch (e) { console.error('Block IP error:', e.message); }
     }
 
@@ -125,6 +132,7 @@ async function checkVPNProxy(ip) {
   }
 }
 
+// VPN Middleware
 const vpnMiddleware = async (req, res, next) => {
   const exemptPaths = ['/api/health', '/api/keep-alive', '/api/admin', '/api/check-vpn', '/api/offerwall'];
   if (exemptPaths.some(p => req.path.startsWith(p))) return next();
@@ -143,7 +151,7 @@ const vpnMiddleware = async (req, res, next) => {
       success: false,
       blocked: true,
       reason: vpnResult.reason,
-      message: 'VPN/Proxy/Tor/Hosting not allowed'
+      message: 'VPN/Proxy/Tor/Hosting kullanımı yasaktır'
     });
   }
 
@@ -158,11 +166,16 @@ const vpnMiddleware = async (req, res, next) => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://coinixfaucet.mine.bz'],
   credentials: true
 }));
+
 app.use(express.json({ limit: '10kb' }));
 app.set('trust proxy', 1);
 app.use(vpnMiddleware);
@@ -170,8 +183,17 @@ app.use(vpnMiddleware);
 // ============================================
 // 🔒 RATE LIMITERS
 // ============================================
-const claimLimiter = rateLimit({ windowMs: 60000, max: 2, message: { success: false, message: 'Too many claims' } });
-const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10, message: { success: false, message: 'Too many withdrawals' } });
+const claimLimiter = rateLimit({
+  windowMs: 60000,
+  max: 2,
+  message: { success: false, message: 'Too many claims' }
+});
+
+const withdrawLimiter = rateLimit({
+  windowMs: 3600000,
+  max: 10,
+  message: { success: false, message: 'Too many withdrawals' }
+});
 
 // ============================================
 // 🔐 AUTH MIDDLEWARE
@@ -192,14 +214,20 @@ const verifyToken = async (req, res, next) => {
 };
 
 const requireEmailVerified = (req, res, next) => {
-  if (!req.user.emailVerified) return res.status(403).json({ success: false, message: 'Email verification required' });
+  if (!req.user.emailVerified) {
+    return res.status(403).json({ success: false, message: 'Email verification required' });
+  }
   next();
 };
 
 const verifyAdmin = (req, res, next) => {
   const key = req.headers['x-admin-key'];
-  if (!process.env.ADMIN_SECRET_KEY) return res.status(500).json({ success: false, message: 'Admin not configured' });
-  if (key !== process.env.ADMIN_SECRET_KEY) return res.status(401).json({ success: false, message: 'Invalid admin key' });
+  if (!process.env.ADMIN_SECRET_KEY) {
+    return res.status(500).json({ success: false, message: 'Admin not configured' });
+  }
+  if (key !== process.env.ADMIN_SECRET_KEY) {
+    return res.status(401).json({ success: false, message: 'Invalid admin key' });
+  }
   next();
 };
 
@@ -219,8 +247,12 @@ app.get('/api/health', (req, res) => {
 // ============================================
 app.get('/api/check-vpn', async (req, res) => {
   try {
-    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.headers['x-real-ip'] || req.ip;
-    if (!clientIP || clientIP === '127.0.0.1') return res.json({ success: true, isVPN: false, reason: 'localhost' });
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                     req.headers['x-real-ip'] ||
+                     req.ip;
+    if (!clientIP || clientIP === '127.0.0.1') {
+      return res.json({ success: true, isVPN: false, reason: 'localhost' });
+    }
     const result = await checkVPNProxy(clientIP);
     res.json({ success: true, isVPN: result.isVPN, reason: result.reason, country: result.country, isp: result.isp });
   } catch (error) {
@@ -251,39 +283,39 @@ app.get('/api/user', verifyToken, async (req, res) => {
   try {
     const doc = await db.collection('users').doc(req.user.uid).get();
     if (!doc.exists) return res.status(404).json({ success: false, message: 'Not found' });
-    
+
     const data = doc.data();
     const cnxUSD = (data.cnx || 0) * CNX_RATE;
-    const coinsUSD = VALID_COINS.reduce((sum, coin) => 
-      sum + ((data.balances[coin] || 0) * COIN_PRICES[coin]), 0
+    const coinsUSD = VALID_COINS.reduce((sum, coin) =>
+      sum + ((data.balances?.[coin] || 0) * COIN_PRICES[coin]), 0
     );
     const totalUSD = cnxUSD + coinsUSD;
 
     res.json({
       success: true,
       user: {
-        uid: data.uid, 
-        username: data.username, 
+        uid: data.uid,
+        username: data.username,
         email: data.email,
-        emailVerified: req.user.emailVerified, 
+        emailVerified: req.user.emailVerified,
         country: data.country,
-        timezone: data.timezone, 
+        timezone: data.timezone,
         faucetpayEmail: data.faucetpayEmail,
-        referralCode: data.referralCode, 
+        referralCode: data.referralCode,
         referredBy: data.referredBy,
         balances: data.balances || {},
         cnx: data.cnx || 0,
         cnxUSD,
         coinsUSD,
         totalUSD,
-        totalWithdrawn: data.totalWithdrawn || 0, 
+        totalWithdrawn: data.totalWithdrawn || 0,
         referralEarnings: data.referralEarnings || 0,
-        referralCount: data.referralCount || 0, 
+        referralCount: data.referralCount || 0,
         totalClaims: data.totalClaims || 0,
-        lastClaimAt: data.lastClaimAt || 0, 
+        lastClaimAt: data.lastClaimAt || 0,
         dailyStreak: data.dailyStreak || 0,
-        highestStreak: data.highestStreak || 0, 
-        level: data.level || 1, 
+        highestStreak: data.highestStreak || 0,
+        level: data.level || 1,
         xp: data.xp || 0,
         usedPromoCodes: data.usedPromoCodes || []
       }
@@ -315,7 +347,9 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
         if (!recaptchaData.success || recaptchaData.score < 0.5) {
           return res.status(403).json({ success: false, message: 'Bot detected' });
         }
-      } catch (e) { console.log('reCAPTCHA skipped:', e.message); }
+      } catch (e) {
+        console.log('reCAPTCHA hatası:', e.message);
+      }
     }
 
     const userRef = db.collection('users').doc(req.user.uid);
@@ -339,7 +373,7 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
       if (!freshDoc.exists) throw new Error('User not found');
       const freshData = freshDoc.data();
       if (now - (freshData.lastClaimAt || 0) < CLAIM_COOLDOWN_MS) throw new Error('Cooldown');
-      
+
       transaction.update(userRef, {
         cnx: FieldValue.increment(cnxAmount),
         lastClaimAt: now,
@@ -349,13 +383,21 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
     });
 
     await db.collection('claims').add({
-      userId: req.user.uid, coin: 'CNX', amount: cnxAmount, usdValue,
+      userId: req.user.uid,
+      coin: 'CNX',
+      amount: cnxAmount,
+      usdValue,
       createdAt: FieldValue.serverTimestamp()
     });
 
     await db.collection('transactions').add({
-      userId: req.user.uid, type: 'claim', coin: 'CNX', amount: cnxAmount, usdValue,
-      status: 'completed', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid,
+      type: 'claim',
+      coin: 'CNX',
+      amount: cnxAmount,
+      usdValue,
+      status: 'completed',
+      createdAt: FieldValue.serverTimestamp()
     });
 
     if (userData.referredBy) {
@@ -390,7 +432,7 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
 app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
   try {
     const { fromCoin, toCoin, amount } = req.body;
-    
+
     if (fromCoin !== 'CNX') return res.status(400).json({ success: false, message: 'Can only swap from CNX' });
     if (!VALID_COINS.includes(toCoin)) return res.status(400).json({ success: false, message: 'Invalid target coin' });
     if (amount <= 0 || !Number.isFinite(amount)) return res.status(400).json({ success: false, message: 'Invalid amount' });
@@ -401,7 +443,7 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
 
     const userData = userDoc.data();
     const cnxBalance = userData.cnx || 0;
-    
+
     if (cnxBalance < amount) return res.status(400).json({ success: false, message: 'Insufficient CNX balance' });
 
     const usdValue = amount * CNX_RATE;
@@ -411,12 +453,12 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
       const freshDoc = await transaction.get(userRef);
       if (!freshDoc.exists) throw new Error('User not found');
       const freshData = freshDoc.data();
-      
+
       if ((freshData.cnx || 0) < amount) throw new Error('Insufficient CNX');
-      
+
       const newBalances = { ...freshData.balances };
       newBalances[toCoin] = (newBalances[toCoin] || 0) + targetAmount;
-      
+
       transaction.update(userRef, {
         cnx: FieldValue.increment(-amount),
         balances: newBalances
@@ -424,15 +466,24 @@ app.post('/api/swap', verifyToken, requireEmailVerified, async (req, res) => {
     });
 
     await db.collection('transactions').add({
-      userId: req.user.uid, type: 'swap',
-      fromCoin: 'CNX', fromAmount: amount,
-      toCoin, toAmount: targetAmount, usdValue,
-      status: 'completed', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid,
+      type: 'swap',
+      fromCoin: 'CNX',
+      fromAmount: amount,
+      toCoin,
+      toAmount: targetAmount,
+      usdValue,
+      status: 'completed',
+      createdAt: FieldValue.serverTimestamp()
     });
 
     res.json({
-      success: true, fromCoin: 'CNX', fromAmount: amount,
-      toCoin, toAmount: targetAmount, usdValue
+      success: true,
+      fromCoin: 'CNX',
+      fromAmount: amount,
+      toCoin,
+      toAmount: targetAmount,
+      usdValue
     });
   } catch (error) {
     console.error('Swap error:', error);
@@ -450,7 +501,7 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
       return res.status(400).json({ success: false, message: 'Invalid coin' });
     }
     const coinUpper = coin.toUpperCase();
-    
+
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) return res.status(404).json({ success: false, message: 'User not found' });
@@ -460,34 +511,39 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
       return res.status(400).json({ success: false, message: 'Set FaucetPay email first' });
     }
 
-    const balance = userData.balances[coinUpper] || 0;
+    const balance = userData.balances?.[coinUpper] || 0;
     const balanceUSD = balance * COIN_PRICES[coinUpper];
-    
+
     if (balanceUSD < WITHDRAW_MINIMUM_USD) {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Min $${WITHDRAW_MINIMUM_USD}. Balance: $${balanceUSD.toFixed(4)}` 
+      return res.status(400).json({
+        success: false,
+        message: `Min $${WITHDRAW_MINIMUM_USD}. Balance: $${balanceUSD.toFixed(4)}`
       });
     }
 
     await db.runTransaction(async (tx) => {
       const fresh = await tx.get(userRef);
       const data = fresh.data();
-      const b = data.balances[coinUpper] || 0;
+      const b = data.balances?.[coinUpper] || 0;
       if (b * COIN_PRICES[coinUpper] < WITHDRAW_MINIMUM_USD) throw new Error('Insufficient');
       const newBal = { ...data.balances };
       newBal[coinUpper] = 0;
-      tx.update(userRef, { 
-        balances: newBal, 
-        totalWithdrawn: FieldValue.increment(b * COIN_PRICES[coinUpper]) 
+      tx.update(userRef, {
+        balances: newBal,
+        totalWithdrawn: FieldValue.increment(b * COIN_PRICES[coinUpper])
       });
     });
 
     const txRef = await db.collection('transactions').add({
-      userId: req.user.uid, type: 'withdraw', coin: coinUpper,
-      amount: balance, usdValue: balanceUSD,
-      destination: userData.faucetpayEmail, username: userData.username,
-      status: 'pending', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid,
+      type: 'withdraw',
+      coin: coinUpper,
+      amount: balance,
+      usdValue: balanceUSD,
+      destination: userData.faucetpayEmail,
+      username: userData.username,
+      status: 'pending',
+      createdAt: FieldValue.serverTimestamp()
     });
 
     await db.collection('global').doc('stats').set({
@@ -497,9 +553,12 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
     }, { merge: true });
 
     res.json({
-      success: true, transactionId: txRef.id,
-      amount: balance, coin: coinUpper,
-      destination: userData.faucetpayEmail, status: 'pending'
+      success: true,
+      transactionId: txRef.id,
+      amount: balance,
+      coin: coinUpper,
+      destination: userData.faucetpayEmail,
+      status: 'pending'
     });
   } catch (error) {
     console.error('Withdraw error:', error);
@@ -515,15 +574,15 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
 app.post('/api/admin/promo/create', verifyAdmin, async (req, res) => {
   try {
     const { code, coin, amount, maxUses, expiresAt } = req.body;
-    
+
     if (!code || !coin || !amount) {
       return res.status(400).json({ success: false, message: 'Code, coin and amount required' });
     }
-    
+
     if (!ALL_COINS.includes(coin.toUpperCase())) {
       return res.status(400).json({ success: false, message: 'Invalid coin' });
     }
-    
+
     const promoDoc = {
       code: code.toUpperCase(),
       coin: coin.toUpperCase(),
@@ -535,9 +594,9 @@ app.post('/api/admin/promo/create', verifyAdmin, async (req, res) => {
       createdAt: FieldValue.serverTimestamp(),
       createdBy: 'admin'
     };
-    
+
     await db.collection('promo_codes').doc(code.toUpperCase()).set(promoDoc);
-    
+
     res.json({ success: true, message: `Promo code ${code.toUpperCase()} created`, promo: promoDoc });
   } catch (error) {
     console.error('Create promo error:', error);
@@ -550,34 +609,34 @@ app.post('/api/promo/redeem', verifyToken, async (req, res) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Code required' });
-    
+
     const promoDoc = await db.collection('promo_codes').doc(code.toUpperCase()).get();
     if (!promoDoc.exists) {
       return res.status(404).json({ success: false, message: 'Invalid promo code' });
     }
-    
+
     const promoData = promoDoc.data();
-    
+
     if (!promoData.isActive) {
       return res.status(400).json({ success: false, message: 'Promo code is inactive' });
     }
-    
+
     if (promoData.expiresAt && new Date() > promoData.expiresAt.toDate()) {
       return res.status(400).json({ success: false, message: 'Promo code expired' });
     }
-    
+
     if (promoData.maxUses && promoData.currentUses >= promoData.maxUses) {
       return res.status(400).json({ success: false, message: 'Promo code max uses reached' });
     }
-    
+
     const userRef = db.collection('users').doc(req.user.uid);
     const userSnap = await userRef.get();
     const userData = userSnap.data();
-    
+
     if (userData.usedPromoCodes && userData.usedPromoCodes.includes(code.toUpperCase())) {
       return res.status(400).json({ success: false, message: 'You already used this promo code' });
     }
-    
+
     // Add reward
     let usdValue = 0;
     if (promoData.coin === 'CNX') {
@@ -595,11 +654,11 @@ app.post('/api/promo/redeem', verifyToken, async (req, res) => {
       });
       usdValue = promoData.amount * COIN_PRICES[promoData.coin];
     }
-    
+
     await promoDoc.ref.update({
       currentUses: FieldValue.increment(1)
     });
-    
+
     await db.collection('transactions').add({
       userId: req.user.uid,
       type: 'promo',
@@ -610,9 +669,9 @@ app.post('/api/promo/redeem', verifyToken, async (req, res) => {
       status: 'completed',
       createdAt: FieldValue.serverTimestamp()
     });
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: `Redeemed ${promoData.amount} ${promoData.coin}!`,
       coin: promoData.coin,
       amount: promoData.amount,
@@ -651,10 +710,10 @@ app.post('/api/admin/promo/:code/toggle', verifyAdmin, async (req, res) => {
   try {
     const promoDoc = await db.collection('promo_codes').doc(req.params.code.toUpperCase()).get();
     if (!promoDoc.exists) return res.status(404).json({ success: false, message: 'Not found' });
-    
+
     const current = promoDoc.data().isActive;
     await promoDoc.ref.update({ isActive: !current });
-    
+
     res.json({ success: true, message: `Promo code ${!current ? 'activated' : 'deactivated'}` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -662,46 +721,80 @@ app.post('/api/admin/promo/:code/toggle', verifyAdmin, async (req, res) => {
 });
 
 // ============================================
-// 🎁 OFFERWALL.ME WEBHOOK
+// 🎁 OFFERWALL.ME WEBHOOK (GERÇEK ENTEGRASYON)
 // ============================================
 app.post('/api/offerwall', async (req, res) => {
   try {
     const { user_id, amount, offer_id, status, tx_id, secret } = req.body;
-    
+
     if (secret !== process.env.OFFERWALL_SECRET_KEY) {
+      console.warn('⚠️ Offerwall: Geçersiz secret');
       return res.status(401).json({ success: false, message: 'Invalid secret' });
     }
-    
+
     if (status !== 'completed') {
-      return res.status(400).json({ success: false, message: 'Offer not completed' });
+      console.log(`ℹ️ Offerwall: Status "${status}" — tamamlanmadı, işlem yapılmadı.`);
+      return res.status(200).json({ success: true, message: 'Status not completed, ignored' });
     }
-    
-    const userSnap = await db.collection('users').where('offerwallId', '==', user_id).limit(1).get();
-    
-    if (userSnap.empty) return res.status(404).json({ success: false, message: 'User not found' });
-    
+
+    const userSnap = await db.collection('users')
+      .where('offerwallId', '==', user_id)
+      .limit(1)
+      .get();
+
+    if (userSnap.empty) {
+      console.warn(`⚠️ Offerwall: Kullanıcı bulunamadı: ${user_id}`);
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
     const userDoc = userSnap.docs[0];
-    const cnxAmount = Math.floor(amount * 100);
-    
-    await db.collection('users').doc(userDoc.id).update({
+    const userId = userDoc.id;
+
+    const cnxAmount = Math.floor(parseFloat(amount) * 100);
+
+    if (cnxAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+
+    await db.collection('users').doc(userId).update({
       cnx: FieldValue.increment(cnxAmount)
     });
-    
+
     await db.collection('transactions').add({
-      userId: userDoc.id,
+      userId: userId,
       type: 'offerwall',
       coin: 'CNX',
       amount: cnxAmount,
-      usdValue: amount,
+      usdValue: parseFloat(amount),
       offerId: offer_id,
       txId: tx_id,
       status: 'completed',
       createdAt: FieldValue.serverTimestamp()
     });
-    
+
+    console.log(`✅ Offerwall: ${cnxAmount} CNX eklendi. Kullanıcı: ${userId}, Offer: ${offer_id}`);
+
     res.json({ success: true, message: `Added ${cnxAmount} CNX` });
   } catch (error) {
     console.error('Offerwall error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post('/api/offerwall/set-id', verifyToken, async (req, res) => {
+  try {
+    const { offerwallId } = req.body;
+    if (!offerwallId) {
+      return res.status(400).json({ success: false, message: 'offerwallId required' });
+    }
+
+    await db.collection('users').doc(req.user.uid).update({
+      offerwallId: offerwallId
+    });
+
+    res.json({ success: true, message: 'Offerwall ID saved' });
+  } catch (error) {
+    console.error('Set offerwall ID error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -713,15 +806,16 @@ app.get('/api/dashboard', verifyToken, async (req, res) => {
   try {
     const doc = await db.collection('users').doc(req.user.uid).get();
     if (!doc.exists) return res.status(404).json({ success: false, message: 'Not found' });
-    
+
     const data = doc.data();
     const cnxUSD = (data.cnx || 0) * CNX_RATE;
-    const coinsUSD = VALID_COINS.reduce((sum, coin) => 
-      sum + ((data.balances[coin] || 0) * COIN_PRICES[coin]), 0
+    const coinsUSD = VALID_COINS.reduce((sum, coin) =>
+      sum + ((data.balances?.[coin] || 0) * COIN_PRICES[coin]), 0
     );
     const totalUSD = cnxUSD + coinsUSD;
 
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
     const claimsSnap = await db.collection('claims')
       .where('userId', '==', req.user.uid)
       .where('createdAt', '>=', todayStart).get();
@@ -784,8 +878,11 @@ app.get('/api/leaderboard', async (req, res) => {
     snap.forEach((doc, i) => {
       const d = doc.data();
       leaderboard.push({
-        rank: i + 1, username: d.username, country: d.country,
-        totalClaims: d.totalClaims || 0, totalWithdrawn: d.totalWithdrawn || 0,
+        rank: i + 1,
+        username: d.username,
+        country: d.country,
+        totalClaims: d.totalClaims || 0,
+        totalWithdrawn: d.totalWithdrawn || 0,
         level: d.level || 1
       });
     });
@@ -846,21 +943,21 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
     const userRef = db.collection('users').doc(req.user.uid);
     const userDoc = await userRef.get();
     if (!userDoc.exists) return res.status(404).json({ success: false });
-    
+
     const data = userDoc.data();
     const today = new Date().toISOString().slice(0, 10);
     const last = data.lastDailyBonus ? new Date(data.lastDailyBonus).toISOString().slice(0, 10) : null;
-    
+
     if (last === today) return res.status(400).json({ success: false, message: 'Already claimed' });
-    
+
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const newStreak = last === yesterday ? (data.dailyStreak || 0) + 1 : 1;
-    
+
     const baseBonus = 10;
     const streakBonus = Math.min(newStreak * 2, 40);
     const cnxBonus = baseBonus + streakBonus;
     const usdValue = +(cnxBonus * CNX_RATE).toFixed(4);
-    
+
     await userRef.update({
       cnx: FieldValue.increment(cnxBonus),
       lastDailyBonus: Date.now(),
@@ -868,13 +965,18 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
       highestStreak: Math.max(data.highestStreak || 0, newStreak),
       claimedDays: FieldValue.arrayUnion(newStreak)
     });
-    
+
     await db.collection('transactions').add({
-      userId: req.user.uid, type: 'daily-bonus', coin: 'CNX',
-      amount: cnxBonus, usdValue, day: newStreak,
-      status: 'completed', createdAt: FieldValue.serverTimestamp()
+      userId: req.user.uid,
+      type: 'daily-bonus',
+      coin: 'CNX',
+      amount: cnxBonus,
+      usdValue,
+      day: newStreak,
+      status: 'completed',
+      createdAt: FieldValue.serverTimestamp()
     });
-    
+
     res.json({ success: true, day: newStreak, amount: cnxBonus, usdValue, newStreak });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -897,10 +999,10 @@ app.post('/api/verify-recaptcha', async (req, res) => {
         body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`
       }
     );
-    
+
     const assessment = await response.json();
     const score = assessment.score || 0;
-    
+
     if (score >= 0.5) {
       res.json({ success: true, score });
     } else {
@@ -928,7 +1030,9 @@ app.get('/api/live-withdraws', async (req, res) => {
       withdrawals.push({
         id: d.id,
         username: data.username || ('User' + (data.userId || '').slice(0, 6)),
-        coin: data.coin, amount: data.amount, usdValue: data.usdValue,
+        coin: data.coin,
+        amount: data.amount,
+        usdValue: data.usdValue,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         status: 'completed'
       });
@@ -1029,7 +1133,9 @@ app.get('/api/admin/users', verifyAdmin, async (req, res) => {
     snap.forEach(d => {
       const data = d.data();
       users.push({
-        id: d.id, username: data.username, email: data.email,
+        id: d.id,
+        username: data.username,
+        email: data.email,
         cnx: data.cnx || 0,
         balances: data.balances || {},
         totalClaims: data.totalClaims || 0,
