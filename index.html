@@ -1,1852 +1,3649 @@
-<!DOCTYPE html>
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  background-color: white; /* Ensure the iframe has a white background */
+                }
+
+                
+              </style>
+                        </head>
+                        <body>
+                            <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#FCD34D">
-<title>COINIX - Premium Multi-Coin Faucet</title>
+<title>COINIX Multi-Coin Faucet</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<!-- RichAds Script -->
 <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
-
-<!-- DGB Wire Mining -->
-<script src="https://dgbmining.pro/ds.js?v=2"></script>
-
+<script>
+  if (window.TelegramAdsController) {
+    window.TelegramAdsController = new TelegramAdsController();
+    window.TelegramAdsController.initialize({ pubId: "988708", appId: "7950" });
+  }
+</script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
 :root {
-    --primary: #FCD34D;
-    --primary-dark: #F59E0B;
-    --primary-darker: #D97706;
-    --primary-light: #FDE68A;
-    --primary-lighter: #FEF3C7;
-    --secondary: #10B981;
-    --accent: #8B5CF6;
-    --danger: #EF4444;
-    --text: #111827;
-    --text-secondary: #6B7280;
-    --bg: #FFFFFF;
-    --bg-secondary: #F9FAFB;
-    --border: #E5E7EB;
-    --border-gold: rgba(252, 211, 77, 0.4);
-    --shadow: 0 4px 16px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 30px rgba(0,0,0,0.08);
-    --shadow-gold: 0 8px 30px rgba(252, 211, 77, 0.3);
-    --radius: 16px;
-    --radius-sm: 10px;
-    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --primary: #f59e0b;
+  --primary-light: #fbbf24;
+  --primary-dark: #d97706;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+  --glass: rgba(255,255,255,0.8);
+  --accent: #f59e0b;
 }
 
-html, body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
-    background: #FFFFFF;
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #334155;
+  --text: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border: #475569;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
+  --glass: rgba(30,41,59,0.8);
 }
 
-body::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: 
-        radial-gradient(ellipse at top right, rgba(252, 211, 77, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom left, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s, color 0.3s;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-secondary); }
-::-webkit-scrollbar-thumb { 
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); 
-    border-radius: 10px; 
-}
-
-/* ============================================
-   LOADING SCREEN - COINIX PNG LOGO
-   ============================================ */
+/* Loading Screen */
 #loading-screen {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: #FFFFFF;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    transition: opacity 0.6s, transform 0.6s;
-    padding: 20px;
-    overflow: hidden;
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  transition: opacity 0.5s;
 }
 
-#loading-screen::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: 
-        radial-gradient(circle at 30% 20%, rgba(252, 211, 77, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 70% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 40%);
-    pointer-events: none;
+.loading-brand {
+  text-align: center;
+  padding: 40px;
 }
 
-#loading-screen.hidden {
-    opacity: 0;
-    transform: scale(1.05);
-    pointer-events: none;
-}
-
-.loading-brand { 
-    text-align: center; 
-    margin-bottom: 40px; 
-    animation: fadeInDown 0.8s ease-out;
-    position: relative;
-    z-index: 1;
-}
-
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* COINIX PNG LOGO - CIRCULAR CONTAINER */
 .loading-logo {
-    width: 140px;
-    height: 140px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 24px;
-    box-shadow: 
-        0 0 0 8px rgba(252, 211, 77, 0.15),
-        0 0 0 16px rgba(252, 211, 77, 0.08),
-        0 20px 60px rgba(252, 211, 77, 0.4),
-        inset 0 -4px 12px rgba(0,0,0,0.1);
-    animation: logoFloat 3s ease-in-out infinite;
-    position: relative;
-    overflow: hidden;
-    padding: 10px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--primary);
+  box-shadow: 0 0 40px rgba(245,158,11,0.5);
+  animation: logoPulse 2s ease-in-out infinite;
 }
 
-.loading-logo::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
-    animation: shimmer 2.5s infinite;
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-}
-
-@keyframes logoFloat {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-8px) scale(1.02); }
-}
-
-.loading-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
-    animation: logoRotate 20s linear infinite;
-}
-
-@keyframes logoRotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(245,158,11,0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(245,158,11,0.7); }
 }
 
 .loading-title {
-    font-size: 3rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #92400E 0%, #D97706 50%, #F59E0B 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: -2px;
-    margin-bottom: 8px;
+  font-size: 36px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 20px;
+  letter-spacing: -1px;
 }
 
 .loading-subtitle {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    font-weight: 600;
+  color: #94a3b8;
+  font-size: 14px;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
-/* Floating Coins */
-.loading-coins {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 50px;
-    flex-wrap: wrap;
-    justify-content: center;
-    position: relative;
-    z-index: 1;
+.loading-coins-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
 }
 
 .loading-coin {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    animation: coinFloat 3s ease-in-out infinite;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  animation: coinFloat 3s ease-in-out infinite;
+  border: 2px solid var(--border);
 }
 
-.loading-coin:nth-child(1) { animation-delay: 0s; }
-.loading-coin:nth-child(2) { animation-delay: 0.3s; }
-.loading-coin:nth-child(3) { animation-delay: 0.6s; }
-.loading-coin:nth-child(4) { animation-delay: 0.9s; }
-.loading-coin:nth-child(5) { animation-delay: 1.2s; }
+.loading-coin:nth-child(2) { animation-delay: 0.2s; }
+.loading-coin:nth-child(3) { animation-delay: 0.4s; }
+.loading-coin:nth-child(4) { animation-delay: 0.6s; }
+.loading-coin:nth-child(5) { animation-delay: 0.8s; }
 
 @keyframes coinFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    25% { transform: translateY(-15px) rotate(5deg); }
-    75% { transform: translateY(5px) rotate(-5deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-.loading-coin img {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    object-fit: contain;
-    box-shadow: 
-        0 8px 20px rgba(0,0,0,0.1),
-        0 0 0 3px rgba(252, 211, 77, 0.3);
-    background: white;
-    padding: 6px;
-    transition: transform 0.3s;
-}
-
-.loading-coin:hover img {
-    transform: scale(1.1) rotate(10deg);
-}
-
-.loading-coin span {
-    font-size: 0.72rem;
-    font-weight: 800;
-    color: var(--primary-darker);
-    background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--primary-light) 100%);
-    padding: 3px 12px;
-    border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(252, 211, 77, 0.2);
-}
-
-/* Spinner Container - Removed, using PNG logo instead */
-.spinner-container { display: none; }
-
-/* Progress bar */
-.loading-progress {
-    width: 200px;
-    height: 4px;
-    background: var(--bg-secondary);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 1;
+.loading-progress-bar {
+  width: 280px;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  margin: 32px auto 0;
+  overflow: hidden;
 }
 
 .loading-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    border-radius: 10px;
-    animation: progressFill 2s ease-in-out infinite;
-    box-shadow: 0 0 10px rgba(252, 211, 77, 0.5);
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 2.5s ease;
 }
 
-@keyframes progressFill {
-    0% { width: 0%; margin-left: 0%; }
-    50% { width: 60%; margin-left: 20%; }
-    100% { width: 0%; margin-left: 100%; }
+#loading-cta {
+  display: none;
+  text-align: center;
+  margin-top: 32px;
 }
 
-.loading-status {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 700;
-    margin-bottom: 32px;
-    text-align: center;
-    min-height: 24px;
-    position: relative;
-    z-index: 1;
-    letter-spacing: 0.5px;
+#loading-cta.show { display: block; animation: fadeInUp 0.5s ease; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-#goto-faucet-btn {
-    display: none;
-    padding: 18px 48px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    color: #78350F;
-    border: none;
-    border-radius: 50px;
-    font-size: 1.1rem;
-    font-weight: 900;
-    cursor: pointer;
-    box-shadow: 
-        0 10px 30px rgba(252, 211, 77, 0.4),
-        0 0 0 4px rgba(252, 211, 77, 0.1);
-    transition: all var(--transition);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
+.btn-glow {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #0f172a;
+  border: none;
+  padding: 16px 48px;
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  animation: btnGlow 2s infinite;
+  transition: transform 0.2s;
 }
 
-#goto-faucet-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    transition: left 0.6s;
+.btn-glow:hover { transform: scale(1.05); }
+
+@keyframes btnGlow {
+  0% { box-shadow: 0 0 10px rgba(245,158,11,0.4); }
+  50% { box-shadow: 0 0 30px rgba(245,158,11,0.8); }
+  100% { box-shadow: 0 0 10px rgba(245,158,11,0.4); }
 }
 
-#goto-faucet-btn:hover::before { left: 100%; }
-
-#goto-faucet-btn:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 
-        0 15px 40px rgba(252, 211, 77, 0.5),
-        0 0 0 6px rgba(252, 211, 77, 0.15);
+.loading-hint {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 12px;
 }
 
-/* ============================================
-   AD CONTAINERS
-   ============================================ */
-.ad-container {
-    margin: 20px 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-}
-
-.ad-label {
-    position: absolute;
-    top: -8px;
-    right: 10px;
-    background: var(--primary);
-    color: #78350F;
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* DGB Wire Container */
-.dgb-wire-container {
-    margin: 20px auto;
-    text-align: center;
-}
-
-/* Adbits Banner */
-#adbits-banner {
-    margin: 20px auto;
-    display: block;
-}
-
-/* ============================================
-   MAIN APP
-   ============================================ */
-#app {
-    display: none;
-    padding-bottom: 100px;
-    position: relative;
-    z-index: 1;
-}
-
-#app.visible {
-    display: block;
-    animation: appFadeIn 0.6s ease-out;
-}
-
-@keyframes appFadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+/* App Container */
+#app { display: none; min-height: 100vh; padding-bottom: 80px; }
+#app.show { display: block; animation: fadeIn 0.5s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Header */
 .header {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    padding: 14px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-gold);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 10px rgba(252, 211, 77, 0.1);
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header-logo {
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 
-        var(--shadow-gold),
-        0 0 0 3px rgba(252, 211, 77, 0.15);
-    position: relative;
-    overflow: hidden;
-}
-
-.header-logo img {
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
-    position: relative;
-    z-index: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  object-fit: cover;
 }
 
 .header-title {
-    font-size: 1.5rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #92400E 0%, #D97706 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: -0.5px;
+  font-size: 20px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.header-nav {
-    display: flex;
-    gap: 5px;
-    overflow-x: auto;
-    max-width: 60%;
-    scrollbar-width: none;
+.header-balance {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
-.header-nav::-webkit-scrollbar { display: none; }
-
-.nav-btn {
-    padding: 9px 14px;
-    background: var(--bg-secondary);
-    border: 2px solid transparent;
-    color: var(--text-secondary);
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 700;
-    transition: all var(--transition);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap;
-    flex-shrink: 0;
+.balance-chip {
+  background: var(--surface-2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.nav-btn:hover {
-    background: var(--primary-lighter);
-    transform: translateY(-2px);
-}
-
-.nav-btn.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: #78350F;
-    border-color: var(--primary-dark);
-    box-shadow: var(--shadow-gold);
-}
-
-.nav-btn .icon { font-size: 1.1rem; font-weight: 900; }
+.balance-chip .coin-icon { font-size: 16px; }
 
 /* Pages */
-.page {
-    display: none;
-    padding: 20px 16px;
-    max-width: 900px;
-    margin: 0 auto;
-    animation: pageSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes pageSlide {
-    from { opacity: 0; transform: translateX(15px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-.page.active { display: block; }
+.page { display: none; padding: 20px; max-width: 800px; margin: 0 auto; }
+.page.active { display: block; animation: slideIn 0.3s ease; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
 
 /* Cards */
 .card {
-    background: #FFFFFF;
-    border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border-gold);
-    box-shadow: var(--shadow);
-    transition: all var(--transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-}
-
-.card:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
-    border-color: var(--primary);
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-    gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
 .card-title {
-    font-size: 1.3rem;
-    font-weight: 900;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    letter-spacing: -0.5px;
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.card-title .icon {
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: var(--primary-darker);
+/* Welcome Card */
+.welcome-card {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #0f172a;
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
 }
 
-.card-subtitle {
-    color: var(--text-secondary);
-    font-size: 0.88rem;
-    margin-top: 4px;
-    font-weight: 500;
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  animation: shimmer 3s infinite;
 }
+
+@keyframes shimmer {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.welcome-title { font-size: 22px; font-weight: 900; position: relative; }
+.welcome-subtitle { font-size: 14px; opacity: 0.8; margin-top: 4px; position: relative; }
 
 /* Stats Grid */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
-    background: #FFFFFF;
-    border-radius: var(--radius);
-    padding: 20px 16px;
-    text-align: center;
-    border: 1px solid var(--border-gold);
-    box-shadow: var(--shadow);
-    transition: all var(--transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
-}
-
-.stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary);
-}
-
-.stat-icon {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 12px;
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: #78350F;
-    box-shadow: var(--shadow-gold);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .stat-value {
-    font-size: 1.8rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, #92400E 0%, #D97706 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.1;
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--primary);
 }
 
 .stat-label {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
 }
 
 /* Coin Cards */
-.coin-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 18px;
-    margin-bottom: 24px;
-}
-
 .coin-card {
-    background: #FFFFFF;
-    border-radius: var(--radius);
-    padding: 24px 20px;
-    text-align: center;
-    border: 1px solid var(--border-gold);
-    box-shadow: var(--shadow);
-    transition: all var(--transition);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .coin-card:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
-.coin-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 16px;
+.coin-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--coin-color, var(--primary));
 }
 
-.coin-icon img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: contain;
-    box-shadow: var(--shadow);
-    background: white;
-    padding: 8px;
-    border: 2px solid var(--border-gold);
+.coin-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.coin-name {
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: var(--text);
-    margin-bottom: 4px;
+.coin-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  animation: coinFloat 3s ease-in-out infinite;
+  background: var(--surface-2);
+  padding: 8px;
 }
 
-.coin-symbol {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 700;
-    margin-bottom: 12px;
-}
+.coin-info { flex: 1; }
+.coin-name { font-size: 20px; font-weight: 900; }
+.coin-price { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
 
 .coin-balance {
-    font-size: 1.5rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 4px;
+  text-align: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 12px 0;
 }
 
-.coin-usd {
-    font-size: 0.9rem;
-    color: var(--secondary);
-    font-weight: 800;
-    margin-bottom: 8px;
+.coin-balance-value {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
 }
 
-.coin-price {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    background: var(--bg-secondary);
-    padding: 4px 12px;
-    border-radius: 20px;
-    display: inline-block;
-    font-weight: 700;
+.coin-balance-usd {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Daily Progress */
+.daily-progress {
+  margin: 12px 0;
+}
+
+.daily-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.daily-progress-bar {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.daily-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Captcha */
+.captcha-box {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.captcha-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.captcha-instruction {
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.captcha-icons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.captcha-icon-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.captcha-icon-btn:hover {
+  border-color: var(--primary);
+  transform: scale(1.1);
+}
+
+.captcha-icon-btn.selected {
+  border-color: var(--primary);
+  background: rgba(245,158,11,0.1);
+  box-shadow: 0 0 20px rgba(245,158,11,0.3);
+}
+
+.captcha-icon-btn.rotated {
+  transform: rotate(180deg);
 }
 
 /* Buttons */
 .btn {
-    padding: 14px 28px;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.95rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: all var(--transition);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-family: inherit;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 50%, var(--primary-darker) 100%);
-    color: #78350F;
-    box-shadow: var(--shadow-gold);
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #0f172a;
 }
 
-.btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(252, 211, 77, 0.4);
-}
+.btn-primary:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(245,158,11,0.4); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text);
-    border: 2px solid var(--border);
-}
-
-.btn-secondary:hover {
-    background: var(--border);
-    transform: translateY(-2px);
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .btn-success {
-    background: linear-gradient(135deg, var(--secondary) 0%, #059669 100%);
-    color: white;
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white;
 }
 
-.btn-success:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: white;
 }
 
-.btn-block { width: 100%; }
-.btn-lg { padding: 16px 32px; font-size: 1.05rem; }
-.btn-sm { padding: 10px 18px; font-size: 0.85rem; }
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none !important;
+/* Input */
+.input-field {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 15px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
 }
 
-/* Forms */
-.form-group { margin-bottom: 20px; }
-
-.form-label {
-    display: block;
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
-.form-input, .form-select {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-size: 0.95rem;
-    font-weight: 600;
-    transition: all var(--transition);
-    font-family: inherit;
+.input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.form-input:focus, .form-select:focus {
-    outline: none;
-    border-color: var(--primary);
-    background: white;
-    box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.15);
+.input-group .input-field { margin-bottom: 0; flex: 1; }
+
+/* Withdraw Card */
+.withdraw-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
-.form-input::placeholder { color: var(--text-secondary); }
-
-/* Captcha */
-.captcha-box {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-lighter) 100%);
-    border-radius: var(--radius);
-    padding: 32px 24px;
-    text-align: center;
-    margin: 20px 0;
-    border: 2px solid var(--border-gold);
-    box-shadow: var(--shadow);
+.withdraw-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.captcha-question {
-    font-size: 2.5rem;
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 24px;
-    letter-spacing: 3px;
+.withdraw-coin-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  padding: 6px;
 }
 
-.captcha-input {
-    width: 140px;
-    padding: 16px;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: 900;
-    background: white;
-    border: 3px solid var(--border-gold);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    margin-bottom: 20px;
-    transition: all var(--transition);
-    font-family: inherit;
+.withdraw-balance {
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
-.captcha-input:focus {
-    outline: none;
-    border-color: var(--primary-dark);
-    box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.2);
-    transform: scale(1.05);
+.withdraw-balance strong {
+  color: var(--text);
+  font-size: 16px;
 }
 
-.captcha-hint {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-top: 12px;
-    font-weight: 600;
+.min-withdraw {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.min-withdraw.enough { background: rgba(16,185,129,0.1); color: var(--success); }
+.min-withdraw.not-enough { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+.amount-presets {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.amount-preset {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.amount-preset:hover {
+  border-color: var(--primary);
+  background: rgba(245,158,11,0.1);
+}
+
+/* Live Payouts */
+.payouts-ticker {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.payouts-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payouts-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.payout-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.payout-item:last-child { border-bottom: none; }
+
+.payout-user { font-weight: 700; }
+.payout-amount { color: var(--success); font-weight: 700; }
+.payout-time { color: var(--text-secondary); font-size: 11px; }
+
+/* Milestone */
+.milestone-card {
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+  color: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.milestone-card::before {
+  content: '🏆';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+.milestone-title { font-size: 18px; font-weight: 900; }
+.milestone-subtitle { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+.milestone-progress {
+  margin-top: 12px;
+  height: 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.milestone-progress-fill {
+  height: 100%;
+  background: white;
+  border-radius: 4px;
+  transition: width 0.5s;
+}
+
+/* Ad Containers */
+.ad-container {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  margin: 16px auto;
+  text-align: center;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+  position: relative;
+}
+
+.ad-container.ad-300x250 {
+  width: 100%;
+  max-width: 300px;
+  height: 250px;
+  min-height: 250px;
+}
+
+.ad-container.ad-728x90 {
+  width: 100%;
+  max-width: 728px;
+  height: 90px;
+  min-height: 90px;
+}
+
+.ad-label {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.2s;
+  border: none;
+  background: none;
+}
+
+.nav-item.active { color: var(--primary); }
+.nav-item .nav-icon { font-size: 22px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  color: var(--text);
+  padding: 14px 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  font-weight: 700;
+  font-size: 14px;
+  display: none;
+  border: 1px solid var(--border);
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast.show { display: block; animation: slideDown 0.3s ease; }
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* Quick Actions */
 .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
-.qa-btn {
-    padding: 24px 16px;
-    background: #FFFFFF;
-    border: 2px solid var(--border-gold);
-    border-radius: var(--radius);
-    text-align: center;
-    cursor: pointer;
-    transition: all var(--transition);
-    box-shadow: var(--shadow);
+.quick-action {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 16px 8px;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
 }
 
-.qa-btn:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary);
+.quick-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary);
 }
 
-.qa-icon {
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--primary-darker);
-    margin-bottom: 10px;
-    display: block;
-}
-
-.qa-label {
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: var(--text);
-}
-
-/* Transaction List */
-.tx-list {
-    max-height: 500px;
-    overflow-y: auto;
-}
-
-.tx-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-    transition: all var(--transition);
-    border-radius: var(--radius-sm);
-    margin-bottom: 4px;
-}
-
-.tx-item:hover {
-    background: var(--bg-secondary);
-    transform: translateX(4px);
-}
-
-.tx-item:last-child { border-bottom: none; }
-
-.tx-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex: 1;
-    min-width: 0;
-}
-
-.tx-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--primary-lighter) 0%, var(--primary-light) 100%);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    font-weight: 900;
-    color: var(--primary-darker);
-    flex-shrink: 0;
-    box-shadow: var(--shadow);
-}
-
-.tx-type {
-    font-size: 0.95rem;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 2px;
-}
-
-.tx-meta {
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.tx-amount {
-    font-size: 1.15rem;
-    font-weight: 900;
-    text-align: right;
-    flex-shrink: 0;
-    margin-left: 12px;
-}
-
-.tx-amount.positive { color: var(--secondary); }
-.tx-amount.negative { color: var(--danger); }
+.quick-action-icon { font-size: 28px; margin-bottom: 6px; }
+.quick-action-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); }
 
 /* Referral */
-.ref-link-box {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-lighter) 100%);
-    border-radius: var(--radius);
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 16px 0;
-    border: 2px solid var(--border-gold);
-    box-shadow: var(--shadow);
+.referral-link-box {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
 }
 
-.ref-link {
-    flex: 1;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    word-break: break-all;
-    font-weight: 700;
-    background: white;
-    padding: 12px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
+.referral-link {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Toast */
-.toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: white;
-    color: var(--text);
-    padding: 16px 28px;
-    border-radius: 50px;
-    box-shadow: var(--shadow-lg);
-    z-index: 9999;
-    display: none;
-    border: 2px solid var(--border-gold);
-    font-weight: 800;
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    max-width: 90%;
-    text-align: center;
+.copy-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #0f172a;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
 }
 
-.toast.show {
-    display: block;
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+/* History */
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
 }
 
-.toast.success {
-    border-color: var(--secondary);
-    background: #D1FAE5;
-    color: #065F46;
+.history-item:last-child { border-bottom: none; }
+
+.history-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.toast.error {
-    border-color: var(--danger);
-    background: #FEE2E2;
-    color: #991B1B;
+.history-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
 }
 
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-}
+.history-desc { font-size: 14px; font-weight: 600; }
+.history-time { font-size: 11px; color: var(--text-secondary); }
+.history-amount { font-weight: 800; font-size: 14px; }
+.history-amount.positive { color: var(--success); }
+.history-amount.negative { color: var(--danger); }
 
-.empty-state .icon {
-    font-size: 3rem;
-    margin-bottom: 12px;
-    opacity: 0.5;
-    font-weight: 900;
-}
-
-.empty-state .text {
-    font-size: 0.95rem;
-    font-weight: 600;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface-2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 /* Responsive */
-@media (max-width: 640px) {
-    .header-nav { max-width: 65%; }
-    .nav-btn { padding: 7px 10px; font-size: 0.72rem; }
-    .nav-btn .icon { display: none; }
-    .coin-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .stat-value { font-size: 1.5rem; }
-    .stat-icon { width: 44px; height: 44px; font-size: 1.3rem; }
-    .loading-title { font-size: 2.2rem; }
-    .loading-logo { width: 110px; height: 110px; }
-    .loading-logo img { width: 90px; height: 90px; }
-    .loading-coin img { width: 48px; height: 48px; }
-    .card { padding: 20px 16px; }
-    .card-title { font-size: 1.15rem; }
-    .captcha-question { font-size: 2rem; }
-    #adbits-banner iframe { width: 100% !important; max-width: 728px; }
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .quick-actions { grid-template-columns: repeat(4, 1fr); }
+  .captcha-icon-btn { width: 56px; height: 56px; font-size: 24px; }
+}
+
+/* Dark mode specific */
+[data-theme="dark"] .coin-image {
+  background: #334155;
+}
+
+[data-theme="dark"] .captcha-icon-btn {
+  background: #1e293b;
+}
+
+/* Notification badge */
+.notif-badge {
+  background: var(--danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
 }
 </style>
 </head>
 <body>
 
+<!-- Loading Screen -->
 <div id="loading-screen">
-    <div class="loading-brand">
-        <div class="loading-logo">
-            <img src="coinix.png" alt="COINIX" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%23FCD34D%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2230%22 font-weight=%22bold%22>C</text></svg>'">
-        </div>
-        <div class="loading-title">COINIX</div>
-        <div class="loading-subtitle">Premium Multi-Coin Faucet</div>
+  <div class="loading-brand">
+    <img src="./coinix.png" alt="Coinix" class="loading-logo" onerror="this.style.display='none'">
+    <h1 class="loading-title">Coinix Faucet</h1>
+    <p class="loading-subtitle">We Support Coins</p>
+    <div class="loading-coins-row">
+      <div class="loading-coin">🐕</div>
+      <div class="loading-coin">🐸</div>
+      <div class="loading-coin"></div>
+      <div class="loading-coin">💎</div>
+      <div class="loading-coin">⚡</div>
     </div>
-    
-    <div class="loading-coins">
-        <div class="loading-coin"><img src="dogecoin.png" alt="DOGE"><span>DOGE</span></div>
-        <div class="loading-coin"><img src="pepecoin.png" alt="PEPE"><span>PEPE</span></div>
-        <div class="loading-coin"><img src="pol.png" alt="POL"><span>POL</span></div>
-        <div class="loading-coin"><img src="feyorra.png" alt="FEYORRA"><span>FEYORRA</span></div>
-        <div class="loading-coin"><img src="digibyte.png" alt="DGB"><span>DGB</span></div>
+    <div class="loading-progress-bar">
+      <div class="loading-progress-fill" id="loading-progress"></div>
     </div>
-    
-    <div class="loading-progress">
-        <div class="loading-progress-fill"></div>
+    <div id="loading-cta">
+      <button class="btn-glow" id="btn-go-faucet">🚀 Go to Faucet</button>
+      <p class="loading-hint">Tap to start earning free crypto</p>
     </div>
-    
-    <div class="loading-status" id="loading-status">Initializing...</div>
-    <button id="goto-faucet-btn" onclick="enterApp()">ENTER FAUCET</button>
+  </div>
 </div>
 
-<div id="app">
-    <div class="header">
-        <div class="header-left">
-            <div class="header-logo">
-                <img src="coinix.png" alt="COINIX" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%23FCD34D%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2230%22 font-weight=%22bold%22>C</text></svg>'">
-            </div>
-            <div class="header-title">COINIX</div>
-        </div>
-        <div class="header-nav">
-            <button class="nav-btn active" onclick="showPage('home')">Home</button>
-            <button class="nav-btn" onclick="showPage('faucet')">Faucet</button>
-            <button class="nav-btn" onclick="showPage('swap')">Swap</button>
-            <button class="nav-btn" onclick="showPage('withdraw')">Withdraw</button>
-            <button class="nav-btn" onclick="showPage('referral')">Refs</button>
-            <button class="nav-btn" onclick="showPage('history')">History</button>
-            <button class="nav-btn" onclick="showPage('notifications')">Notifs</button>
-            <button class="nav-btn" id="admin-nav-btn" onclick="showPage('admin')" style="display:none;">Admin</button>
-        </div>
-    </div>
-
-    <div class="page active" id="page-home">
-        <!-- Adbits Banner Top -->
-        <div class="ad-container" id="adbits-banner">
-            <span class="ad-label">Ad</span>
-            <iframe id="ADBits-online" src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:728px; height:90px; border:0px; padding:0; overflow:hidden" allowtransparency="true"></iframe>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">T</div>
-                <div class="stat-value" id="stat-total-claims">0</div>
-                <div class="stat-label">Total Claims</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">D</div>
-                <div class="stat-value" id="stat-today-claims">0</div>
-                <div class="stat-label">Today</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">R</div>
-                <div class="stat-value" id="stat-referrals">0</div>
-                <div class="stat-label">Referrals</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">M</div>
-                <div class="stat-value" id="stat-milestone">25</div>
-                <div class="stat-label">Next Milestone</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Your Balances</div>
-                    <div class="card-subtitle">Real-time coin balances with live prices</div>
-                </div>
-            </div>
-            <div class="coin-grid" id="coin-balances"></div>
-        </div>
-
-        <!-- DGB Wire Mining -->
-        <div class="dgb-wire-container">
-            <div class="dgb-wire" dgb-type="2" dgb-userid="155"></div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Quick Actions</div>
-                    <div class="card-subtitle">Fast access to main features</div>
-                </div>
-            </div>
-            <div class="quick-actions">
-                <div class="qa-btn" onclick="showPage('faucet')">
-                    <span class="qa-icon">F</span>
-                    <span class="qa-label">Faucet</span>
-                </div>
-                <div class="qa-btn" onclick="showPage('swap')">
-                    <span class="qa-icon">S</span>
-                    <span class="qa-label">Swap</span>
-                </div>
-                <div class="qa-btn" onclick="showPage('withdraw')">
-                    <span class="qa-icon">W</span>
-                    <span class="qa-label">Withdraw</span>
-                </div>
-                <div class="qa-btn" onclick="showPage('referral')">
-                    <span class="qa-icon">R</span>
-                    <span class="qa-label">Referrals</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="page" id="page-faucet">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Multi-Coin Faucet</div>
-                    <div class="card-subtitle">Claim free coins every 10 seconds - Daily limit: 100 per coin</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Select Coin</label>
-                <select class="form-select" id="faucet-coin-select" onchange="loadCaptcha()">
-                    <option value="doge">DOGE - Dogecoin</option>
-                    <option value="pepe">PEPE - Pepe Coin</option>
-                    <option value="pol">POL - Polygon</option>
-                    <option value="feyorra">FEYORRA - Feyorra</option>
-                    <option value="dgb">DGB - DigiByte</option>
-                </select>
-            </div>
-
-            <div class="captcha-box">
-                <div class="captcha-question" id="captcha-question">Loading...</div>
-                <input type="number" class="captcha-input" id="captcha-answer" placeholder="?">
-                <div class="captcha-hint">Solve the math problem to claim!</div>
-                
-                <button class="btn btn-primary btn-block btn-lg" onclick="claimCoin()" style="margin-top: 20px;">
-                    CLAIM NOW
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="page" id="page-swap">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Swap Coins to CNX</div>
-                    <div class="card-subtitle">Convert your faucet earnings to CNX balance</div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Select Coin</label>
-                <select class="form-select" id="swap-coin-select">
-                    <option value="doge">DOGE - Dogecoin</option>
-                    <option value="pepe">PEPE - Pepe Coin</option>
-                    <option value="pol">POL - Polygon</option>
-                    <option value="feyorra">FEYORRA - Feyorra</option>
-                    <option value="dgb">DGB - DigiByte</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Amount</label>
-                <input type="number" class="form-input" id="swap-amount" placeholder="Enter amount" step="any">
-            </div>
-            <button class="btn btn-primary btn-block btn-lg" onclick="doSwap()">Swap to CNX</button>
-        </div>
-    </div>
-
-    <div class="page" id="page-withdraw">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Withdraw Funds</div>
-                    <div class="card-subtitle">Withdraw your coins to FaucetPay</div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Select Coin</label>
-                <select class="form-select" id="withdraw-coin-select">
-                    <option value="doge">DOGE - Dogecoin</option>
-                    <option value="pepe">PEPE - Pepe Coin</option>
-                    <option value="pol">POL - Polygon</option>
-                    <option value="feyorra">FEYORRA - Feyorra</option>
-                    <option value="dgb">DGB - DigiByte</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">FaucetPay Email</label>
-                <input type="email" class="form-input" id="withdraw-email" placeholder="your@email.com">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Amount</label>
-                <input type="number" class="form-input" id="withdraw-amount" placeholder="Enter amount" step="any">
-            </div>
-            <button class="btn btn-success btn-block btn-lg" onclick="doWithdraw()">Request Withdrawal</button>
-        </div>
-    </div>
-
-    <div class="page" id="page-referral">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Referral Program</div>
-                    <div class="card-subtitle">Earn 25% commission from your referrals</div>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">REF</div>
-                    <div class="stat-value" id="ref-count">0</div>
-                    <div class="stat-label">Referrals</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">EAR</div>
-                    <div class="stat-value" id="ref-earnings">0</div>
-                    <div class="stat-label">Earnings (CNX)</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">BAL</div>
-                    <div class="stat-value" id="ref-balance">0</div>
-                    <div class="stat-label">Available (CNX)</div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Your Referral Link</label>
-                <div class="ref-link-box">
-                    <div class="ref-link" id="ref-link">Loading...</div>
-                    <button class="btn btn-sm btn-secondary" onclick="copyRefLink()">Copy</button>
-                </div>
-            </div>
-            <button class="btn btn-primary btn-block" onclick="collectRefBonus()">Collect Referral Balance</button>
-        </div>
-    </div>
-
-    <div class="page" id="page-history">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Transaction History</div>
-                    <div class="card-subtitle">Your recent claims, swaps, and withdrawals</div>
-                </div>
-            </div>
-            <div class="tx-list" id="tx-list">
-                <div class="empty-state">
-                    <div class="icon">HST</div>
-                    <div class="text">No transactions yet</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="page" id="page-notifications">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Notifications</div>
-                    <div class="card-subtitle">System alerts and rewards</div>
-                </div>
-                <button class="btn btn-sm btn-secondary" onclick="markNotifsRead()">Mark all read</button>
-            </div>
-            <div class="tx-list" id="notif-list">
-                <div class="empty-state">
-                    <div class="icon">NTF</div>
-                    <div class="text">No notifications</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="page" id="page-admin">
-        <div class="card">
-            <div class="card-header">
-                <div>
-                    <div class="card-title">Admin Dashboard</div>
-                    <div class="card-subtitle">System management and analytics</div>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">USR</div>
-                    <div class="stat-value" id="admin-users">0</div>
-                    <div class="stat-label">Total Users</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">CLM</div>
-                    <div class="stat-value" id="admin-claims">0</div>
-                    <div class="stat-label">Total Claims</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">WDR</div>
-                    <div class="stat-value" id="admin-withdrawals">0</div>
-                    <div class="stat-label">Withdrawals</div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Broadcast Message</label>
-                <textarea class="form-input" id="admin-broadcast-msg" rows="3" placeholder="Message to all users..."></textarea>
-            </div>
-            <button class="btn btn-primary btn-block" onclick="adminBroadcast()">Send Broadcast</button>
-        </div>
-    </div>
-    
-</div>
-
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Popads Script (Sayfa sonunda) -->
-<script>
-// Popads entegrasyonu için buraya kod gelecek
-// Örnek:
-// var popads_network_id = "YOUR_POPADS_ID";
-// (function() { var p = document.createElement('script'); p.type = 'text/javascript'; p.async = true;
-// p.src = ('https:' == document.location.protocol ? 'https:' : 'http:') + '//cdn.popads.net/pop.js';
-// var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(p, s); })();
-</script>
+<!-- App -->
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <img src="./coinix.png" alt="Coinix" class="header-logo" onerror="this.style.display='none'">
+      <span class="header-title">COINIX</span>
+    </div>
+    <div class="header-balance">
+      <div class="balance-chip"><span class="coin-icon"></span><span id="header-doge">0</span></div>
+      <div class="balance-chip"><span class="coin-icon">🐸</span><span id="header-pepe">0</span></div>
+    </div>
+  </div>
 
-<!-- RichAds Initialization -->
-<script>
-window.TelegramAdsController = new TelegramAdsController();
-window.TelegramAdsController.initialize({
-    pubId: "988708",
-    appId: "7950",
-});
-</script>
+  <!-- Dashboard Page -->
+  <div class="page active" id="page-dashboard">
+    <div class="welcome-card">
+      <div class="welcome-title" id="welcome-title">Welcome back!</div>
+      <div class="welcome-subtitle">Start earning crypto today</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-claims">0</div>
+        <div class="stat-label">Today Claims</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-referrals">0</div>
+        <div class="stat-label">Referrals</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-milestone">25</div>
+        <div class="stat-label">Next Milestone</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-earned">$0</div>
+        <div class="stat-label">Total Earned</div>
+      </div>
+    </div>
+
+    <!-- Ad: ADBits -->
+    <div class="ad-container ad-728x90">
+      <span class="ad-label">Sponsored</span>
+      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+    </div>
+
+    <!-- Milestone Card -->
+    <div class="milestone-card">
+      <div class="milestone-title">🏆 Next Milestone</div>
+      <div class="milestone-subtitle" id="milestone-text">25 claims = 0.01 DOGE bonus</div>
+      <div class="milestone-progress">
+        <div class="milestone-progress-fill" id="milestone-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-title">⚡ Quick Actions</div>
+      <div class="quick-actions">
+        <div class="quick-action" onclick="showPage('faucet')">
+          <div class="quick-action-icon">🚰</div>
+          <div class="quick-action-label">Faucet</div>
+        </div>
+        <div class="quick-action" onclick="showPage('earn')">
+          <div class="quick-action-icon">💰</div>
+          <div class="quick-action-label">Earn</div>
+        </div>
+        <div class="quick-action" onclick="showPage('withdraw')">
+          <div class="quick-action-icon"></div>
+          <div class="quick-action-label">Withdraw</div>
+        </div>
+        <div class="quick-action" onclick="showPage('referral')">
+          <div class="quick-action-icon">👥</div>
+          <div class="quick-action-label">Refer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ad: DGB Mining -->
+    <div class="dgb-wire" dgb-type="2" dgb-userid="155"></div>
+    <script src="https://dgbmining.pro/ds.js?v=2"></script>
+
+    <!-- Live Payouts -->
+    <div class="payouts-ticker">
+      <div class="payouts-title">🔴 Live Payouts</div>
+      <div class="payouts-list" id="live-payouts">
+        <div style="text-align:center;color:var(--text-secondary);padding:20px;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Promo Code -->
+    <div class="card">
+      <div class="card-title">🎁 Promo Code</div>
+      <div class="input-group">
+        <input type="text" id="promo-code-input" placeholder="Enter code" class="input-field">
+        <select id="promo-coin-select" class="input-field" style="max-width:120px;">
+          <option value="doge">DOGE</option>
+          <option value="pepe">PEPE</option>
+          <option value="pol">POL</option>
+          <option value="feyorra">FEYORRA</option>
+          <option value="dgb">DGB</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="redeemPromo()">Redeem Code</button>
+    </div>
+  </div>
+
+  <!-- Faucet Page -->
+  <div class="page" id="page-faucet">
+    <div class="card" style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">We Support Coins</div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="font-size:32px;">🐕</div><div style="font-size:11px;font-weight:700;">DOGE</div></div>
+        <div style="text-align:center;"><div style="font-size:32px;">🐸</div><div style="font-size:11px;font-weight:700;">PEPE</div></div>
+        <div style="text-align:center;"><div style="font-size:32px;"></div><div style="font-size:11px;font-weight:700;">POL</div></div>
+        <div style="text-align:center;"><div style="font-size:32px;">💎</div><div style="font-size:11px;font-weight:700;">FEYORRA</div></div>
+        <div style="text-align:center;"><div style="font-size:32px;">⚡</div><div style="font-size:11px;font-weight:700;">DGB</div></div>
+      </div>
+    </div>
+
+    <!-- Ad: 300x250 -->
+    <div class="ad-container ad-300x250">
+      <span class="ad-label">Sponsored</span>
+      <div style="color:var(--text-secondary);font-size:13px;">Ad Space 300x250</div>
+    </div>
+
+    <!-- Coin Cards -->
+    <div id="faucet-coins"></div>
+
+    <!-- Ad: ADBits -->
+    <div class="ad-container ad-728x90">
+      <span class="ad-label">Sponsored</span>
+      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+    </div>
+  </div>
+
+  <!-- Earn Page -->
+  <div class="page" id="page-earn">
+    <div class="card">
+      <div class="card-title">💰 Earn Zone</div>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Complete tasks and earn crypto instantly</p>
+      <div style="display:grid;gap:12px;">
+        <button class="btn btn-primary" onclick="openOfferwall()"> PTC Ads <span style="opacity:0.7;font-size:12px;">+20% bonus</span></button>
+        <button class="btn btn-secondary" onclick="openShortlinks()">🔗 Shortlinks <span style="opacity:0.7;font-size:12px;">+20% bonus</span></button>
+        <button class="btn btn-secondary" onclick="openGames()">🎮 Games <span style="opacity:0.7;font-size:12px;">+20% bonus</span></button>
+      </div>
+    </div>
+
+    <!-- Ad -->
+    <div class="ad-container ad-728x90">
+      <span class="ad-label">Sponsored</span>
+      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+    </div>
+  </div>
+
+  <!-- Withdraw Page -->
+  <div class="page" id="page-withdraw">
+    <div class="card" style="text-align:center;margin-bottom:20px;">
+      <div class="card-title" style="justify-content:center;">💸 Withdraw Crypto</div>
+      <p style="color:var(--text-secondary);font-size:13px;">Send to your FaucetPay email. Min: ~$0.03 USD</p>
+    </div>
+
+    <!-- Ad -->
+    <div class="ad-container ad-300x250">
+      <span class="ad-label">Sponsored</span>
+      <div style="color:var(--text-secondary);font-size:13px;">Ad Space 300x250</div>
+    </div>
+
+    <div id="withdraw-coins"></div>
+
+    <!-- Ad: DGB Mining -->
+    <div class="dgb-wire" dgb-type="2" dgb-userid="155"></div>
+    <script src="https://dgbmining.pro/ds.js?v=2"></script>
+
+    <!-- Withdrawal History -->
+    <div class="card">
+      <div class="card-title"> Withdrawal History</div>
+      <div id="withdraw-history">
+        <div style="text-align:center;color:var(--text-secondary);padding:20px;">No withdrawals yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Page -->
+  <div class="page" id="page-referral">
+    <div class="card">
+      <div class="card-title">👥 Referrals</div>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Earn <strong style="color:var(--success);">+0.01 DOGE</strong> per signup + <strong style="color:var(--success);">20% lifetime</strong> commission</p>
+      <div class="referral-link-box">
+        <span class="referral-link" id="referral-link">Loading...</span>
+        <button class="copy-btn" onclick="copyReferral()">Copy</button>
+      </div>
+      <div class="stats-grid" style="margin-top:16px;">
+        <div class="stat-card">
+          <div class="stat-value" id="ref-count">0</div>
+          <div class="stat-label">Total Referrals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="ref-earnings">0</div>
+          <div class="stat-label">DOGE Earned</div>
+        </div>
+      </div>
+      <button class="btn btn-success" onclick="collectReferral()" style="margin-top:12px;">Collect Referral Earnings</button>
+    </div>
+
+    <!-- Ad -->
+    <div class="ad-container ad-728x90">
+      <span class="ad-label">Sponsored</span>
+      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your Referrals (<span id="ref-list-count">0</span>)</div>
+      <div id="referral-list">
+        <div style="text-align:center;color:var(--text-secondary);padding:20px;">No referrals yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Page -->
+  <div class="page" id="page-history">
+    <div class="card">
+      <div class="card-title"> Transaction History</div>
+      <div id="transaction-history">
+        <div style="text-align:center;color:var(--text-secondary);padding:20px;">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="showPage('faucet')">
+      <span class="nav-icon">🚰</span>
+      <span>Faucet</span>
+    </button>
+    <button class="nav-item" onclick="showPage('earn')">
+      <span class="nav-icon">💰</span>
+      <span>Earn</span>
+    </button>
+    <button class="nav-item" onclick="showPage('withdraw')">
+      <span class="nav-icon"></span>
+      <span>Withdraw</span>
+    </button>
+    <button class="nav-item" onclick="showPage('referral')">
+      <span class="nav-icon">👥</span>
+      <span>Refs</span>
+    </button>
+  </div>
+</div>
 
 <script>
-const API_BASE = window.location.origin;
+// ============================================
+// CONFIG
+// ============================================
+const API_URL = window.location.origin;
 const COINS = {
-    doge: { symbol: 'DOGE', name: 'Dogecoin', claimAmount: 0.004, decimals: 4, img: 'dogecoin.png', priceId: 'dogecoin' },
-    pepe: { symbol: 'PEPE', name: 'Pepe Coin', claimAmount: 1000, decimals: 0, img: 'pepecoin.png', priceId: 'pepe' },
-    pol:  { symbol: 'POL',  name: 'Polygon',   claimAmount: 0.05,  decimals: 2, img: 'pol.png', priceId: 'polygon-ecosystem-token' },
-    feyorra: { symbol: 'FEYORRA', name: 'Feyorra', claimAmount: 1, decimals: 0, img: 'feyorra.png', priceId: 'FEYORRA', fixedPrice: 0.001 },
-    dgb:  { symbol: 'DGB',  name: 'DigiByte',  claimAmount: 1.5,   decimals: 2, img: 'digibyte.png', priceId: 'digibyte' }
+  doge:    { symbol: 'DOGE',    name: 'Dogecoin',  claimAmount: 0.004,  decimals: 4, color: '#c2a633', icon: '🐕' },
+  pepe:    { symbol: 'PEPE',    name: 'Pepe',      claimAmount: 1000,   decimals: 0, color: '#4caf50', icon: '🐸' },
+  pol:     { symbol: 'POL',     name: 'Polygon',   claimAmount: 0.05,   decimals: 2, color: '#8247e5', icon: '⬡' },
+  feyorra: { symbol: 'FEYORRA', name: 'Feyorra',   claimAmount: 1,      decimals: 0, color: '#00d4ff', icon: '💎' },
+  dgb:     { symbol: 'DGB',     name: 'DigiByte',  claimAmount: 1.5,    decimals: 2, color: '#0066ff', icon: '⚡' }
 };
+const COIN_ORDER = ['doge', 'pepe', 'pol', 'feyorra', 'dgb'];
 
+// ============================================
+// STATE
+// ============================================
 let token = localStorage.getItem('coinix_token');
 let userData = null;
-let priceCache = {};
-let currentCaptchaCoin = 'doge';
+let prices = {};
+let currentCaptcha = null;
+let claimCooldowns = {};
 
-function generateUUID() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-    }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
+// ============================================
+// TELEGRAM INIT
+// ============================================
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+  if (tg.colorScheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  tg.setHeaderColor?.('#f59e0b');
+  tg.setBackgroundColor?.('#f8fafc');
 }
 
-async function apiGet(url) {
-    try {
-        const headers = {};
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        const res = await fetch(url, { headers });
-        return await res.json();
-    } catch (e) {
-        console.error('apiGet error', url, e);
-        return { error: 'Network error' };
-    }
-}
+// ============================================
+// LOADING
+// ============================================
+window.addEventListener('load', () => {
+  const progress = document.getElementById('loading-progress');
+  setTimeout(() => { progress.style.width = '100%'; }, 100);
+  setTimeout(() => {
+    document.querySelector('.loading-brand').style.opacity = '0';
+    document.querySelector('.loading-brand').style.transition = 'opacity 0.5s';
+    setTimeout(() => {
+      document.querySelector('.loading-brand').style.display = 'none';
+      document.getElementById('loading-cta').classList.add('show');
+    }, 500);
+  }, 2800);
 
-async function apiPost(url, data) {
-    try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(data)
-        });
-        return await res.json();
-    } catch (e) {
-        console.error('apiPost error', url, e);
-        return { error: 'Network error' };
-    }
-}
+  document.getElementById('btn-go-faucet').addEventListener('click', () => {
+    document.getElementById('loading-screen').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('app').classList.add('show');
+      initApp();
+    }, 500);
+  });
+});
 
-async function init() {
-    try {
-        updateLoadingStatus('Connecting to server...');
-        const health = await apiGet('/api/health');
-        if (!health.ok) throw new Error('Server not ready');
-        
-        updateLoadingStatus('Loading live prices...');
-        await loadPrices();
-        
-        updateLoadingStatus('Authenticating...');
-        await authenticate();
-        
-        updateLoadingStatus('Loading your data...');
-        await loadUserData();
-        
-        updateLoadingStatus('Ready!');
-    } catch (err) {
-        updateLoadingStatus('Error: ' + err.message + '. Click button to continue.');
-        console.error(err);
-    } finally {
-        // BEYAZ EKRAN SORUNUNU KESIN OLARAK COZER: Hata olsa bile 1.5 saniye sonra butonu gosterir
-        setTimeout(() => {
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('goto-faucet-btn').style.display = 'block';
-        }, 1500);
-    }
-}
-
-function updateLoadingStatus(msg) {
-    document.getElementById('loading-status').textContent = msg;
-}
-
-function enterApp() {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('app').classList.add('visible');
-    showPage('faucet'); // BUTONA BASINCA DOGRUDAN FAUCET DASHBOARD'A YONLENDIRIR
-}
-
-async function loadPrices() {
-    const res = await apiGet('/api/prices');
-    if (res && !res.error) {
-        priceCache = res;
-    }
-}
-
-async function authenticate() {
-    const tg = window.Telegram?.WebApp;
-    const initData = tg?.initData || '';
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref') || urlParams.get('startapp') || localStorage.getItem('coinix_ref');
-    const device_fp = localStorage.getItem('coinix_fp') || generateUUID();
-    localStorage.setItem('coinix_fp', device_fp);
-    
-    if (ref) localStorage.setItem('coinix_ref', ref);
-    
-    const res = await apiPost('/api/auth', {
-        initData: initData,
-        ref: ref,
-        device_fp: device_fp,
-        nonce: generateUUID(),
-        timestamp: Date.now()
-    });
-    
-    if (res.success) {
-        token = res.token;
-        localStorage.setItem('coinix_token', token);
-        if (res.is_admin) {
-            document.getElementById('admin-nav-btn').style.display = 'flex';
-        }
-    } else {
-        throw new Error(res.error || 'Authentication failed');
-    }
-}
-
-async function loadUserData() {
-    const res = await apiGet('/api/me');
-    if (res && !res.error) {
-        userData = res;
-    } else {
-        throw new Error(res?.error || 'Failed to load user data');
-    }
-}
-
-function renderAll() {
-    if (userData) {
-        renderBalances();
-        renderStats();
-    }
-    loadCaptcha();
-}
-
-function renderStats() {
-    if (!userData) return;
-    document.getElementById('stat-total-claims').textContent = userData.total_claims || 0;
-    document.getElementById('stat-today-claims').textContent = 0; 
-    document.getElementById('stat-referrals').textContent = userData.referrals || 0;
-    
-    let base = 25;
-    while (base <= (userData.total_claims || 0)) {
-        base *= 10;
-    }
-    document.getElementById('stat-milestone').textContent = base;
-}
-
-function renderBalances() {
-    const container = document.getElementById('coin-balances');
-    if (!container || !userData) return;
-    container.innerHTML = '';
-    
-    for (const [id, coin] of Object.entries(COINS)) {
-        const balance = userData.balances?.[id] || 0;
-        const price = priceCache[coin.priceId || coin.symbol] || coin.fixedPrice || 0;
-        const usdValue = balance * price;
-        
-        const card = document.createElement('div');
-        card.className = 'coin-card';
-        card.innerHTML = `
-            <div class="coin-icon"><img src="${coin.img}" alt="${coin.symbol}" onerror="this.style.display='none'"></div>
-            <div class="coin-name">${coin.name}</div>
-            <div class="coin-symbol">${coin.symbol}</div>
-            <div class="coin-balance">${balance.toFixed(coin.decimals)}</div>
-            <div class="coin-usd">$${usdValue.toFixed(4)}</div>
-            <div class="coin-price">$${price > 0 ? price.toFixed(price < 0.01 ? 6 : 4) : '0.00'}</div>
-        `;
-        container.appendChild(card);
-    }
-}
-
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    
-    const page = document.getElementById('page-' + pageId);
-    if (page) page.classList.add('active');
-    
-    const navBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick')?.includes(`'${pageId}'`));
-    if (navBtn) navBtn.classList.add('active');
-    
-    if (pageId === 'faucet') loadCaptcha();
-    if (pageId === 'history') renderTransactions();
-    if (pageId === 'referral') renderReferral();
-    if (pageId === 'notifications') renderNotifications();
-    if (pageId === 'admin') renderAdmin();
-}
-
-async function loadCaptcha() {
-    const select = document.getElementById('faucet-coin-select');
-    if (!select) return;
-    currentCaptchaCoin = select.value;
-    const qEl = document.getElementById('captcha-question');
-    const aEl = document.getElementById('captcha-answer');
-    if (qEl) qEl.textContent = 'Loading...';
-    if (aEl) aEl.value = '';
-    
-    try {
-        const res = await apiGet(`/api/captcha/${currentCaptchaCoin}`);
-        if (res.success && qEl) {
-            qEl.textContent = res.question;
-        } else if (qEl) {
-            qEl.textContent = 'Error';
-        }
-    } catch (e) {
-        if (qEl) qEl.textContent = 'Error';
-    }
-}
-
-async function claimCoin() {
-    const aEl = document.getElementById('captcha-answer');
-    const answer = aEl?.value;
-    if (!answer) {
-        showToast('Please solve the captcha', 'error');
-        return;
-    }
-    
-    const btn = document.querySelector('#page-faucet .btn-primary');
-    if (btn) btn.disabled = true;
-    
-    try {
-        const res = await apiPost(`/api/claim/${currentCaptchaCoin}`, {
-            captchaAnswer: answer,
-            nonce: generateUUID(),
-            timestamp: Date.now()
-        });
-        
-        if (res.success) {
-            showToast(`Claimed ${res.amount} ${COINS[currentCaptchaCoin].symbol}!`, 'success');
-            if (res.milestoneReward > 0) {
-                showToast(`Milestone Bonus: ${res.milestoneReward} CNX!`, 'success');
-            }
-            await loadUserData();
-            renderAll();
-            loadCaptcha();
-        } else {
-            if (res.error?.includes('Cooldown')) {
-                showToast(`Cooldown: ${Math.ceil(res.wait / 1000)}s`, 'error');
-            } else {
-                showToast(res.error || 'Claim failed', 'error');
-            }
-            loadCaptcha();
-        }
-    } catch (e) {
-        showToast('Network error', 'error');
-        loadCaptcha();
-    } finally {
-        if (btn) btn.disabled = false;
-    }
-}
-
-function renderTransactions() {
-    const list = document.getElementById('tx-list');
-    if (!list) return;
-    list.innerHTML = '<div class="empty-state"><div class="text">Loading...</div></div>';
-    apiGet('/api/transactions').then(res => {
-        if (res.list && res.list.length > 0) {
-            list.innerHTML = res.list.map(tx => `
-                <div class="tx-item">
-                    <div class="tx-left">
-                        <div class="tx-icon">TX</div>
-                        <div>
-                            <div class="tx-type">${tx.type.replace('_', ' ').toUpperCase()}</div>
-                            <div class="tx-meta">${new Date(tx.timestamp).toLocaleString()}</div>
-                        </div>
-                    </div>
-                    <div class="tx-amount ${tx.type.includes('withdraw') || tx.type.includes('swap') ? 'negative' : 'positive'}">
-                        ${tx.type.includes('withdraw') || tx.type.includes('swap') ? '-' : '+'}${tx.amount} ${tx.currency}
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            list.innerHTML = '<div class="empty-state"><div class="icon">HST</div><div class="text">No transactions yet</div></div>';
-        }
-    }).catch(() => {
-        list.innerHTML = '<div class="empty-state"><div class="text">Failed to load</div></div>';
-    });
-}
-
-function renderReferral() {
-    apiGet('/api/referral').then(res => {
-        if (res.link) {
-            document.getElementById('ref-link').textContent = res.link;
-            document.getElementById('ref-count').textContent = res.referrals || 0;
-            document.getElementById('ref-earnings').textContent = (res.earnings || 0).toFixed(2);
-            document.getElementById('ref-balance').textContent = (res.referral_balance || 0).toFixed(2);
-        }
-    });
-}
-
-function copyRefLink() {
-    const link = document.getElementById('ref-link').textContent;
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(link);
-        showToast('Link copied!', 'success');
-    }
-}
-
-function collectRefBonus() {
-    apiPost('/api/referral/collect', {}).then(res => {
-        if (res.success) {
-            showToast(`Collected ${res.amount} CNX!`, 'success');
-            loadUserData().then(() => {
-                renderAll();
-                renderReferral();
-            });
-        } else {
-            showToast(res.error || 'Failed', 'error');
-        }
-    });
-}
-
-function doWithdraw() {
-    const coin = document.getElementById('withdraw-coin-select').value;
-    const email = document.getElementById('withdraw-email').value;
-    const amount = parseFloat(document.getElementById('withdraw-amount').value);
-    
-    if (!email || !amount) {
-        showToast('Please fill all fields', 'error');
-        return;
-    }
-    
-    apiPost('/api/withdraw', { coin, faucetpay_email: email, amount }).then(res => {
-        if (res.success) {
-            showToast('Withdrawal requested!', 'success');
-            document.getElementById('withdraw-email').value = '';
-            document.getElementById('withdraw-amount').value = '';
-            loadUserData().then(renderAll);
-        } else {
-            showToast(res.error || 'Failed', 'error');
-        }
-    });
-}
-
-function doSwap() {
-    const coin = document.getElementById('swap-coin-select').value;
-    const amount = parseFloat(document.getElementById('swap-amount').value);
-    
-    if (!amount) {
-        showToast('Enter an amount', 'error');
-        return;
-    }
-    
-    apiPost('/api/swap-coin', { coin, amount }).then(res => {
-        if (res.success) {
-            showToast(`Swapped to ${res.resultAmount} CNX!`, 'success');
-            document.getElementById('swap-amount').value = '';
-            loadUserData().then(renderAll);
-        } else {
-            showToast(res.error || 'Failed', 'error');
-        }
-    });
-}
-
-function renderNotifications() {
-    const list = document.getElementById('notif-list');
-    if (!list) return;
-    apiGet('/api/notifications').then(res => {
-        if (res.list && res.list.length > 0) {
-            list.innerHTML = res.list.map(n => `
-                <div class="tx-item">
-                    <div class="tx-left">
-                        <div class="tx-icon">N</div>
-                        <div>
-                            <div class="tx-type">${n.title || 'Notification'}</div>
-                            <div class="tx-meta">${n.message}</div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            list.innerHTML = '<div class="empty-state"><div class="icon">NTF</div><div class="text">No notifications</div></div>';
-        }
-    });
-}
-
-function markNotifsRead() {
-    apiPost('/api/notifications/read', {}).then(() => {
-        showToast('Marked as read', 'success');
-    });
-}
-
-function renderAdmin() {
-    if (!userData?.is_admin) {
-        document.getElementById('page-admin').innerHTML = '<div class="empty-state"><div class="text">Access Denied</div></div>';
-        return;
-    }
-    apiGet('/api/admin/stats').then(res => {
-        if (res.totalUsers !== undefined) {
-            document.getElementById('admin-users').textContent = res.totalUsers || 0;
-            document.getElementById('admin-claims').textContent = res.totalClaims || 0;
-            document.getElementById('admin-withdrawals').textContent = res.totalWithdrawals || 0;
-        }
-    });
-}
-
-function adminBroadcast() {
-    const msg = document.getElementById('admin-broadcast-msg').value;
-    if (!msg) return showToast('Enter a message', 'error');
-    apiPost('/api/admin/broadcast', { message: msg }).then(res => {
-        if (res.success) {
-            showToast('Broadcast sent!', 'success');
-            document.getElementById('admin-broadcast-msg').value = '';
-        } else {
-            showToast('Failed', 'error');
-        }
-    });
+// ============================================
+// API HELPERS
+// ============================================
+async function api(endpoint, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+  return await res.json();
 }
 
 function showToast(msg, type = 'success') {
-    const toast = document.getElementById('toast');
-    if (!toast) return;
-    toast.className = 'toast ' + type;
-    toast.textContent = msg;
-    toast.classList.add('show');
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => { toast.className = 'toast'; }, 3000);
 }
 
-if (window.Telegram?.WebApp) {
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
-    window.Telegram.WebApp.setHeaderColor('#FFFFFF');
+// ============================================
+// AUTH
+// ============================================
+async function authenticate() {
+  if (!tg?.initData) {
+    showToast('Open in Telegram', 'error');
+    return false;
+  }
+  const res = await api('/api/auth', {
+    method: 'POST',
+    body: JSON.stringify({ initData: tg.initData })
+  });
+  if (res.error) {
+    showToast(res.error, 'error');
+    return false;
+  }
+  token = res.token;
+  localStorage.setItem('coinix_token', token);
+  return true;
 }
 
-init();
+// ============================================
+// INIT
+// ============================================
+async function initApp() {
+  if (!token) {
+    const ok = await authenticate();
+    if (!ok) return;
+  }
+  await Promise.all([loadUserData(), loadPrices(), loadLivePayouts()]);
+  renderFaucetCoins();
+  renderWithdrawCoins();
+  setInterval(loadPrices, 120000);
+  setInterval(loadLivePayouts, 30000);
+}
+
+async function loadUserData() {
+  const res = await api('/api/me');
+  if (res.error) { showToast(res.error, 'error'); return; }
+  userData = res;
+  updateDashboard();
+  updateHeader();
+}
+
+async function loadPrices() {
+  const res = await api('/api/prices');
+  if (res.prices) {
+    prices = res.prices;
+    renderFaucetCoins();
+    renderWithdrawCoins();
+  }
+}
+
+async function loadLivePayouts() {
+  const res = await api('/api/live-payouts');
+  const container = document.getElementById('live-payouts');
+  if (res.payouts && res.payouts.length > 0) {
+    container.innerHTML = res.payouts.map(p => `
+      <div class="payout-item">
+        <span class="payout-user">${p.username}</span>
+        <span class="payout-amount">${p.amount} ${p.coin}</span>
+        <span class="payout-time">${timeAgo(p.timestamp)}</span>
+      </div>
+    `).join('');
+  } else {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No payouts yet</div>';
+  }
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const seconds = Math.floor((Date.now() - ts) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
+  return `${Math.floor(seconds/86400)}d ago`;
+}
+
+// ============================================
+// DASHBOARD
+// ============================================
+function updateDashboard() {
+  if (!userData) return;
+  document.getElementById('welcome-title').textContent = `Welcome, ${userData.username || 'User'}!`;
+  document.getElementById('stat-claims').textContent = userData.daily_claims || 0;
+  document.getElementById('stat-referrals').textContent = userData.referrals || 0;
+  const nextMs = getNextMilestone(userData.total_claims || 0);
+  document.getElementById('stat-milestone').textContent = nextMs;
+  document.getElementById('stat-earned').textContent = `$${(userData.total_earned || 0).toFixed(2)}`;
+  // Milestone progress
+  const prevMs = nextMs / 10;
+  const progress = Math.min(100, ((userData.total_claims || 0) - prevMs) / (nextMs - prevMs) * 100);
+  document.getElementById('milestone-fill').style.width = `${progress}%`;
+  document.getElementById('milestone-text').textContent = `${nextMs} claims = ${nextMs >= 2500 ? 1 : nextMs >= 250 ? 0.1 : 0.01} DOGE bonus`;
+}
+
+function updateHeader() {
+  if (!userData) return;
+  document.getElementById('header-doge').textContent = (userData.balances?.doge || 0).toFixed(4);
+  document.getElementById('header-pepe').textContent = formatNumber(userData.balances?.pepe || 0);
+}
+
+function formatNumber(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n.toFixed(0);
+}
+
+function getNextMilestone(totalClaims) {
+  let base = 25;
+  while (base <= totalClaims) base *= 10;
+  return base;
+}
+
+// ============================================
+// PAGES
+// ============================================
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navMap = { dashboard: 0, faucet: 1, earn: 2, withdraw: 3, referral: 4 };
+  const navItems = document.querySelectorAll('.nav-item');
+  if (navItems[navMap[page]]) navItems[navMap[page]].classList.add('active');
+  if (page === 'withdraw') loadWithdrawHistory();
+  if (page === 'history') loadTransactionHistory();
+  if (page === 'referral') loadReferral();
+  if (page === 'faucet') loadCaptchaForAll();
+}
+
+// ============================================
+// FAUCET
+// ============================================
+function renderFaucetCoins() {
+  const container = document.getElementById('faucet-coins');
+  container.innerHTML = COIN_ORDER.map(coinKey => {
+    const coin = COINS[coinKey];
+    const balance = userData?.balances?.[coinKey] || 0;
+    const price = prices[coinKey]?.price || 0;
+    const usdValue = balance * price;
+    const dailyClaims = userData?.daily_claims || 0;
+    const dailyProgress = Math.min(100, (dailyClaims / 100) * 100);
+    const cooldown = claimCooldowns[coinKey] || 0;
+    const canClaim = cooldown <= 0;
+    return `
+      <div class="coin-card" style="--coin-color:${coin.color}">
+        <div class="coin-header">
+          <div class="coin-image" style="font-size:32px;display:flex;align-items:center;justify-content:center;">${coin.icon}</div>
+          <div class="coin-info">
+            <div class="coin-name">${coin.name}</div>
+            <div class="coin-price">1 ${coin.symbol} = $${price ? price.toFixed(coin.decimals + 2) : '0.00'}</div>
+          </div>
+        </div>
+        <div class="coin-balance">
+          <div class="coin-balance-value">${balance.toFixed(coin.decimals)} ${coin.symbol}</div>
+          <div class="coin-balance-usd">~ $${usdValue.toFixed(4)} USD</div>
+        </div>
+        <div class="daily-progress">
+          <div class="daily-progress-label">
+            <span>Daily Progress</span>
+            <span>${dailyClaims}/100</span>
+          </div>
+          <div class="daily-progress-bar">
+            <div class="daily-progress-fill" style="width:${dailyProgress}%"></div>
+          </div>
+        </div>
+        <div class="captcha-box" id="captcha-${coinKey}">
+          <div class="captcha-title"> Security Check</div>
+          <div class="captcha-instruction">Find the matching icon:</div>
+          <div class="captcha-icons" id="captcha-icons-${coinKey}">
+            <div style="color:var(--text-secondary);font-size:13px;">Loading captcha...</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="claim-btn-${coinKey}" onclick="claimCoin('${coinKey}')" ${!canClaim ? 'disabled' : ''}>
+          ${canClaim ? `CLAIM ${coin.symbol}` : `Wait ${Math.ceil(cooldown/1000)}s`}
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadCaptchaForAll() {
+  for (const coinKey of COIN_ORDER) {
+    await loadCaptcha(coinKey);
+  }
+}
+
+async function loadCaptcha(coinKey) {
+  const res = await api('/api/captcha');
+  if (res.success) {
+    currentCaptcha = res;
+    const container = document.getElementById(`captcha-icons-${coinKey}`);
+    if (container) {
+      container.innerHTML = res.icons.map((icon, i) => `
+        <div class="captcha-icon-btn" onclick="selectCaptcha('${coinKey}', '${icon}', this)">${icon}</div>
+      `).join('');
+    }
+  }
+}
+
+function selectCaptcha(coinKey, icon, el) {
+  const container = document.getElementById(`captcha-icons-${coinKey}`);
+  container.querySelectorAll('.captcha-icon-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  el.dataset.selected = icon;
+}
+
+async function claimCoin(coinKey) {
+  const btn = document.getElementById(`claim-btn-${coinKey}`);
+  const selected = document.querySelector(`#captcha-icons-${coinKey} .captcha-icon-btn.selected`);
+  if (!selected) {
+    showToast('Select the correct icon', 'error');
+    return;
+  }
+  const answer = selected.dataset.selected;
+  btn.disabled = true;
+  btn.textContent = 'Claiming...';
+  const res = await api('/api/claim', {
+    method: 'POST',
+    body: JSON.stringify({ coin: coinKey, captchaAnswer: answer, nonce: crypto.randomUUID(), timestamp: Date.now() })
+  });
+  if (res.error) {
+    showToast(res.error, 'error');
+    if (res.captchaRequired) await loadCaptcha(coinKey);
+    btn.disabled = false;
+    btn.textContent = `CLAIM ${COINS[coinKey].symbol}`;
+    return;
+  }
+  showToast(`+${res.amount} ${res.coin} claimed!${res.milestone ? '  Milestone!' : ''}`);
+  claimCooldowns[coinKey] = 180000;
+  startCooldown(coinKey);
+  await loadUserData();
+  await loadCaptcha(coinKey);
+}
+
+function startCooldown(coinKey) {
+  let remaining = 180000;
+  const interval = setInterval(() => {
+    remaining -= 1000;
+    claimCooldowns[coinKey] = remaining;
+    const btn = document.getElementById(`claim-btn-${coinKey}`);
+    if (btn) {
+      if (remaining <= 0) {
+        clearInterval(interval);
+        btn.disabled = false;
+        btn.textContent = `CLAIM ${COINS[coinKey].symbol}`;
+        claimCooldowns[coinKey] = 0;
+      } else {
+        btn.disabled = true;
+        btn.textContent = `Wait ${Math.ceil(remaining/1000)}s`;
+      }
+    }
+  }, 1000);
+}
+
+// ============================================
+// WITHDRAW
+// ============================================
+function renderWithdrawCoins() {
+  const container = document.getElementById('withdraw-coins');
+  container.innerHTML = COIN_ORDER.map(coinKey => {
+    const coin = COINS[coinKey];
+    const balance = userData?.balances?.[coinKey] || 0;
+    const price = prices[coinKey]?.price || 0;
+    const minWithdraw = prices[coinKey]?.minWithdraw || 0;
+    const enough = balance >= minWithdraw;
+    return `
+      <div class="withdraw-card">
+        <div class="withdraw-header">
+          <div class="withdraw-coin-img" style="font-size:24px;display:flex;align-items:center;justify-content:center;">${coin.icon}</div>
+          <div>
+            <div style="font-weight:800;">${coin.name}</div>
+            <div class="withdraw-balance">Balance: <strong>${balance.toFixed(coin.decimals)} ${coin.symbol}</strong></div>
+          </div>
+          <div class="min-withdraw ${enough ? 'enough' : 'not-enough'}">
+            ${enough ? '✓ Available' : '✗ Not enough'}
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
+          Min: ${minWithdraw.toFixed(coin.decimals)} ${coin.symbol} (~$0.03)
+        </div>
+        <input type="email" id="withdraw-email-${coinKey}" placeholder="FaucetPay Email" class="input-field">
+        <input type="number" id="withdraw-amount-${coinKey}" placeholder="Amount" class="input-field" step="0.0001">
+        <div class="amount-presets">
+          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.25)">25%</div>
+          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.5)">50%</div>
+          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.75)">75%</div>
+          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 1)">MAX</div>
+        </div>
+        <button class="btn btn-primary" onclick="doWithdraw('${coinKey}')">Withdraw ${coin.symbol}</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function setWithdrawAmount(coinKey, fraction) {
+  const balance = userData?.balances?.[coinKey] || 0;
+  document.getElementById(`withdraw-amount-${coinKey}`).value = (balance * fraction).toFixed(COINS[coinKey].decimals);
+}
+
+async function doWithdraw(coinKey) {
+  const email = document.getElementById(`withdraw-email-${coinKey}`).value;
+  const amount = parseFloat(document.getElementById(`withdraw-amount-${coinKey}`).value);
+  if (!email || !email.includes('@')) { showToast('Invalid email', 'error'); return; }
+  if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
+  const res = await api('/api/withdraw', {
+    method: 'POST',
+    body: JSON.stringify({ faucetpay_email: email, amount, coin: coinKey, nonce: crypto.randomUUID(), timestamp: Date.now() })
+  });
+  if (res.error) { showToast(res.error, 'error'); return; }
+  showToast('Withdrawal submitted!');
+  await loadUserData();
+  renderWithdrawCoins();
+  loadWithdrawHistory();
+}
+
+async function loadWithdrawHistory() {
+  const res = await api('/api/withdrawals');
+  const container = document.getElementById('withdraw-history');
+  if (res.length > 0) {
+    container.innerHTML = res.map(w => `
+      <div class="history-item">
+        <div class="history-type">
+          <div class="history-icon">💸</div>
+          <div>
+            <div class="history-desc">${w.amount} ${COINS[w.coin]?.symbol || w.coin}</div>
+            <div class="history-time">${timeAgo(w.timestamp)} • ${w.status}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No withdrawals yet</div>';
+  }
+}
+
+// ============================================
+// REFERRAL
+// ============================================
+async function loadReferral() {
+  const res = await api('/api/referral');
+  if (res.link) {
+    document.getElementById('referral-link').textContent = res.link;
+    document.getElementById('ref-count').textContent = res.referrals || 0;
+    document.getElementById('ref-earnings').textContent = (res.referral_balance?.doge || 0).toFixed(4);
+  }
+  const listRes = await api('/api/referral/list');
+  const listContainer = document.getElementById('referral-list');
+  document.getElementById('ref-list-count').textContent = listRes.count || 0;
+  if (listRes.list && listRes.list.length > 0) {
+    listContainer.innerHTML = listRes.list.map(r => `
+      <div class="history-item">
+        <div class="history-type">
+          <div class="history-icon">👤</div>
+          <div>
+            <div class="history-desc">${r.first_name || r.username || 'User'}</div>
+            <div class="history-time">Joined ${timeAgo(r.created_at)}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    listContainer.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No referrals yet</div>';
+  }
+}
+
+function copyReferral() {
+  const link = document.getElementById('referral-link').textContent;
+  navigator.clipboard.writeText(link).then(() => showToast('Link copied!'));
+}
+
+async function collectReferral() {
+  const res = await api('/api/referral/collect', { method: 'POST' });
+  if (res.error) { showToast(res.error, 'error'); return; }
+  showToast(`Collected ${res.amount} DOGE!`);
+  await loadUserData();
+  loadReferral();
+}
+
+// ============================================
+// PROMO
+// ============================================
+async function redeemPromo() {
+  const code = document.getElementById('promo-code-input').value;
+  const coin = document.getElementById('promo-coin-select').value;
+  if (!code) { showToast('Enter a code', 'error'); return; }
+  const res = await api('/api/promo/redeem', {
+    method: 'POST',
+    body: JSON.stringify({ code, targetCoin: coin })
+  });
+  if (res.error) { showToast(res.error, 'error'); return; }
+  showToast(`Redeemed! +${res.reward} ${res.coin}`);
+  document.getElementById('promo-code-input').value = '';
+  await loadUserData();
+}
+
+// ============================================
+// HISTORY
+// ============================================
+async function loadTransactionHistory() {
+  const res = await api('/api/transactions?limit=30');
+  const container = document.getElementById('transaction-history');
+  if (res.list && res.list.length > 0) {
+    container.innerHTML = res.list.map(t => {
+      const isPositive = ['faucet_claim', 'promo', 'referral', 'milestone', 'return_bonus', 'offerwall'].includes(t.type);
+      return `
+        <div class="history-item">
+          <div class="history-type">
+            <div class="history-icon">${getTxIcon(t.type)}</div>
+            <div>
+              <div class="history-desc">${t.description || t.type}</div>
+              <div class="history-time">${timeAgo(t.timestamp)}</div>
+            </div>
+          </div>
+          <div class="history-amount ${isPositive ? 'positive' : 'negative'}">
+            ${isPositive ? '+' : '-'}${t.amount} ${t.currency}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No transactions yet</div>';
+  }
+}
+
+function getTxIcon(type) {
+  const icons = { faucet_claim: '🚰', promo: '', referral: '👥', milestone: '🏆', withdraw: '', swap: '🔄', offerwall: '📺', return_bonus: '' };
+  return icons[type] || '💰';
+}
+
+// ============================================
+// OFFERWALL
+// ============================================
+async function openOfferwall() {
+  const res = await api('/api/offerwall/offerwall');
+  if (res.url) window.open(res.url, '_blank');
+}
+
+async function openShortlinks() {
+  const res = await api('/api/offerwall/shortlinks');
+  if (res.shortlinks && res.shortlinks.length > 0) {
+    window.open(res.shortlinks[0].url, '_blank');
+  } else {
+    showToast('No shortlinks available', 'error');
+  }
+}
+
+async function openGames() {
+  const res = await api('/api/offerwall/games');
+  if (res.url) window.open(res.url, '_blank');
+}
+
+// ============================================
+// ACTIVITY
+// ============================================
+async function updateActivity() {
+  await api('/api/activity', { method: 'POST' });
+}
+
+// Call activity update on load
+setTimeout(updateActivity, 2000);
 </script>
-
 </body>
 </html>
 
+
+
+              <script>
+                              require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const compression = require('compression');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const admin = require('firebase-admin');
+
+// ============================================
+// FIREBASE INIT
+// ============================================
+let serviceAccount = null;
+let firebaseInitialized = false;
+let db = null;
+let serverTimestamp = () => new Date();
+let increment = (n) => n;
+let FieldValue = null;
+let Timestamp = null;
+
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    console.log('[Firebase] Using FIREBASE_SERVICE_ACCOUNT_JSON');
+  } else if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+    serviceAccount = JSON.parse(decoded);
+    console.log('[Firebase] Using FIREBASE_SERVICE_ACCOUNT_BASE64');
+  }
+
+  if (serviceAccount) {
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    db = admin.firestore();
+    FieldValue = admin.firestore.FieldValue;
+    Timestamp = admin.firestore.Timestamp;
+    serverTimestamp = () => FieldValue.serverTimestamp();
+    increment = (n) => FieldValue.increment(n);
+    firebaseInitialized = true;
+    console.log('[Firebase] Initialized successfully');
+  } else {
+    console.warn('[Firebase] Running WITHOUT database');
+  }
+} catch (e) {
+  console.error('[Firebase] Init error:', e.message);
+  firebaseInitialized = false;
+  db = null;
+}
+
+// ============================================
+// LOGGER
+// ============================================
+const logger = {
+  info: (msg, meta = {}) => console.log(`[INFO] ${msg}`, meta),
+  error: (msg, meta = {}) => console.error(`[ERROR] ${msg}`, meta),
+  debug: (msg, meta = {}) => console.log(`[DEBUG] ${msg}`, meta),
+  warn: (msg, meta = {}) => console.warn(`[WARN] ${msg}`, meta)
+};
+
+// ============================================
+// COIN CONFIGURATION
+// ============================================
+const COINS = {
+  doge:    { symbol: 'DOGE',    name: 'Dogecoin',     claimAmount: 0.004,   priceId: 'dogecoin',                  decimals: 4, color: '#c2a633', svg: 'doge' },
+  pepe:    { symbol: 'PEPE',    name: 'Pepe',         claimAmount: 1000,    priceId: 'pepe',                      decimals: 0, color: '#4caf50', svg: 'pepe' },
+  pol:     { symbol: 'POL',     name: 'Polygon',      claimAmount: 0.05,    priceId: 'polygon-ecosystem-token',   decimals: 2, color: '#8247e5', svg: 'pol' },
+  feyorra: { symbol: 'FEYORRA', name: 'Feyorra',      claimAmount: 1,       priceId: 'feyorra',                   decimals: 0, color: '#00d4ff', svg: 'feyorra', fallbackPrice: 0.0001 },
+  dgb:     { symbol: 'DGB',     name: 'DigiByte',     claimAmount: 1.5,     priceId: 'digibyte',                  decimals: 2, color: '#0066ff', svg: 'dgb' }
+};
+
+const COIN_ORDER = ['doge', 'pepe', 'pol', 'feyorra', 'dgb'];
+
+// ============================================
+// CONFIG
+// ============================================
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const BOT_USERNAME = process.env.BOT_USERNAME || 'CoinixBot';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.error('[CONFIG] JWT_SECRET missing! Using ephemeral secret.');
+  return crypto.randomBytes(32).toString('hex');
+})();
+const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
+const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
+const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
+const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
+const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
+const PORT = process.env.PORT || 10000;
+
+const FAUCET_COOLDOWN = 180000; // 3 minutes
+const REFERRAL_SIGNUP_BONUS = 0.01; // DOGE
+const REFERRAL_COMMISSION_PERCENT = 20;
+const BONUS_PERCENT = 20;
+const BONUS_TYPES = ['ptc', 'shortlink', 'offer', 'task', 'game'];
+const WITHDRAW_USD_MIN = 0.03;
+
+function validateCriticalConfig() {
+  const missing = [];
+  if (!BOT_TOKEN) missing.push('BOT_TOKEN');
+  if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
+  if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON && !process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    missing.push('FIREBASE_SERVICE_ACCOUNT_JSON or BASE64');
+  }
+  if (missing.length) {
+    console.error('[CONFIG] MISSING:', missing.join(', '));
+  } else {
+    console.log('[CONFIG] All critical env vars present');
+  }
+}
+validateCriticalConfig();
+
+// ============================================
+// SECURITY
+// ============================================
+function setupSecurity(app) {
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro", "https://adbits.online"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://richinfo.co", "https://*.richinfo.co"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://richinfo.co", "https://*.richinfo.co"],
+        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://richinfo.co", "https://*.richinfo.co", "https://adbits.online"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: []
+      }
+    },
+    crossOriginEmbedderPolicy: false,
+    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
+  }));
+}
+
+// ============================================
+// RATE LIMITERS
+// ============================================
+const generalLimiter = rateLimit({ windowMs: 60000, max: 120, standardHeaders: true, legacyHeaders: false });
+const authLimiter = rateLimit({ windowMs: 300000, max: 20, standardHeaders: true, legacyHeaders: false });
+const claimLimiter = rateLimit({ windowMs: 60000, max: 30, standardHeaders: true, legacyHeaders: false });
+const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10, standardHeaders: true, legacyHeaders: false });
+const promoLimiter = rateLimit({ windowMs: 3600000, max: 30, standardHeaders: true, legacyHeaders: false });
+const postbackLimiter = rateLimit({ windowMs: 60000, max: 60, standardHeaders: true, legacyHeaders: false });
+
+// ============================================
+// NONCE / REPLAY GUARD
+// ============================================
+const usedNonces = new Map();
+const NONCE_MAX_AGE = 5 * 60 * 1000;
+
+function validateNonce(nonce, timestamp) {
+  if (!nonce || !timestamp) return { valid: false, error: 'Nonce and timestamp required' };
+  const ts = parseInt(timestamp);
+  if (isNaN(ts) || Math.abs(Date.now() - ts) > 300000) {
+    return { valid: false, error: 'Request expired or invalid timestamp' };
+  }
+  const key = `${nonce}:${ts}`;
+  if (usedNonces.has(key)) {
+    return { valid: false, error: 'Duplicate request detected' };
+  }
+  usedNonces.set(key, Date.now());
+  return { valid: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, time] of usedNonces) {
+    if (now - time > NONCE_MAX_AGE) usedNonces.delete(key);
+  }
+}, 60000);
+
+// ============================================
+// AUTH MIDDLEWARE
+// ============================================
+function validateTelegramInitData(initData) {
+  if (!initData || !BOT_TOKEN) return false;
+  try {
+    const pairs = initData.split('&');
+    const params = {};
+    let hash = '';
+    for (const pair of pairs) {
+      const idx = pair.indexOf('=');
+      if (idx === -1) continue;
+      const key = pair.substring(0, idx);
+      const value = pair.substring(idx + 1);
+      if (key === 'hash') { hash = value; } else { params[key] = value; }
+    }
+    if (!hash) return false;
+    if (params.auth_date) {
+      const authDate = parseInt(params.auth_date, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (!isNaN(authDate) && Math.abs(now - authDate) > 300) {
+        logger.warn('Init data auth_date too old', { authDate, now });
+        return false;
+      }
+    }
+    const entries = Object.keys(params).sort().map(k => `${k}=${params[k]}`);
+    const dataCheckString = entries.join('\n');
+    const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
+    const checkHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+    const a = Buffer.from(hash, 'hex');
+    const b = Buffer.from(checkHash, 'hex');
+    if (a.length !== b.length || a.length === 0) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch (e) {
+    logger.error('Init data validation error', { error: e.message });
+    return false;
+  }
+}
+
+function jwtAuth(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Missing token' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (e) {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+}
+
+function adminAuth(req, res, next) {
+  const key = req.headers['x-admin-key'];
+  if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(403).json({ error: 'Admin token required' });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!payload.is_admin) return res.status(403).json({ error: 'Admin only' });
+    req.user = payload;
+    next();
+  } catch (e) {
+    return res.status(403).json({ error: 'Invalid admin token' });
+  }
+}
+
+// ============================================
+// UTILS
+// ============================================
+async function logAction(action, userId, details = {}) {
+  if (!db) return;
+  try {
+    await db.collection('logs').add({ action, user_id: String(userId), details, timestamp: serverTimestamp() });
+  } catch (e) { logger.error('Log error', { error: e.message }); }
+}
+
+async function logTransaction(userId, type, amount, currency, description, metadata = {}) {
+  if (!db) return;
+  try {
+    await db.collection('transactions').add({
+      user_id: String(userId), type, amount: Number(amount), currency: currency || 'DOGE',
+      description, metadata, timestamp: serverTimestamp()
+    });
+  } catch (e) { logger.error('Transaction log error', { error: e.message }); }
+}
+
+async function createNotification(userId, title, message, type = 'general') {
+  if (!db) return;
+  try {
+    await db.collection('notifications').add({
+      user_id: String(userId), title, message, type, read: false, timestamp: serverTimestamp()
+    });
+  } catch (e) { logger.error('Notification error', { error: e.message }); }
+}
+
+function getClientIP(req) {
+  return (req.headers['x-forwarded-for'] || '0.0.0.0').split(',')[0].trim();
+}
+
+function startOfTodayTs() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return Timestamp ? Timestamp.fromDate(d) : d;
+}
+
+function tsToMillis(ts) {
+  if (!ts) return null;
+  if (ts.toMillis) return ts.toMillis();
+  if (ts instanceof Date) return ts.getTime();
+  return null;
+}
+
+// ============================================
+// TELEGRAM BOT API HELPERS
+// ============================================
+async function sendTelegramMessage(chatId, text, parseMode = 'HTML') {
+  if (!BOT_TOKEN) return { ok: false, error: 'No bot token' };
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: parseMode })
+    });
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function notifyAdminNewUser(userData, ref) {
+  if (!ADMIN_TELEGRAM_ID) return;
+  const text = `🎉 New User Registered\n\nID: ${userData.telegram_id}\nUsername: ${userData.username ? '@' + userData.username : 'N/A'}\nFirst Name: ${userData.first_name || 'N/A'}\nReferral: ${ref || 'None'}\nTime: ${new Date().toISOString()}`;
+  await sendTelegramMessage(ADMIN_TELEGRAM_ID, text);
+}
+
+async function broadcastToUsers(message) {
+  if (!db || !BOT_TOKEN) return { sent: 0, failed: 0 };
+  let sent = 0, failed = 0;
+  try {
+    const snap = await db.collection('users').where('banned', '!=', true).limit(500).get();
+    for (const doc of snap.docs) {
+      const user = doc.data();
+      if (!user.telegram_id || user.banned) continue;
+      const res = await sendTelegramMessage(user.telegram_id, message, 'Markdown');
+      if (res.ok) sent++; else failed++;
+      await new Promise(r => setTimeout(r, 35));
+    }
+  } catch (e) {
+    logger.error('Broadcast error', { error: e.message });
+  }
+  return { sent, failed };
+}
+
+// ============================================
+// COIN PRICE CACHE (CoinGecko)
+// ============================================
+const priceCache = {};
+let priceLastUpdate = 0;
+
+async function fetchCoinPrices() {
+  try {
+    const ids = Object.values(COINS).map(c => c.priceId).filter(Boolean).join(',');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!response.ok) return;
+    const data = await response.json();
+    for (const [coinKey, coin] of Object.entries(COINS)) {
+      const cgData = data[coin.priceId];
+      if (cgData && cgData.usd != null) {
+        priceCache[coinKey] = {
+          price: cgData.usd,
+          change: typeof cgData.usd_24h_change === 'number' ? cgData.usd_24h_change : 0,
+          lastUpdate: Date.now()
+        };
+      } else if (coin.fallbackPrice) {
+        if (!priceCache[coinKey]) {
+          priceCache[coinKey] = { price: coin.fallbackPrice, change: 0, lastUpdate: Date.now() };
+        }
+      }
+    }
+    priceLastUpdate = Date.now();
+    logger.info('[Prices] Updated', Object.keys(priceCache).length);
+  } catch (err) {
+    logger.error('Price fetch error', { error: err.message });
+  }
+}
+
+function getCoinPrice(coinKey) {
+  const cached = priceCache[coinKey];
+  if (cached) return cached.price;
+  const coin = COINS[coinKey];
+  return coin?.fallbackPrice || 0;
+}
+
+function getMinWithdrawAmount(coinKey) {
+  const price = getCoinPrice(coinKey);
+  if (!price || price <= 0) return Infinity;
+  return WITHDRAW_USD_MIN / price;
+}
+
+function getMilestoneReward(totalClaims) {
+  if (totalClaims < 25) return 0;
+  let base = 25, reward = 0.01;
+  while (base <= totalClaims) {
+    if (totalClaims === base) return reward;
+    base *= 10;
+    reward *= 10;
+  }
+  return 0;
+}
+
+function getNextMilestone(totalClaims) {
+  let base = 25;
+  while (base <= totalClaims) base *= 10;
+  return base;
+}
+
+// Initial fetch
+fetchCoinPrices();
+setInterval(fetchCoinPrices, 120000);
+
+// ============================================
+// OFFERWALL.ME
+// ============================================
+async function getOfferwallUrl(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
+    res.json({ success: true, url, user_id: userId });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function getPTCAds(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    if (!OFFERWALL_APP_ID || !OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
+    const userIp = getClientIP(req);
+    const country = req.headers['cf-ipcountry'] || 'US';
+    const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+    clearTimeout(timeout);
+    if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
+    const data = await response.json();
+    if (data.status !== 200) return res.json({ success: false, ads: [], message: data.message });
+    const ads = (data.data || []).map(ad => ({
+      id: ad.id || String(Math.random()),
+      title: ad.title || 'Ad',
+      description: ad.description || '',
+      reward: Number(ad.reward) || 0,
+      duration: ad.duration || 30,
+      url: ad.url || '',
+      type: ad.type || 1,
+      max: ad.max || 0
+    }));
+    res.json({ success: true, ads, total: ads.length });
+  } catch (err) {
+    logger.error('PTC Ads error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function getShortlinks(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    if (!OFFERWALL_APP_ID || !OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
+    const userIp = getClientIP(req);
+    const country = req.headers['cf-ipcountry'] || 'US';
+    const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+    clearTimeout(timeout);
+    if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
+    const data = await response.json();
+    if (data.status !== 200) return res.json({ success: false, shortlinks: [], message: data.message });
+    const shortlinks = (data.data || []).map(link => ({
+      id: link.id || String(Math.random()),
+      name: link.name || 'Link',
+      reward: Number(link.reward) || 0,
+      url: link.url || '',
+      remaining_views: link.remaining_views || 0,
+      daily_limit: link.daily_limit || 0
+    }));
+    res.json({ success: true, shortlinks, total: shortlinks.length });
+  } catch (err) {
+    logger.error('Shortlinks error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function getGames(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const url = `https://offerwall.me/games/${OFFERWALL_APP_ID}/${userId}`;
+    res.json({ success: true, url, user_id: userId });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// POSTBACK
+// ============================================
+const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
+function isOfferwallIP(ip) {
+  if (!ip) return false;
+  return OFFERWALL_IPS.some(a => ip.toLowerCase() === a.toLowerCase());
+}
+
+async function postback(req, res) {
+  try {
+    const clientIp = getClientIP(req);
+    if (!isOfferwallIP(clientIp)) return res.status(403).send('ERROR: Invalid source');
+    const { subId, transId, reward, signature, status = '1', offer_name, offer_type, reward_name, reward_value, payout, userIp, country, debug } = req.body;
+    if (!subId || !transId || !reward || !signature) return res.status(400).send('ERROR: Missing params');
+    const expectedSig = crypto.createHash('md5').update(`${subId}.${transId}.${reward}.${OFFERWALL_SECRET_KEY}`).digest('hex');
+    if (signature !== expectedSig) {
+      logger.warn('Postback signature mismatch', { subId, transId, reward });
+      return res.status(403).send('ERROR: Signature mismatch');
+    }
+    const userRef = db.collection('users').doc(subId);
+    const doc = await userRef.get();
+    if (!doc.exists) return res.status(404).send('ERROR: User not found');
+    if (doc.data().banned) return res.status(403).send('ERROR: User banned');
+    const existingTx = await db.collection('offerwall_completions').where('trans_id', '==', transId).limit(1).get();
+    if (!existingTx.empty) return res.status(200).send('ok');
+    const baseAmt = Number(reward);
+    if (isNaN(baseAmt) || baseAmt <= 0) return res.status(400).send('ERROR: Invalid reward');
+    const taskType = String(offer_type || 'offer').toLowerCase();
+    const isBonusEligible = BONUS_TYPES.some(t => taskType.includes(t));
+    const bonusAmt = isBonusEligible ? Math.round(baseAmt * BONUS_PERCENT) / 100 : 0;
+    const totalAmt = Math.round((baseAmt + bonusAmt) * 100) / 100;
+    const numericStatus = parseInt(status) || 1;
+    await db.runTransaction(async (t) => {
+      const userDoc = await t.get(userRef);
+      if (!userDoc.exists) throw new Error('User not found');
+      const userData = userDoc.data();
+      const currentBalance = userData.balances?.doge || 0;
+      if (numericStatus === 1) {
+        t.update(userRef, {
+          'balances.doge': increment(totalAmt),
+          total_earned: increment(totalAmt),
+          total_offerwall_earned: increment(totalAmt)
+        });
+      } else if (numericStatus === 2) {
+        const deductAmt = Math.min(baseAmt, currentBalance);
+        if (deductAmt > 0) {
+          t.update(userRef, {
+            'balances.doge': increment(-deductAmt),
+            total_earned: increment(-deductAmt),
+            total_offerwall_earned: increment(-deductAmt)
+          });
+        }
+      }
+      t.set(db.collection('offerwall_completions').doc(transId), {
+        user_id: subId, trans_id: transId, task_type: taskType,
+        offer_name: offer_name || 'Unknown',
+        reward_name: reward_name || null,
+        reward_value: reward_value || null,
+        payout: payout || null,
+        user_ip: userIp || clientIp,
+        country: country || null,
+        debug: debug || null,
+        base_amount: baseAmt, bonus_amount: bonusAmt, amount: totalAmt,
+        status: numericStatus === 1 ? 'completed' : 'chargeback',
+        timestamp: serverTimestamp()
+      });
+    });
+    if (numericStatus === 1) {
+      await giveReferralBonus(subId, baseAmt, taskType);
+      await logTransaction(subId, 'offerwall', totalAmt, 'DOGE', `Offerwall: ${offer_name || 'Unknown'}`, { transId, taskType, bonus: bonusAmt });
+    }
+    await logAction('offerwall_completed', subId, { transId, totalAmt, offer_name, country, debug });
+    res.status(200).send('ok');
+  } catch (err) {
+    logger.error('Postback error', { error: err.message });
+    res.status(500).send('ERROR: Server error');
+  }
+}
+
+// ============================================
+// AUTH
+// ============================================
+async function auth(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  const { initData, ref, device_fp, nonce, timestamp } = req.body;
+  if (!initData) return res.status(400).json({ error: 'Missing initData' });
+  if (!validateTelegramInitData(initData)) return res.status(403).json({ error: 'Invalid signature' });
+  if (nonce && timestamp) {
+    const nonceCheck = validateNonce(nonce, timestamp);
+    if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
+  }
+  let user;
+  try {
+    const pairs = initData.split('&');
+    let userStr = '';
+    for (const pair of pairs) {
+      const idx = pair.indexOf('=');
+      if (idx === -1) continue;
+      const key = pair.substring(0, idx);
+      const value = pair.substring(idx + 1);
+      if (key === 'user') { userStr = decodeURIComponent(value); break; }
+    }
+    user = JSON.parse(userStr);
+  } catch (e) {
+    return res.status(400).json({ error: 'Bad user data' });
+  }
+  if (!user || !user.id) return res.status(400).json({ error: 'No user data' });
+  const userId = String(user.id);
+  const userRef = db.collection('users').doc(userId);
+  if (ref && ref === userId) return res.status(400).json({ error: 'Self referral not allowed' });
+  if (device_fp) {
+    try {
+      const deviceId = String(device_fp).slice(0, 64);
+      const deviceRef = db.collection('devices').doc(deviceId);
+      const deviceDoc = await deviceRef.get();
+      if (deviceDoc.exists) {
+        const boundTo = deviceDoc.data().telegram_id;
+        if (boundTo && String(boundTo) !== userId) {
+          return res.status(403).json({ error: 'This device is already linked to another account.' });
+        }
+      } else {
+        await deviceRef.set({ telegram_id: userId, first_seen: serverTimestamp(), ua: req.headers['user-agent'] || null });
+      }
+    } catch (e) { logger.warn('Device FP check error', { error: e.message }); }
+  }
+  try {
+    const doc = await userRef.get();
+    const isNew = !doc.exists;
+    if (isNew) {
+      const newUser = {
+        telegram_id: userId,
+        username: user.username || null,
+        first_name: user.first_name || null,
+        photo_url: user.photo_url || null,
+        balances: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+        referral_balance: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+        total_earned: 0,
+        total_claims: 0,
+        total_withdrawals: 0,
+        total_offerwall_earned: 0,
+        total_promo_earned: 0,
+        referrals: 0,
+        referral_earnings: 0,
+        referred_by: ref || null,
+        banned: false,
+        is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
+        last_claim: null,
+        last_opened: null,
+        last_active: serverTimestamp(),
+        inactivity_reminder_sent: false,
+        return_bonus_claimed: false,
+        daily_claims: 0,
+        last_claim_date: null,
+        created_at: serverTimestamp(),
+        country: req.headers['cf-ipcountry'] || null
+      };
+      await userRef.set(newUser);
+      if (ref && ref !== userId) {
+        const refRef = db.collection('users').doc(String(ref));
+        const refDoc = await refRef.get();
+        if (refDoc.exists && !refDoc.data().banned) {
+          const existingRef = await db.collection('referralBonuses')
+            .where('referred', '==', userId)
+            .where('type', '==', 'signup')
+            .limit(1)
+            .get();
+          if (existingRef.empty) {
+            await db.runTransaction(async (t) => {
+              const rdoc = await t.get(refRef);
+              if (!rdoc.exists) return;
+              t.update(refRef, {
+                referrals: increment(1),
+                'referral_balance.doge': increment(REFERRAL_SIGNUP_BONUS),
+                referral_earnings: increment(REFERRAL_SIGNUP_BONUS)
+              });
+              const rbRef = db.collection('referralBonuses').doc();
+              t.set(rbRef, {
+                referrer: String(ref), referred: userId, amount: REFERRAL_SIGNUP_BONUS,
+                type: 'signup', timestamp: serverTimestamp()
+              });
+            });
+          }
+        }
+      }
+      await logAction('user_register', userId, { ref });
+      await logTransaction(userId, 'signup', 0, 'DOGE', 'Account created', { ref });
+      await notifyAdminNewUser(newUser, ref);
+    } else {
+      if (doc.data().banned) return res.status(403).json({ error: 'User banned' });
+      await userRef.update({
+        last_active: serverTimestamp(),
+        username: user.username || doc.data().username,
+        first_name: user.first_name || doc.data().first_name,
+        photo_url: user.photo_url || doc.data().photo_url
+      });
+    }
+    const isAdmin = String(userId) === String(ADMIN_TELEGRAM_ID);
+    const token = jwt.sign({ userId, username: user.username, is_admin: isAdmin }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, user_id: userId, username: user.username, token, isNew, is_admin: isAdmin });
+  } catch (err) {
+    logger.error('Auth error', { error: err.message });
+    res.status(500).json({ error: 'Auth failed' });
+  }
+}
+
+// ============================================
+// USER ENDPOINTS
+// ============================================
+async function getMe(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    const balances = d.balances || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 };
+    const balancesUSD = {};
+    for (const [key, val] of Object.entries(balances)) {
+      balancesUSD[key] = val * getCoinPrice(key);
+    }
+    const totalUSD = Object.values(balancesUSD).reduce((a, b) => a + b, 0);
+    res.json({
+      telegram_id: d.telegram_id, username: d.username, first_name: d.first_name, photo_url: d.photo_url || null,
+      balances, balancesUSD, totalUSD,
+      total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
+      total_withdrawals: d.total_withdrawals || 0,
+      total_offerwall_earned: d.total_offerwall_earned || 0,
+      total_promo_earned: d.total_promo_earned || 0,
+      referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings || 0,
+      referral_balance: d.referral_balance || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+      daily_claims: d.daily_claims || 0,
+      last_claim: tsToMillis(d.last_claim),
+      last_opened: tsToMillis(d.last_opened),
+      banned: d.banned || false,
+      is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID)
+    });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+}
+
+async function getBalance(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const doc = await db.collection('users').doc(String(req.user.userId)).get();
+    if (!doc.exists) return res.json({ balances: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 }, total_claims: 0 });
+    const d = doc.data();
+    res.json({
+      balances: d.balances || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+      referral_balance: d.referral_balance || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+      total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
+      referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings || 0,
+      last_claim: tsToMillis(d.last_claim),
+      daily_claims: d.daily_claims || 0
+    });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+}
+
+async function getTodayEarnings(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const startOfDay = startOfTodayTs();
+    const faucetSnap = await db.collection('transactions')
+      .where('user_id', '==', userId)
+      .where('type', '==', 'faucet_claim')
+      .where('timestamp', '>=', startOfDay)
+      .get();
+    const faucetTotal = faucetSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const offerSnap = await db.collection('transactions')
+      .where('user_id', '==', userId)
+      .where('type', '==', 'offerwall')
+      .where('timestamp', '>=', startOfDay)
+      .get();
+    const offerTotal = offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    res.json({ total: faucetTotal + offerTotal, faucet: faucetTotal, offerwall: offerTotal });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+}
+
+async function getReferral(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    const link = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+    res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings || 0, referral_balance: d.referral_balance || { doge: 0 } });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function getReferralList(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const snap = await db.collection('users')
+      .where('referred_by', '==', userId)
+      .orderBy('created_at', 'desc')
+      .limit(100)
+      .get();
+    const list = snap.docs.map(d => {
+      const x = d.data();
+      return {
+        id: d.id,
+        first_name: x.first_name || null,
+        username: x.username || null,
+        photo_url: x.photo_url || null,
+        total_earned: x.total_earned || 0,
+        created_at: tsToMillis(x.created_at)
+      };
+    });
+    res.json({ count: list.length, list });
+  } catch (err) {
+    logger.error('getReferralList error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function giveReferralBonus(userId, amount, type) {
+  if (!db || amount <= 0) return;
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return;
+    const userData = userDoc.data();
+    if (!userData.referred_by) return;
+    const referrerId = userData.referred_by;
+    const bonusAmount = Math.round(amount * (REFERRAL_COMMISSION_PERCENT / 100) * 1e8) / 1e8;
+    if (bonusAmount <= 0) return;
+    const referrerRef = db.collection('users').doc(referrerId);
+    await db.runTransaction(async (t) => {
+      const refDoc = await t.get(referrerRef);
+      if (!refDoc.exists) return;
+      t.update(referrerRef, {
+        'referral_balance.doge': increment(bonusAmount),
+        referral_earnings: increment(bonusAmount)
+      });
+    });
+    await db.collection('referralBonuses').add({
+      referrer: referrerId, referred: userId, amount: bonusAmount,
+      type: type || 'unknown', timestamp: serverTimestamp()
+    });
+    await logTransaction(referrerId, 'referral', bonusAmount, 'DOGE', `Referral bonus from ${userId}`, { referred: userId, sourceType: type });
+  } catch (e) { logger.error('Referral bonus error', { error: e.message }); }
+}
+
+async function collectReferralBonus(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  const userId = String(req.user.userId);
+  const userRef = db.collection('users').doc(userId);
+  try {
+    let collected = 0;
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('User not found');
+      const d = doc.data();
+      const rb = d.referral_balance?.doge || 0;
+      if (rb <= 0) throw new Error('No referral balance');
+      collected = rb;
+      t.update(userRef, {
+        'balances.doge': increment(rb),
+        'referral_balance.doge': increment(-rb)
+      });
+    });
+    await logAction('referral_collected', userId, { amount: collected });
+    await logTransaction(userId, 'referral_collect', collected, 'DOGE', 'Collected referral earnings');
+    res.json({ success: true, amount: collected });
+  } catch (err) { res.status(400).json({ error: err.message }); }
+}
+
+// ============================================
+// ACTIVITY & RETURN BONUS
+// ============================================
+async function updateActivity(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  const userId = String(req.user.userId);
+  const userRef = db.collection('users').doc(userId);
+  try {
+    const doc = await userRef.get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    const now = Date.now();
+    const lastOpened = d.last_opened ? d.last_opened.toMillis() : 0;
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+    let bonusGranted = false;
+    const updates = { last_opened: serverTimestamp(), last_active: serverTimestamp() };
+    if (lastOpened && (now - lastOpened) >= threeDays && !d.return_bonus_claimed) {
+      updates['balances.doge'] = increment(0.01);
+      updates.return_bonus_claimed = true;
+      updates.total_earned = increment(0.01);
+      bonusGranted = true;
+      await logTransaction(userId, 'return_bonus', 0.01, 'DOGE', 'Return after inactivity bonus');
+      await createNotification(userId, 'Welcome Back!', 'You received 0.01 DOGE for coming back!', 'reward');
+    }
+    if (d.inactivity_reminder_sent) {
+      updates.inactivity_reminder_sent = false;
+    }
+    await userRef.update(updates);
+    res.json({ success: true, bonusGranted, bonusAmount: bonusGranted ? 0.01 : 0 });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+}
+
+// ============================================
+// CUSTOM ICON CAPTCHA
+// ============================================
+const activeCaptchas = new Map();
+
+const CAPTCHA_ICONS = ['⚡', '💎', '🔥', '⭐', '🎯', '🚀', '💰', '🎲', '', '🏆', '', '🎪'];
+
+function generateIconCaptcha(userId) {
+  if (activeCaptchas.size > 5000) {
+    const firstKey = activeCaptchas.keys().next().value;
+    activeCaptchas.delete(firstKey);
+  }
+  // Pick 4 random icons, one is the "target" (shown upright), others are rotated
+  const targetIdx = Math.floor(Math.random() * CAPTCHA_ICONS.length);
+  const targetIcon = CAPTCHA_ICONS[targetIdx];
+  // Pick 3 distractors
+  const distractors = [];
+  while (distractors.length < 3) {
+    const idx = Math.floor(Math.random() * CAPTCHA_ICONS.length);
+    if (idx !== targetIdx && !distractors.includes(CAPTCHA_ICONS[idx])) {
+      distractors.push(CAPTCHA_ICONS[idx]);
+    }
+  }
+  // Shuffle all 4
+  const allIcons = [targetIcon, ...distractors];
+  for (let i = allIcons.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allIcons[i], allIcons[j]] = [allIcons[j], allIcons[i]];
+  }
+  // Target is shown rotated 180deg in instruction, user must find the upright one
+  // Actually: show "Find the icon that matches: [icon]" and display 4 options, one correct
+  const answer = targetIcon;
+  activeCaptchas.set(userId, { answer, icons: allIcons, expiresAt: Date.now() + 5 * 60 * 1000 });
+  return { icons: allIcons, target: targetIcon, expiresAt: Date.now() + 5 * 60 * 1000 };
+}
+
+function verifyIconCaptcha(userId, userAnswer) {
+  const captcha = activeCaptchas.get(userId);
+  if (!captcha) return { valid: false, error: 'No active captcha' };
+  if (Date.now() > captcha.expiresAt) {
+    activeCaptchas.delete(userId);
+    return { valid: false, error: 'Captcha expired' };
+  }
+  if (userAnswer !== captcha.answer) {
+    activeCaptchas.delete(userId);
+    return { valid: false, error: 'Wrong icon selected' };
+  }
+  activeCaptchas.delete(userId);
+  return { valid: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [userId, captcha] of activeCaptchas) {
+    if (now > captcha.expiresAt) activeCaptchas.delete(userId);
+  }
+}, 60000);
+
+async function getCaptcha(req, res) {
+  try {
+    const userId = String(req.user.userId);
+    const captcha = generateIconCaptcha(userId);
+    res.json({ success: true, ...captcha });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function verifyCaptchaEndpoint(req, res) {
+  try {
+    const userId = String(req.user.userId);
+    const { answer } = req.body;
+    if (!answer) return res.status(400).json({ valid: false, error: 'Answer required' });
+    res.json(verifyIconCaptcha(userId, answer));
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// FAUCET CLAIM
+// ============================================
+async function claim(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  const userId = String(req.user.userId);
+  const { coin, captchaAnswer, nonce, timestamp } = req.body;
+  if (!coin || !COINS[coin]) return res.status(400).json({ error: 'Invalid coin' });
+  if (!captchaAnswer) return res.status(400).json({ error: 'Captcha required', captchaRequired: true });
+  if (nonce && timestamp) {
+    const nonceCheck = validateNonce(nonce, timestamp);
+    if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
+  }
+  const captchaResult = verifyIconCaptcha(userId, captchaAnswer);
+  if (!captchaResult.valid) return res.status(403).json({ error: captchaResult.error, captchaRequired: true });
+  const userRef = db.collection('users').doc(userId);
+  try {
+    const now = Date.now();
+    const todayStr = new Date().toDateString();
+    let newBalance = 0;
+    let milestoneReward = 0;
+    let milestoneHit = false;
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('User not found');
+      const d = doc.data();
+      if (d.banned) throw new Error('User banned');
+      const lastClaim = d.last_claim ? d.last_claim.toMillis() : 0;
+      if (now - lastClaim < FAUCET_COOLDOWN) {
+        throw new Error(`Cooldown|${FAUCET_COOLDOWN - (now - lastClaim)}`);
+      }
+      const recentClaims = await db.collection('transactions')
+        .where('user_id', '==', userId)
+        .where('type', '==', 'faucet_claim')
+        .where('timestamp', '>=', Timestamp.fromMillis(now - 5000))
+        .limit(1)
+        .get();
+      if (!recentClaims.empty) throw new Error('Duplicate claim detected');
+      const claimAmount = COINS[coin].claimAmount;
+      const balanceKey = `balances.${coin}`;
+      const currentBalance = d.balances?.[coin] || 0;
+      newBalance = currentBalance + claimAmount;
+      // Daily claims reset
+      let dailyClaims = d.daily_claims || 0;
+      if (d.last_claim_date !== todayStr) {
+        dailyClaims = 0;
+      }
+      dailyClaims += 1;
+      const totalClaims = (d.total_claims || 0) + 1;
+      // Milestone check
+      const msReward = getMilestoneReward(totalClaims);
+      if (msReward > 0) {
+        milestoneReward = msReward;
+        milestoneHit = true;
+      }
+      const updates = {
+        [balanceKey]: increment(claimAmount),
+        total_earned: increment(claimAmount),
+        total_claims: increment(1),
+        last_claim: serverTimestamp(),
+        last_active: serverTimestamp(),
+        daily_claims: dailyClaims,
+        last_claim_date: todayStr
+      };
+      if (milestoneHit) {
+        updates['balances.doge'] = increment(milestoneReward);
+        updates.total_earned = increment(milestoneReward);
+      }
+      t.update(userRef, updates);
+      const txRef = db.collection('transactions').doc();
+      t.set(txRef, {
+        user_id: userId, type: 'faucet_claim', amount: claimAmount,
+        currency: COINS[coin].symbol, description: `Faucet claim ${COINS[coin].symbol}`,
+        metadata: { coin, milestone: milestoneHit ? milestoneReward : 0 },
+        timestamp: serverTimestamp()
+      });
+      if (milestoneHit) {
+        const msTxRef = db.collection('transactions').doc();
+        t.set(msTxRef, {
+          user_id: userId, type: 'milestone', amount: milestoneReward,
+          currency: 'DOGE', description: `Milestone reward: ${totalClaims} claims`,
+          metadata: { totalClaims }, timestamp: serverTimestamp()
+        });
+      }
+    });
+    await giveReferralBonus(userId, COINS[coin].claimAmount, 'faucet');
+    await logAction('faucet_claim', userId, { coin, amount: COINS[coin].claimAmount, milestone: milestoneHit });
+    if (milestoneHit) {
+      await createNotification(userId, '🏆 Milestone!', `You reached ${getMilestoneReward((await userRef.get()).data().total_claims)} claims milestone! +${milestoneReward} DOGE bonus!`, 'milestone');
+    }
+    res.json({ success: true, amount: COINS[coin].claimAmount, balance: newBalance, coin: COINS[coin].symbol, milestone: milestoneHit, milestoneReward });
+  } catch (err) {
+    const msg = err.message || '';
+    if (msg.includes('Cooldown')) {
+      const wait = parseInt(msg.split('|')[1]) || FAUCET_COOLDOWN;
+      return res.status(429).json({ error: 'Cooldown active', wait });
+    }
+    if (msg.includes('User banned')) return res.status(403).json({ error: 'User banned' });
+    if (msg.includes('User not found')) return res.status(404).json({ error: 'User not found' });
+    if (msg.includes('Duplicate')) return res.status(429).json({ error: 'Duplicate claim detected' });
+    res.status(500).json({ error: 'Claim failed' });
+  }
+}
+
+// ============================================
+// WITHDRAW
+// ============================================
+async function withdraw(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  const userId = String(req.user.userId);
+  const { faucetpay_email, amount, coin, nonce, timestamp } = req.body;
+  const amt = Number(amount);
+  if (!coin || !COINS[coin]) return res.status(400).json({ error: 'Invalid coin' });
+  if (!amt || amt <= 0 || isNaN(amt)) return res.status(400).json({ error: 'Invalid amount' });
+  if (!faucetpay_email || !faucetpay_email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
+  if (nonce && timestamp) {
+    const nonceCheck = validateNonce(nonce, timestamp);
+    if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
+  }
+  const minWithdraw = getMinWithdrawAmount(coin);
+  if (amt < minWithdraw) {
+    return res.status(400).json({ error: `Minimum withdrawal: ${minWithdraw.toFixed(COINS[coin].decimals)} ${COINS[coin].symbol} (~$${WITHDRAW_USD_MIN} USD)` });
+  }
+  const userRef = db.collection('users').doc(userId);
+  try {
+    await db.runTransaction(async (t) => {
+      const doc = await t.get(userRef);
+      if (!doc.exists) throw new Error('User not found');
+      const d = doc.data();
+      if (d.banned) throw new Error('User banned');
+      const currentBalance = d.balances?.[coin] || 0;
+      if (currentBalance < amt) throw new Error(`Insufficient ${COINS[coin].symbol} balance`);
+      const recentWds = await db.collection('transactions')
+        .where('user_id', '==', userId)
+        .where('type', '==', 'withdraw')
+        .where('timestamp', '>=', Timestamp.fromMillis(Date.now() - 5000))
+        .limit(1)
+        .get();
+      if (!recentWds.empty) throw new Error('Duplicate withdrawal detected');
+      const balanceKey = `balances.${coin}`;
+      t.update(userRef, { [balanceKey]: increment(-amt), total_withdrawals: increment(1), last_active: serverTimestamp() });
+      const txRef = db.collection('transactions').doc();
+      t.set(txRef, {
+        user_id: userId, type: 'withdraw', amount: amt,
+        currency: COINS[coin].symbol, description: `Withdraw ${COINS[coin].symbol} to ${faucetpay_email}`,
+        metadata: { faucetpay_email, coin }, timestamp: serverTimestamp()
+      });
+    });
+    const ref = await db.collection('withdrawals').add({
+      user_id: userId, faucetpay_email, amount: amt, coin, status: 'pending', timestamp: serverTimestamp()
+    });
+    await logAction('withdraw', userId, { amount: amt, coin, faucetpay_email });
+    res.json({ success: true, id: ref.id });
+  } catch (err) {
+    if (err.message?.includes('Insufficient') || err.message?.includes('Minimum')) return res.status(400).json({ error: err.message });
+    if (err.message?.includes('Duplicate')) return res.status(429).json({ error: err.message });
+    res.status(500).json({ error: 'Withdrawal failed' });
+  }
+}
+
+async function getWithdrawHistory(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const snapshot = await db.collection('withdrawals').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
+    res.json(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: tsToMillis(d.data().timestamp) })));
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function getPrices(req, res) {
+  try {
+    const prices = {};
+    for (const [key, coin] of Object.entries(COINS)) {
+      const cached = priceCache[key];
+      prices[key] = {
+        symbol: coin.symbol,
+        price: cached?.price || coin.fallbackPrice || 0,
+        change: cached?.change || 0,
+        minWithdraw: getMinWithdrawAmount(key),
+        lastUpdate: cached?.lastUpdate || 0
+      };
+    }
+    res.json({ prices, lastUpdate: priceLastUpdate });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function getLivePayouts(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const snapshot = await db.collection('withdrawals')
+      .where('status', '==', 'approved')
+      .orderBy('timestamp', 'desc')
+      .limit(20)
+      .get();
+    const payouts = [];
+    for (const doc of snapshot.docs) {
+      const d = doc.data();
+      const userDoc = await db.collection('users').doc(String(d.user_id)).get();
+      const username = userDoc.exists ? (userDoc.data().username || `User${d.user_id.slice(0,4)}`) : `User${d.user_id.slice(0,4)}`;
+      payouts.push({
+        username,
+        amount: d.amount,
+        coin: COINS[d.coin]?.symbol || d.coin || 'DOGE',
+        timestamp: tsToMillis(d.timestamp)
+      });
+    }
+    res.json({ payouts });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// PROMO CODES
+// ============================================
+function validatePromoCode(code) {
+  if (!code) return null;
+  const trimmed = String(code).trim().toUpperCase();
+  if (trimmed.length < 3 || trimmed.length > 32) return null;
+  if (!/^[A-Z0-9_-]+$/.test(trimmed)) return null;
+  return trimmed;
+}
+
+async function redeemPromo(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const code = validatePromoCode(req.body.code);
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
+    const targetCoin = req.body.targetCoin || 'doge';
+    if (!COINS[targetCoin]) return res.status(400).json({ error: 'Invalid target coin' });
+    const userId = String(req.user.userId);
+    const promoRef = db.collection('promoCodes').doc(code);
+    const promoDoc = await promoRef.get();
+    if (!promoDoc.exists) return res.status(400).json({ error: 'Invalid code' });
+    const promo = promoDoc.data();
+    if (promo.enabled === false) return res.status(400).json({ error: 'Code disabled' });
+    if (promo.expiresAt) {
+      const expTs = promo.expiresAt.toDate ? promo.expiresAt.toDate() : new Date(promo.expiresAt);
+      if (expTs < new Date()) return res.status(400).json({ error: 'Code expired' });
+    }
+    if ((promo.usedCount || 0) >= (promo.usageLimit || promo.maxUses || 0)) return res.status(400).json({ error: 'Code usage limit reached' });
+    if (promo.usedBy && Array.isArray(promo.usedBy) && promo.usedBy.includes(userId)) return res.status(400).json({ error: 'Already used' });
+    const userRef = db.collection('users').doc(userId);
+    const reward = Number(promo.reward);
+    await db.runTransaction(async (t) => {
+      const u = await t.get(userRef);
+      if (!u.exists) throw new Error('User not found');
+      const ud = u.data();
+      if (ud.banned) throw new Error('User banned');
+      const freshPromo = await t.get(promoRef);
+      const fp = freshPromo.data();
+      if (fp.enabled === false) throw new Error('Code disabled');
+      if (fp.expiresAt) {
+        const expTs = fp.expiresAt.toDate ? fp.expiresAt.toDate() : new Date(fp.expiresAt);
+        if (expTs < new Date()) throw new Error('Code expired');
+      }
+      if ((fp.usedCount || 0) >= (fp.usageLimit || fp.maxUses || 0)) throw new Error('Code usage limit reached');
+      if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('Already used');
+      const balanceKey = `balances.${targetCoin}`;
+      t.update(userRef, {
+        [balanceKey]: increment(reward),
+        total_earned: increment(reward),
+        total_promo_earned: increment(reward),
+        last_active: serverTimestamp()
+      });
+      t.update(promoRef, {
+        usedCount: increment(1),
+        usedBy: FieldValue ? FieldValue.arrayUnion(userId) : [...(fp.usedBy || []), userId]
+      });
+      const useRef = db.collection('promo_uses').doc();
+      t.set(useRef, {
+        user_id: userId, code, reward, coin: targetCoin,
+        timestamp: serverTimestamp()
+      });
+      const txRef = db.collection('transactions').doc();
+      t.set(txRef, {
+        user_id: userId, type: 'promo', amount: reward,
+        currency: COINS[targetCoin].symbol, description: `Promo code: ${code}`,
+        metadata: { code, targetCoin }, timestamp: serverTimestamp()
+      });
+    });
+    await logAction('promo_redeem', userId, { code, reward, coin: targetCoin });
+    res.json({ success: true, code, reward, coin: COINS[targetCoin].symbol });
+  } catch (err) {
+    return res.status(400).json({ error: err.message || 'Failed to redeem' });
+  }
+}
+
+async function getPromoHistory(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const snap = await db.collection('promo_uses').where('user_id', '==', userId).orderBy('timestamp', 'desc').limit(50).get();
+    const history = snap.docs.map(d => {
+      const data = d.data();
+      return { id: d.id, code: data.code, reward: data.reward, coin: data.coin, usedAt: tsToMillis(data.timestamp) };
+    });
+    const totalBonus = history.reduce((s, h) => s + (h.reward || 0), 0);
+    res.json({ history, totalBonus, count: history.length });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+async function getNotifications(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const snap = await db.collection('notifications')
+      .where('user_id', '==', userId)
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    const list = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id, title: data.title, message: data.message,
+        type: data.type, read: data.read || false,
+        timestamp: tsToMillis(data.timestamp)
+      };
+    });
+    const unreadCount = list.filter(n => !n.read).length;
+    res.json({ list, unreadCount });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function markNotificationsRead(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const { ids } = req.body;
+    if (ids && Array.isArray(ids) && ids.length > 0) {
+      const batch = db.batch();
+      for (const id of ids.slice(0, 10)) {
+        batch.update(db.collection('notifications').doc(id), { read: true });
+      }
+      await batch.commit();
+    } else {
+      const snap = await db.collection('notifications')
+        .where('user_id', '==', userId)
+        .where('read', '==', false)
+        .limit(50)
+        .get();
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.update(d.ref, { read: true }));
+      await batch.commit();
+    }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// TRANSACTION HISTORY
+// ============================================
+async function getTransactionHistory(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const { type, limit = 50 } = req.query;
+    let query = db.collection('transactions')
+      .where('user_id', '==', userId)
+      .orderBy('timestamp', 'desc')
+      .limit(parseInt(limit) || 50);
+    if (type) {
+      query = db.collection('transactions')
+        .where('user_id', '==', userId)
+        .where('type', '==', type)
+        .orderBy('timestamp', 'desc')
+        .limit(parseInt(limit) || 50);
+    }
+    const snap = await query.get();
+    const list = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id, type: data.type, amount: data.amount,
+        currency: data.currency, description: data.description,
+        metadata: data.metadata || {},
+        timestamp: tsToMillis(data.timestamp)
+      };
+    });
+    res.json({ list, count: list.length });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// ADMIN ENDPOINTS
+// ============================================
+async function adminListPromos(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const snap = await db.collection('promoCodes').orderBy('createdAt', 'desc').get();
+    const list = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        code: d.id, reward: data.reward || 0,
+        usageLimit: data.usageLimit || 0, usedCount: data.usedCount || 0,
+        enabled: data.enabled !== false,
+        createdAt: tsToMillis(data.createdAt),
+        expiresAt: tsToMillis(data.expiresAt)
+      };
+    });
+    res.json(list);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+async function adminCreatePromo(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const code = validatePromoCode(req.body.code);
+    const reward = Number(req.body.reward);
+    const usageLimit = req.body.usageLimit ? parseInt(req.body.usageLimit) : 100;
+    const expiresAt = req.body.expiresAt || null;
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
+    if (!reward || reward <= 0 || isNaN(reward)) return res.status(400).json({ error: 'Invalid reward' });
+    const promoRef = db.collection('promoCodes').doc(code);
+    if ((await promoRef.get()).exists) return res.status(400).json({ error: 'Code already exists' });
+    await promoRef.set({
+      code, reward, usageLimit, usedCount: 0, usedBy: [], enabled: true,
+      createdBy: req.user.userId, createdAt: serverTimestamp(),
+      expiresAt: expiresAt ? new Date(expiresAt) : null
+    });
+    await logAction('promo_create', req.user.userId, { code, reward, usageLimit });
+    res.json({ success: true, code, reward, usageLimit });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+async function adminTogglePromo(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const code = validatePromoCode(req.body.code);
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
+    await db.collection('promoCodes').doc(code).update({ enabled: !!req.body.enabled });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+async function adminDeletePromo(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const code = validatePromoCode(req.body.code);
+    if (!code) return res.status(400).json({ error: 'Invalid code' });
+    await db.collection('promoCodes').doc(code).delete();
+    await logAction('promo_delete', req.user.userId, { code });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+async function adminGetUsers(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { search, banned, sortBy = 'created_at', order = 'desc', limit = 50 } = req.query;
+    let query = db.collection('users').orderBy(sortBy, order === 'asc' ? 'asc' : 'desc');
+    if (banned === 'true') {
+      query = db.collection('users').where('banned', '==', true).orderBy('created_at', 'desc');
+    } else if (banned === 'false') {
+      query = db.collection('users').where('banned', '==', false).orderBy('created_at', 'desc');
+    }
+    const snap = await query.limit(parseInt(limit) || 50).get();
+    let users = snap.docs.map(d => ({
+      id: d.id, ...d.data(),
+      created_at: tsToMillis(d.data().created_at),
+      last_active: tsToMillis(d.data().last_active)
+    }));
+    if (search) {
+      const q = search.toLowerCase();
+      users = users.filter(u =>
+        (u.first_name || '').toLowerCase().includes(q) ||
+        (u.username || '').toLowerCase().includes(q) ||
+        String(u.id).includes(q)
+      );
+    }
+    res.json(users);
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminGetUserDetail(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.params.userId);
+    const doc = await db.collection('users').doc(userId).get();
+    if (!doc.exists) return res.status(404).json({ error: 'User not found' });
+    const d = doc.data();
+    const txSnap = await db.collection('transactions')
+      .where('user_id', '==', userId)
+      .orderBy('timestamp', 'desc')
+      .limit(20)
+      .get();
+    const transactions = txSnap.docs.map(d => ({
+      id: d.id, ...d.data(),
+      timestamp: tsToMillis(d.data().timestamp)
+    }));
+    res.json({
+      user: { id: doc.id, ...d, created_at: tsToMillis(d.created_at) },
+      transactions
+    });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminGetWithdrawals(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { status } = req.query;
+    let query = db.collection('withdrawals').orderBy('timestamp', 'desc');
+    if (status) query = query.where('status', '==', status);
+    const snap = await query.limit(200).get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: tsToMillis(d.data().timestamp) })));
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminApproveWithdrawal(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const id = req.body.id;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await db.collection('withdrawals').doc(id).update({ status: 'approved', approved_at: serverTimestamp(), approved_by: req.user.userId });
+    await logAction('withdrawal_approved', req.user.userId, { id });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminRejectWithdrawal(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const id = req.body.id;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const wdRef = db.collection('withdrawals').doc(id);
+    const wd = await wdRef.get();
+    if (!wd.exists) return res.status(404).json({ error: 'Not found' });
+    const wdData = wd.data();
+    if (wdData.status === 'approved') return res.status(400).json({ error: 'Already approved' });
+    await db.runTransaction(async (t) => {
+      const u = await t.get(db.collection('users').doc(String(wdData.user_id)));
+      if (u.exists) {
+        const coin = wdData.coin || 'doge';
+        t.update(u.ref, { [`balances.${coin}`]: increment(wdData.amount || 0) });
+      }
+      t.update(wdRef, { status: 'rejected', rejected_at: serverTimestamp(), rejected_by: req.user.userId });
+    });
+    await logAction('withdrawal_rejected', req.user.userId, { id });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminBanUser(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { userId, reason } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    await db.collection('users').doc(String(userId)).update({ banned: true, ban_reason: reason || 'Admin ban', banned_at: serverTimestamp(), banned_by: req.user.userId });
+    await logAction('user_ban', req.user.userId, { bannedUser: String(userId), reason });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminUnbanUser(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    await db.collection('users').doc(String(userId)).update({ banned: false, unbanned_at: serverTimestamp(), unbanned_by: req.user.userId });
+    await logAction('user_unban', req.user.userId, { unbannedUser: String(userId) });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminAddBalance(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { userId, amount, coin, reason } = req.body;
+    if (!userId || !amount) return res.status(400).json({ error: 'userId and amount required' });
+    const targetCoin = coin || 'doge';
+    if (!COINS[targetCoin]) return res.status(400).json({ error: 'Invalid coin' });
+    const amt = Number(amount);
+    await db.runTransaction(async (t) => {
+      const u = await t.get(db.collection('users').doc(String(userId)));
+      if (!u.exists) throw new Error('User not found');
+      t.update(u.ref, { [`balances.${targetCoin}`]: increment(amt), last_active: serverTimestamp() });
+      const txRef = db.collection('transactions').doc();
+      t.set(txRef, {
+        user_id: String(userId), type: 'admin_edit', amount: amt,
+        currency: COINS[targetCoin].symbol,
+        description: `Admin balance edit: ${reason || 'No reason'}`,
+        metadata: { adminId: req.user.userId, reason, coin: targetCoin },
+        timestamp: serverTimestamp()
+      });
+    });
+    await logAction('admin_add_balance', req.user.userId, { userId: String(userId), amount, coin: targetCoin, reason });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message || 'Failed' }); }
+}
+
+async function adminGetLogs(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const snap = await db.collection('logs').orderBy('timestamp', 'desc').limit(100).get();
+    res.json(snap.docs.map(d => ({ id: d.id, ...d.data(), timestamp: tsToMillis(d.data().timestamp) })));
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminGetStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const now = Date.now();
+    const fiveMinAgo = Timestamp.fromDate(new Date(now - 5 * 60 * 1000));
+    const oneDayAgo = Timestamp.fromDate(new Date(now - 24 * 60 * 60 * 1000));
+    const sevenDaysAgo = Timestamp.fromDate(new Date(now - 7 * 24 * 60 * 60 * 1000));
+    const todayStart = startOfTodayTs();
+    const todayStartMs = tsToMillis(todayStart);
+    const usersSnap = await db.collection('users').get();
+    const wdSnap = await db.collection('withdrawals').get();
+    const offerSnap = await db.collection('offerwall_completions').get();
+    const promoSnap = await db.collection('promo_uses').get();
+    const claimsSnap = await db.collection('transactions').where('type', '==', 'faucet_claim').get().catch(() => ({ size: 0, docs: [] }));
+    const users = usersSnap.docs;
+    const totalUsers = users.length;
+    const todaysUsers = users.filter(d => {
+      const ms = tsToMillis(d.data().created_at);
+      return ms && ms >= todayStartMs;
+    }).length;
+    const onlineUsers = users.filter(d => {
+      const ms = tsToMillis(d.data().last_active);
+      return ms && ms >= fiveMinAgo.toMillis();
+    }).length;
+    const activeUsers = users.filter(d => {
+      const ms = tsToMillis(d.data().last_active);
+      return ms && ms >= oneDayAgo.toMillis();
+    }).length;
+    const weeklyActiveUsers = users.filter(d => {
+      const ms = tsToMillis(d.data().last_active);
+      return ms && ms >= sevenDaysAgo.toMillis();
+    }).length;
+    const pendingWithdraws = wdSnap.docs.filter(d => d.data().status === 'pending').length;
+    const approvedWithdraws = wdSnap.docs.filter(d => d.data().status === 'approved').length;
+    const rejectedWithdraws = wdSnap.docs.filter(d => d.data().status === 'rejected').length;
+    const totalFaucetPaid = claimsSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const totalOfferwallEarnings = offerSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const totalPromoEarnings = promoSnap.docs.reduce((s, d) => s + (d.data().reward || 0), 0);
+    const totalWithdrawals = wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
+    const totalRevenue = totalOfferwallEarnings * 0.3;
+    res.json({
+      totalUsers, todaysUsers, onlineUsers,
+      pendingWithdraws, approvedWithdraws, rejectedWithdraws,
+      totalFaucetClaims: claimsSnap.size,
+      totalFaucetPaid,
+      totalOfferwallEarnings,
+      totalPromoEarnings,
+      totalWithdrawals,
+      totalRevenue: Math.round(totalRevenue * 1e8) / 1e8,
+      activeUsers, dailyActiveUsers: activeUsers, weeklyActiveUsers,
+      bannedUsers: users.filter(d => d.data().banned).length
+    });
+  } catch (err) {
+    logger.error('Admin stats error', { error: err.message });
+    res.status(500).json({ error: 'Failed' });
+  }
+}
+
+async function adminGetSettings(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const doc = await db.collection('settings').doc('global').get();
+    res.json(doc.exists ? doc.data() : {});
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminUpdateSettings(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    await db.collection('settings').doc('global').set(req.body, { merge: true });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminBroadcast(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { message, target } = req.body;
+    if (!message) return res.status(400).json({ error: 'message required' });
+    await db.collection('broadcasts').add({
+      message, target: target || 'all', sentBy: req.user.userId, timestamp: serverTimestamp()
+    });
+    let botResult = await broadcastToUsers(message);
+    res.json({ success: true, bot: botResult });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function adminSendDM(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const { userId, message } = req.body;
+    if (!userId || !message) return res.status(400).json({ error: 'userId and message required' });
+    const target = await db.collection('users').doc(String(userId)).get();
+    if (!target.exists) return res.status(404).json({ error: 'User not found' });
+    await db.collection('admin_dms').add({
+      user_id: String(userId), message, sent_by: req.user.userId, timestamp: serverTimestamp()
+    });
+    let botSent = false, botError = null;
+    try {
+      const result = await sendTelegramMessage(String(userId), message, 'Markdown');
+      botSent = result.ok;
+      if (!result.ok) botError = result.description || 'Unknown';
+    } catch (e) {
+      botError = e.message;
+    }
+    await logAction('admin_dm', req.user.userId, { targetUser: String(userId), botSent, botError });
+    res.json({ success: true, bot_sent: botSent, bot_error: botError });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+async function getGlobalStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const usersSnap = await db.collection('users').get();
+    const wdSnap = await db.collection('withdrawals').get();
+    res.json({
+      totalUsers: usersSnap.size,
+      activeToday: usersSnap.docs.filter(d => d.data().last_claim && (Date.now() - d.data().last_claim.toMillis() < 86400000)).length,
+      totalPaid: wdSnap.docs.reduce((s, d) => s + (d.data().amount || 0), 0)
+    });
+  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+}
+
+// ============================================
+// EXPRESS APP
+// ============================================
+const app = express();
+process.on('unhandledRejection', (err) => logger.error('Unhandled Rejection', { error: err.message }));
+process.on('uncaughtException', (err) => logger.error('Uncaught Exception', { error: err.message }));
+setupSecurity(app);
+app.use(cors({ origin: true, credentials: true }));
+app.use(compression());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ============================================
+// ROUTES
+// ============================================
+app.get('/ping', (req, res) => res.status(200).send('OK'));
+app.get('/api/health', (req, res) => res.json({ ok: true, db: firebaseInitialized, ts: Date.now() }));
+app.post('/api/auth', authLimiter, auth);
+app.use('/api', generalLimiter);
+app.get('/api/me', jwtAuth, getMe);
+app.get('/api/balance', jwtAuth, getBalance);
+app.get('/api/captcha', jwtAuth, getCaptcha);
+app.post('/api/captcha/verify', jwtAuth, verifyCaptchaEndpoint);
+app.post('/api/claim', claimLimiter, jwtAuth, claim);
+app.post('/api/withdraw', withdrawLimiter, jwtAuth, withdraw);
+app.get('/api/withdrawals', jwtAuth, getWithdrawHistory);
+app.get('/api/referral', jwtAuth, getReferral);
+app.get('/api/referral/list', jwtAuth, getReferralList);
+app.post('/api/referral/collect', jwtAuth, collectReferralBonus);
+app.get('/api/prices', getPrices);
+app.get('/api/live-payouts', getLivePayouts);
+app.get('/api/today-earnings', jwtAuth, getTodayEarnings);
+app.post('/api/activity', jwtAuth, updateActivity);
+app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
+app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
+app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
+app.get('/api/offerwall/games', jwtAuth, getGames);
+app.post('/api/postback', postbackLimiter, postback);
+app.post('/api/offerwall-postback', postbackLimiter, postback);
+app.post('/api/promo/redeem', promoLimiter, jwtAuth, redeemPromo);
+app.get('/api/promo/history', jwtAuth, getPromoHistory);
+app.get('/api/notifications', jwtAuth, getNotifications);
+app.post('/api/notifications/read', jwtAuth, markNotificationsRead);
+app.get('/api/transactions', jwtAuth, getTransactionHistory);
+app.get('/api/stats/global', getGlobalStats);
+app.get('/api/admin/stats', adminAuth, adminGetStats);
+app.get('/api/admin/users', adminAuth, adminGetUsers);
+app.get('/api/admin/users/:userId', adminAuth, adminGetUserDetail);
+app.get('/api/admin/withdrawals', adminAuth, adminGetWithdrawals);
+app.post('/api/admin/approve-withdrawal', adminAuth, adminApproveWithdrawal);
+app.post('/api/admin/reject-withdrawal', adminAuth, adminRejectWithdrawal);
+app.post('/api/admin/add-balance', adminAuth, adminAddBalance);
+app.post('/api/admin/ban-user', adminAuth, adminBanUser);
+app.post('/api/admin/unban-user', adminAuth, adminUnbanUser);
+app.get('/api/admin/logs', adminAuth, adminGetLogs);
+app.get('/api/admin/settings', adminAuth, adminGetSettings);
+app.post('/api/admin/settings', adminAuth, adminUpdateSettings);
+app.post('/api/admin/broadcast', adminAuth, adminBroadcast);
+app.post('/api/admin/send-dm', adminAuth, adminSendDM);
+app.get('/api/admin/promo/list', adminAuth, adminListPromos);
+app.post('/api/admin/promo/create', adminAuth, adminCreatePromo);
+app.post('/api/admin/promo/toggle', adminAuth, adminTogglePromo);
+app.post('/api/admin/promo/delete', adminAuth, adminDeletePromo);
+
+// ============================================
+// STATIC FILE SERVING
+// ============================================
+const publicPath = path.join(__dirname, '..');
+console.log('[Static] Serving files from:', publicPath);
+app.use(express.static(publicPath, {
+  maxAge: '1d',
+  setHeaders: (res, p) => {
+    if (p.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
+
+// ============================================
+// SPA FALLBACK
+// ============================================
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  const indexPath = path.join(publicPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      logger.error('index.html not found', { path: indexPath, error: err.message });
+      res.status(404).send('App not found');
+    }
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  logger.error('Express error', { error: err.message, path: req.path });
+  if (process.env.NODE_ENV === 'production') {
+    res.status(500).json({ error: 'Internal server error' });
+  } else {
+    res.status(500).json({ error: 'Internal server error', debug: err.message });
+  }
+});
+
+module.exports = app;
+
+if (require.main === module) {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    logger.info(`Coinix backend listening on port ${PORT}`);
+    logger.info(`Static path: ${publicPath}`);
+    logger.info(`App URL: ${APP_URL}`);
+  });
+
+  if (firebaseInitialized && BOT_TOKEN) {
+    const scheduleInactiveScan = () => {
+      const now = new Date();
+      const nextRun = new Date(now);
+      nextRun.setUTCHours(10, 0, 0, 0);
+      if (nextRun <= now) nextRun.setUTCDate(nextRun.getUTCDate() + 1);
+      const msUntilRun = nextRun.getTime() - now.getTime();
+      console.log(`[Scheduler] Inactive scan in ${Math.round(msUntilRun / 60000)} minutes`);
+      setTimeout(async () => {
+        try {
+          console.log('[Scheduler] Inactive scan executed');
+        } catch (e) {
+          console.error('[Scheduler] Inactive scan error:', e.message);
+        }
+        setInterval(async () => {
+          try {
+            console.log('[Scheduler] Inactive scan executed');
+          } catch (e) {
+            console.error('[Scheduler] Inactive scan error:', e.message);
+          }
+        }, 24 * 60 * 60 * 1000);
+      }, msUntilRun);
+    };
+    scheduleInactiveScan();
+  }
+
+  if (process.env.NODE_ENV === 'production' && APP_URL) {
+    const PING_INTERVAL_MS = 14 * 60 * 1000;
+    const PING_ENDPOINTS = ['/ping', '/api/health'];
+    let pingIndex = 0;
+    let consecutiveFailures = 0;
+    const keepAlivePing = async () => {
+      const endpoint = PING_ENDPOINTS[pingIndex % PING_ENDPOINTS.length];
+      pingIndex++;
+      const url = `${APP_URL}${endpoint}`;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        consecutiveFailures = 0;
+        logger.debug(`[KeepAlive] OK ${endpoint}`);
+      } catch (e) {
+        consecutiveFailures++;
+        logger.warn(`[KeepAlive] FAIL ${endpoint} (${consecutiveFailures}): ${e.message}`);
+      }
+    };
+    setTimeout(() => {
+      keepAlivePing();
+      setInterval(keepAlivePing, PING_INTERVAL_MS);
+    }, 30 * 1000);
+    logger.info('[KeepAlive] enabled (interval: 14m)');
+  } else {
+    logger.info('[KeepAlive] disabled');
+  }
+
+  const shutdown = (signal) => {
+    logger.info(`${signal} received, shutting down gracefully...`);
+    server.close(() => {
+      logger.info('HTTP server closed');
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(1), 10000).unref();
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
+
+              </script>
+                        </body>
+                        </html>
+                    
