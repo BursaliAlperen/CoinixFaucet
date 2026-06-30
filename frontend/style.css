@@ -78,6 +78,16 @@ html, body { background: var(--bg); }
 }
 .btn-ghost:hover { background: rgba(255,255,255,0.1); }
 
+.btn-danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  color: white; font-weight: 600; font-size: 0.75rem;
+  border-radius: 0.625rem; border: none; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-danger:hover { background: #b91c1c; }
+
 .icon-btn {
   width: 40px; height: 40px;
   display: inline-flex; align-items: center; justify-content: center;
@@ -172,6 +182,28 @@ html, body { background: var(--bg); }
 .feature-icon.green { background: linear-gradient(135deg, #22C55E, #15803D); }
 .feature-icon.cyan { background: linear-gradient(135deg, #06B6D4, #0E7490); }
 .feature-icon.blue { background: linear-gradient(135deg, #2563EB, #1E40AF); }
+
+/* STEP CARD */
+.step-card {
+  padding: 2rem 1.5rem;
+  background: linear-gradient(180deg, rgba(24,24,27,0.8), rgba(24,24,27,0.5));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 1.5rem;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+.step-card:hover { transform: translateY(-4px); border-color: rgba(245,158,11,0.3); }
+.step-num { position: absolute; top: 1rem; right: 1rem; font-size: 0.75rem; font-weight: 800; color: rgba(245,158,11,0.5); }
+.step-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(249,115,22,0.1));
+  border: 1px solid rgba(245,158,11,0.3);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1rem;
+}
+.step-icon svg { width: 28px; height: 28px; color: #fbbf24; }
 
 /* FAQ */
 .faq-item {
@@ -307,23 +339,6 @@ html, body { background: var(--bg); }
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* MODAL */
-.modal-backdrop {
-  position: fixed; inset: 0; z-index: 90;
-  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 1rem;
-}
-.modal-content {
-  background: linear-gradient(180deg, #18181B, #0F0F12);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 1.5rem; padding: 2rem;
-  max-width: 440px; width: 100%;
-  animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
 /* STAT CARD (app) */
 .stat-card {
   padding: 1.25rem;
@@ -344,6 +359,7 @@ html, body { background: var(--bg); }
 .badge-yellow { background: rgba(234,179,8,0.15); color: #facc15; }
 .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
 .badge-purple { background: rgba(124,58,237,0.15); color: #a78bfa; }
+.badge-blue { background: rgba(37,99,235,0.15); color: #60a5fa; }
 
 /* TX FILTERS */
 .tx-filter {
@@ -403,3 +419,20 @@ table tbody tr:hover { background: rgba(255,255,255,0.03); }
   animation: spin 0.6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* PROMO CODE INPUT */
+.promo-input {
+  width: 100%; padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0.875rem; color: white;
+  font-size: 0.875rem; transition: all 0.2s; outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.promo-input:focus {
+  border-color: var(--yellow);
+  background: rgba(245,158,11,0.05);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+}
