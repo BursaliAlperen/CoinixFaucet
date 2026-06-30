@@ -9,10 +9,10 @@ import {
   increment, runTransaction, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ⚠️ Render'da backend URL'ini ayarla!
+// ️ Render backend URL'ini buraya yaz
 const API_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:3000' 
-  : 'https://coinixfaucet.mine.bz'; // Render backend URL'n
+  : 'https://coinixfaucet-backend.onrender.com'; // Kendi backend URL'n
 
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
@@ -42,19 +42,13 @@ function timeAgo(ts) {
   return Math.floor(s/86400) + 'd ago';
 }
 
-// 🔐 Backend'e güvenli API çağrısı
 async function apiCall(endpoint, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
   const token = await user.getIdToken();
-  
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers
-    }
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers }
   });
   const data = await res.json();
   if (!data.success) throw new Error(data.message);
@@ -419,10 +413,7 @@ async function handleClaim() {
     if (typeof grecaptcha !== 'undefined') {
       token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' });
     }
-    const data = await apiCall('/api/claim', {
-      method: 'POST',
-      body: JSON.stringify({ recaptchaToken: token })
-    });
+    const data = await apiCall('/api/claim', { method: 'POST', body: JSON.stringify({ recaptchaToken: token }) });
     toast(`Claimed ${fmt(data.amount)} ${data.coin}!`, 'success');
     startCountdown();
   } catch (e) {
