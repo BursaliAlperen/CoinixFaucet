@@ -116,55 +116,74 @@ console.log('📁 Frontend path:', frontendPath);
 app.use(express.static(frontendPath));
 
 // ============================================
-// 🗺️ SITEMAP.XML
+// 🤖 ROBOTS.TXT
+// ============================================
+app.get('/robots.txt', (req, res) => {
+    res.header('Content-Type', 'text/plain');
+    res.send(`User-agent: *
+Allow: /
+Sitemap: https://coinixfaucet.mine.bz/sitemap.xml`);
+});
+
+// ============================================
+// 🗺️ SITEMAP.XML - GENİŞLETİLMİŞ
 // ============================================
 app.get('/sitemap.xml', (req, res) => {
+    const today = new Date().toISOString().split('T')[0];
     res.header('Content-Type', 'application/xml');
     res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://coinixfaucet.mine.bz/</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/#/dashboard</loc>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/#/faucet</loc>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/#/daily-bonus</loc>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/#/leaderboard</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://coinixfaucet.mine.bz/#/referrals</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://coinixfaucet.mine.bz/#/withdraw</loc>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/#/transactions</loc>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/#/settings</loc>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://coinixfaucet.mine.bz/</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -806,6 +825,7 @@ app.listen(PORT, () => {
   console.log(`||| 🚀 CoinixFaucet v2.0 running on port ${PORT}`);
   console.log(`||| 📁 Serving frontend from ${frontendPath}`);
   console.log(`||| 🗺️ Sitemap: https://coinixfaucet.mine.bz/sitemap.xml`);
+  console.log(`||| 🤖 Robots: https://coinixfaucet.mine.bz/robots.txt`);
   console.log('||| ========================================== |||');
   startSelfPing();
 });
