@@ -25,28 +25,25 @@ const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;',
 
 // ============ DARK MODE ============
 let darkMode = localStorage.getItem('darkMode') !== 'false';
+
 function toggleDarkMode() {
   darkMode = !darkMode;
   localStorage.setItem('darkMode', darkMode);
   document.documentElement.classList.toggle('dark', darkMode);
-  updateDarkModeIcon();
+  updateDarkModeIcons();
 }
-function updateDarkModeIcon() {
-  const icon = $('#darkModeIcon');
-  if (icon) {
-    icon.innerHTML = darkMode ? 
+
+function updateDarkModeIcons() {
+  document.querySelectorAll('.dark-mode-icon').forEach(el => {
+    el.innerHTML = darkMode ? 
       '<i data-lucide="moon" class="w-5 h-5"></i>' : 
       '<i data-lucide="sun" class="w-5 h-5"></i>';
-    lucide.createIcons({ nodes: [icon] });
-  }
+  });
+  lucide.createIcons();
 }
-// Dark mode toggle butonu
-document.addEventListener('DOMContentLoaded', () => {
-  if (darkMode) document.documentElement.classList.add('dark');
-  updateDarkModeIcon();
-  const btn = $('#darkModeToggle');
-  if (btn) btn.addEventListener('click', toggleDarkMode);
-});
+
+// Dark mode başlangıç
+if (darkMode) document.documentElement.classList.add('dark');
 
 function toast(msg, type = 'info', duration = 3500) {
   const el = document.createElement('div');
@@ -88,6 +85,13 @@ let recaptchaToken = null;
 // ========== LANDING ==========
 function initLanding() {
   console.log('||| LANDING INIT |||');
+  
+  // Dark mode toggle
+  document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
+    btn.addEventListener('click', toggleDarkMode);
+  });
+  updateDarkModeIcons();
+  
   $$('.open-auth-btn, #openLoginBtn, #openSignupBtn').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode || (btn.id === 'openSignupBtn' ? 'register' : 'login');
@@ -296,7 +300,6 @@ onAuthStateChanged(auth, async user => {
     console.log('||| USER:', user.email);
     state.user = user;
     await reload(user);
-    // Email doğrulama kontrolü GEÇİCİ OLARAK KALDIRILDI (test için)
     const snap = await getDoc(doc(db, COL.users, user.uid));
     if (!snap.exists()) { 
       console.log('||| USER PROFILE YOK, ÇIKIŞ YAPILIYOR');
@@ -328,6 +331,23 @@ function updateTopBar() {
   $('#topBalance').textContent = fmtUSD(total);
   $('#profileName').textContent = state.profile.username;
   $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
+  
+  // Login durumunda butonları güncelle
+  const landingLoginBtn = $('#openLoginBtn');
+  const landingSignupBtn = $('#openSignupBtn');
+  if (landingLoginBtn) {
+    landingLoginBtn.textContent = 'Dashboard';
+    landingLoginBtn.className = 'btn-primary text-sm';
+    landingLoginBtn.onclick = () => router.go('#/dashboard');
+  }
+  if (landingSignupBtn) {
+    landingSignupBtn.textContent = 'Logout';
+    landingSignupBtn.className = 'btn-ghost text-sm';
+    landingSignupBtn.onclick = async () => {
+      await signOut(auth);
+      toast('Logged out', 'info');
+    };
+  }
   
   // Admin kontrolü
   if (state.profile.isAdmin) {
@@ -637,6 +657,14 @@ function renderSettings() {
 }
 
 // ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+  // Dark mode toggle'ları bağla
+  document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
+    if (btn) btn.addEventListener('click', toggleDarkMode);
+  });
+  updateDarkModeIcons();
+});
+
 lucide.createIcons();
 initLanding();
 console.log('||| ⚡ CoinixFaucet ready |||');
