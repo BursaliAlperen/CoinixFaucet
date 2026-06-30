@@ -10,24 +10,12 @@
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#7C3AED" />
 <link rel="canonical" href="https://coinixfaucet.mine.bz/" />
-
-<!-- Open Graph -->
 <meta property="og:title" content="CoinixFaucet — Earn Free Crypto Instantly" />
 <meta property="og:description" content="Premium crypto faucet with instant FaucetPay withdrawals" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://coinixfaucet.mine.bz/" />
-
-<!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="CoinixFaucet — Earn Free Crypto" />
-<meta name="twitter:description" content="Claim free BTC, DOGE, DGB, FEY & POL every 60 seconds" />
-
-<!-- PWA -->
 <link rel="manifest" href="/manifest.json" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="CoinixFaucet" />
-
-<!-- Favicon -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237C3AED'/%3E%3Cstop offset='1' stop-color='%2306B6D4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23g)'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-weight='800'%3EC%3C/text%3E%3C/svg%3E" />
 
 <!-- reCAPTCHA Enterprise -->
@@ -96,7 +84,7 @@
         <h2 class="text-4xl sm:text-5xl font-black mb-4">Real-Time Platform Data</h2>
         <p class="text-zinc-400">All numbers are live from our database. No fake stats.</p>
       </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="liveStatsGrid">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div class="stat-glass-card"><div class="stat-icon purple"><i data-lucide="users"></i></div><div class="stat-label">Registered Users</div><div class="stat-value" id="statUsers">—</div></div>
         <div class="stat-glass-card"><div class="stat-icon green"><i data-lucide="mouse-pointer-click"></i></div><div class="stat-label">Total Claims</div><div class="stat-value" id="statClaims">—</div></div>
         <div class="stat-glass-card"><div class="stat-icon cyan"><i data-lucide="wallet"></i></div><div class="stat-label">Total Paid Out</div><div class="stat-value" id="statPaid">—</div></div>
@@ -115,7 +103,7 @@
         <p class="text-zinc-400">Real users. Real payouts. Scroll to see more.</p>
       </div>
       <div class="glass-card rounded-3xl overflow-hidden">
-        <div class="live-withdraws-scroll" id="liveWithdrawsTable">
+        <div class="live-withdraws-scroll">
           <table class="w-full">
             <thead class="sticky top-0 bg-[#18181B]/95 backdrop-blur-xl z-10">
               <tr class="border-b border-white/5 text-left text-xs uppercase text-zinc-500">
@@ -157,7 +145,7 @@
         <div class="feature-card"><div class="feature-icon purple"><i data-lucide="zap"></i></div><h3 class="font-bold mb-2">Instant FaucetPay</h3><p class="text-sm text-zinc-400">Get paid in seconds directly to your FaucetPay wallet.</p></div>
         <div class="feature-card"><div class="feature-icon blue"><i data-lucide="layout-dashboard"></i></div><h3 class="font-bold mb-2">Premium Dashboard</h3><p class="text-sm text-zinc-400">Track earnings, claims and referrals in a beautiful Web3 dashboard.</p></div>
         <div class="feature-card"><div class="feature-icon green"><i data-lucide="timer"></i></div><h3 class="font-bold mb-2">Fast 60s Claims</h3><p class="text-sm text-zinc-400">Claim free crypto every 60 seconds. No waiting.</p></div>
-        <div class="feature-card"><div class="feature-icon cyan"><i data-lucide="shield-check"></i></div><h3 class="font-bold mb-2">Secure Platform</h3><p class="text-sm text-zinc-400">reCAPTCHA Enterprise, Firebase Auth, encrypted passwords.</p></div>
+        <div class="feature-card"><div class="feature-icon cyan"><i data-lucide="shield-check"></i></div><h3 class="font-bold mb-2">Secure Platform</h3><p class="text-sm text-zinc-400">reCAPTCHA Enterprise, Firebase Auth, email verification.</p></div>
         <div class="feature-card"><div class="feature-icon yellow"><i data-lucide="calendar-check"></i></div><h3 class="font-bold mb-2">Daily Bonus</h3><p class="text-sm text-zinc-400">Claim every day to grow your streak up to 365 days.</p></div>
         <div class="feature-card"><div class="feature-icon purple"><i data-lucide="users"></i></div><h3 class="font-bold mb-2">20% Referral Program</h3><p class="text-sm text-zinc-400">Earn 20% from every claim your referrals make. Lifetime.</p></div>
       </div>
@@ -172,7 +160,7 @@
         <h2 class="text-4xl sm:text-5xl font-black mb-4">Start Earning in 4 Steps</h2>
       </div>
       <div class="grid md:grid-cols-4 gap-4">
-        <div class="step-card"><div class="step-num">01</div><div class="step-icon"><i data-lucide="user-plus"></i></div><h3 class="font-bold mb-1">Create Account</h3><p class="text-sm text-zinc-400">Sign up in seconds.</p></div>
+        <div class="step-card"><div class="step-num">01</div><div class="step-icon"><i data-lucide="user-plus"></i></div><h3 class="font-bold mb-1">Create Account</h3><p class="text-sm text-zinc-400">Sign up and verify your email.</p></div>
         <div class="step-card"><div class="step-num">02</div><div class="step-icon"><i data-lucide="droplets"></i></div><h3 class="font-bold mb-1">Claim Coins</h3><p class="text-sm text-zinc-400">Click claim every 60s.</p></div>
         <div class="step-card"><div class="step-num">03</div><div class="step-icon"><i data-lucide="trending-up"></i></div><h3 class="font-bold mb-1">Earn Rewards</h3><p class="text-sm text-zinc-400">Stack bonuses & referrals.</p></div>
         <div class="step-card"><div class="step-num">04</div><div class="step-icon"><i data-lucide="arrow-up-right"></i></div><h3 class="font-bold mb-1">Withdraw Instantly</h3><p class="text-sm text-zinc-400">Cash out to FaucetPay.</p></div>
@@ -189,7 +177,7 @@
         <h2 class="text-4xl sm:text-5xl font-black mb-4">Frequently Asked Questions</h2>
       </div>
       <div class="space-y-3">
-        <details class="faq-item"><summary><span>How do I claim crypto?</span><i data-lucide="chevron-down"></i></summary><p>Create a free account, go to the Manual Faucet page and click Claim Reward every 60 seconds.</p></details>
+        <details class="faq-item"><summary><span>How do I claim crypto?</span><i data-lucide="chevron-down"></i></summary><p>Create a free account, verify your email, go to the Manual Faucet page and click Claim Reward every 60 seconds.</p></details>
         <details class="faq-item"><summary><span>How often can I claim?</span><i data-lucide="chevron-down"></i></summary><p>Every 60 seconds, 24/7. No daily limit.</p></details>
         <details class="faq-item"><summary><span>What is the minimum withdrawal?</span><i data-lucide="chevron-down"></i></summary><p>$0.03 across all supported coins.</p></details>
         <details class="faq-item"><summary><span>How long do withdrawals take?</span><i data-lucide="chevron-down"></i></summary><p>Instant via FaucetPay. Most users receive funds within seconds.</p></details>
@@ -219,7 +207,7 @@
   </footer>
 </div>
 
-<!-- AUTH MODAL -->
+<!-- ============ AUTH MODAL (Email Verification + Forgot Password) ============ -->
 <div id="authModal" class="auth-modal hidden">
   <div class="auth-modal-backdrop"></div>
   <div class="auth-modal-content">
@@ -237,8 +225,14 @@
     <form id="authForm" class="space-y-3">
       <div id="usernameField" class="hidden"><label class="label">Username</label><div class="relative"><i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="text" name="username" class="input-field" placeholder="yourname" minlength="3" /></div></div>
       <div><label class="label">Email</label><div class="relative"><i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="email" name="email" class="input-field" placeholder="you@email.com" required autocomplete="email" /></div></div>
-      <div><label class="label">Password</label><div class="relative"><i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="password" name="password" class="input-field" placeholder="••••••••" minlength="6" required autocomplete="current-password" /></div></div>
+      <div id="passwordField"><label class="label">Password</label><div class="relative"><i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="password" name="password" class="input-field" placeholder="••••••••" minlength="6" required autocomplete="current-password" /></div></div>
       <div id="referralField" class="hidden"><label class="label">Referral Code (optional)</label><div class="relative"><i data-lucide="gift" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="text" name="referral" class="input-field" placeholder="ABC123" /></div></div>
+      
+      <!-- Forgot Password Link -->
+      <div id="forgotPasswordLink" class="text-right">
+        <button type="button" id="openForgotPassword" class="text-xs text-purple-400 hover:text-purple-300 transition">Forgot password?</button>
+      </div>
+      
       <button type="submit" id="authSubmit" class="btn-primary w-full mt-2">
         <span id="authBtnText">Sign In</span>
       </button>
@@ -247,7 +241,62 @@
   </div>
 </div>
 
-<!-- APP SHELL -->
+<!-- ============ FORGOT PASSWORD MODAL ============ -->
+<div id="forgotPasswordModal" class="auth-modal hidden">
+  <div class="auth-modal-backdrop"></div>
+  <div class="auth-modal-content">
+    <button id="closeForgotPassword" class="absolute top-4 right-4 icon-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center mb-4">
+        <i data-lucide="key-round" class="w-8 h-8"></i>
+      </div>
+      <h2 class="text-2xl font-black mb-1">Forgot Password?</h2>
+      <p class="text-sm text-zinc-400">Enter your email and we'll send you a reset link</p>
+    </div>
+    <form id="forgotPasswordForm" class="space-y-3">
+      <div><label class="label">Email Address</label><div class="relative"><i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="email" name="email" class="input-field" placeholder="you@email.com" required /></div></div>
+      <button type="submit" id="forgotPasswordSubmit" class="btn-primary w-full">
+        <i data-lucide="send" class="w-4 h-4"></i>
+        <span id="forgotBtnText">Send Reset Link</span>
+      </button>
+    </form>
+    <div id="forgotPasswordSuccess" class="hidden mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+      <div class="flex items-center gap-2 text-green-400 text-sm font-medium">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span>Reset link sent! Check your email.</span>
+      </div>
+    </div>
+    <p class="text-xs text-zinc-500 text-center mt-4">Remember your password? <button type="button" id="backToLogin" class="text-purple-400 hover:text-purple-300">Sign in</button></p>
+  </div>
+</div>
+
+<!-- ============ EMAIL VERIFICATION MODAL ============ -->
+<div id="emailVerificationModal" class="auth-modal hidden">
+  <div class="auth-modal-backdrop"></div>
+  <div class="auth-modal-content text-center">
+    <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center mb-4">
+      <i data-lucide="mail-check" class="w-10 h-10"></i>
+    </div>
+    <h2 class="text-2xl font-black mb-2">Verify Your Email</h2>
+    <p class="text-sm text-zinc-400 mb-6">We sent a verification link to<br /><span id="verificationEmail" class="text-white font-semibold">—</span></p>
+    <div class="p-4 rounded-xl bg-white/5 border border-white/5 text-sm text-zinc-300 mb-6">
+      Please click the link in the email to verify your account. Check your spam folder if you don't see it.
+    </div>
+    <div class="space-y-3">
+      <button id="resendVerificationBtn" class="btn-primary w-full">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span id="resendBtnText">Resend Verification Email</span>
+      </button>
+      <button id="checkVerificationBtn" class="btn-ghost w-full">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+        I've Verified My Email
+      </button>
+      <button id="logoutFromVerification" class="text-xs text-zinc-500 hover:text-zinc-400 transition">Logout</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
 <div id="appShell" class="hidden min-h-screen flex">
   <aside id="sidebar" class="sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/5 bg-[#09090B]/80 backdrop-blur-xl">
     <div class="p-6 flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center font-black">C</div><div><h1 class="font-bold text-sm">CoinixFaucet</h1><p class="text-[10px] text-zinc-500">v1.0</p></div></div>
@@ -292,7 +341,6 @@
 <script type="module" src="app.js"></script>
 
 <script>
-// PWA Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(console.error);
