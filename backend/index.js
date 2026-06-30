@@ -180,17 +180,24 @@ app.set('trust proxy', 1);
 app.use(vpnMiddleware);
 
 // ============================================
-// 📁 STATIC DOSYALAR (FRONTEND) - DÜZELTİLDİ
+// 📁 STATIC DOSYALAR (FRONTEND) - ESNEK YOL
 // ============================================
-// Artık 'frontend' klasörü aramıyor, doğrudan proje kökünü kullanıyor
-const frontendPath = __dirname;
-console.log(`📁 Frontend path: ${frontendPath}`);
-
-// frontend klasörünün varlığını kontrol et (artık kök)
+let frontendPath = join(__dirname, 'frontend');
 if (!fs.existsSync(frontendPath)) {
-  console.error(`❌ Frontend klasörü bulunamadı: ${frontendPath}`);
-  process.exit(1);
+    frontendPath = __dirname; // önce kökü dene
 }
+// index.html'in varlığını kontrol et
+if (!fs.existsSync(join(frontendPath, 'index.html'))) {
+    // bir üst dizini dene (backend/ klasörü içinde çalışıyorsa)
+    const parentPath = join(__dirname, '..');
+    if (fs.existsSync(join(parentPath, 'index.html'))) {
+        frontendPath = parentPath;
+    } else {
+        console.error(`❌ index.html bulunamadı. Aranan yollar: ${frontendPath}, ${parentPath}`);
+        process.exit(1);
+    }
+}
+console.log(`📁 Frontend path: ${frontendPath}`);
 
 // Statik dosyaları sun
 app.use(express.static(frontendPath));
