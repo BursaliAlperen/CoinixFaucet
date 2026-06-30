@@ -5,27 +5,35 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import admin from 'firebase-admin';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // ============================================
-// 🔥 FIREBASE ADMIN INIT
+// 🔥 FIREBASE ADMIN INIT (Secret File)
 // ============================================
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      type: "service_account",
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      client_id: process.env.FIREBASE_CLIENT_ID,
-      auth_uri: "https://accounts.google.com/o/oauth2/auth",
-      token_uri: "https://oauth2.googleapis.com/token",
-      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-      client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL
-    })
-  });
+  try {
+    const serviceAccountPath = process.env.RENDER
+      ? '/opt/render/project/src/firebaseserviceaccount.json'
+      : join(__dirname, 'firebaseserviceaccount.json');
+
+    const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+
+    console.log('✅ Firebase Admin initialized with secret file');
+  } catch (error) {
+    console.error('❌ Firebase Admin initialization failed:', error.message);
+    process.exit(1);
+  }
 }
 
 const db = getFirestore();
@@ -73,7 +81,6 @@ app.set('trust proxy', 1);
 // ============================================
 const claimLimiter = rateLimit({ windowMs: 60000, max: 2, message: { success: false, message: 'Too many claims.' } });
 const withdrawLimiter = rateLimit({ windowMs: 3600000, max: 10, message: { success: false, message: 'Too many withdrawals.' } });
-const authLimiter = rateLimit({ windowMs: 900000, max: 5, message: { success: false, message: 'Too many attempts.' } });
 
 // ============================================
 // 🔐 AUTH MIDDLEWARE
@@ -100,55 +107,44 @@ const requireEmailVerified = (req, res, next) => {
   next();
 };
 
-// 🔐 ADMIN AUTH MIDDLEWARE
 const verifyAdmin = (req, res, next) => {
   const key = req.headers['x-admin-key'];
   if (!process.env.ADMIN_SECRET_KEY) {
     return res.status(500).json({ success: false, message: 'Admin not configured' });
   }
   if (key !== process.env.ADMIN_SECRET_KEY) {
-    console.warn('⚠️ Unauthorized admin access attempt from', req.ip);
+    console.warn('⚠️ Unauthorized admin access from', req.ip);
     return res.status(401).json({ success: false, message: 'Invalid admin key' });
   }
   next();
 };
 
 // ============================================
-// 💖 KEEP-ALIVE ENDPOINT
+// 💖 KEEP-ALIVE
 // ============================================
 app.get('/api/keep-alive', (req, res) => {
-  res.json({
-    success: true,
-    status: 'alive',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    message: 'CoinixFaucet backend is awake'
-  });
+  res.json({ success: true, status: 'alive', timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
 
-// ============================================
-// 🔄 SELF PING (Backup keep-alive)
-// ============================================
-let selfPingInterval;
+// Self-ping every 14 minutes
 function startSelfPing() {
-  if (selfPingInterval) clearInterval(selfPingInterval);
-  selfPingInterval = setInterval(async () => {
+  setInterval(async () => {
     try {
       const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
       await fetch(`${url}/api/keep-alive`);
-      console.log('💓 Self-ping successful at', new Date().toISOString());
+      console.log(' Self-ping at', new Date().toISOString());
     } catch (err) {
       console.log('⚠️ Self-ping failed:', err.message);
     }
-  }, 14 * 60 * 1000); // 14 dakika (Render 15 dk'da uyutur)
+  }, 14 * 60 * 1000);
 }
 
 // ============================================
-// 💰 PRICES (READ ONLY)
+// 💰 PRICES
 // ============================================
 app.get('/api/prices', (req, res) => {
   res.json({
@@ -161,7 +157,7 @@ app.get('/api/prices', (req, res) => {
 });
 
 // ============================================
-// 👤 USER PROFILE
+//  USER PROFILE
 // ============================================
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
@@ -187,26 +183,21 @@ app.get('/api/user', verifyToken, async (req, res) => {
 });
 
 // ============================================
-// 🚰 CLAIM ENDPOINT (SECURE)
+// 🚰 CLAIM
 // ============================================
 app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (req, res) => {
   try {
     const { recaptchaToken } = req.body;
     
-    // reCAPTCHA verification
     if (recaptchaToken && process.env.RECAPTCHA_API_KEY) {
       try {
         const recaptchaRes = await fetch(
-          `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/assessments?key=${process.env.RECAPTCHA_API_KEY}`,
+          `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID || 'coinixfaucet'}/assessments?key=${process.env.RECAPTCHA_API_KEY}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              event: {
-                token: recaptchaToken,
-                expectedAction: 'claim',
-                siteKey: process.env.RECAPTCHA_SITE_KEY
-              }
+              event: { token: recaptchaToken, expectedAction: 'claim', siteKey: process.env.RECAPTCHA_SITE_KEY }
             })
           }
         );
@@ -214,7 +205,7 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
         if ((assessment.riskAnalysis?.score || 0) < 0.3) {
           return res.status(403).json({ success: false, message: 'Bot detected' });
         }
-      } catch (e) { console.log('reCAPTCHA check failed, continuing:', e.message); }
+      } catch (e) { console.log('reCAPTCHA check skipped:', e.message); }
     }
 
     const userRef = db.collection('users').doc(req.user.uid);
@@ -238,9 +229,7 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
       const freshDoc = await transaction.get(userRef);
       if (!freshDoc.exists) throw new Error('User not found');
       const freshData = freshDoc.data();
-      if (now - (freshData.lastClaimAt || 0) < CLAIM_COOLDOWN_MS) {
-        throw new Error('Cooldown');
-      }
+      if (now - (freshData.lastClaimAt || 0) < CLAIM_COOLDOWN_MS) throw new Error('Cooldown');
       const newBalances = { ...freshData.balances };
       newBalances[coin] = (newBalances[coin] || 0) + amount;
       transaction.update(userRef, {
@@ -262,22 +251,17 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
 
     // Referral bonus
     if (userData.referredBy) {
-      const refSnap = await db.collection('users')
-        .where('referralCode', '==', userData.referredBy).limit(1).get();
+      const refSnap = await db.collection('users').where('referralCode', '==', userData.referredBy).limit(1).get();
       if (!refSnap.empty) {
         const refDoc = refSnap.docs[0];
         const refData = refDoc.data();
         await db.collection('users').doc(refDoc.id).update({
           referralEarnings: FieldValue.increment(usdValue * REFERRAL_RATE),
-          balances: {
-            ...refData.balances,
-            [coin]: (refData.balances[coin] || 0) + (amount * REFERRAL_RATE)
-          }
+          balances: { ...refData.balances, [coin]: (refData.balances[coin] || 0) + (amount * REFERRAL_RATE) }
         });
       }
     }
 
-    // Update global stats
     await db.collection('global').doc('stats').set({
       totalClaims: FieldValue.increment(1),
       totalPaid: FieldValue.increment(usdValue),
@@ -292,7 +276,7 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
 });
 
 // ============================================
-// 💸 WITHDRAW (SECURE)
+// 💸 WITHDRAW
 // ============================================
 app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, async (req, res) => {
   try {
@@ -333,7 +317,6 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
       status: 'completed', createdAt: FieldValue.serverTimestamp()
     });
 
-    // Update global stats
     await db.collection('global').doc('stats').set({
       totalWithdrawals: FieldValue.increment(1),
       totalWithdrawnAmount: FieldValue.increment(balanceUSD),
@@ -474,7 +457,7 @@ app.get('/api/transactions', verifyToken, async (req, res) => {
 });
 
 // ============================================
-// 🎁 DAILY BONUS
+//  DAILY BONUS
 // ============================================
 app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res) => {
   try {
@@ -509,7 +492,7 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
 });
 
 // ============================================
-// 🔐 RECAPTCHA VERIFY (for frontend)
+//  RECAPTCHA VERIFY
 // ============================================
 app.post('/api/verify-recaptcha', async (req, res) => {
   try {
@@ -517,7 +500,7 @@ app.post('/api/verify-recaptcha', async (req, res) => {
     if (!token) return res.status(400).json({ success: false, message: 'Token required' });
     
     const response = await fetch(
-      `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/assessments?key=${process.env.RECAPTCHA_API_KEY}`,
+      `https://recaptchaenterprise.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID || 'coinixfaucet'}/assessments?key=${process.env.RECAPTCHA_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -539,15 +522,12 @@ app.post('/api/verify-recaptcha', async (req, res) => {
 });
 
 // ============================================
-// 🔐🔐🔐 ADMIN PANEL ENDPOINTS 🔐🔐🔐
+// 🔐 ADMIN ENDPOINTS
 // ============================================
-
-// Admin auth check
 app.post('/api/admin/verify', verifyAdmin, (req, res) => {
   res.json({ success: true, message: 'Admin authenticated' });
 });
 
-// Admin dashboard stats
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
   try {
     const usersSnap = await db.collection('users').count().get();
@@ -573,15 +553,12 @@ app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
   }
 });
 
-// Add fake withdrawal (landing page'de görünür)
 app.post('/api/admin/add-withdrawal', verifyAdmin, async (req, res) => {
   try {
     const { username, coin, amount, usdValue } = req.body;
-    
     if (!username || !coin || !VALID_COINS.includes(coin.toUpperCase())) {
       return res.status(400).json({ success: false, message: 'Invalid data' });
     }
-
     const finalAmount = parseFloat(amount) || (Math.random() * 100 + 10).toFixed(4);
     const finalUSD = parseFloat(usdValue) || (finalAmount * COIN_PRICES[coin.toUpperCase()]).toFixed(4);
 
@@ -598,23 +575,18 @@ app.post('/api/admin/add-withdrawal', verifyAdmin, async (req, res) => {
       createdAt: FieldValue.serverTimestamp()
     });
 
-    // Update global stats
     await db.collection('global').doc('stats').set({
       totalWithdrawals: FieldValue.increment(1),
       totalWithdrawnAmount: FieldValue.increment(parseFloat(finalUSD)),
       lastUpdated: FieldValue.serverTimestamp()
     }, { merge: true });
 
-    res.json({
-      success: true,
-      message: `Fake withdrawal added: ${finalAmount} ${coin.toUpperCase()} for ${username}`
-    });
+    res.json({ success: true, message: `Added: ${finalAmount} ${coin.toUpperCase()} for ${username}` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Add bulk fake withdrawals (toplu ekleme)
 app.post('/api/admin/add-bulk-withdrawals', verifyAdmin, async (req, res) => {
   try {
     const { count = 10 } = req.body;
@@ -638,12 +610,9 @@ app.post('/api/admin/add-bulk-withdrawals', verifyAdmin, async (req, res) => {
       const ref = db.collection('transactions').doc();
       batch.set(ref, {
         userId: 'fake-' + Date.now() + '-' + i,
-        type: 'withdraw',
-        coin, amount, usdValue: usd,
-        destination: 'faucetpay@user.com',
-        username, isFake: true,
-        status: 'completed',
-        createdAt: FieldValue.serverTimestamp()
+        type: 'withdraw', coin, amount, usdValue: usd,
+        destination: 'faucetpay@user.com', username, isFake: true,
+        status: 'completed', createdAt: FieldValue.serverTimestamp()
       });
       added++;
       totalUSD += usd;
@@ -657,28 +626,16 @@ app.post('/api/admin/add-bulk-withdrawals', verifyAdmin, async (req, res) => {
       lastUpdated: FieldValue.serverTimestamp()
     }, { merge: true });
 
-    res.json({
-      success: true,
-      message: `Added ${added} fake withdrawals, total $${totalUSD.toFixed(2)}`
-    });
+    res.json({ success: true, message: `Added ${added} withdrawals, total $${totalUSD.toFixed(2)}` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Boost global stats (sayıları artır)
 app.post('/api/admin/boost-stats', verifyAdmin, async (req, res) => {
   try {
-    const {
-      addClaims = 0,
-      addPaid = 0,
-      addWithdrawals = 0,
-      addWithdrawnAmount = 0,
-      addReferralRewards = 0
-    } = req.body;
-
+    const { addClaims = 0, addPaid = 0, addWithdrawals = 0, addWithdrawnAmount = 0, addReferralRewards = 0 } = req.body;
     const updates = { lastUpdated: FieldValue.serverTimestamp() };
-    
     if (addClaims > 0) updates.totalClaims = FieldValue.increment(addClaims);
     if (addPaid > 0) updates.totalPaid = FieldValue.increment(addPaid);
     if (addWithdrawals > 0) updates.totalWithdrawals = FieldValue.increment(addWithdrawals);
@@ -686,17 +643,12 @@ app.post('/api/admin/boost-stats', verifyAdmin, async (req, res) => {
     if (addReferralRewards > 0) updates.referralRewards = FieldValue.increment(addReferralRewards);
 
     await db.collection('global').doc('stats').set(updates, { merge: true });
-
-    res.json({
-      success: true,
-      message: `Stats boosted: +${addClaims} claims, +$${addPaid} paid, +${addWithdrawals} withdrawals`
-    });
+    res.json({ success: true, message: `Boosted: +${addClaims} claims, +$${addPaid} paid, +${addWithdrawals} withdrawals` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Get all users (admin only)
 app.get('/api/admin/users', verifyAdmin, async (req, res) => {
   try {
     const snap = await db.collection('users').orderBy('createdAt', 'desc').limit(100).get();
@@ -704,11 +656,8 @@ app.get('/api/admin/users', verifyAdmin, async (req, res) => {
     snap.forEach(d => {
       const data = d.data();
       users.push({
-        id: d.id,
-        username: data.username,
-        email: data.email,
-        totalClaims: data.totalClaims || 0,
-        totalWithdrawn: data.totalWithdrawn || 0,
+        id: d.id, username: data.username, email: data.email,
+        totalClaims: data.totalClaims || 0, totalWithdrawn: data.totalWithdrawn || 0,
         referralCount: data.referralCount || 0,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || null
       });
@@ -719,24 +668,21 @@ app.get('/api/admin/users', verifyAdmin, async (req, res) => {
   }
 });
 
-// Delete a transaction (admin)
 app.delete('/api/admin/transaction/:id', verifyAdmin, async (req, res) => {
   try {
     await db.collection('transactions').doc(req.params.id).delete();
-    res.json({ success: true, message: 'Transaction deleted' });
+    res.json({ success: true, message: 'Deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// Get recent transactions (admin - all users)
 app.get('/api/admin/transactions', verifyAdmin, async (req, res) => {
   try {
     const { limit = 50 } = req.query;
     const snap = await db.collection('transactions')
       .orderBy('createdAt', 'desc')
-      .limit(Math.min(parseInt(limit) || 50, 200))
-      .get();
+      .limit(Math.min(parseInt(limit) || 50, 200)).get();
     const txs = [];
     snap.forEach(d => txs.push({ id: d.id, ...d.data() }));
     res.json({ success: true, transactions: txs });
@@ -746,7 +692,7 @@ app.get('/api/admin/transactions', verifyAdmin, async (req, res) => {
 });
 
 // ============================================
-// 🌐 LIVE WITHDRAWS (Public, Landing Page için)
+//  LIVE WITHDRAWS
 // ============================================
 app.get('/api/live-withdraws', async (req, res) => {
   try {
@@ -754,8 +700,7 @@ app.get('/api/live-withdraws', async (req, res) => {
       .where('type', '==', 'withdraw')
       .where('status', '==', 'completed')
       .orderBy('createdAt', 'desc')
-      .limit(30)
-      .get();
+      .limit(30).get();
     
     const withdrawals = [];
     snap.forEach(d => {
@@ -763,9 +708,7 @@ app.get('/api/live-withdraws', async (req, res) => {
       withdrawals.push({
         id: d.id,
         username: data.username || ('User' + (data.userId || '').slice(0, 6)),
-        coin: data.coin,
-        amount: data.amount,
-        usdValue: data.usdValue,
+        coin: data.coin, amount: data.amount, usdValue: data.usdValue,
         createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         status: 'completed'
       });
@@ -778,25 +721,22 @@ app.get('/api/live-withdraws', async (req, res) => {
 });
 
 // ============================================
-// 🎯 404 + ERROR HANDLER
+// 404 + ERROR
 // ============================================
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Not found' });
-});
-
+app.use((req, res) => res.status(404).json({ success: false, message: 'Not found' }));
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ success: false, message: 'Internal error' });
 });
 
 // ============================================
-// 🚀 START
+//  START
 // ============================================
 app.listen(PORT, () => {
   console.log(`🚀 CoinixFaucet Backend running on port ${PORT}`);
-  console.log(`🔐 Firebase: ${process.env.FIREBASE_PROJECT_ID}`);
-  console.log(`🛡️ Admin Panel: ${process.env.ADMIN_SECRET_KEY ? 'ENABLED' : 'DISABLED'}`);
-  console.log(`💖 Keep-alive: Active (self-ping every 14min)`);
+  console.log(`🔐 Firebase: coinixfaucet`);
+  console.log(`️ Admin: ${process.env.ADMIN_SECRET_KEY ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`💖 Keep-alive: Active`);
   startSelfPing();
 });
 
