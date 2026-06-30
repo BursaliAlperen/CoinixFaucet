@@ -12,13 +12,9 @@ services:
         value: production
       - key: PORT
         value: "3000"
-      - key: FIREBASE_PROJECT_ID
-        value: coinixfaucet
-      - key: RECAPTCHA_SITE_KEY
-        value: 6LctET4tAAAAAAGcqEdyQbF_gcTH57Dnxztlv2hN
-      - key: RECAPTCHA_SECRET_KEY
+      - key: FIREBASE_SERVICE_ACCOUNT
         sync: false
-      - key: OFFERWALL_API_KEY
+      - key: RECAPTCHA_SECRET_KEY
         sync: false
       - key: OFFERWALL_SECRET_KEY
         sync: false
