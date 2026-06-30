@@ -180,36 +180,43 @@ app.set('trust proxy', 1);
 app.use(vpnMiddleware);
 
 // ============================================
-// 📁 STATIC DOSYALAR (FRONTEND) - ESNEK YOL
+// 📁 STATIC DOSYALAR (FRONTEND) - KESİN ÇÖZÜM
 // ============================================
-let frontendPath = join(__dirname, 'frontend');
-if (!fs.existsSync(frontendPath)) {
-    frontendPath = __dirname; // önce kökü dene
-}
-// index.html'in varlığını kontrol et
-if (!fs.existsSync(join(frontendPath, 'index.html'))) {
-    // bir üst dizini dene (backend/ klasörü içinde çalışıyorsa)
-    const parentPath = join(__dirname, '..');
-    if (fs.existsSync(join(parentPath, 'index.html'))) {
-        frontendPath = parentPath;
-    } else {
-        console.error(`❌ index.html bulunamadı. Aranan yollar: ${frontendPath}, ${parentPath}`);
-        process.exit(1);
+const possiblePaths = [
+    __dirname,
+    join(__dirname, '..'),
+    join(__dirname, 'frontend'),
+    join(__dirname, '../frontend'),
+    join(process.cwd(), 'frontend'),
+    process.cwd()
+];
+
+let frontendPath = null;
+for (const p of possiblePaths) {
+    if (fs.existsSync(join(p, 'index.html'))) {
+        frontendPath = p;
+        break;
     }
 }
-console.log(`📁 Frontend path: ${frontendPath}`);
+
+if (!frontendPath) {
+    console.error('❌ index.html bulunamadı. Aranan yollar:', possiblePaths);
+    process.exit(1);
+}
+
+console.log('📁 Frontend path:', frontendPath);
 
 // Statik dosyaları sun
 app.use(express.static(frontendPath));
 
-// Admin paneli için özel rota
+// Admin paneli (isteğe bağlı)
 app.get('/admin', (req, res) => {
-  const adminPath = join(frontendPath, 'admin.html');
-  if (fs.existsSync(adminPath)) {
-    res.sendFile(adminPath);
-  } else {
-    res.status(404).send('Admin page not found');
-  }
+    const adminPath = join(frontendPath, 'admin.html');
+    if (fs.existsSync(adminPath)) {
+        res.sendFile(adminPath);
+    } else {
+        res.status(404).send('Admin page not found');
+    }
 });
 
 // ============================================
