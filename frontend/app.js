@@ -9,6 +9,9 @@ import {
   increment, runTransaction, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// ============ API URL (aynı origin) ============
+const API_URL = '';  // Boş bırak, aynı sunucu üzerinden çalışır
+
 // ============ ADBLOCK DETECTION ============
 async function detectAdBlock() {
   try {
@@ -40,11 +43,6 @@ function showAdBlockWarning() {
   `;
   document.body.appendChild(div);
 }
-
-// ============ API URL ============
-const API_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://coinixfaucet-backend.onrender.com';
 
 // ============ HELPERS ============
 const $ = (s, p = document) => p.querySelector(s);
@@ -79,7 +77,8 @@ async function apiCall(endpoint, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
   const token = await user.getIdToken();
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  const url = API_URL ? `${API_URL}${endpoint}` : endpoint;
+  const res = await fetch(url, {
     ...options,
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers }
   });
@@ -135,7 +134,8 @@ function renderLandingCoins() {
 
 async function loadLiveStats() {
   try {
-    const res = await fetch(`${API_URL}/api/stats`);
+    const url = API_URL ? `${API_URL}/api/stats` : '/api/stats';
+    const res = await fetch(url);
     const data = await res.json();
     if (data.success) {
       $('#statUsers').textContent = (data.stats.totalUsers || 0).toLocaleString();
@@ -153,7 +153,8 @@ async function loadLiveWithdraws() {
   const loading = $('#withdrawsLoading');
   if (!table) return;
   try {
-    const res = await fetch(`${API_URL}/api/live-withdraws`);
+    const url = API_URL ? `${API_URL}/api/live-withdraws` : '/api/live-withdraws';
+    const res = await fetch(url);
     const data = await res.json();
     if (loading) loading.style.display = 'none';
     table.innerHTML = '';
@@ -478,7 +479,8 @@ function renderDailyBonus() {
 
 async function renderLeaderboard() {
   try {
-    const res = await fetch(`${API_URL}/api/leaderboard`);
+    const url = API_URL ? `${API_URL}/api/leaderboard` : '/api/leaderboard';
+    const res = await fetch(url);
     const data = await res.json();
     const c = $('#pageContainer');
     if (!data.success) return;
@@ -627,4 +629,4 @@ detectAdBlock();
 // ============ INIT ============
 lucide.createIcons();
 initLanding();
-console.log('⚡ CoinixFaucet ready · Backend:', API_URL);
+console.log('⚡ CoinixFaucet ready · Backend:', API_URL || 'same origin');
