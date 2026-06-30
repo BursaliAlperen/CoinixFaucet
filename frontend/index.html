@@ -15,26 +15,22 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://coinixfaucet.mine.bz/" />
 <meta name="twitter:card" content="summary_large_image" />
-<!-- Google Site Verification - YENİ DOĞRULAMA KODU -->
 <meta name="google-site-verification" content="M_3TVujcb-QO4_nYZk8-vNeZfb-9BwrOVlJAy7CSRjM" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237C3AED'/%3E%3Cstop offset='1' stop-color='%2306B6D4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23g)'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-weight='800'%3EC%3C/text%3E%3C/svg%3E" />
 
-<!-- reCAPTCHA Enterprise -->
 <script src="https://www.google.com/recaptcha/enterprise.js?render=6LctET4tAAAAAAGcqEdyQbF_gcTH57Dnxztlv2hN"></script>
 
-<!-- CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
 <link rel="stylesheet" href="/style.css" />
 </head>
-<body class="bg-[#09090B] text-white font-['Inter'] antialiased">
+<body class="bg-[#09090B] text-white font-['Inter'] antialiased dark:bg-[#0a0a0f]">
 
 <!-- LANDING PAGE -->
 <div id="landingPage">
@@ -51,6 +47,7 @@
       <a href="#faq" class="landing-nav-link">FAQ</a>
     </nav>
     <div class="flex items-center gap-2">
+      <button id="darkModeToggle" class="icon-btn"><span id="darkModeIcon" class="dark-mode-icon"><i data-lucide="moon" class="w-5 h-5"></i></span></button>
       <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
       <button id="openSignupBtn" class="btn-primary text-sm"><i data-lucide="sparkles" class="w-4 h-4"></i>Sign Up</button>
     </div>
@@ -105,16 +102,16 @@
         <p class="text-zinc-400">Real users. Real payouts. Scroll to see more.</p>
       </div>
       <div class="glass-card rounded-3xl overflow-hidden">
-        <div class="live-withdraws-scroll">
+        <div class="live-withdraws-scroll-vertical">
           <table class="w-full">
-            <thead class="sticky top-0 bg-[#18181B]/95 backdrop-blur-xl z-10">
+            <thead class="sticky top-0 bg-[#18181B]/95 backdrop-blur-xl z-10 dark:bg-[#1a1a2e]/95">
               <tr class="border-b border-white/5 text-left text-xs uppercase text-zinc-500">
-                <th class="p-4 font-semibold">User</th>
-                <th class="p-4 font-semibold">Coin</th>
-                <th class="p-4 font-semibold">Amount</th>
-                <th class="p-4 font-semibold">USD</th>
-                <th class="p-4 font-semibold">Time</th>
-                <th class="p-4 font-semibold">Status</th>
+                <th class="p-3 font-semibold">User</th>
+                <th class="p-3 font-semibold">Coin</th>
+                <th class="p-3 font-semibold">Amount</th>
+                <th class="p-3 font-semibold">USD</th>
+                <th class="p-3 font-semibold">Time</th>
+                <th class="p-3 font-semibold">Status</th>
               </tr>
             </thead>
             <tbody id="withdrawsBody"></tbody>
@@ -209,7 +206,7 @@
   </footer>
 </div>
 
-<!-- ============ AUTH MODAL (Email Verification + Forgot Password) ============ -->
+<!-- ============ AUTH MODAL ============ -->
 <div id="authModal" class="auth-modal hidden">
   <div class="auth-modal-backdrop"></div>
   <div class="auth-modal-content">
@@ -230,7 +227,6 @@
       <div id="passwordField"><label class="label">Password</label><div class="relative"><i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="password" name="password" class="input-field" placeholder="••••••••" minlength="6" required autocomplete="current-password" /></div></div>
       <div id="referralField" class="hidden"><label class="label">Referral Code (optional)</label><div class="relative"><i data-lucide="gift" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="text" name="referral" class="input-field" placeholder="ABC123" /></div></div>
       
-      <!-- Forgot Password Link -->
       <div id="forgotPasswordLink" class="text-right">
         <button type="button" id="openForgotPassword" class="text-xs text-purple-400 hover:text-purple-300 transition">Forgot password?</button>
       </div>
@@ -300,8 +296,8 @@
 
 <!-- ============ APP SHELL ============ -->
 <div id="appShell" class="hidden min-h-screen flex">
-  <aside id="sidebar" class="sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/5 bg-[#09090B]/80 backdrop-blur-xl">
-    <div class="p-6 flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center font-black">C</div><div><h1 class="font-bold text-sm">CoinixFaucet</h1><p class="text-[10px] text-zinc-500">v1.0</p></div></div>
+  <aside id="sidebar" class="sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/5 bg-[#09090B]/80 backdrop-blur-xl dark:bg-[#0a0a1a]/80">
+    <div class="p-6 flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center font-black">C</div><div><h1 class="font-bold text-sm">CoinixFaucet</h1><p class="text-[10px] text-zinc-500">v2.0</p></div></div>
     <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
       <a href="#/dashboard" data-route="dashboard" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
       <a href="#/faucet" data-route="faucet" class="nav-link"><i data-lucide="droplets"></i><span>Manual Faucet</span></a>
@@ -311,14 +307,18 @@
       <a href="#/withdraw" data-route="withdraw" class="nav-link"><i data-lucide="wallet"></i><span>Withdraw</span></a>
       <a href="#/transactions" data-route="transactions" class="nav-link"><i data-lucide="receipt"></i><span>Transactions</span></a>
       <a href="#/settings" data-route="settings" class="nav-link"><i data-lucide="settings"></i><span>Settings</span></a>
+      <a href="/admin" data-route="admin" class="nav-link hidden" style="display:none"><i data-lucide="shield"></i><span>Admin Panel</span></a>
     </nav>
-    <div class="p-3 border-t border-white/5"><button id="logoutBtn" class="nav-link text-red-400 hover:bg-red-500/10 w-full"><i data-lucide="log-out"></i><span>Logout</span></button></div>
+    <div class="p-3 border-t border-white/5">
+      <button id="logoutBtn" class="nav-link text-red-400 hover:bg-red-500/10 w-full"><i data-lucide="log-out"></i><span>Logout</span></button>
+    </div>
   </aside>
   <main class="flex-1 min-w-0">
     <header class="top-nav">
       <button id="menuToggle" class="lg:hidden p-2 rounded-xl bg-white/5"><i data-lucide="menu" class="w-5 h-5"></i></button>
       <div class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/5 border border-white/5"><i data-lucide="wallet" class="w-4 h-4 text-zinc-400"></i><span class="text-xs text-zinc-400 hidden sm:inline">Balance</span><span id="topBalance" class="text-sm font-bold">$0.0000</span></div>
       <div class="flex items-center gap-2">
+        <button id="darkModeToggle2" class="icon-btn"><span id="darkModeIcon2" class="dark-mode-icon"><i data-lucide="moon" class="w-5 h-5"></i></span></button>
         <button id="profileBtn" class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/5 border border-white/5"><div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold" id="profileAvatar">U</div><span id="profileName" class="text-sm font-medium hidden sm:inline">User</span></button>
       </div>
     </header>
