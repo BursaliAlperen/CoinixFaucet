@@ -21,11 +21,12 @@ export const COL = {
   claims: 'claims',
   transactions: 'transactions',
   referrals: 'referrals',
-  global: 'global'
+  global: 'global',
+  promoCodes: 'promo_codes'
 };
 
 // CNX = $0.01 (Faucet coin)
-// 5 coin: PEPE, DOGE, DGB, FEY, POL
+// 5 coin: PEPE, DOGE, DGB, FEY, POL (ayrı bakiye)
 export const COINS = ['PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
 
 export const COIN_META = {
