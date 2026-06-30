@@ -24,11 +24,9 @@ if (!admin.apps.length) {
       process.exit(1);
     }
     const serviceAccount = JSON.parse(serviceAccountJson);
-
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-
     console.log('✅ Firebase Admin initialized (via env)');
   } catch (error) {
     console.error('❌ Firebase Admin init failed:', error.message);
@@ -179,6 +177,11 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.set('trust proxy', 1);
 app.use(vpnMiddleware);
+
+// ============================================
+// 📁 STATIC DOSYALAR (FRONTEND)
+// ============================================
+app.use(express.static(join(__dirname, 'frontend')));
 
 // ============================================
 // 🔒 RATE LIMITERS
@@ -721,7 +724,7 @@ app.post('/api/admin/promo/:code/toggle', verifyAdmin, async (req, res) => {
 });
 
 // ============================================
-// 🎁 OFFERWALL.ME WEBHOOK (GERÇEK ENTEGRASYON)
+// 🎁 OFFERWALL.ME WEBHOOK
 // ============================================
 app.post('/api/offerwall', async (req, res) => {
   try {
@@ -1152,7 +1155,11 @@ app.get('/api/admin/users', verifyAdmin, async (req, res) => {
 // ============================================
 // 🚫 404 + ERROR
 // ============================================
-app.use((req, res) => res.status(404).json({ success: false, message: 'Not found' }));
+// API olmayan tüm istekler için index.html (SPA desteği)
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, 'frontend', 'index.html'));
+});
+
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ success: false, message: 'Internal error' });
@@ -1182,6 +1189,7 @@ app.listen(PORT, () => {
   console.log(`🎟️ Promo Codes: ENABLED`);
   console.log(`🛡️ VPN Protection: ENABLED`);
   console.log(`💖 Keep-alive: Active`);
+  console.log(`📁 Serving frontend from ${join(__dirname, 'frontend')}`);
   startSelfPing();
 });
 
