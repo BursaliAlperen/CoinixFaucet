@@ -9,40 +9,10 @@ import {
   increment, runTransaction, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ============ API URL (aynı origin) ============
-const API_URL = '';  // Boş bırak, aynı sunucu üzerinden çalışır
+console.log('||| ========== COINIXFAUCET APP START ========== |||');
 
-// ============ ADBLOCK DETECTION ============
-async function detectAdBlock() {
-  try {
-    const response = await fetch('/ads.js', { method: 'HEAD', cache: 'no-store' });
-    if (!response.ok || response.status === 404) {
-      showAdBlockWarning();
-      return true;
-    }
-    return false;
-  } catch (e) {
-    showAdBlockWarning();
-    return true;
-  }
-}
-
-function showAdBlockWarning() {
-  const existing = document.getElementById('adblock-warning');
-  if (existing) return;
-  const div = document.createElement('div');
-  div.id = 'adblock-warning';
-  div.className = 'fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-lg p-6';
-  div.innerHTML = `
-    <div class="glass-card p-8 rounded-3xl max-w-md w-full text-center border border-red-500/30">
-      <div class="text-6xl mb-4">🛡️</div>
-      <h2 class="text-2xl font-bold mb-2">AdBlock Tespit Edildi</h2>
-      <p class="text-zinc-400 text-sm mb-6">CoinixFaucet, reklam gelirleriyle ayakta kalıyor. Lütfen AdBlock'u devre dışı bırak ve sayfayı yenile.</p>
-      <button onclick="location.reload()" class="btn-primary w-full">Sayfayı Yenile</button>
-    </div>
-  `;
-  document.body.appendChild(div);
-}
+// ============ API URL ============
+const API_URL = '';
 
 // ============ HELPERS ============
 const $ = (s, p = document) => p.querySelector(s);
@@ -52,6 +22,31 @@ const fmtUSD = n => '$' + Number(n || 0).toFixed(4);
 const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const now = () => Date.now();
 const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+// ============ DARK MODE ============
+let darkMode = localStorage.getItem('darkMode') !== 'false';
+function toggleDarkMode() {
+  darkMode = !darkMode;
+  localStorage.setItem('darkMode', darkMode);
+  document.documentElement.classList.toggle('dark', darkMode);
+  updateDarkModeIcon();
+}
+function updateDarkModeIcon() {
+  const icon = $('#darkModeIcon');
+  if (icon) {
+    icon.innerHTML = darkMode ? 
+      '<i data-lucide="moon" class="w-5 h-5"></i>' : 
+      '<i data-lucide="sun" class="w-5 h-5"></i>';
+    lucide.createIcons({ nodes: [icon] });
+  }
+}
+// Dark mode toggle butonu
+document.addEventListener('DOMContentLoaded', () => {
+  if (darkMode) document.documentElement.classList.add('dark');
+  updateDarkModeIcon();
+  const btn = $('#darkModeToggle');
+  if (btn) btn.addEventListener('click', toggleDarkMode);
+});
 
 function toast(msg, type = 'info', duration = 3500) {
   const el = document.createElement('div');
@@ -92,6 +87,7 @@ let recaptchaToken = null;
 
 // ========== LANDING ==========
 function initLanding() {
+  console.log('||| LANDING INIT |||');
   $$('.open-auth-btn, #openLoginBtn, #openSignupBtn').forEach(btn => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode || (btn.id === 'openSignupBtn' ? 'register' : 'login');
@@ -165,12 +161,12 @@ async function loadLiveWithdraws() {
     data.withdrawals.forEach(t => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-4"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm">${escapeHtml(t.username || 'User')}</span></div></td>
-        <td class="p-4"><div class="flex items-center gap-2"><img src="/coins/${(t.coin || 'btc').toLowerCase()}.svg" class="w-5 h-5 rounded-full" onerror="this.style.display='none'"/><span class="text-sm font-medium">${t.coin}</span></div></td>
-        <td class="p-4 font-mono text-sm text-green-400">${fmt(t.amount)}</td>
-        <td class="p-4 text-sm text-zinc-400">${fmtUSD(t.usdValue)}</td>
-        <td class="p-4 text-xs text-zinc-500">${timeAgo(t.createdAt)}</td>
-        <td class="p-4"><span class="badge badge-green">Completed</span></td>`;
+        <td class="p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm">${escapeHtml(t.username || 'User')}</span></div></td>
+        <td class="p-3"><div class="flex items-center gap-2"><img src="/coins/${(t.coin || 'btc').toLowerCase()}.svg" class="w-5 h-5 rounded-full" onerror="this.style.display='none'"/><span class="text-sm font-medium">${t.coin}</span></div></td>
+        <td class="p-3 font-mono text-sm text-green-400">${fmt(t.amount)}</td>
+        <td class="p-3 text-sm text-zinc-400">${fmtUSD(t.usdValue)}</td>
+        <td class="p-3 text-xs text-zinc-500">${timeAgo(t.createdAt)}</td>
+        <td class="p-3"><span class="badge badge-green">Completed</span></td>`;
       table.appendChild(row);
     });
   } catch (e) {
@@ -183,6 +179,7 @@ async function loadLiveWithdraws() {
 let authMode = 'login';
 
 function openAuthModal(mode = 'login') {
+  console.log('||| AUTH MODAL OPEN:', mode);
   authMode = mode;
   updateAuthModalUI();
   $('#authModal').classList.remove('hidden');
@@ -191,6 +188,7 @@ function openAuthModal(mode = 'login') {
     grecaptcha.enterprise.ready(async () => {
       try {
         recaptchaToken = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: mode === 'login' ? 'LOGIN' : 'REGISTER' });
+        console.log('||| reCAPTCHA token alındı');
       } catch (e) { console.error('reCAPTCHA error:', e); }
     });
   }
@@ -246,13 +244,7 @@ $('#authForm').addEventListener('submit', async e => {
     if (authMode === 'login') {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       await reload(cred.user);
-      if (!cred.user.emailVerified) {
-        await signOut(auth);
-        toast('Verify your email first', 'warning');
-        showEmailVerificationModal(email);
-        closeAuthModal();
-        return;
-      }
+      console.log('||| LOGIN SUCCESS:', cred.user.email);
       toast('Welcome back!', 'success');
       closeAuthModal();
     } else {
@@ -271,6 +263,7 @@ $('#authForm').addEventListener('submit', async e => {
         totalClaims: 0, lastClaimAt: 0,
         lastDailyBonus: 0, dailyStreak: 0, highestStreak: 0, claimedDays: [],
         twoFA: false, notifications: true, level: 1, xp: 0,
+        isAdmin: false,
         createdAt: serverTimestamp()
       };
       await setDoc(doc(db, COL.users, cred.user.uid), profile);
@@ -283,7 +276,6 @@ $('#authForm').addEventListener('submit', async e => {
       }
       toast('Account created! Check email.', 'success');
       closeAuthModal();
-      showEmailVerificationModal(email);
       await signOut(auth);
     }
   } catch (err) {
@@ -297,36 +289,22 @@ $('#authForm').addEventListener('submit', async e => {
   }
 });
 
-// ========== EMAIL VERIFICATION ==========
-function showEmailVerificationModal(email) {
-  $('#verificationEmail').textContent = email;
-  $('#emailVerificationModal').classList.remove('hidden');
-}
-function hideEmailVerificationModal() { $('#emailVerificationModal').classList.add('hidden'); }
-
-$('#checkVerificationBtn')?.addEventListener('click', () => {
-  hideEmailVerificationModal();
-  openAuthModal('login');
-  toast('Sign in to check verification', 'info');
-});
-
-$('#logoutFromVerification')?.addEventListener('click', async () => {
-  await signOut(auth);
-  hideEmailVerificationModal();
-});
-
 // ========== AUTH STATE ==========
 onAuthStateChanged(auth, async user => {
+  console.log('||| AUTH STATE CHANGED |||');
   if (user) {
+    console.log('||| USER:', user.email);
     state.user = user;
     await reload(user);
-    if (!user.emailVerified) {
-      showEmailVerificationModal(user.email);
-      return;
-    }
+    // Email doğrulama kontrolü GEÇİCİ OLARAK KALDIRILDI (test için)
     const snap = await getDoc(doc(db, COL.users, user.uid));
-    if (!snap.exists()) { await signOut(auth); return; }
+    if (!snap.exists()) { 
+      console.log('||| USER PROFILE YOK, ÇIKIŞ YAPILIYOR');
+      await signOut(auth); 
+      return; 
+    }
     state.profile = snap.data();
+    console.log('||| PROFILE:', state.profile.username);
     state.unsubProfile?.();
     state.unsubProfile = onSnapshot(doc(db, COL.users, user.uid), s => {
       if (s.exists()) { state.profile = s.data(); updateTopBar(); }
@@ -334,12 +312,13 @@ onAuthStateChanged(auth, async user => {
     $('#landingPage').classList.add('hidden');
     $('#appShell').classList.remove('hidden');
     lucide.createIcons();
+    console.log('||| APP SHELL GÖSTERİLİYOR |||');
     router.init();
   } else {
+    console.log('||| USER LOGGED OUT |||');
     state.user = null; state.profile = null; state.unsubProfile?.();
     $('#landingPage').classList.remove('hidden');
     $('#appShell').classList.add('hidden');
-    hideEmailVerificationModal();
   }
 });
 
@@ -349,9 +328,20 @@ function updateTopBar() {
   $('#topBalance').textContent = fmtUSD(total);
   $('#profileName').textContent = state.profile.username;
   $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
+  
+  // Admin kontrolü
+  if (state.profile.isAdmin) {
+    console.log('||| ✅ ADMIN YETKİSİ TESPİT EDİLDİ |||');
+    const adminLink = document.querySelector('.nav-link[href="/admin"]');
+    if (adminLink) adminLink.style.display = 'flex';
+  }
 }
 
-$('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
+$('#logoutBtn')?.addEventListener('click', async () => { 
+  console.log('||| LOGOUT |||');
+  await signOut(auth); 
+  toast('Signed out', 'info'); 
+});
 
 // ========== ROUTER ==========
 const router = {
@@ -361,14 +351,22 @@ const router = {
     transactions: renderTransactions, settings: renderSettings
   },
   init() {
+    console.log('||| ROUTER INIT |||');
     window.addEventListener('hashchange', () => this.navigate());
-    $('#menuToggle')?.addEventListener('click', () => $('#sidebar').classList.toggle('open'));
+    const menuToggle = $('#menuToggle');
+    if (menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        console.log('||| MENU TOGGLED |||');
+        $('#sidebar').classList.toggle('open');
+      });
+    }
     if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
     else this.navigate();
   },
   go(h) { location.hash = h; },
   navigate() {
     const route = location.hash.replace('#/', '') || 'dashboard';
+    console.log('||| NAVIGATE TO:', route);
     const fn = this.routes[route];
     if (!fn) { this.go('#/dashboard'); return; }
     $$('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.route === route));
@@ -387,6 +385,7 @@ window.router = router;
 
 // ========== PAGES ==========
 async function renderDashboard() {
+  console.log('||| RENDER DASHBOARD |||');
   if (!state.profile) return;
   try {
     const data = await apiCall('/api/dashboard');
@@ -418,6 +417,7 @@ async function renderDashboard() {
 
 let faucetInterval = null;
 function renderFaucet() {
+  console.log('||| RENDER FAUCET |||');
   $('#claimBtn').addEventListener('click', handleClaim);
   startCountdown();
 }
@@ -439,13 +439,19 @@ function startCountdown() {
 }
 
 async function handleClaim() {
+  console.log('||| HANDLE CLAIM |||');
   const btn = $('#claimBtn');
   if (btn.disabled) return;
   btn.disabled = true;
   try {
     let token = null;
     if (typeof grecaptcha !== 'undefined') {
-      token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' });
+      try {
+        token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' });
+        console.log('||| reCAPTCHA token alındı (claim)');
+      } catch (e) {
+        console.log('||| reCAPTCHA hatası (claim devam ediyor):', e.message);
+      }
     }
     const data = await apiCall('/api/claim', { method: 'POST', body: JSON.stringify({ recaptchaToken: token }) });
     toast(`Claimed ${fmt(data.amount)} ${data.coin}!`, 'success');
@@ -457,6 +463,7 @@ async function handleClaim() {
 }
 
 function renderDailyBonus() {
+  console.log('||| RENDER DAILY BONUS |||');
   const p = state.profile;
   const c = $('#pageContainer');
   c.innerHTML = `
@@ -478,6 +485,7 @@ function renderDailyBonus() {
 }
 
 async function renderLeaderboard() {
+  console.log('||| RENDER LEADERBOARD |||');
   try {
     const url = API_URL ? `${API_URL}/api/leaderboard` : '/api/leaderboard';
     const res = await fetch(url);
@@ -497,6 +505,7 @@ async function renderLeaderboard() {
 }
 
 function renderReferrals() {
+  console.log('||| RENDER REFERRALS |||');
   const p = state.profile;
   const link = `${location.origin}?ref=${p.referralCode}`;
   $('#pageContainer').innerHTML = `
@@ -519,6 +528,7 @@ function renderReferrals() {
 }
 
 function renderWithdraw() {
+  console.log('||| RENDER WITHDRAW |||');
   const grid = document.createElement('div');
   grid.className = 'grid sm:grid-cols-2 lg:grid-cols-3 gap-4';
   COINS.forEach(coin => {
@@ -551,6 +561,7 @@ function renderWithdraw() {
 }
 
 window.doWithdraw = async (coin) => {
+  console.log('||| DO WITHDRAW:', coin);
   if (!state.profile.faucetpayEmail) {
     toast('Set FaucetPay email in Settings first', 'warning');
     router.go('#/settings');
@@ -565,6 +576,7 @@ window.doWithdraw = async (coin) => {
 };
 
 async function renderTransactions() {
+  console.log('||| RENDER TRANSACTIONS |||');
   try {
     const data = await apiCall('/api/transactions?limit=100');
     const list = data.transactions.map(t => `
@@ -583,6 +595,7 @@ async function renderTransactions() {
 }
 
 function renderSettings() {
+  console.log('||| RENDER SETTINGS |||');
   const p = state.profile;
   $('#pageContainer').innerHTML = `
     <div class="space-y-6">
@@ -623,10 +636,7 @@ function renderSettings() {
   });
 }
 
-// ============ ADBLOCK DETECTION ON START ============
-detectAdBlock();
-
 // ============ INIT ============
 lucide.createIcons();
 initLanding();
-console.log('⚡ CoinixFaucet ready · Backend:', API_URL || 'same origin');
+console.log('||| ⚡ CoinixFaucet ready |||');
