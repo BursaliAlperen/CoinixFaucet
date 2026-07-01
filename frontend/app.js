@@ -1,20 +1,16 @@
 import { auth, db, COL, COINS, COIN_META, RECAPTCHA_SITE_KEY } from './firebase-config.js';
 import {
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, updatePassword, sendEmailVerification, sendPasswordResetEmail, reload
+  signOut, sendEmailVerification, sendPasswordResetEmail, reload
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where,
-  orderBy, limit, getDocs, onSnapshot, serverTimestamp,
-  increment, runTransaction, Timestamp
+  limit, getDocs, onSnapshot, serverTimestamp,
+  increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-console.log('||| ========== COINIXFAUCET APP START ========== |||');
+console.log('||| ========== APP START ========== |||');
 
-// ============ API URL ============
-const API_URL = '';
-
-// ============ HELPERS ============
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
 const fmt = (n, d = 4) => Number(n || 0).toFixed(d);
@@ -23,83 +19,38 @@ const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const now = () => Date.now();
 const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
-// ============ DARK MODE - DÜZELTİLDİ ============
-function getDarkMode() {
-  return localStorage.getItem('darkMode') === 'true';
-}
-
+// ============ DARK MODE ============
+function getDarkMode() { return localStorage.getItem('darkMode') === 'true'; }
 function setDarkMode(isDark) {
   localStorage.setItem('darkMode', isDark);
-  if (isDark) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
+  document.documentElement.classList.toggle('dark', isDark);
   updateDarkModeIcons();
 }
-
-function toggleDarkMode() {
-  const isDark = !getDarkMode();
-  setDarkMode(isDark);
-}
-
+function toggleDarkMode() { setDarkMode(!getDarkMode()); }
 function updateDarkModeIcons() {
   const isDark = getDarkMode();
   document.querySelectorAll('.dark-mode-icon').forEach(el => {
-    if (el) {
-      el.innerHTML = isDark ? 
-        '<i data-lucide="moon" class="w-5 h-5"></i>' : 
-        '<i data-lucide="sun" class="w-5 h-5"></i>';
-    }
+    if (el) el.innerHTML = isDark ? '<i data-lucide="moon" class="w-5 h-5"></i>' : '<i data-lucide="sun" class="w-5 h-5"></i>';
   });
-  // Lucide ikonlarını yeniden oluştur
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
-
-// Başlangıç dark mode ayarı
-if (getDarkMode()) {
-  document.documentElement.classList.add('dark');
-} else {
-  document.documentElement.classList.remove('dark');
-}
+if (getDarkMode()) document.documentElement.classList.add('dark');
 
 // ============ TOAST ============
-function toast(msg, type = 'info', duration = 3500) {
+function toast(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : type === 'warning' ? 'alert-triangle' : 'info';
-  el.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><div class="flex-1 text-sm">${msg}</div>`;
+  el.innerHTML = `<div class="flex-1 text-sm">${msg}</div>`;
   const root = $('#toastRoot');
-  if (root) {
-    root.appendChild(el);
-    if (typeof lucide !== 'undefined') {
-      lucide.createIcons({ nodes: [el] });
-    }
-    setTimeout(() => { 
-      el.style.animation = 'slideIn 0.3s reverse'; 
-      setTimeout(() => { if (el.parentNode) el.remove(); }, 300); 
-    }, duration);
-  }
+  if (root) { root.appendChild(el); setTimeout(() => el.remove(), 3500); }
 }
 
-function timeAgo(ts) {
-  if (!ts) return 'just now';
-  const t = ts.toDate ? ts.toDate().getTime() : new Date(ts).getTime();
-  const s = Math.floor((now() - t) / 1000);
-  if (s < 60) return s + 's ago';
-  if (s < 3600) return Math.floor(s/60) + 'm ago';
-  if (s < 86400) return Math.floor(s/3600) + 'h ago';
-  return Math.floor(s/86400) + 'd ago';
-}
-
+// ============ API ============
 async function apiCall(endpoint, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
   const token = await user.getIdToken();
-  const url = API_URL ? `${API_URL}${endpoint}` : endpoint;
-  const res = await fetch(url, {
+  const res = await fetch(endpoint, {
     ...options,
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...options.headers }
   });
@@ -108,22 +59,13 @@ async function apiCall(endpoint, options = {}) {
   return data;
 }
 
-const state = { user: null, profile: null, unsubProfile: null, txFilter: 'all' };
-let recaptchaToken = null;
+const state = { user: null, profile: null };
 
-// ========== LANDING ==========
+// ============ LANDING ============
 function initLanding() {
-  console.log('||| LANDING INIT |||');
-  
-  // Dark mode toggle - TÜM BUTONLARI BAĞLA
   document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
-    if (btn) {
-      btn.removeEventListener('click', toggleDarkMode);
-      btn.addEventListener('click', toggleDarkMode);
-    }
+    if (btn) btn.addEventListener('click', toggleDarkMode);
   });
-  
-  // Dark mode ikonlarını güncelle
   setTimeout(updateDarkModeIcons, 100);
   
   $$('.open-auth-btn, #openLoginBtn, #openSignupBtn').forEach(btn => {
@@ -152,7 +94,7 @@ function renderLandingCoins() {
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
           <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background:${m.color}20;border:2px solid ${m.color}40">
-            <img src="/coins/${coin.toLowerCase()}.svg" class="w-8 h-8 rounded-full" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
+            <div style="font-size:24px;font-weight:900;color:${m.color}">${coin[0]}</div>
           </div>
           <div><div class="font-bold text-lg">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
         </div>
@@ -168,35 +110,26 @@ function renderLandingCoins() {
 
 async function loadLiveStats() {
   try {
-    const url = API_URL ? `${API_URL}/api/stats` : '/api/stats';
-    const res = await fetch(url);
+    const res = await fetch('/api/stats');
     const data = await res.json();
     if (data.success) {
-      const statUsers = $('#statUsers');
-      const statClaims = $('#statClaims');
-      const statPaid = $('#statPaid');
-      const statAvg = $('#statAvg');
-      const statRef = $('#statRef');
-      const heroOnline = $('#heroOnline');
-      if (statUsers) statUsers.textContent = (data.stats.totalUsers || 0).toLocaleString();
-      if (statClaims) statClaims.textContent = (data.stats.totalClaims || 0).toLocaleString();
-      if (statPaid) statPaid.textContent = fmtUSD(data.stats.totalPaid || 0);
-      if (statAvg) statAvg.textContent = fmtUSD(data.stats.totalClaims > 0 ? (data.stats.totalPaid / data.stats.totalClaims) : 0);
-      if (statRef) statRef.textContent = fmtUSD((data.stats.totalPaid || 0) * 0.2);
-      if (heroOnline) heroOnline.textContent = (Math.min(data.stats.totalUsers || 0, Math.floor((data.stats.totalUsers || 0) * 0.15) + 50)).toLocaleString();
+      const s = data.stats;
+      if ($('#statUsers')) $('#statUsers').textContent = (s.totalUsers || 0).toLocaleString();
+      if ($('#statClaims')) $('#statClaims').textContent = (s.totalClaims || 0).toLocaleString();
+      if ($('#statPaid')) $('#statPaid').textContent = fmtUSD(s.totalPaid || 0);
+      if ($('#statAvg')) $('#statAvg').textContent = fmtUSD(s.totalClaims > 0 ? (s.totalPaid / s.totalClaims) : 0);
+      if ($('#statRef')) $('#statRef').textContent = fmtUSD((s.totalPaid || 0) * 0.2);
+      if ($('#heroOnline')) $('#heroOnline').textContent = (Math.min(s.totalUsers || 0, Math.floor((s.totalUsers || 0) * 0.15) + 50)).toLocaleString();
     }
   } catch (e) { console.error('Stats error:', e); }
 }
 
 async function loadLiveWithdraws() {
   const table = $('#withdrawsBody');
-  const loading = $('#withdrawsLoading');
   if (!table) return;
   try {
-    const url = API_URL ? `${API_URL}/api/live-withdraws` : '/api/live-withdraws';
-    const res = await fetch(url);
+    const res = await fetch('/api/live-withdraws');
     const data = await res.json();
-    if (loading) loading.style.display = 'none';
     table.innerHTML = '';
     if (!data.success || !data.withdrawals.length) {
       table.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-zinc-500">No withdrawals yet</td></tr>';
@@ -206,321 +139,150 @@ async function loadLiveWithdraws() {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td class="p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm">${escapeHtml(t.username || 'User')}</span></div></td>
-        <td class="p-3"><div class="flex items-center gap-2"><img src="/coins/${(t.coin || 'btc').toLowerCase()}.svg" class="w-5 h-5 rounded-full" onerror="this.style.display='none'"/><span class="text-sm font-medium">${t.coin}</span></div></td>
+        <td class="p-3"><span class="text-sm font-medium">${t.coin}</span></td>
         <td class="p-3 font-mono text-sm text-green-400">${fmt(t.amount)}</td>
         <td class="p-3 text-sm text-zinc-400">${fmtUSD(t.usdValue)}</td>
-        <td class="p-3 text-xs text-zinc-500">${timeAgo(t.createdAt)}</td>
+        <td class="p-3 text-xs text-zinc-500">${new Date(t.createdAt).toLocaleTimeString()}</td>
         <td class="p-3"><span class="badge badge-green">Completed</span></td>`;
       table.appendChild(row);
     });
-  } catch (e) {
-    console.error('Withdraws error:', e);
-    if (loading) { loading.textContent = 'Error loading'; loading.classList.add('text-red-400'); }
-  }
+  } catch (e) { console.error('Withdraws error:', e); }
 }
 
-// ========== AUTH MODAL ==========
+// ============ AUTH ============
 let authMode = 'login';
+let recaptchaToken = null;
 
 function openAuthModal(mode = 'login') {
-  console.log('||| AUTH MODAL OPEN:', mode);
   authMode = mode;
   updateAuthModalUI();
   const modal = $('#authModal');
   if (modal) modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-  if (typeof grecaptcha !== 'undefined') {
-    grecaptcha.enterprise.ready(async () => {
-      try {
-        recaptchaToken = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: mode === 'login' ? 'LOGIN' : 'REGISTER' });
-        console.log('||| reCAPTCHA token alındı');
-      } catch (e) { console.error('reCAPTCHA error:', e); }
-    });
-  }
 }
 
 function closeAuthModal() {
   const modal = $('#authModal');
   if (modal) modal.classList.add('hidden');
   document.body.style.overflow = '';
-  recaptchaToken = null;
 }
 
 function updateAuthModalUI() {
   $$('[data-auth-tab]').forEach(b => b.classList.toggle('active', b.dataset.authTab === authMode));
-  const usernameField = $('#usernameField');
-  const referralField = $('#referralField');
-  const authBtnText = $('#authBtnText');
-  const authModalTitle = $('#authModalTitle');
-  const authModalSubtitle = $('#authModalSubtitle');
-  const forgotPasswordLink = $('#forgotPasswordLink');
-  if (usernameField) usernameField.classList.toggle('hidden', authMode !== 'register');
-  if (referralField) referralField.classList.toggle('hidden', authMode !== 'register');
-  if (authBtnText) authBtnText.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
-  if (authModalTitle) authModalTitle.textContent = authMode === 'login' ? 'Welcome Back' : 'Create Account';
-  if (authModalSubtitle) authModalSubtitle.textContent = authMode === 'login' ? 'Sign in to continue' : 'Join thousands earning free crypto';
-  if (forgotPasswordLink) forgotPasswordLink.classList.toggle('hidden', authMode !== 'login');
+  if ($('#usernameField')) $('#usernameField').classList.toggle('hidden', authMode !== 'register');
+  if ($('#referralField')) $('#referralField').classList.toggle('hidden', authMode !== 'register');
+  if ($('#authBtnText')) $('#authBtnText').textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+  if ($('#authModalTitle')) $('#authModalTitle').textContent = authMode === 'login' ? 'Welcome Back' : 'Create Account';
 }
 
-// Auth modal event listeners
-const closeAuthModalBtn = $('#closeAuthModal');
-if (closeAuthModalBtn) closeAuthModalBtn.addEventListener('click', closeAuthModal);
-const authModalBackdrop = document.querySelector('.auth-modal-backdrop');
-if (authModalBackdrop) authModalBackdrop.addEventListener('click', closeAuthModal);
-$$('[data-auth-tab]').forEach(btn => btn.addEventListener('click', () => { 
-  authMode = btn.dataset.authTab; 
-  updateAuthModalUI(); 
-}));
+$('#closeAuthModal')?.addEventListener('click', closeAuthModal);
+document.querySelector('.auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
+$$('[data-auth-tab]').forEach(btn => btn.addEventListener('click', () => { authMode = btn.dataset.authTab; updateAuthModalUI(); }));
 
-const openForgotPasswordBtn = $('#openForgotPassword');
-if (openForgotPasswordBtn) {
-  openForgotPasswordBtn.addEventListener('click', () => { 
-    closeAuthModal(); 
-    const forgotModal = $('#forgotPasswordModal');
-    if (forgotModal) forgotModal.classList.remove('hidden'); 
-  });
-}
-const closeForgotPasswordBtn = $('#closeForgotPassword');
-if (closeForgotPasswordBtn) {
-  closeForgotPasswordBtn.addEventListener('click', () => {
-    const forgotModal = $('#forgotPasswordModal');
-    if (forgotModal) forgotModal.classList.add('hidden');
-  });
-}
-const backToLoginBtn = $('#backToLogin');
-if (backToLoginBtn) {
-  backToLoginBtn.addEventListener('click', () => { 
-    const forgotModal = $('#forgotPasswordModal');
-    if (forgotModal) forgotModal.classList.add('hidden'); 
-    openAuthModal('login'); 
-  });
-}
+$('#authForm')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = fd.get('email').trim().toLowerCase();
+  const password = fd.get('password');
+  const btn = $('#authSubmit');
+  if (btn) btn.disabled = true;
 
-const forgotPasswordForm = $('#forgotPasswordForm');
-if (forgotPasswordForm) {
-  forgotPasswordForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const email = e.target.email.value.trim().toLowerCase();
-    const btn = $('#forgotPasswordSubmit');
-    const txt = $('#forgotBtnText');
-    if (btn) btn.disabled = true;
-    if (txt) txt.textContent = 'Sending...';
-    try {
-      await sendPasswordResetEmail(auth, email);
-      const successDiv = $('#forgotPasswordSuccess');
-      if (successDiv) successDiv.classList.remove('hidden');
-      toast('Reset link sent to ' + email, 'success');
-      setTimeout(() => { 
-        const modal = $('#forgotPasswordModal');
-        if (modal) modal.classList.add('hidden');
-        const successDiv2 = $('#forgotPasswordSuccess');
-        if (successDiv2) successDiv2.classList.add('hidden');
-      }, 3000);
-    } catch (err) { toast(err.message, 'error'); }
-    finally { 
-      if (btn) btn.disabled = false;
-      if (txt) txt.textContent = 'Send Reset Link';
+  try {
+    if (authMode === 'login') {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      await reload(cred.user);
+      toast('Welcome back!', 'success');
+      closeAuthModal();
+    } else {
+      const username = fd.get('username').trim();
+      const referral = fd.get('referral').trim().toUpperCase();
+      if (username.length < 3) throw new Error('Username 3+ chars');
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(cred.user);
+      const refCode = uid();
+      const profile = {
+        uid: cred.user.uid, username, email,
+        country: 'Unknown', timezone: 'UTC', faucetpayEmail: '',
+        referralCode: refCode, referredBy: referral || null,
+        balances: Object.fromEntries(COINS.map(c => [c, 0])),
+        totalWithdrawn: 0, referralEarnings: 0, referralCount: 0,
+        totalClaims: 0, lastClaimAt: 0,
+        lastDailyBonus: 0, dailyStreak: 0, highestStreak: 0,
+        isAdmin: false,
+        createdAt: serverTimestamp()
+      };
+      await setDoc(doc(db, COL.users, cred.user.uid), profile);
+      toast('Account created! Check email.', 'success');
+      closeAuthModal();
+      await signOut(auth);
     }
-  });
-}
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+});
 
-const authForm = $('#authForm');
-if (authForm) {
-  authForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const email = fd.get('email').trim().toLowerCase();
-    const password = fd.get('password');
-    const btn = $('#authSubmit');
-    const txt = $('#authBtnText');
-    if (btn) btn.disabled = true;
-    if (txt) txt.textContent = 'Please wait...';
-
-    try {
-      if (authMode === 'login') {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        await reload(cred.user);
-        console.log('||| LOGIN SUCCESS:', cred.user.email);
-        toast('Welcome back!', 'success');
-        closeAuthModal();
-      } else {
-        const username = fd.get('username').trim();
-        const referral = fd.get('referral').trim().toUpperCase();
-        if (username.length < 3) throw new Error('Username 3+ chars');
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await sendEmailVerification(cred.user, { url: 'https://coinixfaucet.mine.bz/' });
-        const refCode = uid();
-        const profile = {
-          uid: cred.user.uid, username, email,
-          country: 'Unknown', timezone: 'UTC', faucetpayEmail: '',
-          referralCode: refCode, referredBy: referral || null,
-          balances: Object.fromEntries(COINS.map(c => [c, 0])),
-          totalWithdrawn: 0, referralEarnings: 0, referralCount: 0,
-          totalClaims: 0, lastClaimAt: 0,
-          lastDailyBonus: 0, dailyStreak: 0, highestStreak: 0, claimedDays: [],
-          twoFA: false, notifications: true, level: 1, xp: 0,
-          isAdmin: false,
-          createdAt: serverTimestamp()
-        };
-        await setDoc(doc(db, COL.users, cred.user.uid), profile);
-        if (referral) {
-          const snap = await getDocs(query(collection(db, COL.users), where('referralCode', '==', referral), limit(1)));
-          if (!snap.empty) {
-            await updateDoc(doc(db, COL.users, snap.docs[0].id), { referralCount: increment(1) });
-            await addDoc(collection(db, COL.referrals), { referrerId: snap.docs[0].id, referredId: cred.user.uid, createdAt: serverTimestamp() });
-          }
-        }
-        toast('Account created! Check email.', 'success');
-        closeAuthModal();
-        await signOut(auth);
-      }
-    } catch (err) {
-      const msg = err.code === 'auth/email-already-in-use' ? 'Email already registered' :
-                  err.code === 'auth/invalid-credential' ? 'Invalid email or password' :
-                  err.code === 'auth/weak-password' ? 'Password too weak' : err.message;
-      toast(msg, 'error');
-    } finally {
-      if (btn) btn.disabled = false;
-      if (txt) txt.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
-    }
-  });
-}
-
-// ========== EMAIL VERIFICATION ==========
-function showEmailVerificationModal(email) {
-  const verifEmail = $('#verificationEmail');
-  if (verifEmail) verifEmail.textContent = email;
-  const modal = $('#emailVerificationModal');
-  if (modal) modal.classList.remove('hidden');
-}
-function hideEmailVerificationModal() { 
-  const modal = $('#emailVerificationModal');
-  if (modal) modal.classList.add('hidden'); 
-}
-
-const checkVerificationBtn = $('#checkVerificationBtn');
-if (checkVerificationBtn) {
-  checkVerificationBtn.addEventListener('click', () => {
-    hideEmailVerificationModal();
-    openAuthModal('login');
-    toast('Sign in to check verification', 'info');
-  });
-}
-
-const logoutFromVerificationBtn = $('#logoutFromVerification');
-if (logoutFromVerificationBtn) {
-  logoutFromVerificationBtn.addEventListener('click', async () => {
-    await signOut(auth);
-    hideEmailVerificationModal();
-  });
-}
-
-// ========== AUTH STATE ==========
+// ============ AUTH STATE ============
 onAuthStateChanged(auth, async user => {
-  console.log('||| AUTH STATE CHANGED |||');
   if (user) {
-    console.log('||| USER:', user.email);
     state.user = user;
     await reload(user);
     const snap = await getDoc(doc(db, COL.users, user.uid));
-    if (!snap.exists()) { 
-      console.log('||| USER PROFILE YOK, ÇIKIŞ YAPILIYOR');
-      await signOut(auth); 
-      return; 
-    }
+    if (!snap.exists()) { await signOut(auth); return; }
     state.profile = snap.data();
-    console.log('||| PROFILE:', state.profile.username);
     state.unsubProfile?.();
     state.unsubProfile = onSnapshot(doc(db, COL.users, user.uid), s => {
       if (s.exists()) { state.profile = s.data(); updateTopBar(); }
     });
-    const landingPage = $('#landingPage');
-    const appShell = $('#appShell');
-    if (landingPage) landingPage.classList.add('hidden');
-    if (appShell) appShell.classList.remove('hidden');
+    if ($('#landingPage')) $('#landingPage').classList.add('hidden');
+    if ($('#appShell')) $('#appShell').classList.remove('hidden');
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    console.log('||| APP SHELL GÖSTERİLİYOR |||');
     router.init();
   } else {
-    console.log('||| USER LOGGED OUT |||');
     state.user = null; state.profile = null; state.unsubProfile?.();
-    const landingPage = $('#landingPage');
-    const appShell = $('#appShell');
-    if (landingPage) landingPage.classList.remove('hidden');
-    if (appShell) appShell.classList.add('hidden');
-    hideEmailVerificationModal();
+    if ($('#landingPage')) $('#landingPage').classList.remove('hidden');
+    if ($('#appShell')) $('#appShell').classList.add('hidden');
   }
 });
 
 function updateTopBar() {
   if (!state.profile) return;
   const total = COINS.reduce((s, c) => s + (state.profile.balances[c] || 0) * (COIN_META[c].usd || 0), 0);
-  const topBalance = $('#topBalance');
-  const profileName = $('#profileName');
-  const profileAvatar = $('#profileAvatar');
-  if (topBalance) topBalance.textContent = fmtUSD(total);
-  if (profileName) profileName.textContent = state.profile.username;
-  if (profileAvatar) profileAvatar.textContent = state.profile.username[0].toUpperCase();
+  if ($('#topBalance')) $('#topBalance').textContent = fmtUSD(total);
+  if ($('#profileName')) $('#profileName').textContent = state.profile.username;
+  if ($('#profileAvatar')) $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
   
-  // Login durumunda butonları güncelle
-  const landingLoginBtn = $('#openLoginBtn');
-  const landingSignupBtn = $('#openSignupBtn');
-  if (landingLoginBtn) {
-    landingLoginBtn.textContent = 'Dashboard';
-    landingLoginBtn.className = 'btn-primary text-sm';
-    landingLoginBtn.onclick = () => router.go('#/dashboard');
-  }
-  if (landingSignupBtn) {
-    landingSignupBtn.textContent = 'Logout';
-    landingSignupBtn.className = 'btn-ghost text-sm';
-    landingSignupBtn.onclick = async () => {
-      await signOut(auth);
-      toast('Logged out', 'info');
-    };
-  }
-  
-  // Admin kontrolü
-  if (state.profile.isAdmin) {
-    console.log('||| ✅ ADMIN YETKİSİ TESPİT EDİLDİ |||');
-    const adminLink = document.querySelector('.nav-link[href="/admin"]');
-    if (adminLink) adminLink.style.display = 'flex';
-  }
+  const loginBtn = $('#openLoginBtn');
+  const signupBtn = $('#openSignupBtn');
+  if (loginBtn) { loginBtn.textContent = 'Dashboard'; loginBtn.className = 'btn-primary text-sm'; loginBtn.onclick = () => router.go('#/dashboard'); }
+  if (signupBtn) { signupBtn.textContent = 'Logout'; signupBtn.className = 'btn-ghost text-sm'; signupBtn.onclick = async () => { await signOut(auth); toast('Logged out', 'info'); }; }
 }
 
-const logoutBtn = $('#logoutBtn');
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => { 
-    console.log('||| LOGOUT |||');
-    await signOut(auth); 
-    toast('Signed out', 'info'); 
-  });
-}
+$('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
 
-// ========== ROUTER ==========
+// ============ ROUTER ============
 const router = {
   routes: {
-    dashboard: renderDashboard, faucet: renderFaucet, 'daily-bonus': renderDailyBonus,
-    leaderboard: renderLeaderboard, referrals: renderReferrals, withdraw: renderWithdraw,
-    transactions: renderTransactions, settings: renderSettings
+    dashboard: renderDashboard,
+    faucet: renderFaucet,
+    'daily-bonus': renderDailyBonus,
+    leaderboard: renderLeaderboard,
+    ptc: renderPtc,          // YENİ PTC SAYFASI
+    referrals: renderReferrals,
+    withdraw: renderWithdraw,
+    transactions: renderTransactions,
+    settings: renderSettings
   },
   init() {
-    console.log('||| ROUTER INIT |||');
     window.addEventListener('hashchange', () => this.navigate());
-    const menuToggle = $('#menuToggle');
-    if (menuToggle) {
-      menuToggle.addEventListener('click', () => {
-        console.log('||| MENU TOGGLED |||');
-        const sidebar = $('#sidebar');
-        if (sidebar) sidebar.classList.toggle('open');
-      });
-    }
+    $('#menuToggle')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
     if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
     else this.navigate();
   },
   go(h) { location.hash = h; },
   navigate() {
     const route = location.hash.replace('#/', '') || 'dashboard';
-    console.log('||| NAVIGATE TO:', route);
     const fn = this.routes[route];
     if (!fn) { this.go('#/dashboard'); return; }
     $$('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.route === route));
@@ -529,9 +291,6 @@ const router = {
       c.innerHTML = '';
       const tpl = $(`#tpl-${route}`);
       if (tpl) c.appendChild(tpl.content.cloneNode(true));
-      c.classList.remove('page-enter');
-      void c.offsetWidth;
-      c.classList.add('page-enter');
     }
     if (typeof lucide !== 'undefined') lucide.createIcons();
     fn();
@@ -539,9 +298,8 @@ const router = {
 };
 window.router = router;
 
-// ========== PAGES ==========
+// ============ PAGES ============
 async function renderDashboard() {
-  console.log('||| RENDER DASHBOARD |||');
   if (!state.profile) return;
   try {
     const data = await apiCall('/api/dashboard');
@@ -574,9 +332,7 @@ async function renderDashboard() {
 
 let faucetInterval = null;
 function renderFaucet() {
-  console.log('||| RENDER FAUCET |||');
-  const claimBtn = $('#claimBtn');
-  if (claimBtn) claimBtn.addEventListener('click', handleClaim);
+  $('#claimBtn')?.addEventListener('click', handleClaim);
   startCountdown();
 }
 
@@ -587,46 +343,29 @@ function startCountdown() {
   if (!btn || !cd || !state.profile) return;
   const tick = () => {
     const remain = Math.max(0, 60000 - (now() - (state.profile.lastClaimAt || 0)));
-    if (remain <= 0) { 
-      cd.textContent = '00:00'; 
-      btn.disabled = false; 
-    } else {
-      const m = Math.floor(remain / 60000);
-      const s = Math.floor((remain % 60000) / 1000);
-      cd.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      btn.disabled = true;
-    }
+    if (remain <= 0) { cd.textContent = '00:00'; btn.disabled = false; }
+    else { const m = Math.floor(remain / 60000), s = Math.floor((remain % 60000) / 1000); cd.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; btn.disabled = true; }
   };
   tick();
   faucetInterval = setInterval(tick, 1000);
 }
 
 async function handleClaim() {
-  console.log('||| HANDLE CLAIM |||');
   const btn = $('#claimBtn');
   if (!btn || btn.disabled) return;
   btn.disabled = true;
   try {
     let token = null;
     if (typeof grecaptcha !== 'undefined') {
-      try {
-        token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' });
-        console.log('||| reCAPTCHA token alındı (claim)');
-      } catch (e) {
-        console.log('||| reCAPTCHA hatası (claim devam ediyor):', e.message);
-      }
+      try { token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' }); } catch(e) {}
     }
     const data = await apiCall('/api/claim', { method: 'POST', body: JSON.stringify({ recaptchaToken: token }) });
     toast(`Claimed ${fmt(data.amount)} ${data.coin}!`, 'success');
     startCountdown();
-  } catch (e) {
-    toast(e.message, 'error');
-    if (btn) btn.disabled = false;
-  }
+  } catch (e) { toast(e.message, 'error'); btn.disabled = false; }
 }
 
 function renderDailyBonus() {
-  console.log('||| RENDER DAILY BONUS |||');
   const p = state.profile;
   const c = $('#pageContainer');
   if (!c) return;
@@ -639,23 +378,14 @@ function renderDailyBonus() {
         <button id="claimBonusBtn" class="btn-primary">🎁 Claim Daily Bonus</button>
       </div>
     </div>`;
-  const claimBonusBtn = $('#claimBonusBtn');
-  if (claimBonusBtn) {
-    claimBonusBtn.addEventListener('click', async () => {
-      try {
-        const data = await apiCall('/api/daily-bonus', { method: 'POST' });
-        toast(`Day ${data.day} bonus: ${fmtUSD(data.reward)}`, 'success');
-        renderDailyBonus();
-      } catch (e) { toast(e.message, 'error'); }
-    });
-  }
+  $('#claimBonusBtn')?.addEventListener('click', async () => {
+    try { const data = await apiCall('/api/daily-bonus', { method: 'POST' }); toast(`Day ${data.day} bonus: ${fmtUSD(data.reward)}`, 'success'); renderDailyBonus(); } catch (e) { toast(e.message, 'error'); }
+  });
 }
 
 async function renderLeaderboard() {
-  console.log('||| RENDER LEADERBOARD |||');
   try {
-    const url = API_URL ? `${API_URL}/api/leaderboard` : '/api/leaderboard';
-    const res = await fetch(url);
+    const res = await fetch('/api/leaderboard');
     const data = await res.json();
     const c = $('#pageContainer');
     if (!c || !data.success) return;
@@ -671,8 +401,48 @@ async function renderLeaderboard() {
   } catch (e) { toast('Error loading', 'error'); }
 }
 
+// ============ PTC SAYFASI (YENİ) ============
+function renderPtc() {
+  const c = $('#pageContainer');
+  if (!c) return;
+  c.innerHTML = `
+    <div class="space-y-6">
+      <div class="glass-card p-8 rounded-3xl gradient-border">
+        <h1 class="text-3xl font-bold mb-4">💰 PTC Ads</h1>
+        <p class="text-zinc-400 mb-6">Click on ads and earn free CNX coins instantly.</p>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-500/50 transition cursor-pointer" onclick="toast('Ad clicked! +0.5 CNX', 'success')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-2xl">📢</div>
+              <div><div class="font-bold">Ad #1</div><div class="text-sm text-zinc-400">Earn 0.5 CNX</div></div>
+            </div>
+          </div>
+          <div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-500/50 transition cursor-pointer" onclick="toast('Ad clicked! +0.3 CNX', 'success')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl">🎯</div>
+              <div><div class="font-bold">Ad #2</div><div class="text-sm text-zinc-400">Earn 0.3 CNX</div></div>
+            </div>
+          </div>
+          <div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-500/50 transition cursor-pointer" onclick="toast('Ad clicked! +0.7 CNX', 'success')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl">🔥</div>
+              <div><div class="font-bold">Ad #3</div><div class="text-sm text-zinc-400">Earn 0.7 CNX</div></div>
+            </div>
+          </div>
+          <div class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-500/50 transition cursor-pointer" onclick="toast('Ad clicked! +0.4 CNX', 'success')">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-2xl">💎</div>
+              <div><div class="font-bold">Ad #4</div><div class="text-sm text-zinc-400">Earn 0.4 CNX</div></div>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-zinc-500 mt-6">More ads coming soon. Click any ad to simulate earning.</p>
+      </div>
+    </div>`;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 function renderReferrals() {
-  console.log('||| RENDER REFERRALS |||');
   const p = state.profile;
   const link = `${location.origin}?ref=${p.referralCode}`;
   const c = $('#pageContainer');
@@ -697,7 +467,6 @@ function renderReferrals() {
 }
 
 function renderWithdraw() {
-  console.log('||| RENDER WITHDRAW |||');
   const c = $('#pageContainer');
   if (!c) return;
   const grid = document.createElement('div');
@@ -713,7 +482,7 @@ function renderWithdraw() {
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
           <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background:${m.color}20;border:2px solid ${m.color}40">
-            <img src="/coins/${coin.toLowerCase()}.svg" class="w-7 h-7 rounded-full" onerror="this.outerHTML='<div style=font-size:24px;font-weight:900;color:${m.color}>${coin[0]}</div>'"/>
+            <div style="font-size:24px;font-weight:900;color:${m.color}">${coin[0]}</div>
           </div>
           <div><div class="font-bold">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
         </div>
@@ -733,33 +502,23 @@ function renderWithdraw() {
 }
 
 window.doWithdraw = async (coin) => {
-  console.log('||| DO WITHDRAW:', coin);
-  if (!state.profile.faucetpayEmail) {
-    toast('Set FaucetPay email in Settings first', 'warning');
-    router.go('#/settings');
-    return;
-  }
-  if (!confirm(`Withdraw all ${coin} balance to ${state.profile.faucetpayEmail}?`)) return;
-  try {
-    const data = await apiCall('/api/withdraw', { method: 'POST', body: JSON.stringify({ coin }) });
-    toast(`Withdrew ${fmt(data.amount)} ${data.coin}!`, 'success');
-    renderWithdraw();
-  } catch (e) { toast(e.message, 'error'); }
+  if (!state.profile.faucetpayEmail) { toast('Set FaucetPay email in Settings first', 'warning'); router.go('#/settings'); return; }
+  if (!confirm(`Withdraw all ${coin} to ${state.profile.faucetpayEmail}?`)) return;
+  try { const data = await apiCall('/api/withdraw', { method: 'POST', body: JSON.stringify({ coin }) }); toast(`Withdrew ${fmt(data.amount)} ${data.coin}!`, 'success'); renderWithdraw(); } catch (e) { toast(e.message, 'error'); }
 };
 
 async function renderTransactions() {
-  console.log('||| RENDER TRANSACTIONS |||');
   try {
     const data = await apiCall('/api/transactions?limit=100');
     const list = data.transactions.map(t => `
       <div class="flex items-center justify-between p-4 hover:bg-white/5 transition">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-            <i data-lucide="${t.type === 'claim' ? 'droplets' : t.type === 'withdraw' ? 'arrow-up-right' : 'gift'}" class="w-5 h-5 ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}"></i>
+            <i data-lucide="${t.type === 'claim' ? 'droplets' : 'gift'}" class="w-5 h-5 ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}"></i>
           </div>
-          <div><div class="text-sm font-medium capitalize">${t.type}</div><div class="text-xs text-zinc-500">${t.coin} · ${timeAgo(t.createdAt)}</div></div>
+          <div><div class="text-sm font-medium capitalize">${t.type}</div><div class="text-xs text-zinc-500">${t.coin}</div></div>
         </div>
-        <div class="text-right"><div class="text-sm font-bold ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}">${t.type === 'withdraw' ? '-' : '+'}${fmt(t.amount)} ${t.coin}</div><span class="badge ${t.status === 'completed' ? 'badge-green' : 'badge-yellow'}">${t.status}</span></div>
+        <div class="text-right"><div class="text-sm font-bold ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}">${t.type === 'withdraw' ? '-' : '+'}${fmt(t.amount)} ${t.coin}</div></div>
       </div>`).join('');
     const c = $('#pageContainer');
     if (!c) return;
@@ -769,7 +528,6 @@ async function renderTransactions() {
 }
 
 function renderSettings() {
-  console.log('||| RENDER SETTINGS |||');
   const p = state.profile;
   const c = $('#pageContainer');
   if (!c) return;
@@ -794,39 +552,17 @@ function renderSettings() {
         <button type="submit" class="btn-primary">💾 Save Changes</button>
       </form>
     </div>`;
-  const settingsForm = $('#settingsForm');
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      try {
-        await apiCall('/api/settings', {
-          method: 'PUT',
-          body: JSON.stringify({
-            username: fd.get('username'),
-            country: fd.get('country'),
-            timezone: fd.get('timezone'),
-            faucetpayEmail: fd.get('faucetpayEmail')
-          })
-        });
-        toast('Saved!', 'success');
-      } catch (err) { toast(err.message, 'error'); }
-    });
-  }
+  $('#settingsForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await apiCall('/api/settings', { method: 'PUT', body: JSON.stringify({ username: fd.get('username'), country: fd.get('country'), timezone: fd.get('timezone'), faucetpayEmail: fd.get('faucetpayEmail') }) });
+      toast('Saved!', 'success');
+    } catch (err) { toast(err.message, 'error'); }
+  });
 }
 
 // ============ INIT ============
-document.addEventListener('DOMContentLoaded', () => {
-  // Dark mode toggle - TÜM BUTONLAR
-  document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
-    if (btn) {
-      btn.addEventListener('click', toggleDarkMode);
-    }
-  });
-  // Dark mode ikonlarını güncelle
-  setTimeout(updateDarkModeIcons, 50);
-});
-
 if (typeof lucide !== 'undefined') lucide.createIcons();
 initLanding();
 console.log('||| ⚡ CoinixFaucet ready |||');
