@@ -528,6 +528,7 @@ function updateTopBar() {
   const heroBtns = $('#heroBtns');
 
   if (!state.profile) {
+    // GİRİŞ YAPILMAMIŞ - Login/Signup göster
     if (landingAuthBtns) {
       landingAuthBtns.innerHTML = `
         <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
@@ -554,6 +555,7 @@ function updateTopBar() {
     return;
   }
 
+  // GİRİŞ YAPILMIŞ - Dashboard butonu göster
   if (landingAuthBtns) {
     landingAuthBtns.innerHTML = `
       <button id="landingDashboardBtn" class="btn-primary text-sm">
@@ -591,24 +593,39 @@ function updateTopBar() {
 
 $('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
 
-// ============ THREE DOTS MENU ============
+// ============ THREE DOTS MENU - FIX ============
 function initThreeDotsMenu() {
   const btn = $('#threeDotsBtn');
   const menu = $('#threeDotsMenu');
   
   if (!btn || !menu) return;
   
-  btn.addEventListener('click', (e) => {
+  // Önceki event listener'ları temizle
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  const newMenu = menu.cloneNode(true);
+  menu.parentNode.replaceChild(newMenu, menu);
+  
+  const freshBtn = $('#threeDotsBtn');
+  const freshMenu = $('#threeDotsMenu');
+  
+  // Tıklama eventi
+  freshBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    menu.classList.toggle('hidden');
+    e.preventDefault();
+    freshMenu.classList.toggle('hidden');
+    console.log('Menu toggled:', !freshMenu.classList.contains('hidden'));
   });
   
+  // Dışarı tıklama ile kapat
   document.addEventListener('click', (e) => {
-    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-      menu.classList.add('hidden');
+    if (!freshMenu.contains(e.target) && !freshBtn.contains(e.target)) {
+      freshMenu.classList.add('hidden');
     }
   });
   
+  // Logout
   $('#logoutBtnMenu')?.addEventListener('click', async () => {
     await signOut(auth);
     toast('Signed out', 'info');
@@ -676,7 +693,7 @@ async function renderDashboard() {
         <div class="glass-card rounded-2xl p-4 text-center bg-gradient-to-r from-primary-500/10 to-secondary-500/10">
           <p class="text-sm text-zinc-500">Advertisement</p>
           <div class="h-20 flex items-center justify-center">
-            <p class="text-zinc-400">728x90 Banner</p>
+            <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:728px; height:90px; border:0px; padding:0; overflow:hidden; max-width:100%;" allowtransparency="true"></iframe>
           </div>
         </div>
         
