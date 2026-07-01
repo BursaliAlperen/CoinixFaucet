@@ -31,8 +31,9 @@ function setDarkMode(isDark) {
 function toggleDarkMode() { setDarkMode(!getDarkMode()); }
 function updateDarkModeIcons() {
   const isDark = getDarkMode();
-  document.querySelectorAll('.dark-mode-icon, #darkModeToggle, #darkModeToggle2').forEach(el => {
-    if (el) el.innerHTML = isDark ? '<i data-lucide="sun" class="w-4 h-4"></i>' : '<i data-lucide="moon" class="w-4 h-4"></i>';
+  const icon = isDark ? 'sun' : 'moon';
+  $$('.dark-mode-icon').forEach(el => {
+    if (el) el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i>`;
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -42,7 +43,8 @@ if (getDarkMode()) document.documentElement.classList.add('dark');
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info'}" class="w-5 h-5"></i><span>${msg}</span>`;
+  const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info';
+  el.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5"></i><span>${msg}</span>`;
   const root = $('#toastRoot');
   if (root) { root.appendChild(el); setTimeout(() => el.remove(), 3500); }
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -66,7 +68,7 @@ const state = { user: null, profile: null };
 
 // ============ LANDING ============
 function initLanding() {
-  document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
+  $$('#darkModeToggle, #darkModeToggle2').forEach(btn => {
     if (btn) btn.addEventListener('click', toggleDarkMode);
   });
   setTimeout(updateDarkModeIcons, 100);
@@ -93,13 +95,13 @@ function renderLandingCoins() {
     card.className = 'coin-landing-card group';
     card.style.setProperty('--coin-color', m.color + '40');
     card.innerHTML = `
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <img src="/coins/${coin.toLowerCase()}.png" alt="${coin}" class="w-12 h-12 rounded-xl mb-4" onerror="this.style.display='none'" />
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="space-y-2 text-sm">
         <div class="flex justify-between"><span class="text-zinc-500">Status</span><span class="badge badge-green">Active</span></div>
         <div class="flex justify-between"><span class="text-zinc-500">Min Withdraw</span><span class="font-medium">$0.03</span></div>
-        <div class="flex justify-between"><span class="text-zinc-500">Payout</span><span class="font-medium">Instant · FaucetPay</span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">Payout</span><span class="font-medium">Instant</span></div>
       </div>
     `;
     grid.appendChild(card);
@@ -116,7 +118,6 @@ async function loadLiveStats() {
       if ($('#statClaims')) $('#statClaims').textContent = (s.totalClaims || 0).toLocaleString();
       if ($('#statPaid')) $('#statPaid').textContent = fmtUSD(s.totalPaid || 0);
       if ($('#statAvg')) $('#statAvg').textContent = fmtUSD(s.totalClaims > 0 ? (s.totalPaid / s.totalClaims) : 0);
-      if ($('#statRef')) $('#statRef').textContent = fmtUSD((s.totalPaid || 0) * 0.2);
       if ($('#heroOnline')) $('#heroOnline').textContent = (Math.min(s.totalUsers || 0, Math.floor((s.totalUsers || 0) * 0.15) + 50)).toLocaleString();
     }
   } catch (e) { console.error('Stats error:', e); }
@@ -187,10 +188,28 @@ async function getRecaptchaToken(action = 'login') {
   
   try {
     // Enterprise ready olmasını bekle
-    if (grecaptcha.enterprise) {
-      return await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action });
-    } else if (grecaptcha.execute) {
-      return await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
+    if (grecaptcha.enterprise && grecaptcha.enterprise.execute) {
+      return await new Promise((resolve, reject) => {
+        grecaptcha.enterprise.ready(async () => {
+          try {
+            const token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action });
+            resolve(token);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+    } else if (grecaptcha.ready && grecaptcha.execute) {
+      return await new Promise((resolve, reject) => {
+        grecaptcha.ready(async () => {
+          try {
+            const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
+            resolve(token);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
     }
   } catch (e) {
     console.warn('reCAPTCHA execute error:', e);
@@ -211,6 +230,7 @@ $('#authForm')?.addEventListener('submit', async e => {
   try {
     // reCAPTCHA token al
     const recaptchaToken = await getRecaptchaToken(authMode === 'login' ? 'login' : 'signup');
+    console.log('||| reCAPTCHA Token:', recaptchaToken ? '✅ Alındı' : '❌ Alınamadı');
     
     if (authMode === 'login') {
       await signInWithEmailAndPassword(auth, email, password);
@@ -301,9 +321,7 @@ $('#forgotPasswordForm')?.addEventListener('submit', async (e) => {
   if (btn) btn.disabled = true;
   
   try {
-    // Firebase ile password reset email gönder
     await sendPasswordResetEmail(auth, email);
-    
     toast('Password reset email sent! Check your inbox.', 'success');
     $('#forgotPasswordModal')?.classList.add('hidden');
     document.body.style.overflow = '';
@@ -316,7 +334,7 @@ $('#forgotPasswordForm')?.addEventListener('submit', async (e) => {
   }
 });
 
-// ============ EMAIL ACTION HANDLERS (Verify + Reset Password) ============
+// ============ EMAIL ACTION HANDLERS ============
 async function handleEmailAction() {
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode');
@@ -324,7 +342,6 @@ async function handleEmailAction() {
   
   if (!mode || !oobCode) return false;
   
-  // Email action page'i göster
   $('#landingPage')?.classList.add('hidden');
   $('#appShell')?.classList.add('hidden');
   $('#emailActionPage')?.classList.remove('hidden');
@@ -333,9 +350,7 @@ async function handleEmailAction() {
   
   try {
     if (mode === 'verifyEmail') {
-      // Email verification
       await applyActionCode(auth, oobCode);
-      
       content.innerHTML = `
         <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
           <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
@@ -345,10 +360,8 @@ async function handleEmailAction() {
         <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
       `;
     } else if (mode === 'resetPassword') {
-      // Password reset
       try {
         await verifyPasswordResetCode(auth, oobCode);
-        
         content.innerHTML = `
           <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">
             <i data-lucide="key" class="w-8 h-8 text-primary-500"></i>
@@ -367,21 +380,16 @@ async function handleEmailAction() {
             <button type="submit" class="btn-primary w-full">Reset Password</button>
           </form>
         `;
-        
         if (typeof lucide !== 'undefined') lucide.createIcons();
-        
-        // Form submit handler
         setTimeout(() => {
           $('#resetPasswordForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPass = $('#newPassword').value;
             const confirmPass = $('#confirmPassword').value;
-            
             if (newPass !== confirmPass) {
               toast('Passwords do not match', 'error');
               return;
             }
-            
             try {
               await confirmPasswordReset(auth, oobCode, newPass);
               content.innerHTML = `
@@ -398,7 +406,6 @@ async function handleEmailAction() {
             }
           });
         }, 100);
-        
       } catch (err) {
         content.innerHTML = `
           <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
@@ -410,34 +417,7 @@ async function handleEmailAction() {
         `;
         if (typeof lucide !== 'undefined') lucide.createIcons();
       }
-    } else if (mode === 'recoverEmail') {
-      // Email recovery
-      try {
-        const info = await checkActionCode(auth, oobCode);
-        await applyActionCode(auth, oobCode);
-        
-        content.innerHTML = `
-          <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
-            <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Email Recovered</h2>
-          <p class="text-zinc-500 dark:text-zinc-400 mb-6">Your email has been restored to: <strong>${info.data.email}</strong></p>
-          <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
-        `;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-      } catch (err) {
-        content.innerHTML = `
-          <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
-            <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Invalid Link</h2>
-          <p class="text-zinc-500 dark:text-zinc-400 mb-6">This recovery link is invalid or has expired.</p>
-          <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
-        `;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-      }
     }
-    
     return true;
   } catch (err) {
     content.innerHTML = `
@@ -466,7 +446,6 @@ onAuthStateChanged(auth, async user => {
       if (s.exists()) { state.profile = s.data(); updateTopBar(); }
     });
 
-    // Hide landing, show app
     if ($('#landingPage')) $('#landingPage').classList.add('hidden');
     if ($('#appShell')) $('#appShell').classList.remove('hidden');
     if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
@@ -474,12 +453,12 @@ onAuthStateChanged(auth, async user => {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     router.init();
     updateTopBar();
+    initThreeDotsMenu();
   } else {
     state.user = null;
     state.profile = null;
     state.unsubProfile?.();
 
-    // Show landing, hide app
     if ($('#landingPage')) $('#landingPage').classList.remove('hidden');
     if ($('#appShell')) $('#appShell').classList.add('hidden');
     if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
@@ -516,6 +495,30 @@ function updateTopBar() {
 $('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
 $('#logoutBtnTop')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
 
+// ============ THREE DOTS MENU ============
+function initThreeDotsMenu() {
+  const btn = $('#threeDotsBtn');
+  const menu = $('#threeDotsMenu');
+  
+  if (!btn || !menu) return;
+  
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.classList.toggle('hidden');
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+  
+  $('#logoutBtnMenu')?.addEventListener('click', async () => {
+    await signOut(auth);
+    toast('Signed out', 'info');
+  });
+}
+
 // ============ ROUTER ============
 const router = {
   routes: {
@@ -528,7 +531,8 @@ const router = {
     withdraw: renderWithdraw,
     transactions: renderTransactions,
     settings: renderSettings,
-    offerwall: renderOfferwall
+    offerwall: renderOfferwall,
+    games: renderGames
   },
   init() {
     window.addEventListener('hashchange', () => this.navigate());
@@ -570,6 +574,15 @@ async function renderDashboard() {
 
     c.innerHTML = `
       <div class="space-y-6 page-enter">
+        <!-- Banner Reklam Alanı -->
+        <div class="glass-card rounded-2xl p-4 text-center bg-gradient-to-r from-primary-500/10 to-secondary-500/10">
+          <p class="text-sm text-zinc-500">Advertisement</p>
+          <div class="h-20 flex items-center justify-center">
+            <!-- Banner reklam kodu buraya eklenecek -->
+            <p class="text-zinc-400">728x90 Banner</p>
+          </div>
+        </div>
+        
         <div class="flex items-center justify-between">
           <div>
             <p class="text-zinc-500 text-sm">Welcome back,</p>
@@ -644,6 +657,7 @@ async function handleClaim() {
     if (typeof grecaptcha !== 'undefined') {
       try { 
         token = await getRecaptchaToken('claim');
+        console.log('||| Claim reCAPTCHA Token:', token ? '✅ Alındı' : '❌ Alınamadı');
       } catch(e) {
         console.warn('reCAPTCHA claim error:', e);
       }
@@ -664,7 +678,7 @@ function renderDailyBonus() {
       <div class="glass-card rounded-3xl p-8 text-center">
         <div class="text-6xl font-black bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
         <p class="text-zinc-500 mb-6">Day Streak · Best: ${p.highestStreak || 0}</p>
-        <button id="claimBonusBtn" class="btn-primary px-8 py-4 text-lg">🎁 Claim Daily Bonus</button>
+        <button id="claimBonusBtn" class="btn-primary px-8 py-4 text-lg">Claim Daily Bonus</button>
       </div>
     </div>
   `;
@@ -707,31 +721,56 @@ async function renderLeaderboard() {
   } catch (e) { toast('Error loading', 'error'); }
 }
 
-function renderPtc() {
+async function renderPtc() {
   const c = $('#pageContainer');
   if (!c) return;
-  c.innerHTML = `
-    <div class="space-y-6 page-enter">
-      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">💰 PTC Ads</h1>
-      <p class="text-zinc-500">Click on ads and earn free CNX coins instantly.</p>
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="glass-card rounded-2xl p-6 text-center">
-          <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">📢</div>
-          <h3 class="font-bold text-lg mb-2">Ad #1</h3>
-          <p class="text-sm text-zinc-500 mb-4">Earn 0.5 CNX</p>
-          <button class="btn-primary w-full">View Ad</button>
-        </div>
-        <div class="glass-card rounded-2xl p-6 text-center">
-          <div class="w-16 h-16 rounded-full bg-secondary-500/20 mx-auto mb-4 flex items-center justify-center">🎯</div>
-          <h3 class="font-bold text-lg mb-2">Ad #2</h3>
-          <p class="text-sm text-zinc-500 mb-4">Earn 0.3 CNX</p>
-          <button class="btn-primary w-full">View Ad</button>
+  
+  try {
+    const data = await apiCall('/api/ptc/available');
+    c.innerHTML = `
+      <div class="space-y-6 page-enter">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">PTC Ads</h1>
+        <p class="text-zinc-500">Click on ads and earn free CNX coins instantly.</p>
+        <div class="grid md:grid-cols-2 gap-6">
+          ${data.ads.map(ad => `
+            <div class="glass-card rounded-2xl p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg">${escapeHtml(ad.title)}</h3>
+                <span class="badge badge-green">+${ad.reward} CNX</span>
+              </div>
+              <p class="text-sm text-zinc-500 mb-4">${ad.duration}s · ${ad.remaining} available</p>
+              <button onclick="viewPtcAd('${ad.id}')" class="btn-primary w-full">View Ad</button>
+            </div>
+          `).join('') || '<p class="text-zinc-500 col-span-2 text-center">No ads available</p>'}
         </div>
       </div>
-    </div>
-  `;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+    `;
+  } catch (e) {
+    c.innerHTML = `
+      <div class="space-y-6 page-enter">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">PTC Ads</h1>
+        <p class="text-zinc-500">No ads available at the moment.</p>
+      </div>
+    `;
+  }
 }
+
+window.viewPtcAd = async (adId) => {
+  try {
+    const data = await apiCall('/api/ptc/view', { method: 'POST', body: JSON.stringify({ adId }) });
+    const win = window.open(data.url, '_blank');
+    setTimeout(async () => {
+      try {
+        const result = await apiCall('/api/ptc/complete', { method: 'POST', body: JSON.stringify({ adId }) });
+        toast(`Earned ${result.reward} CNX!`, 'success');
+      } catch (e) {
+        toast(e.message, 'error');
+      }
+    }, data.duration * 1000);
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+};
 
 function renderReferrals() {
   const p = state.profile;
@@ -789,7 +828,7 @@ function renderWithdraw() {
     const card = document.createElement('div');
     card.className = 'coin-card group';
     card.innerHTML = `
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <img src="/coins/${coin.toLowerCase()}.png" alt="${coin}" class="w-12 h-12 rounded-xl mb-4" onerror="this.style.display='none'" />
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="mb-4">
@@ -883,7 +922,7 @@ function renderSettings() {
             <input name="faucetpayEmail" type="email" value="${escapeHtml(p.faucetpayEmail)}" class="input-field" placeholder="your@faucetpay.email" />
           </div>
         </div>
-        <button type="submit" class="btn-primary">💾 Save Changes</button>
+        <button type="submit" class="btn-primary">Save Changes</button>
       </form>
     </div>
   `;
@@ -902,27 +941,42 @@ function renderSettings() {
   });
 }
 
-// ============ OFFERWALL ============
 function renderOfferwall() {
   const frame = $('#offerwallFrame');
   if (frame && state.profile) {
-    // Offerwall.me URL - API_KEY env'den gelecek, şimdilik placeholder
-    // Gerçek API key'i backend'den almalıyız veya .env'den
-    const apiKey = 'YOUR_OFFERWALL_API_KEY'; // .env'den gelecek
+    const apiKey = 'YOUR_OFFERWALL_API_KEY';
     const userId = state.profile.uid;
     frame.src = `https://offerwall.me/offerwall/${apiKey}/${userId}`;
   }
-  
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+function renderGames() {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+window.openGame = (game) => {
+  const container = $('#gameFrameContainer');
+  const frame = $('#gameFrame');
+  if (!container || !frame) return;
+  
+  // Oyun URL'leri - kendi oyun sayfalarınız veya iframe oyunlar
+  const gameUrls = {
+    dice: 'https://www.freeonlinegames.com/embed/dice-game',
+    coinflip: 'https://www.freeonlinegames.com/embed/coin-flip',
+    wheel: 'https://www.freeonlinegames.com/embed/wheel-of-fortune'
+  };
+  
+  frame.src = gameUrls[game] || '';
+  container.classList.remove('hidden');
+  container.scrollIntoView({ behavior: 'smooth' });
+};
+
 // ============ INIT ============
 document.addEventListener('DOMContentLoaded', async () => {
-  // Email action handler'ı kontrol et
   const hasEmailAction = await handleEmailAction();
   
   if (!hasEmailAction) {
-    // Normal app init
     if (typeof lucide !== 'undefined') lucide.createIcons();
     initLanding();
   }
