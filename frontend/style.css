@@ -477,14 +477,34 @@ body {
 
 #offerwallFrame, #gameFrame { background: #fff; border-radius: 1.5rem; }
 
-#threeDotsMenu { animation: menuFadeIn 0.2s ease; z-index: 200; }
-
-@keyframes menuFadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* THREE DOTS MENU - Z-INDEX FIX */
+#threeDotsMenu {
+  animation: menuFadeIn 0.2s ease;
+  position: absolute !important;
+  z-index: 100001 !important;
+  background: white !important;
 }
 
-#threeDotsBtn { position: relative; z-index: 201; }
+.dark #threeDotsMenu {
+  background: #18181b !important;
+  border-color: rgba(63, 63, 70, 0.5) !important;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#threeDotsBtn {
+  position: relative !important;
+  z-index: 100000 !important;
+}
 
 @media (max-width: 768px) {
   .landing-header { padding: 1rem; }
