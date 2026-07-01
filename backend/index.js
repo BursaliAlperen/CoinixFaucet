@@ -8,6 +8,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -91,112 +92,107 @@ app.set('trust proxy', 1);
 // 📁 STATIC DOSYALAR (FRONTEND)
 // ============================================
 const possiblePaths = [
-    __dirname,
-    join(__dirname, '..'),
-    join(__dirname, 'frontend'),
-    join(__dirname, '../frontend'),
-    join(process.cwd(), 'frontend'),
-    process.cwd()
+  __dirname,
+  join(__dirname, '..'),
+  join(__dirname, 'frontend'),
+  join(__dirname, '../frontend'),
+  join(process.cwd(), 'frontend'),
+  process.cwd()
 ];
 
 let frontendPath = null;
 for (const p of possiblePaths) {
-    if (fs.existsSync(join(p, 'index.html'))) {
-        frontendPath = p;
-        break;
-    }
+  if (fs.existsSync(join(p, 'index.html'))) {
+    frontendPath = p;
+    break;
+  }
 }
 
 if (!frontendPath) {
-    console.error('❌ index.html bulunamadı. Aranan yollar:', possiblePaths);
-    process.exit(1);
+  console.error('❌ index.html bulunamadı. Aranan yollar:', possiblePaths);
+  process.exit(1);
 }
 
 console.log('📁 Frontend path:', frontendPath);
 app.use(express.static(frontendPath));
 
 // ============================================
-// 🤖 ROBOTS.TXT
+// 🤖 ROBOTS.TXT - SEO OPTIMIZED
 // ============================================
 app.get('/robots.txt', (req, res) => {
-    res.header('Content-Type', 'text/plain');
-    res.send(`User-agent: *
+  const siteUrl = process.env.SITE_URL || 'https://coinixfaucet.mine.bz';
+  res.header('Content-Type', 'text/plain');
+  res.send(`User-agent: *
 Allow: /
-Sitemap: https://coinixfaucet.mine.bz/sitemap.xml`);
+Disallow: /admin
+Disallow: /api/
+Disallow: /#/dashboard
+Disallow: /#/settings
+Disallow: /#/withdraw
+Disallow: /#/transactions
+Disallow: /#/faucet
+Disallow: /#/daily-bonus
+Disallow: /#/referrals
+Disallow: /#/ptc
+Disallow: /#/leaderboard
+Disallow: /#/offerwall
+
+Sitemap: ${siteUrl}/sitemap.xml`);
 });
 
 // ============================================
-// 🗺️ SITEMAP.XML - GENİŞLETİLMİŞ
+// 🗺️ SITEMAP.XML - SEO OPTIMIZED
 // ============================================
 app.get('/sitemap.xml', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
-    res.header('Content-Type', 'application/xml');
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  const today = new Date().toISOString().split('T')[0];
+  const siteUrl = process.env.SITE_URL || 'https://coinixfaucet.mine.bz';
+  
+  res.header('Content-Type', 'application/xml');
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
+    <loc>${siteUrl}/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
+    <loc>${siteUrl}/#/about</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
+    <loc>${siteUrl}/#/faq</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
+    <loc>${siteUrl}/#/terms</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
+    <loc>${siteUrl}/#/privacy</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://coinixfaucet.mine.bz/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>`);
 });
 
 app.get('/admin', (req, res) => {
-    const adminPath = join(frontendPath, 'admin.html');
-    if (fs.existsSync(adminPath)) {
-        res.sendFile(adminPath);
-    } else {
-        res.status(404).send('Admin page not found');
-    }
+  const adminPath = join(frontendPath, 'admin.html');
+  if (fs.existsSync(adminPath)) {
+    res.sendFile(adminPath);
+  } else {
+    res.status(404).send('Admin page not found');
+  }
 });
 
 // ============================================
@@ -289,10 +285,10 @@ app.get('/api/user', verifyToken, async (req, res) => {
       sum + ((data.balances?.[coin] || 0) * COIN_PRICES[coin]), 0
     );
     const totalUSD = cnxUSD + coinsUSD;
-    
+
     const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase());
     const isAdmin = adminEmails.includes(req.user.email.toLowerCase());
-    
+
     res.json({
       success: true,
       user: {
@@ -690,6 +686,131 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
     res.json({ success: true, day: newStreak, amount: cnxBonus, usdValue, newStreak });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============================================
+// 🔐 FORGOT PASSWORD
+// ============================================
+app.post('/api/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+
+    // Firebase Admin ile password reset email'i gönder
+    const link = await auth.generatePasswordResetLink(email, {
+      url: `${process.env.SITE_URL || 'https://coinixfaucet.mine.bz'}/#/reset-password`
+    });
+
+    // Firebase otomatik email gönderir
+    res.json({ success: true, message: 'Password reset email sent' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send reset email' });
+  }
+});
+
+// ============================================
+// 🔐 RESEND VERIFICATION EMAIL
+// ============================================
+app.post('/api/resend-verification', verifyToken, async (req, res) => {
+  try {
+    const user = await auth.getUser(req.user.uid);
+    if (user.emailVerified) {
+      return res.json({ success: true, message: 'Already verified' });
+    }
+
+    const link = await auth.generateEmailVerificationLink(user.email, {
+      url: `${process.env.SITE_URL || 'https://coinixfaucet.mine.bz'}/#/verify-email`
+    });
+
+    res.json({ success: true, message: 'Verification email sent' });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ success: false, message: 'Failed to resend verification' });
+  }
+});
+
+// ============================================
+// 🎯 OFFERWALL.ME POSTBACK
+// ============================================
+app.post('/api/offerwall/postback', async (req, res) => {
+  try {
+    const { subId, transId, reward, status, signature, payout, offer_name, userIp } = req.body;
+    const secret = process.env.OFFERWALL_SECRET_KEY;
+
+    if (!secret) {
+      console.error('OFFERWALL_SECRET_KEY not set');
+      return res.status(500).json({ error: 'Server not configured' });
+    }
+
+    // Signature verification: MD5(subId + transId + reward + secret)
+    const expectedSig = crypto.createHash('md5')
+      .update(`${subId}${transId}${reward}${secret}`)
+      .digest('hex');
+
+    if (expectedSig !== signature) {
+      console.error('Invalid signature:', signature, 'expected:', expectedSig);
+      return res.status(403).json({ error: 'Invalid signature' });
+    }
+
+    // Find user by referralCode (subId)
+    const userSnap = await db.collection('users')
+      .where('referralCode', '==', subId)
+      .limit(1)
+      .get();
+
+    if (userSnap.empty) {
+      console.error('User not found for subId:', subId);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userDoc = userSnap.docs[0];
+    const userRef = db.collection('users').doc(userDoc.id);
+    const rewardAmount = parseFloat(reward);
+
+    if (status === '1') {
+      // Add reward
+      await userRef.update({
+        cnx: FieldValue.increment(Math.floor(rewardAmount * 100)),
+        totalClaims: FieldValue.increment(1)
+      });
+
+      // Record transaction
+      await db.collection('transactions').add({
+        userId: userDoc.id,
+        type: 'offerwall',
+        amount: rewardAmount,
+        offerName: offer_name,
+        transactionId: transId,
+        status: 'completed',
+        createdAt: FieldValue.serverTimestamp()
+      });
+
+      console.log(`✅ Offerwall reward: ${rewardAmount} to ${subId}`);
+    } else if (status === '2') {
+      // Chargeback - subtract
+      await userRef.update({
+        cnx: FieldValue.increment(-Math.floor(rewardAmount * 100))
+      });
+
+      await db.collection('transactions').add({
+        userId: userDoc.id,
+        type: 'offerwall_chargeback',
+        amount: -rewardAmount,
+        offerName: offer_name,
+        transactionId: transId,
+        status: 'chargeback',
+        createdAt: FieldValue.serverTimestamp()
+      });
+
+      console.log(`⚠️ Offerwall chargeback: ${rewardAmount} from ${subId}`);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Offerwall postback error:', error);
+    res.status(500).json({ error: 'Internal error' });
   }
 });
 
