@@ -14,15 +14,11 @@
   <link rel="canonical" href="https://coinixfaucet.mine.bz/" />
   <title>CoinixFaucet - Earn Free Cryptocurrency Every Day</title>
   
-  <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#8b5cf6" />
-  
-  <!-- Favicon - Yuvarlak Logo -->
   <link rel="icon" type="image/png" href="/logo.png" />
   <link rel="apple-touch-icon" href="/logo.png" />
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -38,29 +34,19 @@
     }
   </script>
   
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <!-- reCAPTCHA Enterprise -->
   <script src="https://www.google.com/recaptcha/enterprise.js?render=6LctET4tAAAAAAGcqEdyQbF_gcTH57Dnxztlv2hN" async defer></script>
   
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="min-h-screen">
-  <!-- Toast Root -->
   <div id="toastRoot" class="fixed top-4 right-4 z-[9999] space-y-2"></div>
 
-  <!-- ============================================ -->
   <!-- LANDING PAGE -->
-  <!-- ============================================ -->
   <div id="landingPage">
-    <!-- Header -->
     <header class="landing-header">
       <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">
-          C
-        </div>
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">C</div>
         <span class="font-bold text-xl">CoinixFaucet</span>
       </div>
       <nav class="hidden md:flex items-center gap-2">
@@ -68,17 +54,19 @@
         <a href="#faq" class="landing-nav-link">FAQ</a>
         <a href="#coins" class="landing-nav-link">Coins</a>
         <button id="darkModeToggle" class="icon-btn">
-          <i data-lucide="moon" class="w-4 h-4 dark-mode-icon"></i>
+          <i data-lucide="moon" class="w-4 h-4"></i>
         </button>
-        <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
-        <button id="openSignupBtn" class="btn-primary text-sm">Sign Up</button>
+        <!-- Auth butonları - JS ile güncellenecek -->
+        <div id="landingAuthBtns">
+          <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
+          <button id="openSignupBtn" class="btn-primary text-sm">Sign Up</button>
+        </div>
       </nav>
       <button id="menuToggle" class="icon-btn lg:hidden">
         <i data-lucide="menu" class="w-5 h-5"></i>
       </button>
     </header>
 
-    <!-- Hero -->
     <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-16 px-4">
       <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-secondary-500/5"></div>
       <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
@@ -98,7 +86,7 @@
           CoinixFaucet is a modern cryptocurrency faucet where users earn free crypto and instantly withdraw through FaucetPay.
         </p>
         
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div id="heroBtns" class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button id="heroSignupBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
             <i data-lucide="rocket" class="w-5 h-5"></i>
             Start Earning — It's Free
@@ -130,7 +118,6 @@
       </div>
     </section>
 
-    <!-- Features -->
     <section id="features" class="py-20 px-4">
       <div class="max-w-6xl mx-auto">
         <div class="text-center mb-12">
@@ -172,7 +159,6 @@
       </div>
     </section>
 
-    <!-- Live Feed -->
     <section class="py-20 px-4 bg-gradient-to-br from-primary-500/5 to-secondary-500/5">
       <div class="max-w-6xl mx-auto">
         <div class="text-center mb-12">
@@ -201,7 +187,6 @@
       </div>
     </section>
 
-    <!-- Coins -->
     <section id="coins" class="py-20 px-4">
       <div class="max-w-6xl mx-auto">
         <div class="text-center mb-12">
@@ -212,7 +197,6 @@
       </div>
     </section>
 
-    <!-- FAQ -->
     <section id="faq" class="py-20 px-4">
       <div class="max-w-3xl mx-auto">
         <div class="text-center mb-12">
@@ -221,38 +205,25 @@
         </div>
         <div class="space-y-4">
           <details class="faq-item">
-            <summary>
-              How do I claim crypto?
-              <i data-lucide="chevron-down" class="w-5 h-5"></i>
-            </summary>
+            <summary>How do I claim crypto? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
             <p>Create a free account, verify your email, go to the Manual Faucet page and click Claim Reward every 60 seconds.</p>
           </details>
           <details class="faq-item">
-            <summary>
-              How often can I claim?
-              <i data-lucide="chevron-down" class="w-5 h-5"></i>
-            </summary>
+            <summary>How often can I claim? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
             <p>Every 60 seconds, 24/7. No daily limit.</p>
           </details>
           <details class="faq-item">
-            <summary>
-              What is the minimum withdrawal?
-              <i data-lucide="chevron-down" class="w-5 h-5"></i>
-            </summary>
+            <summary>What is the minimum withdrawal? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
             <p>$0.03 across all supported coins.</p>
           </details>
           <details class="faq-item">
-            <summary>
-              How long do withdrawals take?
-              <i data-lucide="chevron-down" class="w-5 h-5"></i>
-            </summary>
+            <summary>How long do withdrawals take? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
             <p>Instant via FaucetPay. Most users receive funds within seconds.</p>
           </details>
         </div>
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="py-12 px-4 border-t border-zinc-200 dark:border-zinc-800">
       <div class="max-w-6xl mx-auto text-center">
         <div class="flex items-center justify-center gap-2 mb-4">
@@ -266,7 +237,7 @@
           <a href="#/about" class="text-zinc-500 hover:text-primary-500">About</a>
         </div>
         <div class="flex items-center justify-center gap-4">
-          <a href="https://t.me/coinixfaucet" target="_blank" class="text-zinc-500 hover:text-primary-500 transition-colors">
+          <a href="https://t.me/CoinixCommunity" target="_blank" class="text-zinc-500 hover:text-primary-500 transition-colors">
             <i data-lucide="send" class="w-5 h-5"></i>
           </a>
         </div>
@@ -274,11 +245,8 @@
     </footer>
   </div>
 
-  <!-- ============================================ -->
-  <!-- APP SHELL (Dashboard) -->
-  <!-- ============================================ -->
+  <!-- APP SHELL -->
   <div id="appShell" class="hidden min-h-screen flex">
-    <!-- Sidebar -->
     <aside id="sidebar" class="sidebar w-64 min-h-screen p-4 flex flex-col gap-2 border-r border-zinc-200 dark:border-zinc-800">
       <div class="flex items-center gap-2 mb-6 px-2">
         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">C</div>
@@ -321,7 +289,7 @@
       
       <div class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
         <button id="darkModeToggle2" class="nav-link">
-          <i data-lucide="moon" class="w-5 h-5 dark-mode-icon"></i> Dark Mode
+          <i data-lucide="moon" class="w-5 h-5"></i> Dark Mode
         </button>
         <button id="logoutBtn" class="nav-link text-red-500 hover:text-red-600">
           <i data-lucide="log-out" class="w-5 h-5"></i> Logout
@@ -329,9 +297,7 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
     <div class="flex-1 flex flex-col min-w-0">
-      <!-- Top Nav -->
       <nav class="top-nav">
         <button id="menuToggle2" class="icon-btn lg:hidden">
           <i data-lucide="menu" class="w-5 h-5"></i>
@@ -347,22 +313,22 @@
             <div id="profileAvatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-sm">U</div>
             <span id="profileName" class="font-medium text-sm hidden sm:block">User</span>
           </div>
-          <!-- Üç Nokta Menüsü -->
+          <!-- ÜÇ NOKTA MENÜSÜ -->
           <div class="relative">
-            <button id="threeDotsBtn" class="icon-btn">
+            <button id="threeDotsBtn" class="icon-btn" type="button">
               <i data-lucide="more-vertical" class="w-4 h-4"></i>
             </button>
-            <div id="threeDotsMenu" class="hidden absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-xl py-2 z-50">
+            <div id="threeDotsMenu" class="hidden absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-xl py-2 z-[200]">
               <a href="#/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
                 <i data-lucide="settings" class="w-4 h-4"></i> Settings
               </a>
               <a href="#/transactions" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
                 <i data-lucide="receipt" class="w-4 h-4"></i> Transactions
               </a>
-              <a href="https://t.me/coinixfaucet" target="_blank" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
+              <a href="https://t.me/CoinixCommunity" target="_blank" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
                 <i data-lucide="send" class="w-4 h-4"></i> Telegram
               </a>
-              <button id="logoutBtnMenu" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+              <button id="logoutBtnMenu" type="button" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
                 <i data-lucide="log-out" class="w-4 h-4"></i> Logout
               </button>
             </div>
@@ -370,14 +336,11 @@
         </div>
       </nav>
 
-      <!-- Page Container -->
       <main id="pageContainer" class="flex-1 p-6 overflow-auto"></main>
     </div>
   </div>
 
-  <!-- ============================================ -->
   <!-- AUTH MODAL -->
-  <!-- ============================================ -->
   <div id="authModal" class="auth-modal hidden">
     <div class="auth-modal-backdrop"></div>
     <div class="auth-modal-content">
@@ -442,9 +405,7 @@
     </div>
   </div>
 
-  <!-- ============================================ -->
   <!-- FORGOT PASSWORD MODAL -->
-  <!-- ============================================ -->
   <div id="forgotPasswordModal" class="auth-modal hidden">
     <div class="auth-modal-backdrop"></div>
     <div class="auth-modal-content">
@@ -473,9 +434,7 @@
     </div>
   </div>
 
-  <!-- ============================================ -->
-  <!-- EMAIL ACTION PAGE (Verify + Reset Password) -->
-  <!-- ============================================ -->
+  <!-- EMAIL ACTION PAGE -->
   <div id="emailActionPage" class="hidden min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary-500/5 to-secondary-500/5">
     <div class="max-w-md w-full glass-card rounded-3xl p-8 text-center">
       <div id="emailActionContent">
@@ -489,14 +448,9 @@
     </div>
   </div>
 
-  <!-- ============================================ -->
   <!-- PAGE TEMPLATES -->
-  <!-- ============================================ -->
-  
-  <!-- Dashboard Template -->
   <template id="tpl-dashboard"></template>
   
-  <!-- Faucet Template -->
   <template id="tpl-faucet">
     <div class="space-y-6 page-enter">
       <div class="text-center">
@@ -515,10 +469,8 @@
     </div>
   </template>
   
-  <!-- Daily Bonus Template -->
   <template id="tpl-daily-bonus"></template>
   
-  <!-- Offerwall Template -->
   <template id="tpl-offerwall">
     <div class="space-y-6 page-enter">
       <div class="flex items-center justify-between">
@@ -528,14 +480,7 @@
         </div>
       </div>
       <div class="glass-card rounded-3xl overflow-hidden" style="height: 70vh;">
-        <iframe 
-          id="offerwallFrame"
-          class="w-full h-full border-0"
-          src=""
-          allow="camera; microphone; geolocation"
-          scrolling="yes"
-          style="min-height: 600px;"
-        ></iframe>
+        <iframe id="offerwallFrame" class="w-full h-full border-0" src="" allow="camera; microphone; geolocation" scrolling="yes" style="min-height: 600px;"></iframe>
       </div>
       <div class="glass-card rounded-2xl p-6">
         <h3 class="font-bold text-lg mb-3 text-zinc-900 dark:text-white">How it works?</h3>
@@ -548,7 +493,6 @@
     </div>
   </template>
   
-  <!-- Games Template -->
   <template id="tpl-games">
     <div class="space-y-6 page-enter">
       <div class="flex items-center justify-between">
@@ -589,20 +533,15 @@
           </div>
         </div>
       </div>
-      <!-- Game iframe container -->
       <div id="gameFrameContainer" class="hidden glass-card rounded-3xl overflow-hidden" style="height: 70vh;">
         <iframe id="gameFrame" class="w-full h-full border-0"></iframe>
       </div>
     </div>
   </template>
   
-  <!-- PTC Template -->
   <template id="tpl-ptc"></template>
-  
-  <!-- Referrals Template -->
   <template id="tpl-referrals"></template>
   
-  <!-- Withdraw Template -->
   <template id="tpl-withdraw">
     <div class="space-y-6 page-enter">
       <div>
@@ -613,16 +552,10 @@
     </div>
   </template>
   
-  <!-- Transactions Template -->
   <template id="tpl-transactions"></template>
-  
-  <!-- Leaderboard Template -->
   <template id="tpl-leaderboard"></template>
-  
-  <!-- Settings Template -->
   <template id="tpl-settings"></template>
 
-  <!-- App Script -->
   <script type="module" src="/app.js"></script>
 </body>
 </html>
