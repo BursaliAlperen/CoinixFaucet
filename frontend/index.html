@@ -3,16 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="CoinixFaucet - Earn free cryptocurrency every day. Claim CNX coins and withdraw instantly via FaucetPay." />
-  <meta name="keywords" content="faucet, crypto, free bitcoin, dogecoin, pepecoin, earn crypto, faucetpay" />
-  <meta name="author" content="CoinixFaucet" />
-  <meta property="og:title" content="CoinixFaucet - Earn Free Crypto Daily" />
-  <meta property="og:description" content="Claim free cryptocurrency every 60 seconds. Instant withdrawals via FaucetPay." />
+  <meta name="description" content="CoinixFaucet - Earn free cryptocurrency every day" />
+  <meta name="keywords" content="faucet, crypto, earn, faucetpay, cnx, pepe, doge" />
+  <meta property="og:title" content="CoinixFaucet - Earn Free Crypto" />
+  <meta property="og:description" content="Claim free cryptocurrency every 60 seconds" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://coinixfaucet.mine.bz/" />
   <meta property="og:image" content="https://coinixfaucet.mine.bz/logo.png" />
   <link rel="canonical" href="https://coinixfaucet.mine.bz/" />
-  <title>CoinixFaucet - Earn Free Cryptocurrency Every Day</title>
+  <title>CoinixFaucet - Earn Free Cryptocurrency</title>
   
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#8b5cf6" />
@@ -40,23 +39,41 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="min-h-screen">
-  <div id="toastRoot" class="fixed top-4 right-4 z-[9999] space-y-2"></div>
+  <!-- MAINTENANCE MODE -->
+  <div id="maintenanceMode" class="hidden fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center">
+    <div class="text-center p-8">
+      <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center mx-auto mb-6">
+        <i data-lucide="settings" class="w-10 h-10 text-white animate-spin"></i>
+      </div>
+      <h1 class="text-3xl font-bold text-white mb-4">Site Under Maintenance</h1>
+      <p class="text-zinc-400 mb-6">We'll be back shortly.</p>
+    </div>
+  </div>
+
+  <!-- COOKIE CONSENT -->
+  <div id="cookieConsent" class="fixed bottom-0 left-0 right-0 z-[9998] bg-zinc-900 text-white p-4 hidden">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-zinc-300">We use cookies to enhance your experience.</p>
+      <button id="acceptCookies" class="btn-primary whitespace-nowrap">Accept</button>
+    </div>
+  </div>
+
+  <div id="toastRoot" class="fixed top-4 right-4 z-[9997] space-y-2"></div>
 
   <!-- LANDING PAGE -->
   <div id="landingPage">
     <header class="landing-header">
       <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">C</div>
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg">C</div>
         <span class="font-bold text-xl">CoinixFaucet</span>
       </div>
       <nav class="hidden md:flex items-center gap-2">
         <a href="#features" class="landing-nav-link">Features</a>
         <a href="#faq" class="landing-nav-link">FAQ</a>
         <a href="#coins" class="landing-nav-link">Coins</a>
-        <button id="darkModeToggle" class="icon-btn">
+        <button id="darkModeToggle" class="icon-btn" title="Toggle Dark Mode">
           <i data-lucide="moon" class="w-4 h-4"></i>
         </button>
-        <!-- Auth butonları - JS ile güncellenecek -->
         <div id="landingAuthBtns">
           <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
           <button id="openSignupBtn" class="btn-primary text-sm">Sign Up</button>
@@ -249,7 +266,7 @@
   <div id="appShell" class="hidden min-h-screen flex">
     <aside id="sidebar" class="sidebar w-64 min-h-screen p-4 flex flex-col gap-2 border-r border-zinc-200 dark:border-zinc-800">
       <div class="flex items-center gap-2 mb-6 px-2">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">C</div>
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg">C</div>
         <span class="font-bold text-lg">CoinixFaucet</span>
       </div>
       
@@ -270,6 +287,9 @@
       </a>
       <a href="#/ptc" class="nav-link" data-route="ptc">
         <i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> PTC Ads
+      </a>
+      <a href="#/swap" class="nav-link" data-route="swap">
+        <i data-lucide="arrow-left-right" class="w-5 h-5"></i> Swap
       </a>
       <a href="#/referrals" class="nav-link" data-route="referrals">
         <i data-lucide="users" class="w-5 h-5"></i> Referrals
@@ -313,12 +333,11 @@
             <div id="profileAvatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-sm">U</div>
             <span id="profileName" class="font-medium text-sm hidden sm:block">User</span>
           </div>
-          <!-- ÜÇ NOKTA MENÜSÜ -->
-          <div class="relative">
-            <button id="threeDotsBtn" class="icon-btn" type="button">
+          <div class="relative" style="z-index: 9999;">
+            <button id="threeDotsBtn" class="icon-btn" type="button" style="z-index: 10000;">
               <i data-lucide="more-vertical" class="w-4 h-4"></i>
             </button>
-            <div id="threeDotsMenu" class="hidden absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-xl py-2 z-[200]">
+            <div id="threeDotsMenu" class="hidden absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-xl py-2" style="z-index: 10001;">
               <a href="#/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
                 <i data-lucide="settings" class="w-4 h-4"></i> Settings
               </a>
@@ -341,7 +360,7 @@
   </div>
 
   <!-- AUTH MODAL -->
-  <div id="authModal" class="auth-modal hidden">
+  <div id="authModal" class="auth-modal hidden" style="z-index: 9996;">
     <div class="auth-modal-backdrop"></div>
     <div class="auth-modal-content">
       <button id="closeAuthModal" class="absolute top-4 right-4 icon-btn hover:scale-110 transition-transform">
@@ -349,7 +368,7 @@
       </button>
       
       <div class="text-center mb-6">
-        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">C</div>
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg">C</div>
         <h2 id="authModalTitle" class="text-2xl font-bold text-zinc-900 dark:text-white">Welcome Back</h2>
         <p class="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Sign in to continue</p>
       </div>
@@ -413,7 +432,7 @@
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <div class="text-center mb-6">
-        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg">
           <i data-lucide="key" class="w-7 h-7"></i>
         </div>
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">Reset Password</h2>
@@ -495,12 +514,8 @@
   
   <template id="tpl-games">
     <div class="space-y-6 page-enter">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Games</h1>
-          <p class="text-zinc-500 dark:text-zinc-400 mt-1">Play games and earn CNX rewards</p>
-        </div>
-      </div>
+      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Games</h1>
+      <p class="text-zinc-500 dark:text-zinc-400">Play games and earn CNX rewards</p>
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="glass-card rounded-2xl overflow-hidden">
           <div class="aspect-video bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center">
@@ -540,13 +555,92 @@
   </template>
   
   <template id="tpl-ptc"></template>
+  
+  <template id="tpl-swap">
+    <div class="space-y-6 page-enter">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white mb-2">Swap Coins</h1>
+        <p class="text-zinc-500 dark:text-zinc-400">Exchange your coins instantly with live rates</p>
+      </div>
+      
+      <div class="max-w-md mx-auto">
+        <div class="glass-card rounded-3xl p-6">
+          <!-- From Coin -->
+          <div class="mb-4">
+            <label class="label mb-2">From</label>
+            <div class="flex gap-2">
+              <select id="swapFromCoin" class="input-field flex-1">
+                <option value="CNX">CNX</option>
+                <option value="PEPE">PEPE</option>
+                <option value="DOGE">DOGE</option>
+                <option value="DGB">DGB</option>
+                <option value="POL">POL</option>
+              </select>
+              <div class="flex items-center gap-2 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                <img id="swapFromIcon" src="/coins/cnx.png" alt="CNX" class="w-6 h-6 rounded-full" onerror="this.style.display='none'" />
+                <span id="swapFromBalance" class="text-sm font-medium">0</span>
+              </div>
+            </div>
+            <input type="number" id="swapFromAmount" placeholder="0.00" step="0.0001" class="input-field mt-2" min="0" />
+          </div>
+          
+          <!-- Swap Icon -->
+          <div class="flex justify-center -my-3 relative z-10">
+            <button id="swapReverseBtn" class="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+              <i data-lucide="arrow-down-up" class="w-5 h-5"></i>
+            </button>
+          </div>
+          
+          <!-- To Coin -->
+          <div class="mb-4 mt-2">
+            <label class="label mb-2">To</label>
+            <div class="flex gap-2">
+              <select id="swapToCoin" class="input-field flex-1">
+                <option value="PEPE">PEPE</option>
+                <option value="DOGE">DOGE</option>
+                <option value="DGB">DGB</option>
+                <option value="POL">POL</option>
+                <option value="CNX">CNX</option>
+              </select>
+              <div class="flex items-center gap-2 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                <img id="swapToIcon" src="/coins/pepe.png" alt="PEPE" class="w-6 h-6 rounded-full" onerror="this.style.display='none'" />
+                <span id="swapToAmount" class="text-sm font-medium">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Swap Info -->
+          <div class="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-4 mb-4">
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-zinc-500">Rate</span>
+              <span id="swapRate" class="font-medium">—</span>
+            </div>
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-zinc-500">Fee (2%)</span>
+              <span id="swapFee" class="font-medium">—</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-zinc-500">You receive</span>
+              <span id="swapFinalAmount" class="font-bold text-primary-500">—</span>
+            </div>
+          </div>
+          
+          <button id="swapExecuteBtn" class="btn-primary w-full">
+            <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
+            Swap Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+  
   <template id="tpl-referrals"></template>
   
   <template id="tpl-withdraw">
     <div class="space-y-6 page-enter">
       <div>
         <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Withdraw</h1>
-        <p class="text-zinc-500 dark:text-zinc-400 mt-1">Minimum $0.03 · Instant via FaucetPay</p>
+        <p class="text-zinc-500 mt-1">Minimum $0.03 · Instant via FaucetPay</p>
       </div>
       <div id="withdrawGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
