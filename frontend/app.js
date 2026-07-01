@@ -1,12 +1,10 @@
 import { auth, db, COL, COINS, COIN_META, RECAPTCHA_SITE_KEY } from './firebase-config.js';
 import {
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, sendEmailVerification, sendPasswordResetEmail, reload
+  signOut, sendEmailVerification, reload
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  doc, getDoc, setDoc, updateDoc, collection, addDoc, query, where,
-  limit, getDocs, onSnapshot, serverTimestamp,
-  increment
+  doc, getDoc, setDoc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 console.log('||| ========== APP START ========== |||');
@@ -29,7 +27,7 @@ function setDarkMode(isDark) {
 function toggleDarkMode() { setDarkMode(!getDarkMode()); }
 function updateDarkModeIcons() {
   const isDark = getDarkMode();
-  document.querySelectorAll('.dark-mode-icon').forEach(el => {
+  document.querySelectorAll('.dark-mode-icon, #darkModeToggle, #darkModeToggle2').forEach(el => {
     if (el) el.innerHTML = isDark ? '<i data-lucide="moon" class="w-5 h-5"></i>' : '<i data-lucide="sun" class="w-5 h-5"></i>';
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -63,17 +61,18 @@ const state = { user: null, profile: null };
 
 // ============ LANDING ============
 function initLanding() {
+  // Dark mode buttons
   document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
     if (btn) btn.addEventListener('click', toggleDarkMode);
   });
   setTimeout(updateDarkModeIcons, 100);
   
-  $$('.open-auth-btn, #openLoginBtn, #openSignupBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.mode || (btn.id === 'openSignupBtn' ? 'register' : 'login');
-      openAuthModal(mode);
-    });
-  });
+  // Auth buttons - Landing page
+  $('#openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
+  $('#openSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+  $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
+  $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+  
   renderLandingCoins();
   loadLiveStats();
   loadLiveWithdraws();
@@ -98,7 +97,7 @@ function renderLandingCoins() {
           </div>
           <div><div class="font-bold text-lg text-zinc-900 dark:text-white">${m.name}</div><div class="text-xs text-zinc-500 dark:text-zinc-400">${coin}</div></div>
         </div>
-        <span class="badge badge-green"><span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Active</span>
+        <span class="badge badge-green">Active</span>
       </div>
       <div class="space-y-2 text-sm">
         <div class="flex justify-between text-zinc-600 dark:text-zinc-400"><span>Min Withdraw</span><span class="font-medium text-zinc-900 dark:text-white">$0.03</span></div>
@@ -138,7 +137,7 @@ async function loadLiveWithdraws() {
     data.withdrawals.forEach(t => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm text-zinc-900 dark:text-white">${escapeHtml(t.username || 'User')}</span></div></td>
+        <td class="p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-xs font-bold text-white">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm text-zinc-900 dark:text-white">${escapeHtml(t.username || 'User')}</span></div></td>
         <td class="p-3 text-zinc-900 dark:text-white"><span class="text-sm font-medium">${t.coin}</span></td>
         <td class="p-3 font-mono text-sm text-green-500">${fmt(t.amount)}</td>
         <td class="p-3 text-sm text-zinc-600 dark:text-zinc-400">${fmtUSD(t.usdValue)}</td>
@@ -188,8 +187,8 @@ $('#authForm')?.addEventListener('submit', async e => {
 
   try {
     if (authMode === 'login') {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      await reload(cred.user);
+      await signInWithEmailAndPassword(auth, email, password);
+      await reload(auth.currentUser);
       toast('Welcome back!', 'success');
       closeAuthModal();
     } else {
@@ -234,37 +233,54 @@ onAuthStateChanged(auth, async user => {
     state.unsubProfile = onSnapshot(doc(db, COL.users, user.uid), s => {
       if (s.exists()) { state.profile = s.data(); updateTopBar(); }
     });
+    
+    // Hide landing, show app
     if ($('#landingPage')) $('#landingPage').classList.add('hidden');
     if ($('#appShell')) $('#appShell').classList.remove('hidden');
+    
     if (typeof lucide !== 'undefined') lucide.createIcons();
     router.init();
-    updateTopBar();
+    updateTopBar(); // Update buttons
   } else {
-    state.user = null; state.profile = null; state.unsubProfile?.();
+    state.user = null; 
+    state.profile = null; 
+    state.unsubProfile?.();
+    
+    // Show landing, hide app
     if ($('#landingPage')) $('#landingPage').classList.remove('hidden');
     if ($('#appShell')) $('#appShell').classList.add('hidden');
-    updateTopBar();
+    
+    updateTopBar(); // Reset buttons
   }
 });
 
 function updateTopBar() {
+  // Landing page buttons
+  const loginBtn = $('#openLoginBtn');
+  const signupBtn = $('#openSignupBtn');
+  const heroLoginBtn = $('#heroLoginBtn');
+  const heroSignupBtn = $('#heroSignupBtn');
+  
   if (!state.profile) {
-      const loginBtn = $('#openLoginBtn');
-      const signupBtn = $('#openSignupBtn');
-      if (loginBtn) { loginBtn.textContent = 'Login'; loginBtn.className = 'btn-ghost text-sm open-auth-btn'; loginBtn.dataset.mode = 'login'; loginBtn.onclick = () => openAuthModal('login'); }
-      if (signupBtn) { signupBtn.textContent = 'Sign Up'; signupBtn.className = 'btn-primary text-sm open-auth-btn'; signupBtn.dataset.mode = 'register'; signupBtn.onclick = () => openAuthModal('register'); }
-      return;
+    // Not logged in - show Login/Signup
+    if (loginBtn) { loginBtn.textContent = 'Login'; loginBtn.className = 'btn-ghost text-sm'; }
+    if (signupBtn) { signupBtn.textContent = 'Sign Up'; signupBtn.className = 'btn-primary text-sm'; }
+    if (heroLoginBtn) { heroLoginBtn.textContent = 'Login'; heroLoginBtn.className = 'btn-ghost text-base px-10 py-5'; }
+    if (heroSignupBtn) { heroSignupBtn.textContent = 'Start Earning — It\'s Free'; heroSignupBtn.className = 'btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40'; }
+    return;
   }
   
+  // Logged in - update dashboard
   const total = COINS.reduce((s, c) => s + (state.profile.balances[c] || 0) * (COIN_META[c].usd || 0), 0);
   if ($('#topBalance')) $('#topBalance').textContent = fmtUSD(total);
   if ($('#profileName')) $('#profileName').textContent = state.profile.username;
   if ($('#profileAvatar')) $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
   
-  const loginBtn = $('#openLoginBtn');
-  const signupBtn = $('#openSignupBtn');
-  if (loginBtn) { loginBtn.textContent = 'Dashboard'; loginBtn.className = 'btn-primary text-sm'; loginBtn.onclick = () => router.go('#/dashboard'); }
+  // Landing page buttons - change to Dashboard/Logout
+  if (loginBtn) { loginBtn.textContent = 'Dashboard'; loginBtn.className = 'btn-primary text-sm'; loginBtn.onclick = () => { $('#landingPage')?.classList.add('hidden'); $('#appShell')?.classList.remove('hidden'); router.go('#/dashboard'); }; }
   if (signupBtn) { signupBtn.textContent = 'Logout'; signupBtn.className = 'btn-ghost text-sm'; signupBtn.onclick = async () => { await signOut(auth); toast('Logged out', 'info'); }; }
+  if (heroLoginBtn) { heroLoginBtn.textContent = 'Dashboard'; heroLoginBtn.className = 'btn-ghost text-base px-10 py-5'; heroLoginBtn.onclick = () => { $('#landingPage')?.classList.add('hidden'); $('#appShell')?.classList.remove('hidden'); router.go('#/dashboard'); }; }
+  if (heroSignupBtn) { heroSignupBtn.textContent = 'Logout'; heroSignupBtn.className = 'btn-ghost text-base px-10 py-5'; heroSignupBtn.onclick = async () => { await signOut(auth); toast('Logged out', 'info'); }; }
 }
 
 $('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
@@ -321,34 +337,26 @@ async function renderDashboard() {
     const c = $('#pageContainer');
     if (!c) return;
     
-    if(!$('#dashUsername')) {
-        c.innerHTML = `
-          <div class="space-y-6 page-enter">
-            <div class="relative overflow-hidden rounded-3xl p-8 gradient-border glass-card">
-              <div class="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-cyan-500/20"></div>
-              <div class="relative">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Welcome back,</p>
-                <h1 class="text-3xl sm:text-4xl font-bold mb-6 text-zinc-900 dark:text-white">${escapeHtml(state.profile.username)}</h1>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div class="stat-card"><div class="stat-label">Main Balance</div><div class="stat-value">${fmtUSD(s.totalBalanceUSD)}</div></div>
-                  <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value text-green-500">${fmtUSD(s.todayEarnings)}</div></div>
-                  <div class="stat-card"><div class="stat-label">Referral</div><div class="stat-value text-purple-500">${fmtUSD(s.referralEarnings)}</div></div>
-                  <div class="stat-card"><div class="stat-label">Withdrawn</div><div class="stat-value text-cyan-500">${fmtUSD(s.totalWithdrawn)}</div></div>
-                </div>
-                <div class="mt-6 flex flex-wrap gap-3">
-                  <button onclick="router.go('#/faucet')" class="btn-primary shadow-lg shadow-yellow-500/30"><i data-lucide="droplets" class="w-4 h-4"></i>Claim Now</button>
-                  <button onclick="router.go('#/withdraw')" class="btn-ghost"><i data-lucide="wallet" class="w-4 h-4"></i>Withdraw</button>
-                </div>
-              </div>
+    c.innerHTML = `
+      <div class="space-y-6 page-enter">
+        <div class="relative overflow-hidden rounded-3xl p-8 gradient-border glass-card">
+          <div class="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-secondary-500/20"></div>
+          <div class="relative">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Welcome back,</p>
+            <h1 class="text-3xl sm:text-4xl font-bold mb-6 text-zinc-900 dark:text-white">${escapeHtml(state.profile.username)}</h1>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="stat-card"><div class="stat-label">Main Balance</div><div class="stat-value">${fmtUSD(s.totalBalanceUSD)}</div></div>
+              <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value text-green-500">${fmtUSD(s.todayEarnings)}</div></div>
+              <div class="stat-card"><div class="stat-label">Referral</div><div class="stat-value text-primary-500">${fmtUSD(s.referralEarnings)}</div></div>
+              <div class="stat-card"><div class="stat-label">Withdrawn</div><div class="stat-value text-secondary-500">${fmtUSD(s.totalWithdrawn)}</div></div>
             </div>
-          </div>`;
-    } else {
-        $('#dashUsername').textContent = state.profile.username;
-        $('#dashTotalBalance').textContent = fmtUSD(s.totalBalanceUSD);
-        $('#dashTodayEarnings').textContent = fmtUSD(s.todayEarnings);
-        $('#dashReferralEarnings').textContent = fmtUSD(s.referralEarnings);
-        $('#dashTotalWithdrawn').textContent = fmtUSD(s.totalWithdrawn);
-    }
+            <div class="mt-6 flex flex-wrap gap-3">
+              <button onclick="router.go('#/faucet')" class="btn-primary shadow-lg shadow-primary-500/30"><i data-lucide="droplets" class="w-4 h-4"></i>Claim Now</button>
+              <button onclick="router.go('#/withdraw')" class="btn-ghost"><i data-lucide="wallet" class="w-4 h-4"></i>Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
     
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (e) { toast(e.message, 'error'); }
@@ -397,9 +405,9 @@ function renderDailyBonus() {
     <div class="space-y-6 page-enter">
       <div class="glass-card p-8 rounded-3xl gradient-border text-center">
         <h1 class="text-3xl font-bold mb-4 text-zinc-900 dark:text-white">Daily Bonus</h1>
-        <div class="text-6xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
+        <div class="text-6xl font-black bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
         <div class="text-zinc-500 dark:text-zinc-400 mb-6">Day Streak · Best: ${p.highestStreak || 0}</div>
-        <button id="claimBonusBtn" class="btn-primary shadow-lg shadow-yellow-500/30">🎁 Claim Daily Bonus</button>
+        <button id="claimBonusBtn" class="btn-primary shadow-lg shadow-primary-500/30">🎁 Claim Daily Bonus</button>
       </div>
     </div>`;
   $('#claimBonusBtn')?.addEventListener('click', async () => {
@@ -417,7 +425,7 @@ async function renderLeaderboard() {
       <div class="flex items-center justify-between p-4 hover:bg-zinc-100 dark:hover:bg-white/5 transition">
         <div class="flex items-center gap-4">
           <div class="w-10 font-bold text-zinc-500 text-center">#${u.rank}</div>
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center font-bold text-white">${u.username[0].toUpperCase()}</div>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-bold text-white">${u.username[0].toUpperCase()}</div>
           <div><div class="font-medium text-zinc-900 dark:text-white">${escapeHtml(u.username)}</div><div class="text-xs text-zinc-500">${u.country || 'Unknown'}</div></div>
         </div>
         <div class="text-right"><div class="font-bold text-zinc-900 dark:text-white">${u.totalClaims} claims</div><div class="text-xs text-zinc-500">${fmtUSD(u.totalWithdrawn)}</div></div>
@@ -434,28 +442,16 @@ function renderPtc() {
         <h1 class="text-3xl font-bold mb-4 text-zinc-900 dark:text-white">💰 PTC Ads</h1>
         <p class="text-zinc-500 dark:text-zinc-400 mb-6">Click on ads and earn free CNX coins instantly.</p>
         <div class="grid sm:grid-cols-2 gap-4">
-          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-yellow-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.5 CNX', 'success')">
+          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-primary-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.5 CNX', 'success')">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📢</div>
+              <div class="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📢</div>
               <div><div class="font-bold text-zinc-900 dark:text-white">Ad #1</div><div class="text-sm text-zinc-500 dark:text-zinc-400">Earn 0.5 CNX</div></div>
             </div>
           </div>
-          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-yellow-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.3 CNX', 'success')">
+          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-secondary-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.3 CNX', 'success')">
             <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🎯</div>
+              <div class="w-12 h-12 rounded-full bg-secondary-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🎯</div>
               <div><div class="font-bold text-zinc-900 dark:text-white">Ad #2</div><div class="text-sm text-zinc-500 dark:text-zinc-400">Earn 0.3 CNX</div></div>
-            </div>
-          </div>
-          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-yellow-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.7 CNX', 'success')">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🔥</div>
-              <div><div class="font-bold text-zinc-900 dark:text-white">Ad #3</div><div class="text-sm text-zinc-500 dark:text-zinc-400">Earn 0.7 CNX</div></div>
-            </div>
-          </div>
-          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-yellow-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.4 CNX', 'success')">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">💎</div>
-              <div><div class="font-bold text-zinc-900 dark:text-white">Ad #4</div><div class="text-sm text-zinc-500 dark:text-zinc-400">Earn 0.4 CNX</div></div>
             </div>
           </div>
         </div>
@@ -474,16 +470,16 @@ function renderReferrals() {
       <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Referrals</h1>
       <div class="glass-card p-8 rounded-3xl gradient-border text-center">
         <div class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Your Referral Code</div>
-        <div class="text-3xl font-black font-mono bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4">${p.referralCode}</div>
+        <div class="text-3xl font-black font-mono bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent mb-4">${p.referralCode}</div>
         <div class="flex gap-2 max-w-lg mx-auto">
           <input readonly value="${link}" class="input-field flex-1 text-center text-sm" />
-          <button onclick="navigator.clipboard.writeText('${link}').then(() => toast('Copied!', 'success'))" class="btn-primary shadow-lg shadow-yellow-500/30">Copy</button>
+          <button onclick="navigator.clipboard.writeText('${link}').then(() => toast('Copied!', 'success'))" class="btn-primary shadow-lg shadow-primary-500/30">Copy</button>
         </div>
       </div>
       <div class="grid sm:grid-cols-3 gap-4">
         <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Total</div><div class="text-3xl font-bold mt-2 text-zinc-900 dark:text-white">${p.referralCount || 0}</div></div>
         <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Earned</div><div class="text-3xl font-bold mt-2 text-green-500">${fmtUSD(p.referralEarnings)}</div></div>
-        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Rate</div><div class="text-3xl font-bold mt-2 text-purple-500">20%</div></div>
+        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Rate</div><div class="text-3xl font-bold mt-2 text-primary-500">20%</div></div>
       </div>
     </div>`;
 }
@@ -516,7 +512,7 @@ function renderWithdraw() {
         <div class="flex justify-between text-sm text-zinc-600 dark:text-zinc-400"><span>Balance</span><span class="font-mono text-zinc-900 dark:text-white">${fmt(bal)} ${coin}</span></div>
         <div class="flex justify-between text-sm text-zinc-600 dark:text-zinc-400"><span>USD</span><span class="text-zinc-900 dark:text-white">${fmtUSD(balUSD)}</span></div>
       </div>
-      <button class="btn-primary w-full shadow-lg shadow-yellow-500/30" ${!can ? 'disabled' : ''} onclick="doWithdraw('${coin}')">${can ? 'Withdraw' : 'Min $0.03 Required'}</button>`;
+      <button class="btn-primary w-full shadow-lg shadow-primary-500/30" ${!can ? 'disabled' : ''} onclick="doWithdraw('${coin}')">${can ? 'Withdraw' : 'Min $0.03 Required'}</button>`;
     grid.appendChild(card);
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -570,7 +566,7 @@ function renderSettings() {
           <label class="label">FaucetPay Email</label>
           <input name="faucetpayEmail" type="email" value="${escapeHtml(p.faucetpayEmail || '')}" class="input-field" placeholder="your@faucetpay.email" />
         </div>
-        <button type="submit" class="btn-primary shadow-lg shadow-yellow-500/30">💾 Save Changes</button>
+        <button type="submit" class="btn-primary shadow-lg shadow-primary-500/30">💾 Save Changes</button>
       </form>
     </div>`;
   $('#settingsForm')?.addEventListener('submit', async e => {
