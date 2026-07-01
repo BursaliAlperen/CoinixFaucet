@@ -11,7 +11,7 @@ import {
   doc, getDoc, setDoc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-console.log('||| ========== APP START ========== |||');
+console.log('🚀 CoinixFaucet App Starting...');
 
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
@@ -21,7 +21,7 @@ const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const now = () => Date.now();
 const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&', '<':'<', '>':'>', '"':'"', "'":'' }[c]));
 
-// ============ DARK MODE ============
+// DARK MODE
 function getDarkMode() { return localStorage.getItem('darkMode') === 'true'; }
 function setDarkMode(isDark) {
   localStorage.setItem('darkMode', isDark);
@@ -32,14 +32,14 @@ function toggleDarkMode() { setDarkMode(!getDarkMode()); }
 function updateDarkModeIcons() {
   const isDark = getDarkMode();
   const icon = isDark ? 'sun' : 'moon';
-  $$('.dark-mode-icon').forEach(el => {
-    if (el) el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i>`;
+  $$('.dark-mode-icon, #darkModeToggle i, #darkModeToggle2 i').forEach(el => {
+    if (el) el.setAttribute('data-lucide', icon);
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 if (getDarkMode()) document.documentElement.classList.add('dark');
 
-// ============ TOAST ============
+// TOAST
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
@@ -50,7 +50,7 @@ function toast(msg, type = 'info') {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// ============ API ============
+// API
 async function apiCall(endpoint, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
@@ -66,11 +66,10 @@ async function apiCall(endpoint, options = {}) {
 
 const state = { user: null, profile: null };
 
-// ============ LANDING ============
+// LANDING
 function initLanding() {
-  $$('#darkModeToggle, #darkModeToggle2').forEach(btn => {
-    if (btn) btn.addEventListener('click', toggleDarkMode);
-  });
+  $('#darkModeToggle')?.addEventListener('click', toggleDarkMode);
+  $('#darkModeToggle2')?.addEventListener('click', toggleDarkMode);
   setTimeout(updateDarkModeIcons, 100);
 
   $('#openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
@@ -93,9 +92,8 @@ function renderLandingCoins() {
     const m = COIN_META[coin];
     const card = document.createElement('div');
     card.className = 'coin-landing-card group';
-    card.style.setProperty('--coin-color', m.color + '40');
     card.innerHTML = `
-      <img src="/coins/${coin.toLowerCase()}.png" alt="${coin}" class="w-12 h-12 rounded-xl mb-4" onerror="this.style.display='none'" />
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="space-y-2 text-sm">
@@ -150,7 +148,7 @@ async function loadLiveWithdraws() {
   } catch (e) { console.error('Withdraws error:', e); }
 }
 
-// ============ AUTH ============
+// AUTH
 let authMode = 'login';
 
 function openAuthModal(mode = 'login') {
@@ -179,46 +177,46 @@ $('#closeAuthModal')?.addEventListener('click', closeAuthModal);
 document.querySelector('#authModal .auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
 $$('[data-auth-tab]').forEach(btn => btn.addEventListener('click', () => { authMode = btn.dataset.authTab; updateAuthModalUI(); }));
 
-// ============ RECAPTCHA HELPER ============
+// RECAPTCHA
 async function getRecaptchaToken(action = 'login') {
   if (typeof grecaptcha === 'undefined') {
     console.warn('reCAPTCHA not loaded');
     return null;
   }
   
-  try {
-    // Enterprise ready olmasını bekle
-    if (grecaptcha.enterprise && grecaptcha.enterprise.execute) {
-      return await new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
+    try {
+      if (grecaptcha.enterprise && grecaptcha.enterprise.ready) {
         grecaptcha.enterprise.ready(async () => {
           try {
             const token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action });
             resolve(token);
           } catch (e) {
-            reject(e);
+            console.warn('reCAPTCHA execute error:', e);
+            resolve(null);
           }
         });
-      });
-    } else if (grecaptcha.ready && grecaptcha.execute) {
-      return await new Promise((resolve, reject) => {
+      } else if (grecaptcha.ready) {
         grecaptcha.ready(async () => {
           try {
             const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
             resolve(token);
           } catch (e) {
-            reject(e);
+            console.warn('reCAPTCHA execute error:', e);
+            resolve(null);
           }
         });
-      });
+      } else {
+        resolve(null);
+      }
+    } catch (e) {
+      console.warn('reCAPTCHA error:', e);
+      resolve(null);
     }
-  } catch (e) {
-    console.warn('reCAPTCHA execute error:', e);
-    return null;
-  }
-  return null;
+  });
 }
 
-// ============ AUTH FORM SUBMIT ============
+// AUTH FORM
 $('#authForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -228,15 +226,13 @@ $('#authForm')?.addEventListener('submit', async e => {
   if (btn) btn.disabled = true;
 
   try {
-    // reCAPTCHA token al
     const recaptchaToken = await getRecaptchaToken(authMode === 'login' ? 'login' : 'signup');
-    console.log('||| reCAPTCHA Token:', recaptchaToken ? '✅ Alındı' : '❌ Alınamadı');
+    console.log('reCAPTCHA Token:', recaptchaToken ? '✅' : '❌');
     
     if (authMode === 'login') {
       await signInWithEmailAndPassword(auth, email, password);
       await reload(auth.currentUser);
       
-      // Email verified kontrolü
       if (!auth.currentUser.emailVerified) {
         toast('Please verify your email first. Check your inbox.', 'warning');
         await signOut(auth);
@@ -292,7 +288,7 @@ $('#authForm')?.addEventListener('submit', async e => {
   }
 });
 
-// ============ FORGOT PASSWORD ============
+// FORGOT PASSWORD
 $('#forgotPasswordBtn')?.addEventListener('click', () => {
   closeAuthModal();
   setTimeout(() => {
@@ -334,7 +330,7 @@ $('#forgotPasswordForm')?.addEventListener('submit', async (e) => {
   }
 });
 
-// ============ EMAIL ACTION HANDLERS ============
+// EMAIL ACTION
 async function handleEmailAction() {
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode');
@@ -433,7 +429,7 @@ async function handleEmailAction() {
   }
 }
 
-// ============ AUTH STATE ============
+// AUTH STATE
 onAuthStateChanged(auth, async user => {
   if (user) {
     state.user = user;
@@ -468,17 +464,63 @@ onAuthStateChanged(auth, async user => {
 });
 
 function updateTopBar() {
-  const loginBtn = $('#openLoginBtn');
-  const signupBtn = $('#openSignupBtn');
-  const heroLoginBtn = $('#heroLoginBtn');
-  const heroSignupBtn = $('#heroSignupBtn');
+  const landingAuthBtns = $('#landingAuthBtns');
+  const heroBtns = $('#heroBtns');
 
   if (!state.profile) {
-    if (loginBtn) { loginBtn.textContent = 'Login'; loginBtn.className = 'btn-ghost text-sm'; }
-    if (signupBtn) { signupBtn.textContent = 'Sign Up'; signupBtn.className = 'btn-primary text-sm'; }
-    if (heroLoginBtn) { heroLoginBtn.textContent = 'Login'; heroLoginBtn.className = 'btn-ghost text-base px-10 py-5'; }
-    if (heroSignupBtn) { heroSignupBtn.textContent = 'Start Earning — It\'s Free'; heroSignupBtn.className = 'btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40'; }
+    // Giriş yapmamış - Login/Signup butonlarını göster
+    if (landingAuthBtns) {
+      landingAuthBtns.innerHTML = `
+        <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
+        <button id="openSignupBtn" class="btn-primary text-sm">Sign Up</button>
+      `;
+      $('#openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
+      $('#openSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+    }
+    if (heroBtns) {
+      heroBtns.innerHTML = `
+        <button id="heroSignupBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
+          <i data-lucide="rocket" class="w-5 h-5"></i>
+          Start Earning — It's Free
+        </button>
+        <button id="heroLoginBtn" class="btn-ghost text-base px-10 py-5">
+          <i data-lucide="log-in" class="w-5 h-5"></i>
+          Login
+        </button>
+      `;
+      $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
+      $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
+  }
+
+  // Giriş yapmış - Dashboard butonu göster
+  if (landingAuthBtns) {
+    landingAuthBtns.innerHTML = `
+      <button id="landingDashboardBtn" class="btn-primary text-sm">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+      </button>
+    `;
+    $('#landingDashboardBtn')?.addEventListener('click', () => {
+      $('#landingPage')?.classList.add('hidden');
+      $('#appShell')?.classList.remove('hidden');
+      router.go('#/dashboard');
+    });
+  }
+  
+  if (heroBtns) {
+    heroBtns.innerHTML = `
+      <button id="heroDashboardBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        Go to Dashboard
+      </button>
+    `;
+    $('#heroDashboardBtn')?.addEventListener('click', () => {
+      $('#landingPage')?.classList.add('hidden');
+      $('#appShell')?.classList.remove('hidden');
+      router.go('#/dashboard');
+    });
   }
 
   const total = COINS.reduce((s, c) => s + (state.profile.balances[c] || 0) * (COIN_META[c].usd || 0), 0);
@@ -486,30 +528,36 @@ function updateTopBar() {
   if ($('#profileName')) $('#profileName').textContent = state.profile.username;
   if ($('#profileAvatar')) $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
 
-  if (loginBtn) { loginBtn.textContent = 'Dashboard'; loginBtn.className = 'btn-primary text-sm'; loginBtn.onclick = () => { $('#landingPage')?.classList.add('hidden'); $('#appShell')?.classList.remove('hidden'); router.go('#/dashboard'); }; }
-  if (signupBtn) { signupBtn.textContent = 'Logout'; signupBtn.className = 'btn-ghost text-sm'; signupBtn.onclick = async () => { await signOut(auth); toast('Logged out', 'info'); }; }
-  if (heroLoginBtn) { heroLoginBtn.textContent = 'Dashboard'; heroLoginBtn.className = 'btn-ghost text-base px-10 py-5'; heroLoginBtn.onclick = () => { $('#landingPage')?.classList.add('hidden'); $('#appShell')?.classList.remove('hidden'); router.go('#/dashboard'); }; }
-  if (heroSignupBtn) { heroSignupBtn.textContent = 'Logout'; heroSignupBtn.className = 'btn-ghost text-base px-10 py-5'; heroSignupBtn.onclick = async () => { await signOut(auth); toast('Logged out', 'info'); }; }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 $('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
-$('#logoutBtnTop')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
 
-// ============ THREE DOTS MENU ============
+// ÜÇ NOKTA MENÜSÜ
 function initThreeDotsMenu() {
   const btn = $('#threeDotsBtn');
   const menu = $('#threeDotsMenu');
   
   if (!btn || !menu) return;
   
-  btn.addEventListener('click', (e) => {
+  // Eski event listener'ları temizle
+  const newBtn = btn.cloneNode(true);
+  btn.parentNode.replaceChild(newBtn, btn);
+  
+  const newMenu = menu.cloneNode(true);
+  menu.parentNode.replaceChild(newMenu, menu);
+  
+  const freshBtn = $('#threeDotsBtn');
+  const freshMenu = $('#threeDotsMenu');
+  
+  freshBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    menu.classList.toggle('hidden');
+    freshMenu.classList.toggle('hidden');
   });
   
   document.addEventListener('click', (e) => {
-    if (!menu.contains(e.target) && !btn.contains(e.target)) {
-      menu.classList.add('hidden');
+    if (!freshMenu.contains(e.target) && !freshBtn.contains(e.target)) {
+      freshMenu.classList.add('hidden');
     }
   });
   
@@ -517,9 +565,11 @@ function initThreeDotsMenu() {
     await signOut(auth);
     toast('Signed out', 'info');
   });
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// ============ ROUTER ============
+// ROUTER
 const router = {
   routes: {
     dashboard: renderDashboard,
@@ -563,7 +613,7 @@ const router = {
 };
 window.router = router;
 
-// ============ PAGES ============
+// PAGES
 async function renderDashboard() {
   if (!state.profile) return;
   try {
@@ -574,11 +624,9 @@ async function renderDashboard() {
 
     c.innerHTML = `
       <div class="space-y-6 page-enter">
-        <!-- Banner Reklam Alanı -->
         <div class="glass-card rounded-2xl p-4 text-center bg-gradient-to-r from-primary-500/10 to-secondary-500/10">
           <p class="text-sm text-zinc-500">Advertisement</p>
           <div class="h-20 flex items-center justify-center">
-            <!-- Banner reklam kodu buraya eklenecek -->
             <p class="text-zinc-400">728x90 Banner</p>
           </div>
         </div>
@@ -657,7 +705,7 @@ async function handleClaim() {
     if (typeof grecaptcha !== 'undefined') {
       try { 
         token = await getRecaptchaToken('claim');
-        console.log('||| Claim reCAPTCHA Token:', token ? '✅ Alındı' : '❌ Alınamadı');
+        console.log('Claim reCAPTCHA:', token ? '✅' : '❌');
       } catch(e) {
         console.warn('reCAPTCHA claim error:', e);
       }
@@ -724,41 +772,33 @@ async function renderLeaderboard() {
 async function renderPtc() {
   const c = $('#pageContainer');
   if (!c) return;
-  
-  try {
-    const data = await apiCall('/api/ptc/available');
-    c.innerHTML = `
-      <div class="space-y-6 page-enter">
-        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">PTC Ads</h1>
-        <p class="text-zinc-500">Click on ads and earn free CNX coins instantly.</p>
-        <div class="grid md:grid-cols-2 gap-6">
-          ${data.ads.map(ad => `
-            <div class="glass-card rounded-2xl p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-lg">${escapeHtml(ad.title)}</h3>
-                <span class="badge badge-green">+${ad.reward} CNX</span>
-              </div>
-              <p class="text-sm text-zinc-500 mb-4">${ad.duration}s · ${ad.remaining} available</p>
-              <button onclick="viewPtcAd('${ad.id}')" class="btn-primary w-full">View Ad</button>
-            </div>
-          `).join('') || '<p class="text-zinc-500 col-span-2 text-center">No ads available</p>'}
+  c.innerHTML = `
+    <div class="space-y-6 page-enter">
+      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">PTC Ads</h1>
+      <p class="text-zinc-500">Click on ads and earn free CNX coins instantly.</p>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-6 text-center">
+          <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">📢</div>
+          <h3 class="font-bold text-lg mb-2">Ad #1</h3>
+          <p class="text-sm text-zinc-500 mb-4">Earn 5 CNX</p>
+          <button onclick="viewPtcAd('ptc1')" class="btn-primary w-full">View Ad</button>
+        </div>
+        <div class="glass-card rounded-2xl p-6 text-center">
+          <div class="w-16 h-16 rounded-full bg-secondary-500/20 mx-auto mb-4 flex items-center justify-center">🎯</div>
+          <h3 class="font-bold text-lg mb-2">Ad #2</h3>
+          <p class="text-sm text-zinc-500 mb-4">Earn 3 CNX</p>
+          <button onclick="viewPtcAd('ptc2')" class="btn-primary w-full">View Ad</button>
         </div>
       </div>
-    `;
-  } catch (e) {
-    c.innerHTML = `
-      <div class="space-y-6 page-enter">
-        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">PTC Ads</h1>
-        <p class="text-zinc-500">No ads available at the moment.</p>
-      </div>
-    `;
-  }
+    </div>
+  `;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.viewPtcAd = async (adId) => {
   try {
     const data = await apiCall('/api/ptc/view', { method: 'POST', body: JSON.stringify({ adId }) });
-    const win = window.open(data.url, '_blank');
+    window.open(data.url, '_blank');
     setTimeout(async () => {
       try {
         const result = await apiCall('/api/ptc/complete', { method: 'POST', body: JSON.stringify({ adId }) });
@@ -828,7 +868,7 @@ function renderWithdraw() {
     const card = document.createElement('div');
     card.className = 'coin-card group';
     card.innerHTML = `
-      <img src="/coins/${coin.toLowerCase()}.png" alt="${coin}" class="w-12 h-12 rounded-xl mb-4" onerror="this.style.display='none'" />
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="mb-4">
@@ -893,6 +933,15 @@ function renderSettings() {
   c.innerHTML = `
     <div class="space-y-6 page-enter">
       <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Settings</h1>
+      
+      <div class="glass-card rounded-2xl p-6">
+        <h3 class="font-bold text-lg mb-4">Redeem Promo Code</h3>
+        <div class="flex gap-2">
+          <input type="text" id="promoCodeInput" placeholder="Enter code..." class="input-field flex-1" />
+          <button onclick="redeemPromo()" class="btn-primary">Redeem</button>
+        </div>
+      </div>
+      
       <form id="settingsForm" class="space-y-6">
         <div class="glass-card rounded-2xl p-6">
           <h3 class="font-bold text-lg mb-4">Profile</h3>
@@ -941,12 +990,29 @@ function renderSettings() {
   });
 }
 
+window.redeemPromo = async () => {
+  const code = $('#promoCodeInput')?.value.trim();
+  if (!code) {
+    toast('Enter a code', 'error');
+    return;
+  }
+  
+  try {
+    const data = await apiCall('/api/promo/redeem', { 
+      method: 'POST', 
+      body: JSON.stringify({ code }) 
+    });
+    toast(data.message || `Redeemed ${data.reward} CNX!`, 'success');
+    $('#promoCodeInput').value = '';
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+};
+
 function renderOfferwall() {
   const frame = $('#offerwallFrame');
   if (frame && state.profile) {
-    const apiKey = 'YOUR_OFFERWALL_API_KEY';
-    const userId = state.profile.uid;
-    frame.src = `https://offerwall.me/offerwall/${apiKey}/${userId}`;
+    frame.src = `https://offerwall.me/offerwall/26tgnfk7s0fce1tscysrcpfeesr398/${state.profile.uid}`;
   }
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -960,7 +1026,6 @@ window.openGame = (game) => {
   const frame = $('#gameFrame');
   if (!container || !frame) return;
   
-  // Oyun URL'leri - kendi oyun sayfalarınız veya iframe oyunlar
   const gameUrls = {
     dice: 'https://www.freeonlinegames.com/embed/dice-game',
     coinflip: 'https://www.freeonlinegames.com/embed/coin-flip',
@@ -972,7 +1037,7 @@ window.openGame = (game) => {
   container.scrollIntoView({ behavior: 'smooth' });
 };
 
-// ============ INIT ============
+// INIT
 document.addEventListener('DOMContentLoaded', async () => {
   const hasEmailAction = await handleEmailAction();
   
@@ -981,5 +1046,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     initLanding();
   }
   
-  console.log('||| ⚡ CoinixFaucet ready |||');
+  console.log('⚡ CoinixFaucet ready');
 });
