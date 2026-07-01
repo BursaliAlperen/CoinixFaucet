@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoinixFaucet — Earn Free BTC, DOGE, DGB, POL & FEY</title>
-    <meta name="description" content="CoinixFaucet is a modern cryptocurrency faucet where users earn free crypto and instantly withdraw through FaucetPay.">
-    <link rel="canonical" href="https://coinixfaucet.mine.bz/">
+    <title>CoinixFaucet — Earn Free Crypto Daily</title>
+    <meta name="description" content="Modern cryptocurrency faucet with instant FaucetPay withdrawals">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -15,49 +14,51 @@
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
                     colors: {
                         primary: {
-                            50: '#fffbeb',
-                            100: '#fef3c7',
-                            200: '#fde68a',
-                            300: '#fcd34d',
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706',
-                            700: '#b45309',
-                            800: '#92400e',
-                            900: '#78350f',
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                        secondary: {
+                            500: '#06b6d4',
+                            600: '#0891b2',
                         }
                     },
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'gradient': 'gradient 8s ease infinite',
                     },
                     keyframes: {
                         float: {
                             '0%, 100%': { transform: 'translateY(0px)' },
                             '50%': { transform: 'translateY(-20px)' },
                         },
-                        glow: {
-                            '0%': { boxShadow: '0 0 20px rgba(245, 158, 11, 0.3)' },
-                            '100%': { boxShadow: '0 0 40px rgba(245, 158, 11, 0.6)' },
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
                         }
                     }
                 }
             }
         }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="font-sans antialiased bg-gray-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
 
-    <!-- ============ LANDING PAGE ============ -->
+    <!-- LANDING PAGE -->
     <div id="landingPage">
         <header class="landing-header bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-zinc-800">
             <a href="#" class="flex items-center gap-2">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black shadow-lg shadow-yellow-500/30">C</div>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white shadow-lg shadow-primary-500/30">C</div>
                 <span class="font-bold text-xl text-zinc-900 dark:text-white">CoinixFaucet</span>
             </a>
             <nav class="hidden md:flex items-center gap-1">
@@ -68,18 +69,18 @@
                 <a href="#faq" class="landing-nav-link">FAQ</a>
             </nav>
             <div class="flex items-center gap-3">
-                <button id="darkModeToggle" class="icon-btn dark-mode-icon hover:scale-110 transition-transform"><i data-lucide="moon" class="w-5 h-5"></i></button>
-                <button id="openLoginBtn" class="btn-ghost text-sm open-auth-btn" data-mode="login">Login</button>
-                <button id="openSignupBtn" class="btn-primary text-sm open-auth-btn" data-mode="register">Sign Up</button>
+                <button id="darkModeToggle" class="icon-btn hover:scale-110 transition-transform"><i data-lucide="moon" class="w-5 h-5"></i></button>
+                <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
+                <button id="openSignupBtn" class="btn-primary text-sm">Sign Up</button>
             </div>
         </header>
 
         <main class="pt-20">
             <!-- HERO -->
             <section id="home" class="relative pt-16 pb-24 px-4 overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-purple-600/5 dark:from-yellow-500/10 dark:to-purple-600/10"></div>
-                <div class="absolute top-20 left-10 w-96 h-96 bg-purple-500/20 dark:bg-purple-500/30 rounded-full blur-3xl animate-float"></div>
-                <div class="absolute bottom-10 right-10 w-[500px] h-[500px] bg-yellow-500/20 dark:bg-yellow-500/30 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-secondary-500/5 dark:from-primary-500/10 dark:to-secondary-500/10"></div>
+                <div class="absolute top-20 left-10 w-96 h-96 bg-primary-500/20 dark:bg-primary-500/30 rounded-full blur-3xl animate-float"></div>
+                <div class="absolute bottom-10 right-10 w-[500px] h-[500px] bg-secondary-500/20 dark:bg-secondary-500/30 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
                 
                 <div class="relative max-w-5xl mx-auto text-center">
                     <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-medium text-zinc-600 dark:text-zinc-300 mb-8 backdrop-blur-sm shadow-sm">
@@ -88,17 +89,17 @@
                     </div>
                     <h1 class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-zinc-900 dark:text-white">
                         Earn Free Cryptocurrency<br>
-                        <span class="bg-gradient-to-r from-yellow-400 via-orange-500 to-purple-600 bg-clip-text text-transparent">Every Single Day</span>
+                        <span class="bg-gradient-to-r from-primary-500 via-purple-500 to-secondary-500 bg-clip-text text-transparent animate-gradient bg-[length:200%_200%]">Every Single Day</span>
                     </h1>
                     <p class="text-lg sm:text-xl text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto mb-12 leading-relaxed">
                         CoinixFaucet is a modern cryptocurrency faucet where users earn free crypto and instantly withdraw through FaucetPay.
                     </p>
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <button class="btn-primary text-base px-10 py-5 open-auth-btn shadow-2xl shadow-yellow-500/40 hover:shadow-yellow-500/60" data-mode="register">
+                        <button id="heroSignupBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40 hover:shadow-primary-500/60">
                             <i data-lucide="zap" class="w-5 h-5"></i>
                             Start Earning — It's Free
                         </button>
-                        <button class="btn-ghost text-base px-10 py-5 open-auth-btn" data-mode="login">Login</button>
+                        <button id="heroLoginBtn" class="btn-ghost text-base px-10 py-5">Login</button>
                     </div>
                 </div>
             </section>
@@ -107,19 +108,18 @@
             <section id="statistics" class="py-24 px-4 bg-gradient-to-b from-gray-50 to-white dark:from-zinc-950 dark:to-zinc-900">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
-                        <div class="inline-block px-4 py-1.5 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-bold uppercase tracking-wider mb-4">Live Data</div>
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-wider mb-4">Live Data</div>
                         <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">LIVE STATISTICS</h2>
                         <p class="text-zinc-600 dark:text-zinc-400 text-lg">Real-Time Platform Data</p>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-500 mt-2">All numbers are live from our database. No fake stats.</p>
                     </div>
                     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
                         <div class="stat-glass-card text-center group">
-                            <div class="stat-icon yellow mx-auto group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-5 h-5"></i></div>
+                            <div class="stat-icon primary mx-auto group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-5 h-5"></i></div>
                             <div class="stat-label">Registered Users</div>
                             <div class="stat-value" id="statUsers">—</div>
                         </div>
                         <div class="stat-glass-card text-center group">
-                            <div class="stat-icon purple mx-auto group-hover:scale-110 transition-transform"><i data-lucide="droplets" class="w-5 h-5"></i></div>
+                            <div class="stat-icon secondary mx-auto group-hover:scale-110 transition-transform"><i data-lucide="droplets" class="w-5 h-5"></i></div>
                             <div class="stat-label">Total Claims</div>
                             <div class="stat-value" id="statClaims">—</div>
                         </div>
@@ -129,7 +129,7 @@
                             <div class="stat-value" id="statPaid">—</div>
                         </div>
                         <div class="stat-glass-card text-center group">
-                            <div class="stat-icon cyan mx-auto group-hover:scale-110 transition-transform"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+                            <div class="stat-icon purple mx-auto group-hover:scale-110 transition-transform"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
                             <div class="stat-label">Avg Claim</div>
                             <div class="stat-value" id="statAvg">—</div>
                         </div>
@@ -146,40 +146,39 @@
             <section id="features" class="py-24 px-4 bg-white dark:bg-zinc-900">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
-                        <div class="inline-block px-4 py-1.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider mb-4">Features</div>
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 text-xs font-bold uppercase tracking-wider mb-4">Features</div>
                         <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">WHY CHOOSE US</h2>
-                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">Built Different. Built Better.</p>
                     </div>
                     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="feature-card group">
-                            <div class="feature-icon yellow group-hover:scale-110 transition-transform"><i data-lucide="zap" class="w-6 h-6"></i></div>
+                            <div class="feature-icon primary group-hover:scale-110 transition-transform"><i data-lucide="zap" class="w-6 h-6"></i></div>
                             <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Instant FaucetPay</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Get paid in seconds directly to your FaucetPay wallet.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Get paid in seconds directly to your FaucetPay wallet.</p>
                         </div>
                         <div class="feature-card group">
-                            <div class="feature-icon purple group-hover:scale-110 transition-transform"><i data-lucide="layout-dashboard" class="w-6 h-6"></i></div>
+                            <div class="feature-icon secondary group-hover:scale-110 transition-transform"><i data-lucide="layout-dashboard" class="w-6 h-6"></i></div>
                             <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Premium Dashboard</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Track earnings, claims and referrals in a beautiful Web3 dashboard.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Track earnings, claims and referrals in a beautiful Web3 dashboard.</p>
                         </div>
                         <div class="feature-card group">
                             <div class="feature-icon green group-hover:scale-110 transition-transform"><i data-lucide="clock" class="w-6 h-6"></i></div>
                             <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Fast 60s Claims</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Claim free crypto every 60 seconds. No waiting.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Claim free crypto every 60 seconds. No waiting.</p>
                         </div>
                         <div class="feature-card group">
-                            <div class="feature-icon cyan group-hover:scale-110 transition-transform"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                            <div class="feature-icon purple group-hover:scale-110 transition-transform"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
                             <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Secure Platform</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">reCAPTCHA Enterprise, Firebase Auth, email verification.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">reCAPTCHA Enterprise, Firebase Auth, email verification.</p>
                         </div>
                         <div class="feature-card group">
                             <div class="feature-icon blue group-hover:scale-110 transition-transform"><i data-lucide="calendar-check" class="w-6 h-6"></i></div>
                             <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Daily Bonus</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Claim every day to grow your streak up to 365 days.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Claim every day to grow your streak up to 365 days.</p>
                         </div>
                         <div class="feature-card group">
-                            <div class="feature-icon yellow group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-6 h-6"></i></div>
+                            <div class="feature-icon primary group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-6 h-6"></i></div>
                             <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">20% Referral Program</h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Earn 20% from every claim your referrals make. Lifetime.</p>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Earn 20% from every claim your referrals make. Lifetime.</p>
                         </div>
                     </div>
                 </div>
@@ -192,7 +191,6 @@
                         <div class="inline-block px-4 py-1.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold uppercase tracking-wider mb-4">Live Feed</div>
                         <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">LIVE FEED</h2>
                         <p class="text-zinc-600 dark:text-zinc-400 text-lg">Recent Withdrawals</p>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-500 mt-2">Real users. Real payouts. Scroll to see more.</p>
                     </div>
                     <div class="glass-card rounded-3xl overflow-hidden live-withdraws-scroll-vertical shadow-2xl">
                         <table class="w-full">
@@ -218,9 +216,8 @@
             <section id="coins" class="py-24 px-4 bg-gray-50 dark:bg-zinc-950">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
-                        <div class="inline-block px-4 py-1.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs font-bold uppercase tracking-wider mb-4">Coins</div>
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold uppercase tracking-wider mb-4">Coins</div>
                         <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">SUPPORTED COINS</h2>
-                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">5 Premium Cryptocurrencies</p>
                     </div>
                     <div id="landingCoinsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
@@ -230,9 +227,8 @@
             <section id="faq" class="py-24 px-4 bg-white dark:bg-zinc-900">
                 <div class="max-w-3xl mx-auto">
                     <div class="text-center mb-16">
-                        <div class="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-bold uppercase tracking-wider mb-4">FAQ</div>
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 text-xs font-bold uppercase tracking-wider mb-4">FAQ</div>
                         <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">FAQ</h2>
-                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">Frequently Asked Questions</p>
                     </div>
                     <div class="space-y-3">
                         <details class="faq-item">
@@ -251,10 +247,6 @@
                             <summary>How long do withdrawals take? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
                             <p>Instant via FaucetPay. Most users receive funds within seconds.</p>
                         </details>
-                        <details class="faq-item">
-                            <summary>How do referrals work? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
-                            <p>Share your referral link. Earn 20% of every claim your referrals make, for life.</p>
-                        </details>
                     </div>
                 </div>
             </section>
@@ -263,33 +255,29 @@
             <footer class="py-12 px-4 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
                 <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
                     <div class="flex items-center gap-2">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black shadow-lg shadow-yellow-500/30">C</div>
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white shadow-lg shadow-primary-500/30">C</div>
                         <span class="font-bold text-xl text-zinc-900 dark:text-white">CoinixFaucet</span>
                     </div>
                     <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
                         <a href="#home" class="hover:text-zinc-900 dark:hover:text-white transition">Home</a>
                         <a href="#features" class="hover:text-zinc-900 dark:hover:text-white transition">Features</a>
                         <a href="#faq" class="hover:text-zinc-900 dark:hover:text-white transition">FAQ</a>
-                        <a href="mailto:support@coinixfaucet.mine.bz" class="hover:text-zinc-900 dark:hover:text-white transition">Contact</a>
                     </div>
-                    <div class="text-xs text-zinc-500 dark:text-zinc-500">
-                        © 2025 CoinixFaucet. All rights reserved.
-                    </div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-500">© 2025 CoinixFaucet</div>
                 </div>
             </footer>
         </main>
     </div>
 
-    <!-- ============ APP SHELL (DASHBOARD) ============ -->
+    <!-- APP SHELL (DASHBOARD) -->
     <div id="appShell" class="hidden min-h-screen flex">
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar w-64 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col h-screen sticky top-0 shadow-xl">
             <div class="p-6 border-b border-gray-200 dark:border-zinc-800">
                 <a href="#/dashboard" class="flex items-center gap-2">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black shadow-lg shadow-yellow-500/30">C</div>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white shadow-lg shadow-primary-500/30">C</div>
                     <span class="font-bold text-xl text-zinc-900 dark:text-white">CoinixFaucet</span>
                 </a>
-                <div class="text-xs text-zinc-500 dark:text-zinc-500 mt-1">Premium Web3 Faucet</div>
             </div>
             <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
                 <a href="#/dashboard" class="nav-link" data-route="dashboard"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
@@ -313,7 +301,9 @@
             <header class="top-nav bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl shadow-sm">
                 <div class="flex items-center gap-3">
                     <button id="menuToggle" class="icon-btn hover:scale-110 transition-transform"><i data-lucide="menu" class="w-5 h-5"></i></button>
-                    <a href="#/dashboard" class="btn-primary text-sm hidden sm:inline-flex shadow-lg shadow-yellow-500/30"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+                    <a href="#/dashboard" id="topDashboardBtn" class="btn-primary text-sm hidden sm:inline-flex shadow-lg shadow-primary-500/30">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                    </a>
                     <h1 id="pageTitle" class="text-xl font-bold text-zinc-900 dark:text-white">Dashboard</h1>
                 </div>
                 <div class="flex items-center gap-3">
@@ -322,10 +312,10 @@
                         <div id="topBalance" class="font-bold text-sm text-zinc-900 dark:text-white">$0.0000</div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <div id="profileAvatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-bold text-black text-sm shadow-lg shadow-yellow-500/30">U</div>
+                        <div id="profileAvatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-primary-500/30">U</div>
                         <span id="profileName" class="font-semibold text-sm hidden sm:block text-zinc-900 dark:text-white">User</span>
                     </div>
-                    <button id="darkModeToggle2" class="icon-btn dark-mode-icon hover:scale-110 transition-transform"><i data-lucide="moon" class="w-5 h-5"></i></button>
+                    <button id="darkModeToggle2" class="icon-btn hover:scale-110 transition-transform"><i data-lucide="moon" class="w-5 h-5"></i></button>
                     <button id="logoutBtnTop" class="icon-btn hover:scale-110 transition-transform"><i data-lucide="log-out" class="w-5 h-5"></i></button>
                 </div>
             </header>
@@ -335,13 +325,13 @@
         </main>
     </div>
 
-    <!-- ============ AUTH MODAL ============ -->
+    <!-- AUTH MODAL -->
     <div id="authModal" class="auth-modal hidden">
         <div class="auth-modal-backdrop"></div>
         <div class="auth-modal-content">
             <button id="closeAuthModal" class="absolute top-4 right-4 icon-btn hover:scale-110 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button>
             <div class="text-center mb-6">
-                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black text-2xl mx-auto mb-3 shadow-lg shadow-yellow-500/30">C</div>
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">C</div>
                 <h2 id="authModalTitle" class="text-2xl font-bold text-zinc-900 dark:text-white">Welcome Back</h2>
                 <p class="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Sign in to continue</p>
             </div>
@@ -378,22 +368,22 @@
                         <input name="referral" class="input-field" placeholder="ENTERCODE" />
                     </div>
                 </div>
-                <button type="submit" id="authSubmit" class="btn-primary w-full mt-2 shadow-lg shadow-yellow-500/30">
+                <button type="submit" id="authSubmit" class="btn-primary w-full mt-2 shadow-lg shadow-primary-500/30">
                     <span id="authBtnText">Sign In</span>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Faucet Sayfası İçin Template -->
+    <!-- Faucet Template -->
     <template id="tpl-faucet">
         <div class="space-y-6 page-enter text-center">
             <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Manual Faucet</h1>
             <p class="text-zinc-500 dark:text-zinc-400">Claim free CNX every 60 seconds.</p>
             <div class="flex flex-col items-center gap-6 py-10">
-                <button id="claimBtn" class="claim-btn animate-glow">
+                <button id="claimBtn" class="claim-btn">
                     <div class="claim-btn-inner">
-                        <i data-lucide="droplets" class="w-10 h-10 text-yellow-500"></i>
+                        <i data-lucide="droplets" class="w-10 h-10 text-primary-500"></i>
                         <span>Claim Reward</span>
                         <span id="faucetCountdown" class="text-2xl font-mono text-zinc-400">00:00</span>
                     </div>
@@ -405,7 +395,7 @@
     <!-- Toast Container -->
     <div id="toastRoot" class="fixed bottom-4 right-4 z-[200] space-y-2 pointer-events-none"></div>
 
-    <!-- Firebase & App Scripts -->
+    <!-- Scripts -->
     <script type="module" src="firebase-config.js"></script>
     <script type="module" src="app.js"></script>
 </body>
