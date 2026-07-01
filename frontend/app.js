@@ -1,7 +1,11 @@
-import { auth, db, COL, COINS, COIN_META, RECAPTCHA_SITE_KEY } from './firebase-config.js';
+import { 
+  auth, db, COL, COINS, COIN_META, RECAPTCHA_SITE_KEY,
+  applyActionCode, checkActionCode, confirmPasswordReset, 
+  verifyPasswordResetCode, sendPasswordResetEmail, sendEmailVerification
+} from './firebase-config.js';
 import {
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  signOut, sendEmailVerification, reload
+  signOut, reload
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   doc, getDoc, setDoc, onSnapshot, serverTimestamp
@@ -15,7 +19,7 @@ const fmt = (n, d = 4) => Number(n || 0).toFixed(d);
 const fmtUSD = n => '$' + Number(n || 0).toFixed(4);
 const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const now = () => Date.now();
-const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&', '<':'<', '>':'>', '"':'"', "'":'' }[c]));
 
 // ============ DARK MODE ============
 function getDarkMode() { return localStorage.getItem('darkMode') === 'true'; }
@@ -28,7 +32,7 @@ function toggleDarkMode() { setDarkMode(!getDarkMode()); }
 function updateDarkModeIcons() {
   const isDark = getDarkMode();
   document.querySelectorAll('.dark-mode-icon, #darkModeToggle, #darkModeToggle2').forEach(el => {
-    if (el) el.innerHTML = isDark ? '<i data-lucide="moon" class="w-5 h-5"></i>' : '<i data-lucide="sun" class="w-5 h-5"></i>';
+    if (el) el.innerHTML = isDark ? '<i data-lucide="sun" class="w-4 h-4"></i>' : '<i data-lucide="moon" class="w-4 h-4"></i>';
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -38,9 +42,10 @@ if (getDarkMode()) document.documentElement.classList.add('dark');
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<div class="flex-1 text-sm">${msg}</div>`;
+  el.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info'}" class="w-5 h-5"></i><span>${msg}</span>`;
   const root = $('#toastRoot');
   if (root) { root.appendChild(el); setTimeout(() => el.remove(), 3500); }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ============ API ============
@@ -61,18 +66,16 @@ const state = { user: null, profile: null };
 
 // ============ LANDING ============
 function initLanding() {
-  // Dark mode buttons
   document.querySelectorAll('#darkModeToggle, #darkModeToggle2').forEach(btn => {
     if (btn) btn.addEventListener('click', toggleDarkMode);
   });
   setTimeout(updateDarkModeIcons, 100);
-  
-  // Auth buttons - Landing page
+
   $('#openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
   $('#openSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
   $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
   $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
-  
+
   renderLandingCoins();
   loadLiveStats();
   loadLiveWithdraws();
@@ -90,19 +93,15 @@ function renderLandingCoins() {
     card.className = 'coin-landing-card group';
     card.style.setProperty('--coin-color', m.color + '40');
     card.innerHTML = `
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <div class="w-14 h-14 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform" style="background:${m.color}20;border:2px solid ${m.color}40">
-            <div style="font-size:24px;font-weight:900;color:${m.color}">${coin[0]}</div>
-          </div>
-          <div><div class="font-bold text-lg text-zinc-900 dark:text-white">${m.name}</div><div class="text-xs text-zinc-500 dark:text-zinc-400">${coin}</div></div>
-        </div>
-        <span class="badge badge-green">Active</span>
-      </div>
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <h3 class="text-xl font-bold mb-1">${m.name}</h3>
+      <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="space-y-2 text-sm">
-        <div class="flex justify-between text-zinc-600 dark:text-zinc-400"><span>Min Withdraw</span><span class="font-medium text-zinc-900 dark:text-white">$0.03</span></div>
-        <div class="flex justify-between text-zinc-600 dark:text-zinc-400"><span>Payout</span><span class="text-green-500 font-medium">Instant · FaucetPay</span></div>
-      </div>`;
+        <div class="flex justify-between"><span class="text-zinc-500">Status</span><span class="badge badge-green">Active</span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">Min Withdraw</span><span class="font-medium">$0.03</span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">Payout</span><span class="font-medium">Instant · FaucetPay</span></div>
+      </div>
+    `;
     grid.appendChild(card);
   });
 }
@@ -131,18 +130,20 @@ async function loadLiveWithdraws() {
     const data = await res.json();
     table.innerHTML = '';
     if (!data.success || !data.withdrawals.length) {
-      table.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-zinc-500">No withdrawals yet</td></tr>';
+      table.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-zinc-500">No withdrawals yet</td></tr>';
       return;
     }
     data.withdrawals.forEach(t => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-3"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-xs font-bold text-white">${(t.username || 'U')[0].toUpperCase()}</div><span class="font-medium text-sm text-zinc-900 dark:text-white">${escapeHtml(t.username || 'User')}</span></div></td>
-        <td class="p-3 text-zinc-900 dark:text-white"><span class="text-sm font-medium">${t.coin}</span></td>
-        <td class="p-3 font-mono text-sm text-green-500">${fmt(t.amount)}</td>
-        <td class="p-3 text-sm text-zinc-600 dark:text-zinc-400">${fmtUSD(t.usdValue)}</td>
-        <td class="p-3 text-xs text-zinc-500">${new Date(t.createdAt).toLocaleTimeString()}</td>
-        <td class="p-3"><span class="badge badge-green">Completed</span></td>`;
+        <td class="p-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-xs">${(t.username || 'U')[0].toUpperCase()}</div></td>
+        <td class="p-3 font-medium">${escapeHtml(t.username || 'User')}</td>
+        <td class="p-3">${t.coin}</td>
+        <td class="p-3">${fmt(t.amount)}</td>
+        <td class="p-3">${fmtUSD(t.usdValue)}</td>
+        <td class="p-3 text-zinc-500 text-sm">${new Date(t.createdAt).toLocaleTimeString()}</td>
+        <td class="p-3"><span class="badge badge-green">Completed</span></td>
+      `;
       table.appendChild(row);
     });
   } catch (e) { console.error('Withdraws error:', e); }
@@ -174,9 +175,31 @@ function updateAuthModalUI() {
 }
 
 $('#closeAuthModal')?.addEventListener('click', closeAuthModal);
-document.querySelector('.auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
+document.querySelector('#authModal .auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
 $$('[data-auth-tab]').forEach(btn => btn.addEventListener('click', () => { authMode = btn.dataset.authTab; updateAuthModalUI(); }));
 
+// ============ RECAPTCHA HELPER ============
+async function getRecaptchaToken(action = 'login') {
+  if (typeof grecaptcha === 'undefined') {
+    console.warn('reCAPTCHA not loaded');
+    return null;
+  }
+  
+  try {
+    // Enterprise ready olmasını bekle
+    if (grecaptcha.enterprise) {
+      return await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action });
+    } else if (grecaptcha.execute) {
+      return await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action });
+    }
+  } catch (e) {
+    console.warn('reCAPTCHA execute error:', e);
+    return null;
+  }
+  return null;
+}
+
+// ============ AUTH FORM SUBMIT ============
 $('#authForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -186,40 +209,249 @@ $('#authForm')?.addEventListener('submit', async e => {
   if (btn) btn.disabled = true;
 
   try {
+    // reCAPTCHA token al
+    const recaptchaToken = await getRecaptchaToken(authMode === 'login' ? 'login' : 'signup');
+    
     if (authMode === 'login') {
       await signInWithEmailAndPassword(auth, email, password);
       await reload(auth.currentUser);
+      
+      // Email verified kontrolü
+      if (!auth.currentUser.emailVerified) {
+        toast('Please verify your email first. Check your inbox.', 'warning');
+        await signOut(auth);
+        if (btn) btn.disabled = false;
+        return;
+      }
+      
       toast('Welcome back!', 'success');
       closeAuthModal();
     } else {
       const username = fd.get('username').trim();
       const referral = fd.get('referral').trim().toUpperCase();
-      if (username.length < 3) throw new Error('Username 3+ chars');
+      
+      if (username.length < 3) throw new Error('Username must be 3+ characters');
+      
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(cred.user);
+      
       const refCode = uid();
       const profile = {
-        uid: cred.user.uid, username, email,
-        country: 'Unknown', timezone: 'UTC', faucetpayEmail: '',
-        referralCode: refCode, referredBy: referral || null,
+        uid: cred.user.uid,
+        username,
+        email,
+        country: 'Unknown',
+        timezone: 'UTC',
+        faucetpayEmail: '',
+        referralCode: refCode,
+        referredBy: referral || null,
         balances: Object.fromEntries(COINS.map(c => [c, 0])),
-        totalWithdrawn: 0, referralEarnings: 0, referralCount: 0,
-        totalClaims: 0, lastClaimAt: 0,
-        lastDailyBonus: 0, dailyStreak: 0, highestStreak: 0,
+        totalWithdrawn: 0,
+        referralEarnings: 0,
+        referralCount: 0,
+        totalClaims: 0,
+        lastClaimAt: 0,
+        lastDailyBonus: 0,
+        dailyStreak: 0,
+        highestStreak: 0,
         isAdmin: false,
         createdAt: serverTimestamp()
       };
+      
       await setDoc(doc(db, COL.users, cred.user.uid), profile);
-      toast('Account created! Check email.', 'success');
+      
+      toast('Account created! Please check your email to verify.', 'success');
       closeAuthModal();
       await signOut(auth);
     }
   } catch (err) {
-    toast(err.message, 'error');
+    console.error('Auth error:', err);
+    toast(err.message || 'Authentication failed', 'error');
   } finally {
     if (btn) btn.disabled = false;
   }
 });
+
+// ============ FORGOT PASSWORD ============
+$('#forgotPasswordBtn')?.addEventListener('click', () => {
+  closeAuthModal();
+  setTimeout(() => {
+    $('#forgotPasswordModal')?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }, 200);
+});
+
+$('#closeForgotPassword')?.addEventListener('click', () => {
+  $('#forgotPasswordModal')?.classList.add('hidden');
+  document.body.style.overflow = '';
+});
+
+document.querySelector('#forgotPasswordModal .auth-modal-backdrop')?.addEventListener('click', () => {
+  $('#forgotPasswordModal')?.classList.add('hidden');
+  document.body.style.overflow = '';
+});
+
+$('#forgotPasswordForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = fd.get('email').trim().toLowerCase();
+  const btn = e.target.querySelector('button[type="submit"]');
+  
+  if (btn) btn.disabled = true;
+  
+  try {
+    // Firebase ile password reset email gönder
+    await sendPasswordResetEmail(auth, email);
+    
+    toast('Password reset email sent! Check your inbox.', 'success');
+    $('#forgotPasswordModal')?.classList.add('hidden');
+    document.body.style.overflow = '';
+    e.target.reset();
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    toast(err.message || 'Failed to send reset email', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+});
+
+// ============ EMAIL ACTION HANDLERS (Verify + Reset Password) ============
+async function handleEmailAction() {
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('mode');
+  const oobCode = params.get('oobCode');
+  
+  if (!mode || !oobCode) return false;
+  
+  // Email action page'i göster
+  $('#landingPage')?.classList.add('hidden');
+  $('#appShell')?.classList.add('hidden');
+  $('#emailActionPage')?.classList.remove('hidden');
+  
+  const content = $('#emailActionContent');
+  
+  try {
+    if (mode === 'verifyEmail') {
+      // Email verification
+      await applyActionCode(auth, oobCode);
+      
+      content.innerHTML = `
+        <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
+          <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Email Verified!</h2>
+        <p class="text-zinc-500 dark:text-zinc-400 mb-6">Your email has been successfully verified.</p>
+        <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
+      `;
+    } else if (mode === 'resetPassword') {
+      // Password reset
+      try {
+        await verifyPasswordResetCode(auth, oobCode);
+        
+        content.innerHTML = `
+          <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">
+            <i data-lucide="key" class="w-8 h-8 text-primary-500"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Reset Password</h2>
+          <p class="text-zinc-500 dark:text-zinc-400 mb-6">Enter your new password</p>
+          <form id="resetPasswordForm" class="space-y-4 text-left">
+            <div>
+              <label class="label">New Password</label>
+              <input type="password" id="newPassword" class="input-field" placeholder="••••••••" required minlength="6" />
+            </div>
+            <div>
+              <label class="label">Confirm Password</label>
+              <input type="password" id="confirmPassword" class="input-field" placeholder="••••••••" required minlength="6" />
+            </div>
+            <button type="submit" class="btn-primary w-full">Reset Password</button>
+          </form>
+        `;
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        
+        // Form submit handler
+        setTimeout(() => {
+          $('#resetPasswordForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPass = $('#newPassword').value;
+            const confirmPass = $('#confirmPassword').value;
+            
+            if (newPass !== confirmPass) {
+              toast('Passwords do not match', 'error');
+              return;
+            }
+            
+            try {
+              await confirmPasswordReset(auth, oobCode, newPass);
+              content.innerHTML = `
+                <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
+                  <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Password Reset!</h2>
+                <p class="text-zinc-500 dark:text-zinc-400 mb-6">Your password has been successfully reset.</p>
+                <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
+              `;
+              if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (err) {
+              toast(err.message || 'Failed to reset password', 'error');
+            }
+          });
+        }, 100);
+        
+      } catch (err) {
+        content.innerHTML = `
+          <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
+            <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Invalid Link</h2>
+          <p class="text-zinc-500 dark:text-zinc-400 mb-6">This password reset link is invalid or has expired.</p>
+          <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    } else if (mode === 'recoverEmail') {
+      // Email recovery
+      try {
+        const info = await checkActionCode(auth, oobCode);
+        await applyActionCode(auth, oobCode);
+        
+        content.innerHTML = `
+          <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
+            <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Email Recovered</h2>
+          <p class="text-zinc-500 dark:text-zinc-400 mb-6">Your email has been restored to: <strong>${info.data.email}</strong></p>
+          <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } catch (err) {
+        content.innerHTML = `
+          <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
+            <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Invalid Link</h2>
+          <p class="text-zinc-500 dark:text-zinc-400 mb-6">This recovery link is invalid or has expired.</p>
+          <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+    
+    return true;
+  } catch (err) {
+    content.innerHTML = `
+      <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
+        <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Error</h2>
+      <p class="text-zinc-500 dark:text-zinc-400 mb-6">${err.message || 'An error occurred'}</p>
+      <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
+    `;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return true;
+  }
+}
 
 // ============ AUTH STATE ============
 onAuthStateChanged(auth, async user => {
@@ -233,50 +465,48 @@ onAuthStateChanged(auth, async user => {
     state.unsubProfile = onSnapshot(doc(db, COL.users, user.uid), s => {
       if (s.exists()) { state.profile = s.data(); updateTopBar(); }
     });
-    
+
     // Hide landing, show app
     if ($('#landingPage')) $('#landingPage').classList.add('hidden');
     if ($('#appShell')) $('#appShell').classList.remove('hidden');
-    
+    if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
     router.init();
-    updateTopBar(); // Update buttons
+    updateTopBar();
   } else {
-    state.user = null; 
-    state.profile = null; 
+    state.user = null;
+    state.profile = null;
     state.unsubProfile?.();
-    
+
     // Show landing, hide app
     if ($('#landingPage')) $('#landingPage').classList.remove('hidden');
     if ($('#appShell')) $('#appShell').classList.add('hidden');
-    
-    updateTopBar(); // Reset buttons
+    if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
+
+    updateTopBar();
   }
 });
 
 function updateTopBar() {
-  // Landing page buttons
   const loginBtn = $('#openLoginBtn');
   const signupBtn = $('#openSignupBtn');
   const heroLoginBtn = $('#heroLoginBtn');
   const heroSignupBtn = $('#heroSignupBtn');
-  
+
   if (!state.profile) {
-    // Not logged in - show Login/Signup
     if (loginBtn) { loginBtn.textContent = 'Login'; loginBtn.className = 'btn-ghost text-sm'; }
     if (signupBtn) { signupBtn.textContent = 'Sign Up'; signupBtn.className = 'btn-primary text-sm'; }
     if (heroLoginBtn) { heroLoginBtn.textContent = 'Login'; heroLoginBtn.className = 'btn-ghost text-base px-10 py-5'; }
     if (heroSignupBtn) { heroSignupBtn.textContent = 'Start Earning — It\'s Free'; heroSignupBtn.className = 'btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40'; }
     return;
   }
-  
-  // Logged in - update dashboard
+
   const total = COINS.reduce((s, c) => s + (state.profile.balances[c] || 0) * (COIN_META[c].usd || 0), 0);
   if ($('#topBalance')) $('#topBalance').textContent = fmtUSD(total);
   if ($('#profileName')) $('#profileName').textContent = state.profile.username;
   if ($('#profileAvatar')) $('#profileAvatar').textContent = state.profile.username[0].toUpperCase();
-  
-  // Landing page buttons - change to Dashboard/Logout
+
   if (loginBtn) { loginBtn.textContent = 'Dashboard'; loginBtn.className = 'btn-primary text-sm'; loginBtn.onclick = () => { $('#landingPage')?.classList.add('hidden'); $('#appShell')?.classList.remove('hidden'); router.go('#/dashboard'); }; }
   if (signupBtn) { signupBtn.textContent = 'Logout'; signupBtn.className = 'btn-ghost text-sm'; signupBtn.onclick = async () => { await signOut(auth); toast('Logged out', 'info'); }; }
   if (heroLoginBtn) { heroLoginBtn.textContent = 'Dashboard'; heroLoginBtn.className = 'btn-ghost text-base px-10 py-5'; heroLoginBtn.onclick = () => { $('#landingPage')?.classList.add('hidden'); $('#appShell')?.classList.remove('hidden'); router.go('#/dashboard'); }; }
@@ -297,11 +527,12 @@ const router = {
     referrals: renderReferrals,
     withdraw: renderWithdraw,
     transactions: renderTransactions,
-    settings: renderSettings
+    settings: renderSettings,
+    offerwall: renderOfferwall
   },
   init() {
     window.addEventListener('hashchange', () => this.navigate());
-    $('#menuToggle')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
+    $('#menuToggle, #menuToggle2')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
     if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
     else this.navigate();
   },
@@ -311,11 +542,11 @@ const router = {
     const fn = this.routes[route];
     if (!fn) { this.go('#/dashboard'); return; }
     $$('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.route === route));
-    
+
     if(window.innerWidth <= 1024) {
-        $('#sidebar')?.classList.remove('open');
+      $('#sidebar')?.classList.remove('open');
     }
-    
+
     const c = $('#pageContainer');
     if (c) {
       c.innerHTML = '';
@@ -336,28 +567,50 @@ async function renderDashboard() {
     const s = data.stats;
     const c = $('#pageContainer');
     if (!c) return;
-    
+
     c.innerHTML = `
       <div class="space-y-6 page-enter">
-        <div class="relative overflow-hidden rounded-3xl p-8 gradient-border glass-card">
-          <div class="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-secondary-500/20"></div>
-          <div class="relative">
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Welcome back,</p>
-            <h1 class="text-3xl sm:text-4xl font-bold mb-6 text-zinc-900 dark:text-white">${escapeHtml(state.profile.username)}</h1>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div class="stat-card"><div class="stat-label">Main Balance</div><div class="stat-value">${fmtUSD(s.totalBalanceUSD)}</div></div>
-              <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value text-green-500">${fmtUSD(s.todayEarnings)}</div></div>
-              <div class="stat-card"><div class="stat-label">Referral</div><div class="stat-value text-primary-500">${fmtUSD(s.referralEarnings)}</div></div>
-              <div class="stat-card"><div class="stat-label">Withdrawn</div><div class="stat-value text-secondary-500">${fmtUSD(s.totalWithdrawn)}</div></div>
-            </div>
-            <div class="mt-6 flex flex-wrap gap-3">
-              <button onclick="router.go('#/faucet')" class="btn-primary shadow-lg shadow-primary-500/30"><i data-lucide="droplets" class="w-4 h-4"></i>Claim Now</button>
-              <button onclick="router.go('#/withdraw')" class="btn-ghost"><i data-lucide="wallet" class="w-4 h-4"></i>Withdraw</button>
-            </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-zinc-500 text-sm">Welcome back,</p>
+            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">${escapeHtml(state.profile.username)}</h1>
           </div>
         </div>
-      </div>`;
-    
+        
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="stat-glass-card">
+            <div class="stat-icon primary"><i data-lucide="wallet" class="w-5 h-5"></i></div>
+            <div class="stat-label">Main Balance</div>
+            <div class="stat-value">${fmtUSD(s.totalBalanceUSD)}</div>
+          </div>
+          <div class="stat-glass-card">
+            <div class="stat-icon green"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+            <div class="stat-label">Today</div>
+            <div class="stat-value">${fmtUSD(s.todayEarnings)}</div>
+          </div>
+          <div class="stat-glass-card">
+            <div class="stat-icon purple"><i data-lucide="users" class="w-5 h-5"></i></div>
+            <div class="stat-label">Referral</div>
+            <div class="stat-value">${fmtUSD(s.referralEarnings)}</div>
+          </div>
+          <div class="stat-glass-card">
+            <div class="stat-icon cyan"><i data-lucide="arrow-down-circle" class="w-5 h-5"></i></div>
+            <div class="stat-label">Withdrawn</div>
+            <div class="stat-value">${fmtUSD(s.totalWithdrawn)}</div>
+          </div>
+        </div>
+        
+        <div class="flex gap-4">
+          <button onclick="router.go('#/faucet')" class="btn-primary flex-1">
+            <i data-lucide="droplets" class="w-5 h-5"></i> Claim Now
+          </button>
+          <button onclick="router.go('#/withdraw')" class="btn-ghost flex-1">
+            <i data-lucide="wallet" class="w-5 h-5"></i> Withdraw
+          </button>
+        </div>
+      </div>
+    `;
+
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (e) { toast(e.message, 'error'); }
 }
@@ -389,7 +642,11 @@ async function handleClaim() {
   try {
     let token = null;
     if (typeof grecaptcha !== 'undefined') {
-      try { token = await grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action: 'claim' }); } catch(e) {}
+      try { 
+        token = await getRecaptchaToken('claim');
+      } catch(e) {
+        console.warn('reCAPTCHA claim error:', e);
+      }
     }
     const data = await apiCall('/api/claim', { method: 'POST', body: JSON.stringify({ recaptchaToken: token }) });
     toast(`Claimed ${fmt(data.amount)} ${data.coin}!`, 'success');
@@ -403,15 +660,20 @@ function renderDailyBonus() {
   if (!c) return;
   c.innerHTML = `
     <div class="space-y-6 page-enter">
-      <div class="glass-card p-8 rounded-3xl gradient-border text-center">
-        <h1 class="text-3xl font-bold mb-4 text-zinc-900 dark:text-white">Daily Bonus</h1>
-        <div class="text-6xl font-black bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
-        <div class="text-zinc-500 dark:text-zinc-400 mb-6">Day Streak · Best: ${p.highestStreak || 0}</div>
-        <button id="claimBonusBtn" class="btn-primary shadow-lg shadow-primary-500/30">🎁 Claim Daily Bonus</button>
+      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Daily Bonus</h1>
+      <div class="glass-card rounded-3xl p-8 text-center">
+        <div class="text-6xl font-black bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
+        <p class="text-zinc-500 mb-6">Day Streak · Best: ${p.highestStreak || 0}</p>
+        <button id="claimBonusBtn" class="btn-primary px-8 py-4 text-lg">🎁 Claim Daily Bonus</button>
       </div>
-    </div>`;
+    </div>
+  `;
   $('#claimBonusBtn')?.addEventListener('click', async () => {
-    try { const data = await apiCall('/api/daily-bonus', { method: 'POST' }); toast(`Day ${data.day} bonus: ${fmtUSD(data.usdValue)}`, 'success'); renderDailyBonus(); } catch (e) { toast(e.message, 'error'); }
+    try { 
+      const data = await apiCall('/api/daily-bonus', { method: 'POST' }); 
+      toast(`Day ${data.day} bonus: ${fmtUSD(data.usdValue)}`, 'success'); 
+      renderDailyBonus(); 
+    } catch (e) { toast(e.message, 'error'); }
   });
 }
 
@@ -421,15 +683,27 @@ async function renderLeaderboard() {
     const data = await res.json();
     const c = $('#pageContainer');
     if (!c || !data.success) return;
-    c.innerHTML = `<div class="space-y-6 page-enter"><h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Leaderboard</h1><div class="glass-card rounded-3xl overflow-hidden divide-y divide-zinc-200 dark:divide-white/5">${data.leaderboard.map(u => `
-      <div class="flex items-center justify-between p-4 hover:bg-zinc-100 dark:hover:bg-white/5 transition">
-        <div class="flex items-center gap-4">
-          <div class="w-10 font-bold text-zinc-500 text-center">#${u.rank}</div>
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-bold text-white">${u.username[0].toUpperCase()}</div>
-          <div><div class="font-medium text-zinc-900 dark:text-white">${escapeHtml(u.username)}</div><div class="text-xs text-zinc-500">${u.country || 'Unknown'}</div></div>
+    c.innerHTML = `
+      <div class="space-y-6 page-enter">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Leaderboard</h1>
+        <div class="glass-card rounded-3xl overflow-hidden">
+          ${data.leaderboard.map(u => `
+            <div class="flex items-center gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800 last:border-0">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold">#${u.rank}</div>
+              <div class="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-bold">${u.username[0].toUpperCase()}</div>
+              <div class="flex-1">
+                <div class="font-bold">${escapeHtml(u.username)}</div>
+                <div class="text-sm text-zinc-500">${u.country || 'Unknown'}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold">${u.totalClaims} claims</div>
+                <div class="text-sm text-zinc-500">${fmtUSD(u.totalWithdrawn)}</div>
+              </div>
+            </div>
+          `).join('')}
         </div>
-        <div class="text-right"><div class="font-bold text-zinc-900 dark:text-white">${u.totalClaims} claims</div><div class="text-xs text-zinc-500">${fmtUSD(u.totalWithdrawn)}</div></div>
-      </div>`).join('')}</div></div>`;
+      </div>
+    `;
   } catch (e) { toast('Error loading', 'error'); }
 }
 
@@ -438,25 +712,24 @@ function renderPtc() {
   if (!c) return;
   c.innerHTML = `
     <div class="space-y-6 page-enter">
-      <div class="glass-card p-8 rounded-3xl gradient-border">
-        <h1 class="text-3xl font-bold mb-4 text-zinc-900 dark:text-white">💰 PTC Ads</h1>
-        <p class="text-zinc-500 dark:text-zinc-400 mb-6">Click on ads and earn free CNX coins instantly.</p>
-        <div class="grid sm:grid-cols-2 gap-4">
-          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-primary-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.5 CNX', 'success')">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">📢</div>
-              <div><div class="font-bold text-zinc-900 dark:text-white">Ad #1</div><div class="text-sm text-zinc-500 dark:text-zinc-400">Earn 0.5 CNX</div></div>
-            </div>
-          </div>
-          <div class="p-6 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 hover:border-secondary-500/50 transition cursor-pointer group" onclick="toast('Ad clicked! +0.3 CNX', 'success')">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-full bg-secondary-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">🎯</div>
-              <div><div class="font-bold text-zinc-900 dark:text-white">Ad #2</div><div class="text-sm text-zinc-500 dark:text-zinc-400">Earn 0.3 CNX</div></div>
-            </div>
-          </div>
+      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">💰 PTC Ads</h1>
+      <p class="text-zinc-500">Click on ads and earn free CNX coins instantly.</p>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="glass-card rounded-2xl p-6 text-center">
+          <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">📢</div>
+          <h3 class="font-bold text-lg mb-2">Ad #1</h3>
+          <p class="text-sm text-zinc-500 mb-4">Earn 0.5 CNX</p>
+          <button class="btn-primary w-full">View Ad</button>
+        </div>
+        <div class="glass-card rounded-2xl p-6 text-center">
+          <div class="w-16 h-16 rounded-full bg-secondary-500/20 mx-auto mb-4 flex items-center justify-center">🎯</div>
+          <h3 class="font-bold text-lg mb-2">Ad #2</h3>
+          <p class="text-sm text-zinc-500 mb-4">Earn 0.3 CNX</p>
+          <button class="btn-primary w-full">View Ad</button>
         </div>
       </div>
-    </div>`;
+    </div>
+  `;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
@@ -468,29 +741,46 @@ function renderReferrals() {
   c.innerHTML = `
     <div class="space-y-6 page-enter">
       <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Referrals</h1>
-      <div class="glass-card p-8 rounded-3xl gradient-border text-center">
-        <div class="text-xs text-zinc-500 dark:text-zinc-400 mb-2">Your Referral Code</div>
-        <div class="text-3xl font-black font-mono bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent mb-4">${p.referralCode}</div>
-        <div class="flex gap-2 max-w-lg mx-auto">
-          <input readonly value="${link}" class="input-field flex-1 text-center text-sm" />
-          <button onclick="navigator.clipboard.writeText('${link}').then(() => toast('Copied!', 'success'))" class="btn-primary shadow-lg shadow-primary-500/30">Copy</button>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="stat-glass-card text-center">
+          <div class="stat-label">Total</div>
+          <div class="stat-value">${p.referralCount || 0}</div>
+        </div>
+        <div class="stat-glass-card text-center">
+          <div class="stat-label">Earned</div>
+          <div class="stat-value">${fmtUSD(p.referralEarnings)}</div>
+        </div>
+        <div class="stat-glass-card text-center">
+          <div class="stat-label">Rate</div>
+          <div class="stat-value">20%</div>
         </div>
       </div>
-      <div class="grid sm:grid-cols-3 gap-4">
-        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Total</div><div class="text-3xl font-bold mt-2 text-zinc-900 dark:text-white">${p.referralCount || 0}</div></div>
-        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Earned</div><div class="text-3xl font-bold mt-2 text-green-500">${fmtUSD(p.referralEarnings)}</div></div>
-        <div class="glass-card p-6 rounded-3xl text-center"><div class="text-xs text-zinc-500 dark:text-zinc-400">Rate</div><div class="text-3xl font-bold mt-2 text-primary-500">20%</div></div>
+      <div class="glass-card rounded-2xl p-6">
+        <label class="label">Your Referral Code</label>
+        <div class="flex gap-2">
+          <input type="text" value="${p.referralCode}" readonly class="input-field flex-1" />
+          <button onclick="navigator.clipboard.writeText('${link}'); toast('Copied!', 'success');" class="btn-primary">Copy</button>
+        </div>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
 function renderWithdraw() {
   const c = $('#pageContainer');
   if (!c) return;
-  c.innerHTML = `<div class="space-y-6 page-enter"><h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Withdraw</h1><p class="text-zinc-500 dark:text-zinc-400">Minimum $0.03 · Instant via FaucetPay</p><div id="withdrawGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>`;
+  c.innerHTML = `
+    <div class="space-y-6 page-enter">
+      <div>
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Withdraw</h1>
+        <p class="text-zinc-500 mt-1">Minimum $0.03 · Instant via FaucetPay</p>
+      </div>
+      <div id="withdrawGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+  `;
   const grid = $('#withdrawGrid');
   if(!grid) return;
-  
+
   COINS.forEach(coin => {
     const m = COIN_META[coin];
     const bal = state.profile.balances[coin] || 0;
@@ -499,20 +789,18 @@ function renderWithdraw() {
     const card = document.createElement('div');
     card.className = 'coin-card group';
     card.innerHTML = `
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform" style="background:${m.color}20;border:2px solid ${m.color}40">
-            <div style="font-size:24px;font-weight:900;color:${m.color}">${coin[0]}</div>
-          </div>
-          <div><div class="font-bold text-zinc-900 dark:text-white">${m.name}</div><div class="text-xs text-zinc-500">${coin}</div></div>
-        </div>
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <h3 class="text-xl font-bold mb-1">${m.name}</h3>
+      <p class="text-sm text-zinc-500 mb-4">${coin}</p>
+      <div class="mb-4">
         <span class="badge ${can ? 'badge-green' : 'badge-yellow'}">${can ? 'Ready' : 'Min $0.03'}</span>
       </div>
-      <div class="space-y-2 mb-4">
-        <div class="flex justify-between text-sm text-zinc-600 dark:text-zinc-400"><span>Balance</span><span class="font-mono text-zinc-900 dark:text-white">${fmt(bal)} ${coin}</span></div>
-        <div class="flex justify-between text-sm text-zinc-600 dark:text-zinc-400"><span>USD</span><span class="text-zinc-900 dark:text-white">${fmtUSD(balUSD)}</span></div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-zinc-500">Balance</span><span class="font-medium">${fmt(bal)} ${coin}</span></div>
+        <div class="flex justify-between"><span class="text-zinc-500">USD</span><span class="font-medium">${fmtUSD(balUSD)}</span></div>
       </div>
-      <button class="btn-primary w-full shadow-lg shadow-primary-500/30" ${!can ? 'disabled' : ''} onclick="doWithdraw('${coin}')">${can ? 'Withdraw' : 'Min $0.03 Required'}</button>`;
+      <button onclick="doWithdraw('${coin}')" class="btn-primary w-full mt-4" ${!can ? 'disabled' : ''}>${can ? 'Withdraw' : 'Min $0.03 Required'}</button>
+    `;
     grid.appendChild(card);
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -521,25 +809,40 @@ function renderWithdraw() {
 window.doWithdraw = async (coin) => {
   if (!state.profile.faucetpayEmail) { toast('Set FaucetPay email in Settings first', 'warning'); router.go('#/settings'); return; }
   if (!confirm(`Withdraw all ${coin} to ${state.profile.faucetpayEmail}?`)) return;
-  try { const data = await apiCall('/api/withdraw', { method: 'POST', body: JSON.stringify({ coin }) }); toast(`Withdrew ${fmt(data.amount)} ${data.coin}!`, 'success'); renderWithdraw(); } catch (e) { toast(e.message, 'error'); }
+  try { 
+    const data = await apiCall('/api/withdraw', { method: 'POST', body: JSON.stringify({ coin }) }); 
+    toast(`Withdrew ${fmt(data.amount)} ${data.coin}!`, 'success'); 
+    renderWithdraw(); 
+  } catch (e) { toast(e.message, 'error'); }
 };
 
 async function renderTransactions() {
   try {
     const data = await apiCall('/api/transactions?limit=100');
     const list = data.transactions.map(t => `
-      <div class="flex items-center justify-between p-4 hover:bg-zinc-100 dark:hover:bg-white/5 transition">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-white/5 flex items-center justify-center">
-            <i data-lucide="${t.type === 'claim' ? 'droplets' : 'gift'}" class="w-5 h-5 ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}"></i>
-          </div>
-          <div><div class="text-sm font-medium capitalize text-zinc-900 dark:text-white">${t.type}</div><div class="text-xs text-zinc-500">${t.coin}</div></div>
+      <div class="flex items-center gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800 last:border-0">
+        <div class="w-10 h-10 rounded-full ${t.type === 'withdraw' ? 'bg-red-500/20' : 'bg-green-500/20'} flex items-center justify-center">
+          <i data-lucide="${t.type === 'withdraw' ? 'arrow-down' : 'arrow-up'}" class="w-5 h-5 ${t.type === 'withdraw' ? 'text-red-500' : 'text-green-500'}"></i>
         </div>
-        <div class="text-right"><div class="text-sm font-bold ${t.type === 'withdraw' ? 'text-red-400' : 'text-green-400'}">${t.type === 'withdraw' ? '-' : '+'}${fmt(t.amount)} ${t.coin}</div></div>
-      </div>`).join('');
+        <div class="flex-1">
+          <div class="font-bold capitalize">${t.type}</div>
+          <div class="text-sm text-zinc-500">${t.coin}</div>
+        </div>
+        <div class="text-right font-bold ${t.type === 'withdraw' ? 'text-red-500' : 'text-green-500'}">
+          ${t.type === 'withdraw' ? '-' : '+'}${fmt(t.amount)} ${t.coin}
+        </div>
+      </div>
+    `).join('');
     const c = $('#pageContainer');
     if (!c) return;
-    c.innerHTML = `<div class="space-y-6 page-enter"><h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Transactions</h1><div class="glass-card rounded-3xl divide-y divide-zinc-200 dark:divide-white/5">${list || '<div class="p-8 text-center text-zinc-500">No transactions</div>'}</div></div>`;
+    c.innerHTML = `
+      <div class="space-y-6 page-enter">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Transactions</h1>
+        <div class="glass-card rounded-3xl overflow-hidden">
+          ${list || '<div class="p-6 text-center text-zinc-500">No transactions</div>'}
+        </div>
+      </div>
+    `;
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (e) { toast(e.message, 'error'); }
 }
@@ -552,34 +855,77 @@ function renderSettings() {
     <div class="space-y-6 page-enter">
       <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Settings</h1>
       <form id="settingsForm" class="space-y-6">
-        <div class="glass-card p-6 rounded-3xl space-y-4">
-          <h3 class="font-semibold text-zinc-900 dark:text-white">Profile</h3>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div><label class="label">Username</label><input name="username" value="${escapeHtml(p.username)}" class="input-field" /></div>
-            <div><label class="label">Email</label><input value="${escapeHtml(p.email)}" class="input-field" readonly /></div>
-            <div><label class="label">Country</label><input name="country" value="${escapeHtml(p.country || '')}" class="input-field" /></div>
-            <div><label class="label">Timezone</label><input name="timezone" value="${escapeHtml(p.timezone || '')}" class="input-field" /></div>
+        <div class="glass-card rounded-2xl p-6">
+          <h3 class="font-bold text-lg mb-4">Profile</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <label class="label">Username</label>
+              <input name="username" type="text" value="${escapeHtml(p.username)}" class="input-field" required minlength="3" />
+            </div>
+            <div>
+              <label class="label">Email</label>
+              <input type="email" value="${escapeHtml(p.email)}" class="input-field" readonly />
+            </div>
+            <div>
+              <label class="label">Country</label>
+              <input name="country" type="text" value="${escapeHtml(p.country)}" class="input-field" />
+            </div>
+            <div>
+              <label class="label">Timezone</label>
+              <input name="timezone" type="text" value="${escapeHtml(p.timezone)}" class="input-field" />
+            </div>
           </div>
         </div>
-        <div class="glass-card p-6 rounded-3xl">
-          <h3 class="font-semibold mb-4 text-zinc-900 dark:text-white">Payment</h3>
-          <label class="label">FaucetPay Email</label>
-          <input name="faucetpayEmail" type="email" value="${escapeHtml(p.faucetpayEmail || '')}" class="input-field" placeholder="your@faucetpay.email" />
+        <div class="glass-card rounded-2xl p-6">
+          <h3 class="font-bold text-lg mb-4">Payment</h3>
+          <div>
+            <label class="label">FaucetPay Email</label>
+            <input name="faucetpayEmail" type="email" value="${escapeHtml(p.faucetpayEmail)}" class="input-field" placeholder="your@faucetpay.email" />
+          </div>
         </div>
-        <button type="submit" class="btn-primary shadow-lg shadow-primary-500/30">💾 Save Changes</button>
+        <button type="submit" class="btn-primary">💾 Save Changes</button>
       </form>
-    </div>`;
+    </div>
+  `;
   $('#settingsForm')?.addEventListener('submit', async e => {
     e.preventDefault();
     const fd = new FormData(e.target);
     try {
-      await apiCall('/api/settings', { method: 'PUT', body: JSON.stringify({ username: fd.get('username'), country: fd.get('country'), timezone: fd.get('timezone'), faucetpayEmail: fd.get('faucetpayEmail') }) });
+      await apiCall('/api/settings', { method: 'PUT', body: JSON.stringify({ 
+        username: fd.get('username'), 
+        country: fd.get('country'), 
+        timezone: fd.get('timezone'), 
+        faucetpayEmail: fd.get('faucetpayEmail') 
+      }) });
       toast('Saved!', 'success');
     } catch (err) { toast(err.message, 'error'); }
   });
 }
 
+// ============ OFFERWALL ============
+function renderOfferwall() {
+  const frame = $('#offerwallFrame');
+  if (frame && state.profile) {
+    // Offerwall.me URL - API_KEY env'den gelecek, şimdilik placeholder
+    // Gerçek API key'i backend'den almalıyız veya .env'den
+    const apiKey = 'YOUR_OFFERWALL_API_KEY'; // .env'den gelecek
+    const userId = state.profile.uid;
+    frame.src = `https://offerwall.me/offerwall/${apiKey}/${userId}`;
+  }
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 // ============ INIT ============
-if (typeof lucide !== 'undefined') lucide.createIcons();
-initLanding();
-console.log('||| ⚡ CoinixFaucet ready |||');
+document.addEventListener('DOMContentLoaded', async () => {
+  // Email action handler'ı kontrol et
+  const hasEmailAction = await handleEmailAction();
+  
+  if (!hasEmailAction) {
+    // Normal app init
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    initLanding();
+  }
+  
+  console.log('||| ⚡ CoinixFaucet ready |||');
+});
