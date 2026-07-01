@@ -11,7 +11,7 @@ import {
   doc, getDoc, setDoc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-console.log('🚀 CoinixFaucet App Starting...');
+console.log('🚀 CoinixFaucet App v3.0 Starting...');
 
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
@@ -32,7 +32,7 @@ function toggleDarkMode() { setDarkMode(!getDarkMode()); }
 function updateDarkModeIcons() {
   const isDark = getDarkMode();
   const icon = isDark ? 'sun' : 'moon';
-  $$('.dark-mode-icon, #darkModeToggle i, #darkModeToggle2 i').forEach(el => {
+  $$('#darkModeToggle i, #darkModeToggle2 i').forEach(el => {
     if (el) el.setAttribute('data-lucide', icon);
   });
   if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -50,6 +50,30 @@ function toast(msg, type = 'info') {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+// ============ ADBLOCK DETECTION ============
+async function detectAdBlock() {
+  // Test reklam yükle
+  const testAd = document.createElement('div');
+  testAd.innerHTML = '<div class="adsbox ad-banner ad-placement" style="position:absolute;left:-9999px;width:1px;height:1px;"></div>';
+  document.body.appendChild(testAd);
+  
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const adElement = testAd.querySelector('.adsbox');
+  const isBlocked = !adElement || adElement.offsetHeight === 0 || 
+                    window.getComputedStyle(adElement).display === 'none' ||
+                    window.getComputedStyle(adElement).visibility === 'hidden';
+  
+  testAd.remove();
+  
+  if (isBlocked) {
+    console.warn('⚠️ AdBlock detected!');
+    $('#adBlockOverlay')?.classList.remove('hidden');
+    return true;
+  }
+  return false;
+}
+
 // ============ API ============
 async function apiCall(endpoint, options = {}) {
   const user = auth.currentUser;
@@ -65,36 +89,6 @@ async function apiCall(endpoint, options = {}) {
 }
 
 const state = { user: null, profile: null };
-
-// ============ COOKIE CONSENT ============
-function initCookieConsent() {
-  if (localStorage.getItem('cookiesAccepted')) {
-    $('#cookieConsent')?.classList.add('hidden');
-    return;
-  }
-  $('#cookieConsent')?.classList.remove('hidden');
-  $('#acceptCookies')?.addEventListener('click', () => {
-    localStorage.setItem('cookiesAccepted', 'true');
-    $('#cookieConsent')?.classList.add('hidden');
-  });
-}
-
-// ============ MAINTENANCE MODE ============
-async function checkMaintenance() {
-  try {
-    const res = await fetch('/api/maintenance');
-    const data = await res.json();
-    if (data.enabled) {
-      $('#maintenanceMode')?.classList.remove('hidden');
-      $('#landingPage')?.classList.add('hidden');
-      $('#appShell')?.classList.add('hidden');
-    } else {
-      $('#maintenanceMode')?.classList.add('hidden');
-    }
-  } catch (e) {
-    console.error('Maintenance check error:', e);
-  }
-}
 
 // ============ LANDING ============
 function initLanding() {
@@ -123,9 +117,9 @@ function renderLandingCoins() {
     const card = document.createElement('div');
     card.className = 'coin-landing-card group';
     card.innerHTML = `
-      <div class="w-12 h-12 rounded-full flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
-      <h3 class="text-xl font-bold mb-1">${m.name}</h3>
-      <p class="text-sm text-zinc-500 mb-4">${coin}</p>
+      <div class="w-14 h-14 rounded-full flex items-center justify-center font-black text-white text-2xl mb-4 shadow-lg" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <h3 class="text-xl font-bold mb-1 text-zinc-900 dark:text-white">${m.name}</h3>
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">${coin}</p>
       <div class="space-y-2 text-sm">
         <div class="flex justify-between"><span class="text-zinc-500">Status</span><span class="badge badge-green">Active</span></div>
         <div class="flex justify-between"><span class="text-zinc-500">Min Withdraw</span><span class="font-medium">$0.03</span></div>
@@ -159,19 +153,18 @@ async function loadLiveWithdraws() {
     const data = await res.json();
     table.innerHTML = '';
     if (!data.success || !data.withdrawals.length) {
-      table.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-zinc-500">No withdrawals yet</td></tr>';
+      table.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-zinc-500">No withdrawals yet</td></tr>';
       return;
     }
     data.withdrawals.forEach(t => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-xs">${(t.username || 'U')[0].toUpperCase()}</div></td>
-        <td class="p-3 font-medium">${escapeHtml(t.username || 'User')}</td>
-        <td class="p-3">${t.coin}</td>
-        <td class="p-3">${fmt(t.amount)}</td>
-        <td class="p-3">${fmtUSD(t.usdValue)}</td>
-        <td class="p-3 text-zinc-500 text-sm">${new Date(t.createdAt).toLocaleTimeString()}</td>
-        <td class="p-3"><span class="badge badge-green">Completed</span></td>
+        <td class="p-4"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-xs">${(t.username || 'U')[0].toUpperCase()}</div></td>
+        <td class="p-4 font-medium">${escapeHtml(t.username || 'User')}</td>
+        <td class="p-4">${t.coin}</td>
+        <td class="p-4">${fmt(t.amount)}</td>
+        <td class="p-4">${fmtUSD(t.usdValue)}</td>
+        <td class="p-4"><span class="badge badge-green">Completed</span></td>
       `;
       table.appendChild(row);
     });
@@ -319,155 +312,14 @@ $('#authForm')?.addEventListener('submit', async e => {
   }
 });
 
-// ============ FORGOT PASSWORD ============
-$('#forgotPasswordBtn')?.addEventListener('click', () => {
-  closeAuthModal();
-  setTimeout(() => {
-    $('#forgotPasswordModal')?.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-  }, 200);
-});
-
-$('#closeForgotPassword')?.addEventListener('click', () => {
-  $('#forgotPasswordModal')?.classList.add('hidden');
-  document.body.style.overflow = '';
-});
-
-document.querySelector('#forgotPasswordModal .auth-modal-backdrop')?.addEventListener('click', () => {
-  $('#forgotPasswordModal')?.classList.add('hidden');
-  document.body.style.overflow = '';
-});
-
-$('#forgotPasswordForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const email = fd.get('email').trim().toLowerCase();
-  const btn = e.target.querySelector('button[type="submit"]');
-  
-  if (btn) btn.disabled = true;
-  
-  try {
-    await sendPasswordResetEmail(auth, email);
-    toast('Password reset email sent! Check your inbox.', 'success');
-    $('#forgotPasswordModal')?.classList.add('hidden');
-    document.body.style.overflow = '';
-    e.target.reset();
-  } catch (err) {
-    console.error('Forgot password error:', err);
-    toast(err.message || 'Failed to send reset email', 'error');
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-});
-
-// ============ EMAIL ACTION ============
-async function handleEmailAction() {
-  const params = new URLSearchParams(window.location.search);
-  const mode = params.get('mode');
-  const oobCode = params.get('oobCode');
-  
-  if (!mode || !oobCode) return false;
-  
-  $('#landingPage')?.classList.add('hidden');
-  $('#appShell')?.classList.add('hidden');
-  $('#emailActionPage')?.classList.remove('hidden');
-  
-  const content = $('#emailActionContent');
-  
-  try {
-    if (mode === 'verifyEmail') {
-      await applyActionCode(auth, oobCode);
-      content.innerHTML = `
-        <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
-          <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
-        </div>
-        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Email Verified!</h2>
-        <p class="text-zinc-500 dark:text-zinc-400 mb-6">Your email has been successfully verified.</p>
-        <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
-      `;
-    } else if (mode === 'resetPassword') {
-      try {
-        await verifyPasswordResetCode(auth, oobCode);
-        content.innerHTML = `
-          <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">
-            <i data-lucide="key" class="w-8 h-8 text-primary-500"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Reset Password</h2>
-          <p class="text-zinc-500 dark:text-zinc-400 mb-6">Enter your new password</p>
-          <form id="resetPasswordForm" class="space-y-4 text-left">
-            <div>
-              <label class="label">New Password</label>
-              <input type="password" id="newPassword" class="input-field" placeholder="••••••••" required minlength="6" />
-            </div>
-            <div>
-              <label class="label">Confirm Password</label>
-              <input type="password" id="confirmPassword" class="input-field" placeholder="••••••••" required minlength="6" />
-            </div>
-            <button type="submit" class="btn-primary w-full">Reset Password</button>
-          </form>
-        `;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-        setTimeout(() => {
-          $('#resetPasswordForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const newPass = $('#newPassword').value;
-            const confirmPass = $('#confirmPassword').value;
-            if (newPass !== confirmPass) {
-              toast('Passwords do not match', 'error');
-              return;
-            }
-            try {
-              await confirmPasswordReset(auth, oobCode, newPass);
-              content.innerHTML = `
-                <div class="w-16 h-16 rounded-full bg-green-500/20 mx-auto mb-4 flex items-center justify-center">
-                  <i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Password Reset!</h2>
-                <p class="text-zinc-500 dark:text-zinc-400 mb-6">Your password has been successfully reset.</p>
-                <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
-              `;
-              if (typeof lucide !== 'undefined') lucide.createIcons();
-            } catch (err) {
-              toast(err.message || 'Failed to reset password', 'error');
-            }
-          });
-        }, 100);
-      } catch (err) {
-        content.innerHTML = `
-          <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
-            <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Invalid Link</h2>
-          <p class="text-zinc-500 dark:text-zinc-400 mb-6">This password reset link is invalid or has expired.</p>
-          <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
-        `;
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-      }
-    }
-    return true;
-  } catch (err) {
-    content.innerHTML = `
-      <div class="w-16 h-16 rounded-full bg-red-500/20 mx-auto mb-4 flex items-center justify-center">
-        <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Error</h2>
-      <p class="text-zinc-500 dark:text-zinc-400 mb-6">${err.message || 'An error occurred'}</p>
-      <button onclick="location.href='/'" class="btn-primary">Go to Login</button>
-    `;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    return true;
-  }
-}
-
 // ============ AUTH STATE ============
 onAuthStateChanged(auth, async user => {
   console.log('🔐 Auth state changed:', user?.email || 'No user');
   
   if (user) {
     state.user = user;
-    await reload(user);
     
+    // HIZLI YÜKLEME - reload bekleme
     const snap = await getDoc(doc(db, COL.users, user.uid));
     if (!snap.exists()) { 
       console.error('❌ User document not found');
@@ -494,7 +346,6 @@ onAuthStateChanged(auth, async user => {
       appShell.classList.remove('hidden');
       console.log('✅ App shell shown');
     }
-    if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
 
     router.init();
     updateTopBar();
@@ -517,7 +368,6 @@ onAuthStateChanged(auth, async user => {
     
     if (landing) landing.classList.remove('hidden');
     if (appShell) appShell.classList.add('hidden');
-    if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
 
     updateTopBar();
   }
@@ -540,13 +390,10 @@ function updateTopBar() {
     if (heroBtns) {
       heroBtns.innerHTML = `
         <button id="heroSignupBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
-          <i data-lucide="rocket" class="w-5 h-5"></i>
+          <i data-lucide="zap" class="w-5 h-5"></i>
           Start Earning — It's Free
         </button>
-        <button id="heroLoginBtn" class="btn-ghost text-base px-10 py-5">
-          <i data-lucide="log-in" class="w-5 h-5"></i>
-          Login
-        </button>
+        <button id="heroLoginBtn" class="btn-ghost text-base px-10 py-5">Login</button>
       `;
       $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
       $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
@@ -598,30 +445,25 @@ function initThreeDotsMenu() {
   const btn = $('#threeDotsBtn');
   const menu = $('#threeDotsMenu');
   
-  if (!btn || !menu) return;
+  if (!btn || !menu) {
+    console.error('❌ Three dots menu elements not found');
+    return;
+  }
   
-  // Önceki event listener'ları temizle
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-  
-  const newMenu = menu.cloneNode(true);
-  menu.parentNode.replaceChild(newMenu, menu);
-  
-  const freshBtn = $('#threeDotsBtn');
-  const freshMenu = $('#threeDotsMenu');
+  console.log('✅ Three dots menu initialized');
   
   // Tıklama eventi
-  freshBtn.addEventListener('click', (e) => {
+  btn.addEventListener('click', (e) => {
     e.stopPropagation();
     e.preventDefault();
-    freshMenu.classList.toggle('hidden');
-    console.log('Menu toggled:', !freshMenu.classList.contains('hidden'));
+    menu.classList.toggle('hidden');
+    console.log('Menu toggled:', !menu.classList.contains('hidden'));
   });
   
   // Dışarı tıklama ile kapat
   document.addEventListener('click', (e) => {
-    if (!freshMenu.contains(e.target) && !freshBtn.contains(e.target)) {
-      freshMenu.classList.add('hidden');
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.add('hidden');
     }
   });
   
@@ -652,7 +494,7 @@ const router = {
   },
   init() {
     window.addEventListener('hashchange', () => this.navigate());
-    $('#menuToggle, #menuToggle2')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
+    $('#menuToggle')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
     if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
     else this.navigate();
   },
@@ -690,13 +532,6 @@ async function renderDashboard() {
 
     c.innerHTML = `
       <div class="space-y-6 page-enter">
-        <div class="glass-card rounded-2xl p-4 text-center bg-gradient-to-r from-primary-500/10 to-secondary-500/10">
-          <p class="text-sm text-zinc-500">Advertisement</p>
-          <div class="h-20 flex items-center justify-center">
-            <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:728px; height:90px; border:0px; padding:0; overflow:hidden; max-width:100%;" allowtransparency="true"></iframe>
-          </div>
-        </div>
-        
         <div class="flex items-center justify-between">
           <div>
             <p class="text-zinc-500 text-sm">Welcome back,</p>
@@ -771,7 +606,6 @@ async function handleClaim() {
     if (typeof grecaptcha !== 'undefined') {
       try { 
         token = await getRecaptchaToken('claim');
-        console.log('Claim reCAPTCHA:', token ? '✅' : '❌');
       } catch(e) {
         console.warn('reCAPTCHA claim error:', e);
       }
@@ -849,16 +683,9 @@ async function renderPtc() {
           <p class="text-sm text-zinc-500 mb-4">Earn 5 CNX</p>
           <button onclick="viewPtcAd('ptc1')" class="btn-primary w-full">View Ad</button>
         </div>
-        <div class="glass-card rounded-2xl p-6 text-center">
-          <div class="w-16 h-16 rounded-full bg-secondary-500/20 mx-auto mb-4 flex items-center justify-center">🎯</div>
-          <h3 class="font-bold text-lg mb-2">Ad #2</h3>
-          <p class="text-sm text-zinc-500 mb-4">Earn 3 CNX</p>
-          <button onclick="viewPtcAd('ptc2')" class="btn-primary w-full">View Ad</button>
-        </div>
       </div>
     </div>
   `;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 window.viewPtcAd = async (adId) => {
@@ -934,7 +761,7 @@ function renderWithdraw() {
     const card = document.createElement('div');
     card.className = 'coin-card group';
     card.innerHTML = `
-      <div class="w-12 h-12 rounded-full flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <div class="w-14 h-14 rounded-full flex items-center justify-center font-black text-white text-2xl mb-4 shadow-lg" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="mb-4">
@@ -1093,9 +920,7 @@ window.openGame = (game) => {
   if (!container || !frame) return;
   
   const gameUrls = {
-    dice: 'https://www.freeonlinegames.com/embed/dice-game',
-    coinflip: 'https://www.freeonlinegames.com/embed/coin-flip',
-    wheel: 'https://www.freeonlinegames.com/embed/wheel-of-fortune'
+    dice: 'https://www.freeonlinegames.com/embed/dice-game'
   };
   
   frame.src = gameUrls[game] || '';
@@ -1136,41 +961,19 @@ function updateSwapUI() {
     const finalAmount = toAmount - fee;
     
     if ($('#swapRate')) $('#swapRate').textContent = `1 ${fromCoin} = ${(fromPrice / toPrice).toFixed(6)} ${toCoin}`;
-    if ($('#swapFee')) $('#swapFee').textContent = `${fee.toFixed(6)} ${toCoin}`;
     if ($('#swapFinalAmount')) $('#swapFinalAmount').textContent = `${finalAmount.toFixed(6)} ${toCoin}`;
-    if ($('#swapToAmount')) $('#swapToAmount').textContent = finalAmount.toFixed(6);
   } else {
     if ($('#swapRate')) $('#swapRate').textContent = '—';
-    if ($('#swapFee')) $('#swapFee').textContent = '—';
     if ($('#swapFinalAmount')) $('#swapFinalAmount').textContent = '—';
-    if ($('#swapToAmount')) $('#swapToAmount').textContent = '0';
   }
-  
-  // Update balances
-  if (state.profile) {
-    const fromBal = fromCoin === 'CNX' ? state.profile.cnx || 0 : state.profile.balances?.[fromCoin] || 0;
-    if ($('#swapFromBalance')) $('#swapFromBalance').textContent = fromBal.toFixed(4);
-  }
-  
-  // Update icons
-  if ($('#swapFromIcon')) $('#swapFromIcon').src = `/coins/${fromCoin.toLowerCase()}.png`;
-  if ($('#swapToIcon')) $('#swapToIcon').src = `/coins/${toCoin.toLowerCase()}.png`;
 }
 
 function renderSwap() {
   loadSwapRates();
   
-  $('#swapFromCoin')?.addEventListener('change', () => {
-    updateSwapUI();
-  });
-  
-  $('#swapToCoin')?.addEventListener('change', () => {
-    updateSwapUI();
-  });
-  
-  $('#swapFromAmount')?.addEventListener('input', () => {
-    updateSwapUI();
-  });
+  $('#swapFromCoin')?.addEventListener('change', updateSwapUI);
+  $('#swapToCoin')?.addEventListener('change', updateSwapUI);
+  $('#swapFromAmount')?.addEventListener('input', updateSwapUI);
   
   $('#swapReverseBtn')?.addEventListener('click', () => {
     const fromCoin = $('#swapFromCoin');
@@ -1216,14 +1019,12 @@ function renderSwap() {
 
 // ============ INIT ============
 document.addEventListener('DOMContentLoaded', async () => {
-  await checkMaintenance();
+  // ADBLOCK DETECTION
+  const isAdBlocked = await detectAdBlock();
   
-  const hasEmailAction = await handleEmailAction();
-  
-  if (!hasEmailAction) {
+  if (!isAdBlocked) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     initLanding();
-    initCookieConsent();
   }
   
   console.log('⚡ CoinixFaucet ready');
