@@ -1,8 +1,15 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+  getAuth, 
+  applyActionCode,
+  checkActionCode,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
+  sendPasswordResetEmail,
+  sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Config - SİZİN VERDİĞİNİZ
 const firebaseConfig = {
   apiKey: "AIzaSyC_jba0EPxo-eN9Y3GRNkKyGQZS3wYXnE0",
   authDomain: "coinixfaucet.firebaseapp.com",
@@ -16,6 +23,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Email action handlers
+export {
+  applyActionCode,
+  checkActionCode,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
+  sendPasswordResetEmail,
+  sendEmailVerification
+};
 
 export const COL = {
   users: 'users',
