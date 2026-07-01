@@ -73,6 +73,61 @@ body {
   border-color: rgba(63, 63, 70, 0.3);
 }
 
+.dark .landing-header {
+  background: rgba(24, 24, 27, 0.8);
+  border-color: rgba(63, 63, 70, 0.3);
+}
+
+.dark .auth-modal-content {
+  background: #18181b;
+}
+
+.dark .toast {
+  background: #18181b;
+}
+
+.dark .claim-btn-inner {
+  background: #18181b;
+}
+
+.dark .faq-item[open] summary {
+  border-color: rgba(63, 63, 70, 0.3);
+}
+
+.dark .faq-item p {
+  color: #a1a1aa;
+}
+
+.dark .label {
+  color: #a1a1aa;
+}
+
+.dark .landing-nav-link {
+  color: #a1a1aa;
+}
+
+.dark .nav-link {
+  color: #a1a1aa;
+}
+
+.dark .btn-ghost {
+  color: #f4f4f5;
+}
+
+.dark .stat-value {
+  color: #f4f4f5;
+}
+
+.dark #offerwallFrame,
+.dark #gameFrame {
+  background: #18181b;
+}
+
+.dark .ad-banner {
+  background: var(--glass-bg-dark);
+  border-color: var(--glass-border-dark);
+}
+
 /* ============================================ */
 /* 🪟 GLASSMORPHISM CARDS */
 /* ============================================ */
@@ -101,11 +156,6 @@ body {
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
-}
-
-.dark .stat-glass-card {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
 }
 
 .stat-glass-card::before {
@@ -143,10 +193,6 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   color: #18181b;
-}
-
-.dark .stat-value {
-  color: #f4f4f5;
 }
 
 /* ============================================ */
@@ -193,10 +239,6 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-}
-
-.dark .btn-ghost {
-  color: #f4f4f5;
 }
 
 .btn-ghost:hover {
@@ -251,10 +293,6 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.dark .label {
-  color: #a1a1aa;
-}
-
 /* ============================================ */
 /* 🏠 LANDING PAGE */
 /* ============================================ */
@@ -275,21 +313,12 @@ body {
   justify-content: space-between;
 }
 
-.dark .landing-header {
-  background: rgba(24, 24, 27, 0.8);
-  border-color: rgba(63, 63, 70, 0.3);
-}
-
 .landing-nav-link {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   color: #52525b;
   font-weight: 500;
   transition: all 0.2s ease;
-}
-
-.dark .landing-nav-link {
-  color: #a1a1aa;
 }
 
 .landing-nav-link:hover {
@@ -305,11 +334,6 @@ body {
   border-radius: 1rem;
   padding: 1.5rem;
   text-align: center;
-}
-
-.dark .stat-card {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
 }
 
 .stat-card .stat-label {
@@ -337,11 +361,6 @@ body {
   border-radius: 1.5rem;
   padding: 2rem;
   transition: all 0.3s ease;
-}
-
-.dark .feature-card {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
 }
 
 .feature-card:hover {
@@ -376,11 +395,6 @@ body {
   transition: all 0.3s ease;
 }
 
-.dark .coin-landing-card {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
-}
-
 .coin-landing-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
@@ -393,11 +407,6 @@ body {
   border: 1px solid var(--glass-border-light);
   border-radius: 1rem;
   overflow: hidden;
-}
-
-.dark .faq-item {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
 }
 
 .faq-item summary {
@@ -418,18 +427,10 @@ body {
   border-bottom: 1px solid rgba(228, 228, 231, 0.3);
 }
 
-.dark .faq-item[open] summary {
-  border-color: rgba(63, 63, 70, 0.3);
-}
-
 .faq-item p {
   padding: 1.5rem;
   color: #71717a;
   line-height: 1.6;
-}
-
-.dark .faq-item p {
-  color: #a1a1aa;
 }
 
 /* ============================================ */
@@ -448,11 +449,6 @@ body {
   z-index: 90;
   overflow-y: auto;
   transition: transform 0.3s ease;
-}
-
-.dark .sidebar {
-  background: rgba(24, 24, 27, 0.95);
-  border-color: rgba(63, 63, 70, 0.3);
 }
 
 @media (max-width: 1024px) {
@@ -475,10 +471,6 @@ body {
   font-weight: 500;
   transition: all 0.2s ease;
   text-decoration: none;
-}
-
-.dark .nav-link {
-  color: #a1a1aa;
 }
 
 .nav-link:hover {
@@ -504,11 +496,6 @@ body {
   position: sticky;
   top: 0;
   z-index: 80;
-}
-
-.dark .top-nav {
-  background: rgba(24, 24, 27, 0.95);
-  border-color: rgba(63, 63, 70, 0.3);
 }
 
 /* ============================================ */
@@ -542,10 +529,6 @@ body {
   padding: 2rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: modalSlideIn 0.3s ease;
-}
-
-.dark .auth-modal-content {
-  background: #18181b;
 }
 
 @keyframes modalSlideIn {
@@ -611,12 +594,8 @@ body {
   gap: 0.5rem;
 }
 
-.dark .claim-btn-inner {
-  background: #18181b;
-}
-
 /* ============================================ */
-/* 🏷️ BADGES */
+/* ️ BADGES */
 /* ============================================ */
 
 .badge {
@@ -652,11 +631,6 @@ body {
   transition: all 0.3s ease;
 }
 
-.dark .coin-card {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
-}
-
 .coin-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
@@ -676,10 +650,6 @@ body {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   animation: toastSlideIn 0.3s ease;
   min-width: 300px;
-}
-
-.dark .toast {
-  background: #18181b;
 }
 
 .toast.success {
@@ -764,7 +734,7 @@ body {
 }
 
 /* ============================================ */
-/* 📧 EMAIL ACTION PAGE */
+/*  EMAIL ACTION PAGE */
 /* ============================================ */
 
 #emailActionPage {
@@ -795,11 +765,6 @@ body {
   border-radius: 1.5rem;
 }
 
-.dark #offerwallFrame,
-.dark #gameFrame {
-  background: #18181b;
-}
-
 /* ============================================ */
 /* 📢 ADVERTISEMENT AREAS */
 /* ============================================ */
@@ -818,17 +783,13 @@ body {
   justify-content: center;
 }
 
-.dark .ad-banner {
-  background: var(--glass-bg-dark);
-  border-color: var(--glass-border-dark);
-}
-
 /* ============================================ */
 /* 🔘 THREE DOTS MENU */
 /* ============================================ */
 
 #threeDotsMenu {
   animation: menuFadeIn 0.2s ease;
+  z-index: 200;
 }
 
 @keyframes menuFadeIn {
@@ -840,6 +801,11 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+#threeDotsBtn {
+  position: relative;
+  z-index: 201;
 }
 
 /* ============================================ */
