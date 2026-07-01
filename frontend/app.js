@@ -21,7 +21,7 @@ const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const now = () => Date.now();
 const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&', '<':'<', '>':'>', '"':'"', "'":'' }[c]));
 
-// DARK MODE
+// ============ DARK MODE ============
 function getDarkMode() { return localStorage.getItem('darkMode') === 'true'; }
 function setDarkMode(isDark) {
   localStorage.setItem('darkMode', isDark);
@@ -39,7 +39,7 @@ function updateDarkModeIcons() {
 }
 if (getDarkMode()) document.documentElement.classList.add('dark');
 
-// TOAST
+// ============ TOAST ============
 function toast(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
@@ -50,7 +50,7 @@ function toast(msg, type = 'info') {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// API
+// ============ API ============
 async function apiCall(endpoint, options = {}) {
   const user = auth.currentUser;
   if (!user) throw new Error('Not authenticated');
@@ -66,7 +66,37 @@ async function apiCall(endpoint, options = {}) {
 
 const state = { user: null, profile: null };
 
-// LANDING
+// ============ COOKIE CONSENT ============
+function initCookieConsent() {
+  if (localStorage.getItem('cookiesAccepted')) {
+    $('#cookieConsent')?.classList.add('hidden');
+    return;
+  }
+  $('#cookieConsent')?.classList.remove('hidden');
+  $('#acceptCookies')?.addEventListener('click', () => {
+    localStorage.setItem('cookiesAccepted', 'true');
+    $('#cookieConsent')?.classList.add('hidden');
+  });
+}
+
+// ============ MAINTENANCE MODE ============
+async function checkMaintenance() {
+  try {
+    const res = await fetch('/api/maintenance');
+    const data = await res.json();
+    if (data.enabled) {
+      $('#maintenanceMode')?.classList.remove('hidden');
+      $('#landingPage')?.classList.add('hidden');
+      $('#appShell')?.classList.add('hidden');
+    } else {
+      $('#maintenanceMode')?.classList.add('hidden');
+    }
+  } catch (e) {
+    console.error('Maintenance check error:', e);
+  }
+}
+
+// ============ LANDING ============
 function initLanding() {
   $('#darkModeToggle')?.addEventListener('click', toggleDarkMode);
   $('#darkModeToggle2')?.addEventListener('click', toggleDarkMode);
@@ -93,7 +123,7 @@ function renderLandingCoins() {
     const card = document.createElement('div');
     card.className = 'coin-landing-card group';
     card.innerHTML = `
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <div class="w-12 h-12 rounded-full flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="space-y-2 text-sm">
@@ -148,7 +178,7 @@ async function loadLiveWithdraws() {
   } catch (e) { console.error('Withdraws error:', e); }
 }
 
-// AUTH
+// ============ AUTH ============
 let authMode = 'login';
 
 function openAuthModal(mode = 'login') {
@@ -177,7 +207,7 @@ $('#closeAuthModal')?.addEventListener('click', closeAuthModal);
 document.querySelector('#authModal .auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
 $$('[data-auth-tab]').forEach(btn => btn.addEventListener('click', () => { authMode = btn.dataset.authTab; updateAuthModalUI(); }));
 
-// RECAPTCHA
+// ============ RECAPTCHA ============
 async function getRecaptchaToken(action = 'login') {
   if (typeof grecaptcha === 'undefined') {
     console.warn('reCAPTCHA not loaded');
@@ -216,7 +246,7 @@ async function getRecaptchaToken(action = 'login') {
   });
 }
 
-// AUTH FORM
+// ============ AUTH FORM ============
 $('#authForm')?.addEventListener('submit', async e => {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -262,6 +292,7 @@ $('#authForm')?.addEventListener('submit', async e => {
         referralCode: refCode,
         referredBy: referral || null,
         balances: Object.fromEntries(COINS.map(c => [c, 0])),
+        cnx: 0,
         totalWithdrawn: 0,
         referralEarnings: 0,
         referralCount: 0,
@@ -288,7 +319,7 @@ $('#authForm')?.addEventListener('submit', async e => {
   }
 });
 
-// FORGOT PASSWORD
+// ============ FORGOT PASSWORD ============
 $('#forgotPasswordBtn')?.addEventListener('click', () => {
   closeAuthModal();
   setTimeout(() => {
@@ -330,7 +361,7 @@ $('#forgotPasswordForm')?.addEventListener('submit', async (e) => {
   }
 });
 
-// EMAIL ACTION
+// ============ EMAIL ACTION ============
 async function handleEmailAction() {
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode');
@@ -429,34 +460,63 @@ async function handleEmailAction() {
   }
 }
 
-// AUTH STATE
+// ============ AUTH STATE ============
 onAuthStateChanged(auth, async user => {
+  console.log('🔐 Auth state changed:', user?.email || 'No user');
+  
   if (user) {
     state.user = user;
     await reload(user);
+    
     const snap = await getDoc(doc(db, COL.users, user.uid));
-    if (!snap.exists()) { await signOut(auth); return; }
+    if (!snap.exists()) { 
+      console.error('❌ User document not found');
+      await signOut(auth); 
+      return; 
+    }
+    
     state.profile = snap.data();
+    console.log('✅ User loaded:', state.profile.username);
+    
     state.unsubProfile?.();
     state.unsubProfile = onSnapshot(doc(db, COL.users, user.uid), s => {
-      if (s.exists()) { state.profile = s.data(); updateTopBar(); }
+      if (s.exists()) { 
+        state.profile = s.data(); 
+        updateTopBar(); 
+      }
     });
 
-    if ($('#landingPage')) $('#landingPage').classList.add('hidden');
-    if ($('#appShell')) $('#appShell').classList.remove('hidden');
+    const landing = $('#landingPage');
+    const appShell = $('#appShell');
+    
+    if (landing) landing.classList.add('hidden');
+    if (appShell) {
+      appShell.classList.remove('hidden');
+      console.log('✅ App shell shown');
+    }
     if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
 
-    if (typeof lucide !== 'undefined') lucide.createIcons();
     router.init();
     updateTopBar();
     initThreeDotsMenu();
+    
+    if (!location.hash || location.hash === '#/') {
+      location.hash = '#/dashboard';
+    } else {
+      router.navigate();
+    }
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   } else {
     state.user = null;
     state.profile = null;
     state.unsubProfile?.();
 
-    if ($('#landingPage')) $('#landingPage').classList.remove('hidden');
-    if ($('#appShell')) $('#appShell').classList.add('hidden');
+    const landing = $('#landingPage');
+    const appShell = $('#appShell');
+    
+    if (landing) landing.classList.remove('hidden');
+    if (appShell) appShell.classList.add('hidden');
     if ($('#emailActionPage')) $('#emailActionPage').classList.add('hidden');
 
     updateTopBar();
@@ -468,7 +528,6 @@ function updateTopBar() {
   const heroBtns = $('#heroBtns');
 
   if (!state.profile) {
-    // Giriş yapmamış - Login/Signup butonlarını göster
     if (landingAuthBtns) {
       landingAuthBtns.innerHTML = `
         <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
@@ -495,7 +554,6 @@ function updateTopBar() {
     return;
   }
 
-  // Giriş yapmış - Dashboard butonu göster
   if (landingAuthBtns) {
     landingAuthBtns.innerHTML = `
       <button id="landingDashboardBtn" class="btn-primary text-sm">
@@ -533,31 +591,21 @@ function updateTopBar() {
 
 $('#logoutBtn')?.addEventListener('click', async () => { await signOut(auth); toast('Signed out', 'info'); });
 
-// ÜÇ NOKTA MENÜSÜ
+// ============ THREE DOTS MENU ============
 function initThreeDotsMenu() {
   const btn = $('#threeDotsBtn');
   const menu = $('#threeDotsMenu');
   
   if (!btn || !menu) return;
   
-  // Eski event listener'ları temizle
-  const newBtn = btn.cloneNode(true);
-  btn.parentNode.replaceChild(newBtn, btn);
-  
-  const newMenu = menu.cloneNode(true);
-  menu.parentNode.replaceChild(newMenu, menu);
-  
-  const freshBtn = $('#threeDotsBtn');
-  const freshMenu = $('#threeDotsMenu');
-  
-  freshBtn.addEventListener('click', (e) => {
+  btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    freshMenu.classList.toggle('hidden');
+    menu.classList.toggle('hidden');
   });
   
   document.addEventListener('click', (e) => {
-    if (!freshMenu.contains(e.target) && !freshBtn.contains(e.target)) {
-      freshMenu.classList.add('hidden');
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.add('hidden');
     }
   });
   
@@ -569,7 +617,7 @@ function initThreeDotsMenu() {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// ROUTER
+// ============ ROUTER ============
 const router = {
   routes: {
     dashboard: renderDashboard,
@@ -582,7 +630,8 @@ const router = {
     transactions: renderTransactions,
     settings: renderSettings,
     offerwall: renderOfferwall,
-    games: renderGames
+    games: renderGames,
+    swap: renderSwap
   },
   init() {
     window.addEventListener('hashchange', () => this.navigate());
@@ -613,7 +662,7 @@ const router = {
 };
 window.router = router;
 
-// PAGES
+// ============ PAGES ============
 async function renderDashboard() {
   if (!state.profile) return;
   try {
@@ -868,7 +917,7 @@ function renderWithdraw() {
     const card = document.createElement('div');
     card.className = 'coin-card group';
     card.innerHTML = `
-      <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
+      <div class="w-12 h-12 rounded-full flex items-center justify-center font-black text-white text-xl mb-4" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
       <h3 class="text-xl font-bold mb-1">${m.name}</h3>
       <p class="text-sm text-zinc-500 mb-4">${coin}</p>
       <div class="mb-4">
@@ -1037,13 +1086,127 @@ window.openGame = (game) => {
   container.scrollIntoView({ behavior: 'smooth' });
 };
 
-// INIT
+// ============ SWAP ============
+let swapRates = null;
+
+async function loadSwapRates() {
+  try {
+    const res = await fetch('/api/swap/rates');
+    const data = await res.json();
+    if (data.success) {
+      swapRates = data.rates;
+      updateSwapUI();
+    }
+  } catch (e) {
+    console.error('Swap rates error:', e);
+  }
+}
+
+function updateSwapUI() {
+  if (!swapRates) return;
+  
+  const fromCoin = $('#swapFromCoin')?.value || 'CNX';
+  const toCoin = $('#swapToCoin')?.value || 'PEPE';
+  const fromAmount = parseFloat($('#swapFromAmount')?.value) || 0;
+  
+  const fromPrice = swapRates[fromCoin]?.usd || 0;
+  const toPrice = swapRates[toCoin]?.usd || 0;
+  
+  if (fromPrice && toPrice && fromAmount > 0) {
+    const fromUSD = fromAmount * fromPrice;
+    const toAmount = fromUSD / toPrice;
+    const fee = toAmount * 0.02;
+    const finalAmount = toAmount - fee;
+    
+    if ($('#swapRate')) $('#swapRate').textContent = `1 ${fromCoin} = ${(fromPrice / toPrice).toFixed(6)} ${toCoin}`;
+    if ($('#swapFee')) $('#swapFee').textContent = `${fee.toFixed(6)} ${toCoin}`;
+    if ($('#swapFinalAmount')) $('#swapFinalAmount').textContent = `${finalAmount.toFixed(6)} ${toCoin}`;
+    if ($('#swapToAmount')) $('#swapToAmount').textContent = finalAmount.toFixed(6);
+  } else {
+    if ($('#swapRate')) $('#swapRate').textContent = '—';
+    if ($('#swapFee')) $('#swapFee').textContent = '—';
+    if ($('#swapFinalAmount')) $('#swapFinalAmount').textContent = '—';
+    if ($('#swapToAmount')) $('#swapToAmount').textContent = '0';
+  }
+  
+  // Update balances
+  if (state.profile) {
+    const fromBal = fromCoin === 'CNX' ? state.profile.cnx || 0 : state.profile.balances?.[fromCoin] || 0;
+    if ($('#swapFromBalance')) $('#swapFromBalance').textContent = fromBal.toFixed(4);
+  }
+  
+  // Update icons
+  if ($('#swapFromIcon')) $('#swapFromIcon').src = `/coins/${fromCoin.toLowerCase()}.png`;
+  if ($('#swapToIcon')) $('#swapToIcon').src = `/coins/${toCoin.toLowerCase()}.png`;
+}
+
+function renderSwap() {
+  loadSwapRates();
+  
+  $('#swapFromCoin')?.addEventListener('change', () => {
+    updateSwapUI();
+  });
+  
+  $('#swapToCoin')?.addEventListener('change', () => {
+    updateSwapUI();
+  });
+  
+  $('#swapFromAmount')?.addEventListener('input', () => {
+    updateSwapUI();
+  });
+  
+  $('#swapReverseBtn')?.addEventListener('click', () => {
+    const fromCoin = $('#swapFromCoin');
+    const toCoin = $('#swapToCoin');
+    const temp = fromCoin.value;
+    fromCoin.value = toCoin.value;
+    toCoin.value = temp;
+    updateSwapUI();
+  });
+  
+  $('#swapExecuteBtn')?.addEventListener('click', async () => {
+    const fromCoin = $('#swapFromCoin')?.value;
+    const toCoin = $('#swapToCoin')?.value;
+    const amount = parseFloat($('#swapFromAmount')?.value);
+    
+    if (!fromCoin || !toCoin || !amount || amount <= 0) {
+      toast('Invalid swap parameters', 'error');
+      return;
+    }
+    
+    if (fromCoin === toCoin) {
+      toast('Cannot swap same coin', 'error');
+      return;
+    }
+    
+    if (!confirm(`Swap ${amount} ${fromCoin} to ${toCoin}?`)) return;
+    
+    try {
+      const data = await apiCall('/api/swap', { 
+        method: 'POST', 
+        body: JSON.stringify({ fromCoin, toCoin, amount }) 
+      });
+      toast(`Swapped ${data.fromAmount} ${data.fromCoin} to ${data.toAmount.toFixed(6)} ${data.toCoin}!`, 'success');
+      $('#swapFromAmount').value = '';
+      updateSwapUI();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  });
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ============ INIT ============
 document.addEventListener('DOMContentLoaded', async () => {
+  await checkMaintenance();
+  
   const hasEmailAction = await handleEmailAction();
   
   if (!hasEmailAction) {
     if (typeof lucide !== 'undefined') lucide.createIcons();
     initLanding();
+    initCookieConsent();
   }
   
   console.log('⚡ CoinixFaucet ready');
