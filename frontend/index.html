@@ -1,249 +1,412 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CoinixFaucet — Earn Free BTC, DOGE, DGB, POL & FEY</title>
-<meta name="description" content="Premium cryptocurrency faucet. Earn free BTC, DOGE, DGB, FEY & POL every 60 seconds." />
-<meta name="google-site-verification" content="M_3TVujcb-QO4_nYZk8-vNeZfb-9BwrOVlJAy7CSRjM" />
-<link rel="manifest" href="/manifest.json" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237C3AED'/%3E%3Cstop offset='1' stop-color='%2306B6D4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23g)'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-weight='800'%3EC%3C/text%3E%3C/svg%3E" />
-<script src="https://www.google.com/recaptcha/enterprise.js?render=6LctET4tAAAAAAGcqEdyQbF_gcTH57Dnxztlv2hN"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinixFaucet — Earn Free BTC, DOGE, DGB, POL & FEY</title>
+    <meta name="description" content="CoinixFaucet is a modern cryptocurrency faucet where users earn free crypto and instantly withdraw through FaucetPay.">
+    <link rel="canonical" href="https://coinixfaucet.mine.bz/">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        primary: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(245, 158, 11, 0.3)' },
+                            '100%': { boxShadow: '0 0 40px rgba(245, 158, 11, 0.6)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
-<body class="bg-[#09090B] text-white font-['Inter'] antialiased">
+<body class="font-sans antialiased bg-gray-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
 
-<!-- LANDING PAGE -->
-<div id="landingPage">
-  <header class="landing-header">
-    <a href="#/" class="flex items-center gap-2.5">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center text-lg font-black shadow-lg shadow-purple-500/40">C</div>
-      <div><div class="font-bold text-sm">CoinixFaucet</div><div class="text-[10px] text-zinc-500">Premium Faucet</div></div>
-    </a>
-    <nav class="landing-nav hidden lg:flex items-center gap-1">
-      <a href="#home" class="landing-nav-link">Home</a>
-      <a href="#features" class="landing-nav-link">Features</a>
-      <a href="#statistics" class="landing-nav-link">Statistics</a>
-      <a href="#coins" class="landing-nav-link">Coins</a>
-      <a href="#faq" class="landing-nav-link">FAQ</a>
-    </nav>
-    <div class="flex items-center gap-2">
-      <button id="darkModeToggle" class="icon-btn"><span id="darkModeIcon" class="dark-mode-icon"><i data-lucide="moon" class="w-5 h-5"></i></span></button>
-      <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
-      <button id="openSignupBtn" class="btn-primary text-sm"><i data-lucide="sparkles" class="w-4 h-4"></i>Sign Up</button>
-    </div>
-  </header>
+    <!-- ============ LANDING PAGE ============ -->
+    <div id="landingPage">
+        <header class="landing-header bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-zinc-800">
+            <a href="#" class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black shadow-lg shadow-yellow-500/30">C</div>
+                <span class="font-bold text-xl text-zinc-900 dark:text-white">CoinixFaucet</span>
+            </a>
+            <nav class="hidden md:flex items-center gap-1">
+                <a href="#home" class="landing-nav-link">Home</a>
+                <a href="#features" class="landing-nav-link">Features</a>
+                <a href="#statistics" class="landing-nav-link">Statistics</a>
+                <a href="#coins" class="landing-nav-link">Coins</a>
+                <a href="#faq" class="landing-nav-link">FAQ</a>
+            </nav>
+            <div class="flex items-center gap-3">
+                <button id="darkModeToggle" class="icon-btn dark-mode-icon hover:scale-110 transition-transform"><i data-lucide="moon" class="w-5 h-5"></i></button>
+                <button id="openLoginBtn" class="btn-ghost text-sm open-auth-btn" data-mode="login">Login</button>
+                <button id="openSignupBtn" class="btn-primary text-sm open-auth-btn" data-mode="register">Sign Up</button>
+            </div>
+        </header>
 
-  <section id="home" class="relative min-h-[90vh] flex items-center justify-center px-6 pt-24 pb-16 overflow-hidden">
-    <div class="absolute inset-0 -z-10">
-      <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-3xl animate-pulse-slow"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow" style="animation-delay:2s"></div>
-    </div>
-    <div class="max-w-5xl mx-auto text-center relative">
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mb-6">
-        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-        <span class="text-xs font-medium text-zinc-300">Live · <span id="heroOnline">—</span> users online</span>
-      </div>
-      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.05]">
-        Earn Free <span class="bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">Cryptocurrency</span><br />Every Single Day
-      </h1>
-      <p class="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10">CoinixFaucet is a modern cryptocurrency faucet where users earn free crypto and instantly withdraw through <span class="text-white font-semibold">FaucetPay</span>.</p>
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button class="open-auth-btn btn-primary text-base px-8 py-4" data-mode="register"><i data-lucide="rocket" class="w-5 h-5"></i>Start Earning — It's Free</button>
-        <button class="open-auth-btn btn-ghost text-base px-8 py-4" data-mode="login"><i data-lucide="log-in" class="w-5 h-5"></i>Login</button>
-      </div>
-    </div>
-  </section>
+        <main class="pt-20">
+            <!-- HERO -->
+            <section id="home" class="relative pt-16 pb-24 px-4 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-purple-600/5 dark:from-yellow-500/10 dark:to-purple-600/10"></div>
+                <div class="absolute top-20 left-10 w-96 h-96 bg-purple-500/20 dark:bg-purple-500/30 rounded-full blur-3xl animate-float"></div>
+                <div class="absolute bottom-10 right-10 w-[500px] h-[500px] bg-yellow-500/20 dark:bg-yellow-500/30 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+                
+                <div class="relative max-w-5xl mx-auto text-center">
+                    <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs font-medium text-zinc-600 dark:text-zinc-300 mb-8 backdrop-blur-sm shadow-sm">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        Live · <span id="heroOnline" class="font-bold">—</span> users online
+                    </div>
+                    <h1 class="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight mb-6 text-zinc-900 dark:text-white">
+                        Earn Free Cryptocurrency<br>
+                        <span class="bg-gradient-to-r from-yellow-400 via-orange-500 to-purple-600 bg-clip-text text-transparent">Every Single Day</span>
+                    </h1>
+                    <p class="text-lg sm:text-xl text-zinc-600 dark:text-zinc-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+                        CoinixFaucet is a modern cryptocurrency faucet where users earn free crypto and instantly withdraw through FaucetPay.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button class="btn-primary text-base px-10 py-5 open-auth-btn shadow-2xl shadow-yellow-500/40 hover:shadow-yellow-500/60" data-mode="register">
+                            <i data-lucide="zap" class="w-5 h-5"></i>
+                            Start Earning — It's Free
+                        </button>
+                        <button class="btn-ghost text-base px-10 py-5 open-auth-btn" data-mode="login">Login</button>
+                    </div>
+                </div>
+            </section>
 
-  <section id="statistics" class="px-6 py-20">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-semibold text-purple-300 mb-4">LIVE STATISTICS</div>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">Real-Time Platform Data</h2>
-        <p class="text-zinc-400">All numbers are live from our database. No fake stats.</p>
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div class="stat-glass-card"><div class="stat-icon purple"><i data-lucide="users"></i></div><div class="stat-label">Registered Users</div><div class="stat-value" id="statUsers">—</div></div>
-        <div class="stat-glass-card"><div class="stat-icon green"><i data-lucide="mouse-pointer-click"></i></div><div class="stat-label">Total Claims</div><div class="stat-value" id="statClaims">—</div></div>
-        <div class="stat-glass-card"><div class="stat-icon cyan"><i data-lucide="wallet"></i></div><div class="stat-label">Total Paid Out</div><div class="stat-value" id="statPaid">—</div></div>
-        <div class="stat-glass-card"><div class="stat-icon yellow"><i data-lucide="trending-up"></i></div><div class="stat-label">Avg Claim</div><div class="stat-value" id="statAvg">—</div></div>
-        <div class="stat-glass-card"><div class="stat-icon blue"><i data-lucide="gift"></i></div><div class="stat-label">Referral Rewards</div><div class="stat-value" id="statRef">—</div></div>
-      </div>
-    </div>
-  </section>
+            <!-- STATS -->
+            <section id="statistics" class="py-24 px-4 bg-gradient-to-b from-gray-50 to-white dark:from-zinc-950 dark:to-zinc-900">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-16">
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-bold uppercase tracking-wider mb-4">Live Data</div>
+                        <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">LIVE STATISTICS</h2>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">Real-Time Platform Data</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-500 mt-2">All numbers are live from our database. No fake stats.</p>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="stat-glass-card text-center group">
+                            <div class="stat-icon yellow mx-auto group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-5 h-5"></i></div>
+                            <div class="stat-label">Registered Users</div>
+                            <div class="stat-value" id="statUsers">—</div>
+                        </div>
+                        <div class="stat-glass-card text-center group">
+                            <div class="stat-icon purple mx-auto group-hover:scale-110 transition-transform"><i data-lucide="droplets" class="w-5 h-5"></i></div>
+                            <div class="stat-label">Total Claims</div>
+                            <div class="stat-value" id="statClaims">—</div>
+                        </div>
+                        <div class="stat-glass-card text-center group">
+                            <div class="stat-icon green mx-auto group-hover:scale-110 transition-transform"><i data-lucide="wallet" class="w-5 h-5"></i></div>
+                            <div class="stat-label">Total Paid Out</div>
+                            <div class="stat-value" id="statPaid">—</div>
+                        </div>
+                        <div class="stat-glass-card text-center group">
+                            <div class="stat-icon cyan mx-auto group-hover:scale-110 transition-transform"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+                            <div class="stat-label">Avg Claim</div>
+                            <div class="stat-value" id="statAvg">—</div>
+                        </div>
+                        <div class="stat-glass-card text-center group">
+                            <div class="stat-icon blue mx-auto group-hover:scale-110 transition-transform"><i data-lucide="gift" class="w-5 h-5"></i></div>
+                            <div class="stat-label">Referral Rewards</div>
+                            <div class="stat-value" id="statRef">—</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-  <section class="px-6 py-20">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="inline-block px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-xs font-semibold text-green-300 mb-4">LIVE FEED</div>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">Recent Withdrawals</h2>
-        <p class="text-zinc-400">Real users. Real payouts. Scroll to see more.</p>
-      </div>
-      <div class="glass-card rounded-3xl overflow-hidden">
-        <div class="live-withdraws-scroll-vertical">
-          <table class="w-full">
-            <thead class="sticky top-0 bg-[#18181B]/95 backdrop-blur-xl z-10">
-              <tr class="border-b border-white/5 text-left text-xs uppercase text-zinc-500">
-                <th class="p-3 font-semibold">User</th>
-                <th class="p-3 font-semibold">Coin</th>
-                <th class="p-3 font-semibold">Amount</th>
-                <th class="p-3 font-semibold">USD</th>
-                <th class="p-3 font-semibold">Time</th>
-                <th class="p-3 font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody id="withdrawsBody"></tbody>
-          </table>
-          <div id="withdrawsLoading" class="p-8 text-center text-zinc-500">Loading withdrawals...</div>
+            <!-- FEATURES -->
+            <section id="features" class="py-24 px-4 bg-white dark:bg-zinc-900">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-16">
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider mb-4">Features</div>
+                        <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">WHY CHOOSE US</h2>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">Built Different. Built Better.</p>
+                    </div>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="feature-card group">
+                            <div class="feature-icon yellow group-hover:scale-110 transition-transform"><i data-lucide="zap" class="w-6 h-6"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Instant FaucetPay</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Get paid in seconds directly to your FaucetPay wallet.</p>
+                        </div>
+                        <div class="feature-card group">
+                            <div class="feature-icon purple group-hover:scale-110 transition-transform"><i data-lucide="layout-dashboard" class="w-6 h-6"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Premium Dashboard</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Track earnings, claims and referrals in a beautiful Web3 dashboard.</p>
+                        </div>
+                        <div class="feature-card group">
+                            <div class="feature-icon green group-hover:scale-110 transition-transform"><i data-lucide="clock" class="w-6 h-6"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Fast 60s Claims</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Claim free crypto every 60 seconds. No waiting.</p>
+                        </div>
+                        <div class="feature-card group">
+                            <div class="feature-icon cyan group-hover:scale-110 transition-transform"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Secure Platform</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">reCAPTCHA Enterprise, Firebase Auth, email verification.</p>
+                        </div>
+                        <div class="feature-card group">
+                            <div class="feature-icon blue group-hover:scale-110 transition-transform"><i data-lucide="calendar-check" class="w-6 h-6"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">Daily Bonus</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Claim every day to grow your streak up to 365 days.</p>
+                        </div>
+                        <div class="feature-card group">
+                            <div class="feature-icon yellow group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-6 h-6"></i></div>
+                            <h3 class="text-xl font-bold mb-2 text-zinc-900 dark:text-white">20% Referral Program</h3>
+                            <p class="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">Earn 20% from every claim your referrals make. Lifetime.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LIVE FEED -->
+            <section class="py-24 px-4 bg-gradient-to-b from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-950">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-16">
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-bold uppercase tracking-wider mb-4">Live Feed</div>
+                        <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">LIVE FEED</h2>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">Recent Withdrawals</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-500 mt-2">Real users. Real payouts. Scroll to see more.</p>
+                    </div>
+                    <div class="glass-card rounded-3xl overflow-hidden live-withdraws-scroll-vertical shadow-2xl">
+                        <table class="w-full">
+                            <thead class="bg-gray-100 dark:bg-white/5 sticky top-0 z-10">
+                                <tr>
+                                    <th class="text-left p-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">User</th>
+                                    <th class="text-left p-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Coin</th>
+                                    <th class="text-left p-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Amount</th>
+                                    <th class="text-left p-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">USD</th>
+                                    <th class="text-left p-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Time</th>
+                                    <th class="text-left p-4 text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="withdrawsBody">
+                                <tr><td colspan="6" class="p-8 text-center text-zinc-500">Loading withdrawals...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- COINS -->
+            <section id="coins" class="py-24 px-4 bg-gray-50 dark:bg-zinc-950">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-16">
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-xs font-bold uppercase tracking-wider mb-4">Coins</div>
+                        <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">SUPPORTED COINS</h2>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">5 Premium Cryptocurrencies</p>
+                    </div>
+                    <div id="landingCoinsGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </section>
+
+            <!-- FAQ -->
+            <section id="faq" class="py-24 px-4 bg-white dark:bg-zinc-900">
+                <div class="max-w-3xl mx-auto">
+                    <div class="text-center mb-16">
+                        <div class="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-bold uppercase tracking-wider mb-4">FAQ</div>
+                        <h2 class="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">FAQ</h2>
+                        <p class="text-zinc-600 dark:text-zinc-400 text-lg">Frequently Asked Questions</p>
+                    </div>
+                    <div class="space-y-3">
+                        <details class="faq-item">
+                            <summary>How do I claim crypto? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
+                            <p>Create a free account, verify your email, go to the Manual Faucet page and click Claim Reward every 60 seconds.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>How often can I claim? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
+                            <p>Every 60 seconds, 24/7. No daily limit.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>What is the minimum withdrawal? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
+                            <p>$0.03 across all supported coins.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>How long do withdrawals take? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
+                            <p>Instant via FaucetPay. Most users receive funds within seconds.</p>
+                        </details>
+                        <details class="faq-item">
+                            <summary>How do referrals work? <i data-lucide="chevron-down" class="w-5 h-5"></i></summary>
+                            <p>Share your referral link. Earn 20% of every claim your referrals make, for life.</p>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="py-12 px-4 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black shadow-lg shadow-yellow-500/30">C</div>
+                        <span class="font-bold text-xl text-zinc-900 dark:text-white">CoinixFaucet</span>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-500 dark:text-zinc-400">
+                        <a href="#home" class="hover:text-zinc-900 dark:hover:text-white transition">Home</a>
+                        <a href="#features" class="hover:text-zinc-900 dark:hover:text-white transition">Features</a>
+                        <a href="#faq" class="hover:text-zinc-900 dark:hover:text-white transition">FAQ</a>
+                        <a href="mailto:support@coinixfaucet.mine.bz" class="hover:text-zinc-900 dark:hover:text-white transition">Contact</a>
+                    </div>
+                    <div class="text-xs text-zinc-500 dark:text-zinc-500">
+                        © 2025 CoinixFaucet. All rights reserved.
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- ============ APP SHELL (DASHBOARD) ============ -->
+    <div id="appShell" class="hidden min-h-screen flex">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 flex flex-col h-screen sticky top-0 shadow-xl">
+            <div class="p-6 border-b border-gray-200 dark:border-zinc-800">
+                <a href="#/dashboard" class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black shadow-lg shadow-yellow-500/30">C</div>
+                    <span class="font-bold text-xl text-zinc-900 dark:text-white">CoinixFaucet</span>
+                </a>
+                <div class="text-xs text-zinc-500 dark:text-zinc-500 mt-1">Premium Web3 Faucet</div>
+            </div>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="#/dashboard" class="nav-link" data-route="dashboard"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+                <a href="#/faucet" class="nav-link" data-route="faucet"><i data-lucide="droplets" class="w-5 h-5"></i> Manual Faucet</a>
+                <a href="#/daily-bonus" class="nav-link" data-route="daily-bonus"><i data-lucide="gift" class="w-5 h-5"></i> Daily Bonus</a>
+                <a href="#/leaderboard" class="nav-link" data-route="leaderboard"><i data-lucide="trophy" class="w-5 h-5"></i> Leaderboard</a>
+                <a href="#/ptc" class="nav-link" data-route="ptc"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> PTC Ads</a>
+                <a href="#/referrals" class="nav-link" data-route="referrals"><i data-lucide="users" class="w-5 h-5"></i> Referrals</a>
+                <a href="#/withdraw" class="nav-link" data-route="withdraw"><i data-lucide="wallet" class="w-5 h-5"></i> Withdraw</a>
+                <a href="#/transactions" class="nav-link" data-route="transactions"><i data-lucide="receipt" class="w-5 h-5"></i> Transactions</a>
+                <a href="#/settings" class="nav-link" data-route="settings"><i data-lucide="settings" class="w-5 h-5"></i> Settings</a>
+            </nav>
+            <div class="p-4 border-t border-gray-200 dark:border-zinc-800">
+                <button id="logoutBtn" class="nav-link text-red-500 hover:bg-red-500/10 w-full"><i data-lucide="log-out" class="w-5 h-5"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="flex-1 flex flex-col min-h-screen overflow-hidden bg-gray-50 dark:bg-zinc-950">
+            <!-- Top Nav -->
+            <header class="top-nav bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl shadow-sm">
+                <div class="flex items-center gap-3">
+                    <button id="menuToggle" class="icon-btn hover:scale-110 transition-transform"><i data-lucide="menu" class="w-5 h-5"></i></button>
+                    <a href="#/dashboard" class="btn-primary text-sm hidden sm:inline-flex shadow-lg shadow-yellow-500/30"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard</a>
+                    <h1 id="pageTitle" class="text-xl font-bold text-zinc-900 dark:text-white">Dashboard</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right hidden sm:block">
+                        <div class="text-xs text-zinc-500 dark:text-zinc-400">Balance</div>
+                        <div id="topBalance" class="font-bold text-sm text-zinc-900 dark:text-white">$0.0000</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div id="profileAvatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-bold text-black text-sm shadow-lg shadow-yellow-500/30">U</div>
+                        <span id="profileName" class="font-semibold text-sm hidden sm:block text-zinc-900 dark:text-white">User</span>
+                    </div>
+                    <button id="darkModeToggle2" class="icon-btn dark-mode-icon hover:scale-110 transition-transform"><i data-lucide="moon" class="w-5 h-5"></i></button>
+                    <button id="logoutBtnTop" class="icon-btn hover:scale-110 transition-transform"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div id="pageContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"></div>
+        </main>
+    </div>
+
+    <!-- ============ AUTH MODAL ============ -->
+    <div id="authModal" class="auth-modal hidden">
+        <div class="auth-modal-backdrop"></div>
+        <div class="auth-modal-content">
+            <button id="closeAuthModal" class="absolute top-4 right-4 icon-btn hover:scale-110 transition-transform"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center font-black text-black text-2xl mx-auto mb-3 shadow-lg shadow-yellow-500/30">C</div>
+                <h2 id="authModalTitle" class="text-2xl font-bold text-zinc-900 dark:text-white">Welcome Back</h2>
+                <p class="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Sign in to continue</p>
+            </div>
+            <div class="flex p-1 bg-gray-100 dark:bg-white/5 rounded-xl mb-6">
+                <button data-auth-tab="login" class="auth-tab active flex-1 py-2 rounded-lg text-sm font-semibold transition">Sign In</button>
+                <button data-auth-tab="register" class="auth-tab flex-1 py-2 rounded-lg text-sm font-semibold transition">Create Account</button>
+            </div>
+            <form id="authForm" class="space-y-4">
+                <div id="usernameField" class="hidden">
+                    <label class="label">Username</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"></i>
+                        <input name="username" class="input-field" placeholder="johndoe" required minlength="3" />
+                    </div>
+                </div>
+                <div>
+                    <label class="label">Email</label>
+                    <div class="relative">
+                        <i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"></i>
+                        <input name="email" type="email" class="input-field" placeholder="you@example.com" required />
+                    </div>
+                </div>
+                <div>
+                    <label class="label">Password</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"></i>
+                        <input name="password" type="password" class="input-field" placeholder="••••••••" required minlength="6" />
+                    </div>
+                </div>
+                <div id="referralField" class="hidden">
+                    <label class="label">Referral Code (optional)</label>
+                    <div class="relative">
+                        <i data-lucide="gift" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"></i>
+                        <input name="referral" class="input-field" placeholder="ENTERCODE" />
+                    </div>
+                </div>
+                <button type="submit" id="authSubmit" class="btn-primary w-full mt-2 shadow-lg shadow-yellow-500/30">
+                    <span id="authBtnText">Sign In</span>
+                </button>
+            </form>
         </div>
-      </div>
     </div>
-  </section>
 
-  <section id="coins" class="px-6 py-20">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-semibold text-blue-300 mb-4">SUPPORTED COINS</div>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">5 Premium Cryptocurrencies</h2>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" id="landingCoinsGrid"></div>
-    </div>
-  </section>
-
-  <section id="features" class="px-6 py-20">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-semibold text-purple-300 mb-4">WHY CHOOSE US</div>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">Built Different. Built Better.</h2>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="feature-card"><div class="feature-icon purple"><i data-lucide="zap"></i></div><h3 class="font-bold mb-2">Instant FaucetPay</h3><p class="text-sm text-zinc-400">Get paid in seconds directly to your FaucetPay wallet.</p></div>
-        <div class="feature-card"><div class="feature-icon blue"><i data-lucide="layout-dashboard"></i></div><h3 class="font-bold mb-2">Premium Dashboard</h3><p class="text-sm text-zinc-400">Track earnings, claims and referrals in a beautiful Web3 dashboard.</p></div>
-        <div class="feature-card"><div class="feature-icon green"><i data-lucide="timer"></i></div><h3 class="font-bold mb-2">Fast 60s Claims</h3><p class="text-sm text-zinc-400">Claim free crypto every 60 seconds. No waiting.</p></div>
-        <div class="feature-card"><div class="feature-icon cyan"><i data-lucide="shield-check"></i></div><h3 class="font-bold mb-2">Secure Platform</h3><p class="text-sm text-zinc-400">reCAPTCHA Enterprise, Firebase Auth, email verification.</p></div>
-        <div class="feature-card"><div class="feature-icon yellow"><i data-lucide="calendar-check"></i></div><h3 class="font-bold mb-2">Daily Bonus</h3><p class="text-sm text-zinc-400">Claim every day to grow your streak up to 365 days.</p></div>
-        <div class="feature-card"><div class="feature-icon purple"><i data-lucide="users"></i></div><h3 class="font-bold mb-2">20% Referral Program</h3><p class="text-sm text-zinc-400">Earn 20% from every claim your referrals make. Lifetime.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section id="faq" class="px-6 py-20">
-    <div class="max-w-4xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="inline-block px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-xs font-semibold text-yellow-300 mb-4">FAQ</div>
-        <h2 class="text-4xl sm:text-5xl font-black mb-4">Frequently Asked Questions</h2>
-      </div>
-      <div class="space-y-3">
-        <details class="faq-item"><summary><span>How do I claim crypto?</span><i data-lucide="chevron-down"></i></summary><p>Create a free account, verify your email, go to the Manual Faucet page and click Claim Reward every 60 seconds.</p></details>
-        <details class="faq-item"><summary><span>How often can I claim?</span><i data-lucide="chevron-down"></i></summary><p>Every 60 seconds, 24/7. No daily limit.</p></details>
-        <details class="faq-item"><summary><span>What is the minimum withdrawal?</span><i data-lucide="chevron-down"></i></summary><p>$0.03 across all supported coins.</p></details>
-        <details class="faq-item"><summary><span>How long do withdrawals take?</span><i data-lucide="chevron-down"></i></summary><p>Instant via FaucetPay. Most users receive funds within seconds.</p></details>
-        <details class="faq-item"><summary><span>How do referrals work?</span><i data-lucide="chevron-down"></i></summary><p>Share your referral link. Earn 20% of every claim your referrals make, for life.</p></details>
-      </div>
-    </div>
-  </section>
-
-  <footer class="border-t border-white/5 px-6 py-12 mt-10">
-    <div class="max-w-7xl mx-auto">
-      <div class="grid md:grid-cols-4 gap-10 mb-12">
-        <div>
-          <div class="flex items-center gap-2.5 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center text-lg font-black">C</div>
-            <div class="font-bold">CoinixFaucet</div>
-          </div>
-          <p class="text-sm text-zinc-400">Premium crypto faucet. Earn free BTC, DOGE, DGB, FEY & POL with instant FaucetPay withdrawals.</p>
+    <!-- Faucet Sayfası İçin Template -->
+    <template id="tpl-faucet">
+        <div class="space-y-6 page-enter text-center">
+            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Manual Faucet</h1>
+            <p class="text-zinc-500 dark:text-zinc-400">Claim free CNX every 60 seconds.</p>
+            <div class="flex flex-col items-center gap-6 py-10">
+                <button id="claimBtn" class="claim-btn animate-glow">
+                    <div class="claim-btn-inner">
+                        <i data-lucide="droplets" class="w-10 h-10 text-yellow-500"></i>
+                        <span>Claim Reward</span>
+                        <span id="faucetCountdown" class="text-2xl font-mono text-zinc-400">00:00</span>
+                    </div>
+                </button>
+            </div>
         </div>
-        <div><h4 class="font-semibold mb-4 text-sm">Quick Links</h4><ul class="space-y-2 text-sm text-zinc-400"><li><a href="#home">Home</a></li><li><a href="#features">Features</a></li><li><a href="#statistics">Statistics</a></li><li><a href="#coins">Coins</a></li></ul></div>
-        <div><h4 class="font-semibold mb-4 text-sm">Support</h4><ul class="space-y-2 text-sm text-zinc-400"><li><a href="#faq">FAQ</a></li><li><a href="mailto:support@coinixfaucet.mine.bz">Contact</a></li></ul></div>
-        <div><h4 class="font-semibold mb-4 text-sm">Official Domain</h4><div class="p-3 rounded-xl bg-white/5 border border-white/5 text-xs text-zinc-400">coinixfaucet.mine.bz</div></div>
-      </div>
-      <div class="pt-8 border-t border-white/5 text-xs text-zinc-500 text-center">© 2025 CoinixFaucet. All rights reserved.</div>
-    </div>
-  </footer>
-</div>
+    </template>
 
-<!-- AUTH MODAL -->
-<div id="authModal" class="auth-modal hidden">
-  <div class="auth-modal-backdrop"></div>
-  <div class="auth-modal-content">
-    <button id="closeAuthModal" class="absolute top-4 right-4 icon-btn"><i data-lucide="x" class="w-4 h-4"></i></button>
-    <div class="flex items-center justify-center gap-2.5 mb-6">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center text-lg font-black">C</div>
-      <div><div class="font-bold text-sm">CoinixFaucet</div><div class="text-[10px] text-zinc-500">Premium Web3 Faucet</div></div>
-    </div>
-    <h2 class="text-2xl font-black mb-1 text-center" id="authModalTitle">Welcome Back</h2>
-    <p class="text-sm text-zinc-400 text-center mb-6" id="authModalSubtitle">Sign in to continue</p>
-    <div class="flex gap-1 p-1 bg-zinc-900/60 rounded-2xl mb-6">
-      <button data-auth-tab="login" class="auth-tab active flex-1 py-2.5 rounded-xl text-sm font-semibold">Sign In</button>
-      <button data-auth-tab="register" class="auth-tab flex-1 py-2.5 rounded-xl text-sm font-semibold">Create Account</button>
-    </div>
-    <form id="authForm" class="space-y-3">
-      <div id="usernameField" class="hidden"><label class="label">Username</label><div class="relative"><i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="text" name="username" class="input-field" placeholder="yourname" minlength="3" /></div></div>
-      <div><label class="label">Email</label><div class="relative"><i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="email" name="email" class="input-field" placeholder="you@email.com" required /></div></div>
-      <div id="passwordField"><label class="label">Password</label><div class="relative"><i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="password" name="password" class="input-field" placeholder="••••••••" minlength="6" required /></div></div>
-      <div id="referralField" class="hidden"><label class="label">Referral Code (optional)</label><div class="relative"><i data-lucide="gift" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i><input type="text" name="referral" class="input-field" placeholder="ABC123" /></div></div>
-      <button type="submit" id="authSubmit" class="btn-primary w-full mt-2"><span id="authBtnText">Sign In</span></button>
-    </form>
-  </div>
-</div>
+    <!-- Toast Container -->
+    <div id="toastRoot" class="fixed bottom-4 right-4 z-[200] space-y-2 pointer-events-none"></div>
 
-<!-- APP SHELL -->
-<div id="appShell" class="hidden min-h-screen flex">
-  <aside id="sidebar" class="sidebar hidden lg:flex flex-col w-64 h-screen sticky top-0 border-r border-white/5 bg-[#09090B]/80 backdrop-blur-xl">
-    <div class="p-6 flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-500 flex items-center justify-center font-black">C</div>
-      <div><h1 class="font-bold text-sm">CoinixFaucet</h1><p class="text-[10px] text-zinc-500">v2.0</p></div>
-    </div>
-    <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
-      <a href="#/dashboard" data-route="dashboard" class="nav-link"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
-      <a href="#/faucet" data-route="faucet" class="nav-link"><i data-lucide="droplets"></i><span>Manual Faucet</span></a>
-      <a href="#/daily-bonus" data-route="daily-bonus" class="nav-link"><i data-lucide="calendar-check"></i><span>Daily Bonus</span></a>
-      <a href="#/leaderboard" data-route="leaderboard" class="nav-link"><i data-lucide="trophy"></i><span>Leaderboard</span></a>
-      
-      <!-- AYRAÇ ||| -->
-      <hr class="border-white/10 my-2" />
-      
-      <a href="#/ptc" data-route="ptc" class="nav-link"><i data-lucide="mouse-pointer-click"></i><span>PTC Ads</span></a>
-      <a href="#/referrals" data-route="referrals" class="nav-link"><i data-lucide="users"></i><span>Referrals</span></a>
-      <a href="#/withdraw" data-route="withdraw" class="nav-link"><i data-lucide="wallet"></i><span>Withdraw</span></a>
-      <a href="#/transactions" data-route="transactions" class="nav-link"><i data-lucide="receipt"></i><span>Transactions</span></a>
-      <a href="#/settings" data-route="settings" class="nav-link"><i data-lucide="settings"></i><span>Settings</span></a>
-    </nav>
-    <div class="p-3 border-t border-white/5">
-      <button id="logoutBtn" class="nav-link text-red-400 hover:bg-red-500/10 w-full"><i data-lucide="log-out"></i><span>Logout</span></button>
-    </div>
-  </aside>
-  <main class="flex-1 min-w-0">
-    <header class="top-nav">
-      <button id="menuToggle" class="lg:hidden p-2 rounded-xl bg-white/5"><i data-lucide="menu" class="w-5 h-5"></i></button>
-      <div class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/5 border border-white/5"><i data-lucide="wallet" class="w-4 h-4 text-zinc-400"></i><span class="text-xs text-zinc-400 hidden sm:inline">Balance</span><span id="topBalance" class="text-sm font-bold">$0.0000</span></div>
-      <div class="flex items-center gap-2">
-        <button id="darkModeToggle2" class="icon-btn"><span id="darkModeIcon2" class="dark-mode-icon"><i data-lucide="moon" class="w-5 h-5"></i></span></button>
-        <button id="profileBtn" class="flex items-center gap-2 px-3 py-2 rounded-2xl bg-white/5 border border-white/5"><div class="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-xs font-bold" id="profileAvatar">U</div><span id="profileName" class="text-sm font-medium hidden sm:inline">User</span></button>
-      </div>
-    </header>
-    <div id="pageContainer" class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto"></div>
-  </main>
-</div>
-
-<div id="toastRoot" class="fixed top-6 right-6 z-[100] space-y-3 pointer-events-none"></div>
-
-<!-- TEMPLATES -->
-<template id="tpl-dashboard"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl gradient-border"><h1 class="text-3xl font-bold mb-4">Dashboard</h1><p class="text-zinc-400">Welcome to CoinixFaucet!</p></div></div></template>
-<template id="tpl-faucet"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl gradient-border text-center"><h1 class="text-3xl font-bold mb-4">Manual Faucet</h1><button id="claimBtn" class="claim-btn mx-auto"><span class="claim-btn-inner"><i data-lucide="droplets" class="w-6 h-6"></i><span>Claim Reward</span></span></button><div id="faucetCountdown" class="text-4xl font-bold mt-6">00:00</div></div></div></template>
-<template id="tpl-daily-bonus"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">Daily Bonus</h1><p class="text-zinc-400">Claim your daily reward!</p></div></div></template>
-<template id="tpl-leaderboard"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">Leaderboard</h1><p class="text-zinc-400">Top earners this month.</p></div></div></template>
-<template id="tpl-ptc"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">PTC Ads</h1><p class="text-zinc-400">Click ads and earn free crypto!</p></div></div></template>
-<template id="tpl-referrals"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">Referrals</h1><p class="text-zinc-400">Earn 20% from referrals.</p></div></div></template>
-<template id="tpl-withdraw"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">Withdraw</h1><p class="text-zinc-400">Minimum $0.03 · Instant via FaucetPay</p></div></div></template>
-<template id="tpl-transactions"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">Transactions</h1><p class="text-zinc-400">Your transaction history.</p></div></div></template>
-<template id="tpl-settings"><div class="space-y-6"><div class="glass-card p-8 rounded-3xl"><h1 class="text-3xl font-bold mb-4">Settings</h1><p class="text-zinc-400">Manage your account.</p></div></div></template>
-
-<script type="module" src="/firebase-config.js"></script>
-<script type="module" src="/app.js"></script>
+    <!-- Firebase & App Scripts -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
