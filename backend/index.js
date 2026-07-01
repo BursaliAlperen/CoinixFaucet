@@ -15,23 +15,21 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log('||| ========== COINIXFAUCET BACKEND START ========== |||');
+console.log('🚀 Starting CoinixFaucet Backend...');
 
-// ============================================
-// 🔥 FIREBASE ADMIN INIT
-// ============================================
+// Firebase Admin Init
 if (!admin.apps.length) {
   try {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!serviceAccountJson) {
-      console.error('❌ FIREBASE_SERVICE_ACCOUNT environment variable is not set!');
+      console.error('❌ FIREBASE_SERVICE_ACCOUNT not set!');
       process.exit(1);
     }
     const serviceAccount = JSON.parse(serviceAccountJson);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
-    console.log('✅ Firebase Admin initialized (via env)');
+    console.log('✅ Firebase Admin initialized');
   } catch (error) {
     console.error('❌ Firebase Admin init failed:', error.message);
     process.exit(1);
@@ -41,9 +39,7 @@ if (!admin.apps.length) {
 const db = getFirestore();
 const auth = admin.auth();
 
-// ============================================
-// 🔒 CONSTANTS
-// ============================================
+// Constants
 const COIN_PRICES = {
   CNX: 0.01,
   PEPE: 0.000008,
@@ -69,9 +65,7 @@ const CLAIM_COOLDOWN_MS = 60000;
 const REFERRAL_RATE = 0.20;
 const CNX_RATE = 0.01;
 
-// ============================================
-// 🚀 EXPRESS APP
-// ============================================
+// Express App
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -88,16 +82,14 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.set('trust proxy', 1);
 
-// ============================================
-// 📁 STATIC DOSYALAR (FRONTEND)
-// ============================================
+// Static Files
 const possiblePaths = [
   __dirname,
   join(__dirname, '..'),
   join(__dirname, 'frontend'),
   join(__dirname, '../frontend'),
-  join(process.cwd(), 'frontend'),
-  process.cwd()
+  process.cwd(),
+  join(process.cwd(), 'frontend')
 ];
 
 let frontendPath = null;
@@ -109,50 +101,21 @@ for (const p of possiblePaths) {
 }
 
 if (!frontendPath) {
-  console.error('❌ index.html bulunamadı. Aranan yollar:', possiblePaths);
+  console.error('❌ index.html not found');
   process.exit(1);
 }
 
-console.log('📁 Frontend path:', frontendPath);
+console.log('📁 Serving frontend from:', frontendPath);
 app.use(express.static(frontendPath));
 
-// ============================================
-// 🤖 ROBOTS.TXT - SEO OPTIMIZED
-// ============================================
-app.get('/robots.txt', (req, res) => {
-  const siteUrl = process.env.SITE_URL || 'https://coinixfaucet.mine.bz';
-  res.header('Content-Type', 'text/plain');
-  res.send(`User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /api/
-Disallow: /#/dashboard
-Disallow: /#/settings
-Disallow: /#/withdraw
-Disallow: /#/transactions
-Disallow: /#/faucet
-Disallow: /#/daily-bonus
-Disallow: /#/referrals
-Disallow: /#/ptc
-Disallow: /#/leaderboard
-Disallow: /#/offerwall
-
-Sitemap: ${siteUrl}/sitemap.xml`);
-});
-
-// ============================================
-// 🗺️ SITEMAP.XML - SEO OPTIMIZED
-// ============================================
+// Sitemap
 app.get('/sitemap.xml', (req, res) => {
   const today = new Date().toISOString().split('T')[0];
   const siteUrl = process.env.SITE_URL || 'https://coinixfaucet.mine.bz';
   
   res.header('Content-Type', 'application/xml');
   res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>${siteUrl}/</loc>
     <lastmod>${today}</lastmod>
@@ -186,6 +149,19 @@ app.get('/sitemap.xml', (req, res) => {
 </urlset>`);
 });
 
+// Robots.txt
+app.get('/robots.txt', (req, res) => {
+  const siteUrl = process.env.SITE_URL || 'https://coinixfaucet.mine.bz';
+  res.header('Content-Type', 'text/plain');
+  res.send(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: ${siteUrl}/sitemap.xml`);
+});
+
+// Admin route
 app.get('/admin', (req, res) => {
   const adminPath = join(frontendPath, 'admin.html');
   if (fs.existsSync(adminPath)) {
@@ -195,9 +171,7 @@ app.get('/admin', (req, res) => {
   }
 });
 
-// ============================================
-// 🔒 RATE LIMITERS
-// ============================================
+// Rate Limiters
 const claimLimiter = rateLimit({
   windowMs: 60000,
   max: 2,
@@ -210,9 +184,7 @@ const withdrawLimiter = rateLimit({
   message: { success: false, message: 'Too many withdrawals' }
 });
 
-// ============================================
-// 🔐 AUTH MIDDLEWARE
-// ============================================
+// Auth Middleware
 const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -246,19 +218,16 @@ const verifyAdmin = (req, res, next) => {
   next();
 };
 
-// ============================================
-// 💖 HEALTH + KEEP-ALIVE
-// ============================================
+// Health Check
 app.get('/api/keep-alive', (req, res) => {
   res.json({ success: true, status: 'alive', timestamp: new Date().toISOString() });
 });
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.0.0' });
 });
 
-// ============================================
-// 💰 PRICES
-// ============================================
+// Prices
 app.get('/api/prices', (req, res) => {
   res.json({
     success: true,
@@ -272,9 +241,7 @@ app.get('/api/prices', (req, res) => {
   });
 });
 
-// ============================================
-// 👤 USER PROFILE
-// ============================================
+// User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
   try {
     const doc = await db.collection('users').doc(req.user.uid).get();
@@ -325,11 +292,8 @@ app.get('/api/user', verifyToken, async (req, res) => {
   }
 });
 
-// ============================================
-// 🚰 CLAIM
-// ============================================
+// Claim
 app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (req, res) => {
-  console.log('||| CLAIM REQUEST START |||');
   try {
     const { recaptchaToken } = req.body;
 
@@ -344,12 +308,11 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
           }
         );
         const recaptchaData = await recaptchaRes.json();
-        console.log('||| reCAPTCHA Response:', recaptchaData.success ? '✅ Başarılı' : '❌ Başarısız');
         if (!recaptchaData.success || recaptchaData.score < 0.5) {
           return res.status(403).json({ success: false, message: 'Bot detected' });
         }
       } catch (e) {
-        console.log('||| reCAPTCHA hatası (devam ediliyor):', e.message);
+        console.log('reCAPTCHA error (continuing):', e.message);
       }
     }
 
@@ -419,19 +382,15 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
       lastUpdated: FieldValue.serverTimestamp()
     }, { merge: true });
 
-    console.log('||| CLAIM SUCCESS:', cnxAmount, 'CNX');
     res.json({ success: true, coin: 'CNX', amount: cnxAmount, usdValue });
   } catch (error) {
-    console.error('||| CLAIM ERROR:', error.message);
+    console.error('Claim error:', error);
     res.status(500).json({ success: false, message: error.message || 'Claim failed' });
   }
 });
 
-// ============================================
-// 💸 WITHDRAW
-// ============================================
+// Withdraw
 app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, async (req, res) => {
-  console.log('||| WITHDRAW REQUEST START |||');
   try {
     const { coin } = req.body;
     if (!VALID_COINS.includes(coin?.toUpperCase())) {
@@ -489,7 +448,6 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
       lastUpdated: FieldValue.serverTimestamp()
     }, { merge: true });
 
-    console.log('||| WITHDRAW SUCCESS:', balance, coinUpper);
     res.json({
       success: true,
       transactionId: txRef.id,
@@ -499,16 +457,13 @@ app.post('/api/withdraw', verifyToken, requireEmailVerified, withdrawLimiter, as
       status: 'pending'
     });
   } catch (error) {
-    console.error('||| WITHDRAW ERROR:', error.message);
+    console.error('Withdraw error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 
-// ============================================
-// 📊 DASHBOARD
-// ============================================
+// Dashboard
 app.get('/api/dashboard', verifyToken, async (req, res) => {
-  console.log('||| DASHBOARD REQUEST |||');
   try {
     const doc = await db.collection('users').doc(req.user.uid).get();
     if (!doc.exists) return res.status(404).json({ success: false, message: 'Not found' });
@@ -544,14 +499,12 @@ app.get('/api/dashboard', verifyToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('||| DASHBOARD ERROR:', error.message);
+    console.error('Dashboard error:', error);
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
 
-// ============================================
-// 📈 GLOBAL STATS
-// ============================================
+// Stats
 app.get('/api/stats', async (req, res) => {
   try {
     const usersSnap = await db.collection('users').count().get();
@@ -574,9 +527,7 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// ============================================
-// 🏆 LEADERBOARD
-// ============================================
+// Leaderboard
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const snap = await db.collection('users').orderBy('totalClaims', 'desc').limit(100).get();
@@ -598,9 +549,7 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
-// ============================================
-// ⚙️ SETTINGS
-// ============================================
+// Settings
 app.put('/api/settings', verifyToken, async (req, res) => {
   try {
     const { username, country, timezone, faucetpayEmail, twoFA, notifications } = req.body;
@@ -619,9 +568,7 @@ app.put('/api/settings', verifyToken, async (req, res) => {
   }
 });
 
-// ============================================
-// 📋 TRANSACTIONS
-// ============================================
+// Transactions
 app.get('/api/transactions', verifyToken, async (req, res) => {
   try {
     const { type, limit = 50 } = req.query;
@@ -629,7 +576,7 @@ app.get('/api/transactions', verifyToken, async (req, res) => {
       .where('userId', '==', req.user.uid)
       .orderBy('createdAt', 'desc')
       .limit(Math.min(parseInt(limit) || 50, 100));
-    if (type && ['claim', 'withdraw', 'daily-bonus', 'referral', 'swap', 'offerwall', 'promo'].includes(type)) {
+    if (type && ['claim', 'withdraw', 'daily-bonus', 'referral', 'swap', 'offerwall', 'promo', 'ptc'].includes(type)) {
       query = query.where('type', '==', type);
     }
     const snap = await query.get();
@@ -641,9 +588,7 @@ app.get('/api/transactions', verifyToken, async (req, res) => {
   }
 });
 
-// ============================================
-// 🎁 DAILY BONUS
-// ============================================
+// Daily Bonus
 app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res) => {
   try {
     const userRef = db.collection('users').doc(req.user.uid);
@@ -689,20 +634,16 @@ app.post('/api/daily-bonus', verifyToken, requireEmailVerified, async (req, res)
   }
 });
 
-// ============================================
-// 🔐 FORGOT PASSWORD
-// ============================================
+// Forgot Password
 app.post('/api/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'Email required' });
 
-    // Firebase Admin ile password reset email'i gönder
-    const link = await auth.generatePasswordResetLink(email, {
-      url: `${process.env.SITE_URL || 'https://coinixfaucet.mine.bz'}/#/reset-password`
+    await auth.generatePasswordResetLink(email, {
+      url: `${process.env.SITE_URL || 'https://coinixfaucet.mine.bz'}/`
     });
 
-    // Firebase otomatik email gönderir
     res.json({ success: true, message: 'Password reset email sent' });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -710,9 +651,7 @@ app.post('/api/forgot-password', async (req, res) => {
   }
 });
 
-// ============================================
-// 🔐 RESEND VERIFICATION EMAIL
-// ============================================
+// Resend Verification
 app.post('/api/resend-verification', verifyToken, async (req, res) => {
   try {
     const user = await auth.getUser(req.user.uid);
@@ -720,8 +659,8 @@ app.post('/api/resend-verification', verifyToken, async (req, res) => {
       return res.json({ success: true, message: 'Already verified' });
     }
 
-    const link = await auth.generateEmailVerificationLink(user.email, {
-      url: `${process.env.SITE_URL || 'https://coinixfaucet.mine.bz'}/#/verify-email`
+    await auth.generateEmailVerificationLink(user.email, {
+      url: `${process.env.SITE_URL || 'https://coinixfaucet.mine.bz'}/`
     });
 
     res.json({ success: true, message: 'Verification email sent' });
@@ -731,9 +670,7 @@ app.post('/api/resend-verification', verifyToken, async (req, res) => {
   }
 });
 
-// ============================================
-// 🎯 OFFERWALL.ME POSTBACK
-// ============================================
+// Offerwall Postback
 app.post('/api/offerwall/postback', async (req, res) => {
   try {
     const { subId, transId, reward, status, signature, payout, offer_name, userIp } = req.body;
@@ -744,17 +681,15 @@ app.post('/api/offerwall/postback', async (req, res) => {
       return res.status(500).json({ error: 'Server not configured' });
     }
 
-    // Signature verification: MD5(subId + transId + reward + secret)
     const expectedSig = crypto.createHash('md5')
       .update(`${subId}${transId}${reward}${secret}`)
       .digest('hex');
 
     if (expectedSig !== signature) {
-      console.error('Invalid signature:', signature, 'expected:', expectedSig);
+      console.error('Invalid signature');
       return res.status(403).json({ error: 'Invalid signature' });
     }
 
-    // Find user by referralCode (subId)
     const userSnap = await db.collection('users')
       .where('referralCode', '==', subId)
       .limit(1)
@@ -770,13 +705,11 @@ app.post('/api/offerwall/postback', async (req, res) => {
     const rewardAmount = parseFloat(reward);
 
     if (status === '1') {
-      // Add reward
       await userRef.update({
         cnx: FieldValue.increment(Math.floor(rewardAmount * 100)),
         totalClaims: FieldValue.increment(1)
       });
 
-      // Record transaction
       await db.collection('transactions').add({
         userId: userDoc.id,
         type: 'offerwall',
@@ -789,7 +722,6 @@ app.post('/api/offerwall/postback', async (req, res) => {
 
       console.log(`✅ Offerwall reward: ${rewardAmount} to ${subId}`);
     } else if (status === '2') {
-      // Chargeback - subtract
       await userRef.update({
         cnx: FieldValue.increment(-Math.floor(rewardAmount * 100))
       });
@@ -814,39 +746,142 @@ app.post('/api/offerwall/postback', async (req, res) => {
   }
 });
 
-// ============================================
-// 🔐 RECAPTCHA VERIFY
-// ============================================
-app.post('/api/verify-recaptcha', async (req, res) => {
+// Promo Code Create (Admin)
+app.post('/api/admin/promo/create', verifyAdmin, async (req, res) => {
   try {
-    const { token, action } = req.body;
-    if (!token) return res.status(400).json({ success: false, message: 'Token required' });
-
-    const response = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`
-      }
-    );
-
-    const assessment = await response.json();
-    const score = assessment.score || 0;
-
-    if (score >= 0.5) {
-      res.json({ success: true, score });
-    } else {
-      res.status(400).json({ success: false, score, message: 'Bot detected' });
+    const { code, reward, maxUses, expiresAt } = req.body;
+    
+    if (!code || !reward) {
+      return res.status(400).json({ success: false, message: 'Code and reward required' });
     }
+    
+    const promoRef = await db.collection('promo_codes').add({
+      code: code.toUpperCase(),
+      reward: parseFloat(reward),
+      maxUses: parseInt(maxUses) || null,
+      currentUses: 0,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      isActive: true,
+      createdAt: FieldValue.serverTimestamp(),
+      createdBy: 'admin'
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Promo code created',
+      promoId: promoRef.id 
+    });
+  } catch (error) {
+    console.error('Create promo error:', error);
+    res.status(500).json({ success: false, message: 'Error creating promo' });
+  }
+});
+
+// Promo Code List (Admin)
+app.get('/api/admin/promo/list', verifyAdmin, async (req, res) => {
+  try {
+    const snap = await db.collection('promo_codes')
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const promos = [];
+    snap.forEach(doc => {
+      promos.push({ id: doc.id, ...doc.data() });
+    });
+    
+    res.json({ success: true, promos });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
 
-// ============================================
-// 🌐 LIVE WITHDRAWS
-// ============================================
+// Promo Code Delete (Admin)
+app.delete('/api/admin/promo/:id', verifyAdmin, async (req, res) => {
+  try {
+    await db.collection('promo_codes').doc(req.params.id).delete();
+    res.json({ success: true, message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error' });
+  }
+});
+
+// Promo Code Redeem (User)
+app.post('/api/promo/redeem', verifyToken, async (req, res) => {
+  try {
+    const { code } = req.body;
+    const userId = req.user.uid;
+    
+    if (!code) {
+      return res.status(400).json({ success: false, message: 'Code required' });
+    }
+    
+    const promoSnap = await db.collection('promo_codes')
+      .where('code', '==', code.toUpperCase())
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
+    
+    if (promoSnap.empty) {
+      return res.status(404).json({ success: false, message: 'Invalid code' });
+    }
+    
+    const promoDoc = promoSnap.docs[0];
+    const promoData = promoDoc.data();
+    const promoId = promoDoc.id;
+    
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    
+    if (userData.usedPromoCodes?.includes(promoId)) {
+      return res.status(400).json({ success: false, message: 'Already used' });
+    }
+    
+    if (promoData.expiresAt && new Date(promoData.expiresAt.toDate()) < new Date()) {
+      return res.status(400).json({ success: false, message: 'Code expired' });
+    }
+    
+    if (promoData.maxUses && promoData.currentUses >= promoData.maxUses) {
+      return res.status(400).json({ success: false, message: 'Code max uses reached' });
+    }
+    
+    const rewardAmount = Math.floor(promoData.reward * 100);
+    
+    await db.runTransaction(async (transaction) => {
+      transaction.update(db.collection('users').doc(userId), {
+        cnx: FieldValue.increment(rewardAmount),
+        usedPromoCodes: FieldValue.arrayUnion(promoId)
+      });
+      
+      transaction.update(db.collection('promo_codes').doc(promoId), {
+        currentUses: FieldValue.increment(1)
+      });
+    });
+    
+    await db.collection('transactions').add({
+      userId,
+      type: 'promo',
+      coin: 'CNX',
+      amount: rewardAmount,
+      usdValue: +(rewardAmount * CNX_RATE).toFixed(4),
+      promoCode: code.toUpperCase(),
+      status: 'completed',
+      createdAt: FieldValue.serverTimestamp()
+    });
+    
+    console.log(`✅ Promo redeemed: ${code} by ${userId}`);
+    
+    res.json({ 
+      success: true, 
+      message: `Redeemed ${rewardAmount} CNX!`,
+      reward: rewardAmount
+    });
+  } catch (error) {
+    console.error('Promo redeem error:', error);
+    res.status(500).json({ success: false, message: 'Error redeeming code' });
+  }
+});
+
+// Live Withdraws
 app.get('/api/live-withdraws', async (req, res) => {
   try {
     const snap = await db.collection('transactions')
@@ -875,41 +910,7 @@ app.get('/api/live-withdraws', async (req, res) => {
   }
 });
 
-// ============================================
-// 🔐 ADMIN ENDPOINTS
-// ============================================
-app.post('/api/admin/verify', verifyAdmin, (req, res) => {
-  res.json({ success: true, message: 'Admin authenticated' });
-});
-
-app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
-  try {
-    const usersSnap = await db.collection('users').count().get();
-    const claimsSnap = await db.collection('claims').count().get();
-    const txSnap = await db.collection('transactions').count().get();
-    const globalSnap = await db.collection('global').doc('stats').get();
-    const globalData = globalSnap.exists ? globalSnap.data() : {};
-
-    res.json({
-      success: true,
-      stats: {
-        totalUsers: usersSnap.data().count,
-        totalClaims: claimsSnap.data().count + (globalData.totalClaims || 0),
-        totalTransactions: txSnap.data().count,
-        totalPaid: globalData.totalPaid || 0,
-        totalWithdrawals: globalData.totalWithdrawals || 0,
-        totalWithdrawnAmount: globalData.totalWithdrawnAmount || 0,
-        referralRewards: globalData.referralRewards || 0
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// ============================================
-// 🚫 404
-// ============================================
+// 404 Handler
 app.get('*', (req, res) => {
   const indexPath = join(frontendPath, 'index.html');
   if (fs.existsSync(indexPath)) {
@@ -919,14 +920,13 @@ app.get('*', (req, res) => {
   }
 });
 
+// Error Handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ success: false, message: 'Internal error' });
 });
 
-// ============================================
-// 💖 SELF-PING
-// ============================================
+// Self Ping
 function startSelfPing() {
   setInterval(async () => {
     try {
@@ -938,16 +938,15 @@ function startSelfPing() {
   }, 14 * 60 * 1000);
 }
 
-// ============================================
-// 🚀 START
-// ============================================
+// Start Server
 app.listen(PORT, () => {
-  console.log('||| ========================================== |||');
-  console.log(`||| 🚀 CoinixFaucet v2.0 running on port ${PORT}`);
-  console.log(`||| 📁 Serving frontend from ${frontendPath}`);
-  console.log(`||| 🗺️ Sitemap: https://coinixfaucet.mine.bz/sitemap.xml`);
-  console.log(`||| 🤖 Robots: https://coinixfaucet.mine.bz/robots.txt`);
-  console.log('||| ========================================== |||');
+  console.log('========================================');
+  console.log(`🚀 CoinixFaucet v2.0 running on port ${PORT}`);
+  console.log(`📁 Serving frontend from ${frontendPath}`);
+  console.log(`🗺️ Sitemap: https://coinixfaucet.mine.bz/sitemap.xml`);
+  console.log(`🤖 Robots: https://coinixfaucet.mine.bz/robots.txt`);
+  console.log(`🔐 Admin: https://coinixfaucet.mine.bz/admin`);
+  console.log('========================================');
   startSelfPing();
 });
 
