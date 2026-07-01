@@ -24,7 +24,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Email action handlers
 export {
   applyActionCode,
   checkActionCode,
@@ -46,6 +45,7 @@ export const COL = {
 
 export const COINS = ['PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
 export const COIN_META = {
+  CNX: { name: 'Coinix', color: '#a855f7', usd: 0.01, min: 0.03 },
   PEPE: { name: 'Pepe', color: '#4ade80', usd: 0.000008, min: 0.03 },
   DOGE: { name: 'Dogecoin', color: '#facc15', usd: 0.15, min: 0.03 },
   DGB: { name: 'DigiByte', color: '#60a5fa', usd: 0.01, min: 0.03 },
