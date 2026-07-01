@@ -10,6 +10,7 @@
   <meta property="og:description" content="Claim free cryptocurrency every 60 seconds. Instant withdrawals via FaucetPay." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://coinixfaucet.mine.bz/" />
+  <meta property="og:image" content="https://coinixfaucet.mine.bz/logo.png" />
   <link rel="canonical" href="https://coinixfaucet.mine.bz/" />
   <title>CoinixFaucet - Earn Free Cryptocurrency Every Day</title>
   
@@ -17,8 +18,9 @@
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#8b5cf6" />
   
-  <!-- Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
+  <!-- Favicon - Yuvarlak Logo -->
+  <link rel="icon" type="image/png" href="/logo.png" />
+  <link rel="apple-touch-icon" href="/logo.png" />
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -56,8 +58,8 @@
     <!-- Header -->
     <header class="landing-header">
       <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">
-          💰
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">
+          C
         </div>
         <span class="font-bold text-xl">CoinixFaucet</span>
       </div>
@@ -254,14 +256,19 @@
     <footer class="py-12 px-4 border-t border-zinc-200 dark:border-zinc-800">
       <div class="max-w-6xl mx-auto text-center">
         <div class="flex items-center justify-center gap-2 mb-4">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl">💰</div>
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl">C</div>
           <span class="font-bold text-xl">CoinixFaucet</span>
         </div>
         <p class="text-zinc-500 text-sm mb-4">© 2026 CoinixFaucet. All rights reserved.</p>
-        <div class="flex items-center justify-center gap-4 text-sm">
+        <div class="flex items-center justify-center gap-4 text-sm mb-4">
           <a href="#/terms" class="text-zinc-500 hover:text-primary-500">Terms</a>
           <a href="#/privacy" class="text-zinc-500 hover:text-primary-500">Privacy</a>
           <a href="#/about" class="text-zinc-500 hover:text-primary-500">About</a>
+        </div>
+        <div class="flex items-center justify-center gap-4">
+          <a href="https://t.me/coinixfaucet" target="_blank" class="text-zinc-500 hover:text-primary-500 transition-colors">
+            <i data-lucide="send" class="w-5 h-5"></i>
+          </a>
         </div>
       </div>
     </footer>
@@ -274,7 +281,7 @@
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar w-64 min-h-screen p-4 flex flex-col gap-2 border-r border-zinc-200 dark:border-zinc-800">
       <div class="flex items-center gap-2 mb-6 px-2">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">💰</div>
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-primary-500/30">C</div>
         <span class="font-bold text-lg">CoinixFaucet</span>
       </div>
       
@@ -289,6 +296,9 @@
       </a>
       <a href="#/offerwall" class="nav-link" data-route="offerwall">
         <i data-lucide="layout-grid" class="w-5 h-5"></i> Offerwall
+      </a>
+      <a href="#/games" class="nav-link" data-route="games">
+        <i data-lucide="gamepad-2" class="w-5 h-5"></i> Games
       </a>
       <a href="#/ptc" class="nav-link" data-route="ptc">
         <i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> PTC Ads
@@ -337,9 +347,26 @@
             <div id="profileAvatar" class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-sm">U</div>
             <span id="profileName" class="font-medium text-sm hidden sm:block">User</span>
           </div>
-          <button id="logoutBtnTop" class="icon-btn">
-            <i data-lucide="log-out" class="w-4 h-4"></i>
-          </button>
+          <!-- Üç Nokta Menüsü -->
+          <div class="relative">
+            <button id="threeDotsBtn" class="icon-btn">
+              <i data-lucide="more-vertical" class="w-4 h-4"></i>
+            </button>
+            <div id="threeDotsMenu" class="hidden absolute right-0 mt-2 w-48 glass-card rounded-xl shadow-xl py-2 z-50">
+              <a href="#/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
+                <i data-lucide="settings" class="w-4 h-4"></i> Settings
+              </a>
+              <a href="#/transactions" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
+                <i data-lucide="receipt" class="w-4 h-4"></i> Transactions
+              </a>
+              <a href="https://t.me/coinixfaucet" target="_blank" class="flex items-center gap-2 px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-primary-500/10">
+                <i data-lucide="send" class="w-4 h-4"></i> Telegram
+              </a>
+              <button id="logoutBtnMenu" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-500/10">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+              </button>
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -359,7 +386,7 @@
       </button>
       
       <div class="text-center mb-6">
-        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">💰</div>
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">C</div>
         <h2 id="authModalTitle" class="text-2xl font-bold text-zinc-900 dark:text-white">Welcome Back</h2>
         <p class="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Sign in to continue</p>
       </div>
@@ -425,7 +452,7 @@
         <i data-lucide="x" class="w-5 h-5"></i>
       </button>
       <div class="text-center mb-6">
-        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center font-black text-white text-2xl mx-auto mb-3 shadow-lg shadow-primary-500/30">
           <i data-lucide="key" class="w-7 h-7"></i>
         </div>
         <h2 class="text-2xl font-bold text-zinc-900 dark:text-white">Reset Password</h2>
@@ -517,6 +544,54 @@
           <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 mt-0.5"></i> Rewards are credited automatically</li>
           <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 mt-0.5"></i> Some offers may take up to 24 hours to verify</li>
         </ul>
+      </div>
+    </div>
+  </template>
+  
+  <!-- Games Template -->
+  <template id="tpl-games">
+    <div class="space-y-6 page-enter">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Games</h1>
+          <p class="text-zinc-500 dark:text-zinc-400 mt-1">Play games and earn CNX rewards</p>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <div class="aspect-video bg-gradient-to-br from-primary-500/20 to-secondary-500/20 flex items-center justify-center">
+            <i data-lucide="gamepad-2" class="w-16 h-16 text-primary-500"></i>
+          </div>
+          <div class="p-4">
+            <h3 class="font-bold text-lg mb-2">Dice Game</h3>
+            <p class="text-sm text-zinc-500 mb-4">Roll the dice and win up to 100 CNX!</p>
+            <button onclick="openGame('dice')" class="btn-primary w-full">Play Now</button>
+          </div>
+        </div>
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <div class="aspect-video bg-gradient-to-br from-green-500/20 to-blue-500/20 flex items-center justify-center">
+            <i data-lucide="coins" class="w-16 h-16 text-green-500"></i>
+          </div>
+          <div class="p-4">
+            <h3 class="font-bold text-lg mb-2">Coin Flip</h3>
+            <p class="text-sm text-zinc-500 mb-4">Flip a coin and double your bet!</p>
+            <button onclick="openGame('coinflip')" class="btn-primary w-full">Play Now</button>
+          </div>
+        </div>
+        <div class="glass-card rounded-2xl overflow-hidden">
+          <div class="aspect-video bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+            <i data-lucide="trophy" class="w-16 h-16 text-purple-500"></i>
+          </div>
+          <div class="p-4">
+            <h3 class="font-bold text-lg mb-2">Wheel of Fortune</h3>
+            <p class="text-sm text-zinc-500 mb-4">Spin the wheel and win big!</p>
+            <button onclick="openGame('wheel')" class="btn-primary w-full">Play Now</button>
+          </div>
+        </div>
+      </div>
+      <!-- Game iframe container -->
+      <div id="gameFrameContainer" class="hidden glass-card rounded-3xl overflow-hidden" style="height: 70vh;">
+        <iframe id="gameFrame" class="w-full h-full border-0"></iframe>
       </div>
     </div>
   </template>
