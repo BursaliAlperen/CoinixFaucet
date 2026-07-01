@@ -57,6 +57,9 @@
     .btn-success {
       background: linear-gradient(135deg, #22c55e, #16a34a);
     }
+    .btn-yellow {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+    }
     .stat-card {
       background: rgba(24, 24, 27, 0.7);
       backdrop-filter: blur(20px);
@@ -69,9 +72,7 @@
     .stat-card::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 3px;
       background: linear-gradient(90deg, #a855f7, #06b6d4);
     }
@@ -142,8 +143,7 @@
     }
     .live-indicator::before {
       content: '';
-      width: 8px;
-      height: 8px;
+      width: 8px; height: 8px;
       background: #22c55e;
       border-radius: 50%;
       animation: pulse 2s infinite;
@@ -156,17 +156,9 @@
       max-height: 600px;
       overflow-y: auto;
     }
-    .scroll-container::-webkit-scrollbar {
-      width: 8px;
-    }
-    .scroll-container::-webkit-scrollbar-track {
-      background: rgba(39, 39, 42, 0.5);
-      border-radius: 4px;
-    }
-    .scroll-container::-webkit-scrollbar-thumb {
-      background: rgba(168, 85, 247, 0.5);
-      border-radius: 4px;
-    }
+    .scroll-container::-webkit-scrollbar { width: 8px; }
+    .scroll-container::-webkit-scrollbar-track { background: rgba(39, 39, 42, 0.5); border-radius: 4px; }
+    .scroll-container::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.5); border-radius: 4px; }
   </style>
 </head>
 <body class="p-4 md:p-6">
@@ -181,9 +173,7 @@
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <div class="live-indicator">
-          Live
-        </div>
+        <div class="live-indicator">Live</div>
         <a href="/" class="btn">
           <i data-lucide="arrow-left" class="w-4 h-4"></i>
           <span class="hidden sm:inline">Back to Site</span>
@@ -232,6 +222,31 @@
 
     <!-- Dashboard Tab -->
     <div id="tab-dashboard" class="tab-content">
+      <!-- Maintenance Mode -->
+      <div class="glass p-6 mb-6">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-yellow-500"></i>
+          Maintenance Mode
+        </h2>
+        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <div class="flex-1">
+            <p class="text-sm text-zinc-400 mb-2">Enable maintenance mode to show a "Site Under Maintenance" page to all visitors.</p>
+            <div class="flex gap-2">
+              <input type="number" id="maintenanceDuration" placeholder="Duration (minutes)" class="input w-40" value="60" />
+              <button id="enableMaintenance" class="btn btn-yellow">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                Enable
+              </button>
+              <button id="disableMaintenance" class="btn">
+                <i data-lucide="stop" class="w-4 h-4"></i>
+                Disable
+              </button>
+            </div>
+          </div>
+          <div id="maintenanceStatus" class="badge badge-green">Live</div>
+        </div>
+      </div>
+
       <div class="grid md:grid-cols-2 gap-6">
         <!-- Live Withdrawals -->
         <div class="glass p-6">
@@ -411,19 +426,12 @@
   <script type="module">
     const ADMIN_KEY = 'coinix_admin_2026_super_secret_key_xK9mP2nQ';
     
-    // Fake data generators
     const fakeUsernames = ['CryptoKing', 'MoonHunter', 'SatoshiFan', 'BlockchainBob', 'DiamondHands', 'HODLer2024', 'CoinCollector', 'FaucetMaster', 'TokenTrader', 'Web3Warrior'];
     const fakeEmails = ['user1@gmail.com', 'crypto@yahoo.com', 'miner@hotmail.com', 'trader@outlook.com', 'investor@proton.me'];
     const fakeCoins = ['PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
-    const fakeCountries = ['US', 'GB', 'DE', 'TR', 'IN', 'BR', 'CA', 'AU'];
     
-    function randomItem(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-    
-    function randomAmount(min, max) {
-      return (Math.random() * (max - min) + min).toFixed(4);
-    }
+    function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randomAmount(min, max) { return (Math.random() * (max - min) + min).toFixed(4); }
     
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -445,14 +453,12 @@
     // Load stats
     async function loadStats() {
       try {
-        const res = await fetch('/api/admin/stats', {
-          headers: { 'x-admin-key': ADMIN_KEY }
-        });
+        const res = await fetch('/api/admin/stats', { headers: { 'x-admin-key': ADMIN_KEY } });
         const data = await res.json();
         
         if (data.success) {
           const realUsers = data.stats.totalUsers || 0;
-          const fakeUsers = Math.floor(realUsers * 2.5); // 2.5x fake users
+          const fakeUsers = Math.floor(realUsers * 2.5);
           document.getElementById('statUsers').textContent = (realUsers + fakeUsers).toLocaleString();
           
           const realOnline = Math.floor(realUsers * 0.15);
@@ -462,17 +468,13 @@
           document.getElementById('statClaims').textContent = (data.stats.totalClaims || 0).toLocaleString();
           document.getElementById('statPaid').textContent = '$' + (data.stats.totalPaid || 0).toFixed(2);
         }
-      } catch (e) {
-        console.error('Stats error:', e);
-      }
+      } catch (e) { console.error('Stats error:', e); }
     }
     
-    // Load live withdrawals (real + fake)
+    // Load live withdrawals
     async function loadLiveWithdrawals() {
       try {
-        const res = await fetch('/api/live-withdraws', {
-          headers: { 'x-admin-key': ADMIN_KEY }
-        });
+        const res = await fetch('/api/live-withdraws', { headers: { 'x-admin-key': ADMIN_KEY } });
         const data = await res.json();
         
         const container = document.getElementById('liveWithdrawals');
@@ -481,7 +483,6 @@
           return;
         }
         
-        // Add fake withdrawals
         const fakeWithdrawals = Array.from({ length: 15 }, () => ({
           username: randomItem(fakeUsernames) + Math.floor(Math.random() * 1000),
           coin: randomItem(fakeCoins),
@@ -512,9 +513,7 @@
             </div>
           </div>
         `).join('');
-      } catch (e) {
-        console.error('Live withdrawals error:', e);
-      }
+      } catch (e) { console.error('Live withdrawals error:', e); }
     }
     
     // Load recent activity
@@ -540,23 +539,18 @@
             <div class="text-xs text-zinc-400">${a.time.toLocaleTimeString()}</div>
           </div>
         `).join('');
-      } catch (e) {
-        console.error('Activity error:', e);
-      }
+      } catch (e) { console.error('Activity error:', e); }
     }
     
-    // Load users (real + fake)
+    // Load users
     async function loadUsers() {
       try {
-        const res = await fetch('/api/admin/users', {
-          headers: { 'x-admin-key': ADMIN_KEY }
-        });
+        const res = await fetch('/api/admin/users', { headers: { 'x-admin-key': ADMIN_KEY } });
         const data = await res.json();
         
         const table = document.getElementById('usersTable');
         const realUsers = data.success ? data.users : [];
         
-        // Generate fake users
         const fakeUsers = Array.from({ length: 30 }, (_, i) => ({
           username: randomItem(fakeUsernames) + Math.floor(Math.random() * 10000),
           email: randomItem(fakeEmails),
@@ -587,23 +581,18 @@
             <td class="p-3 text-zinc-400 text-sm">${new Date(u.createdAt?.toDate?.() || Date.now()).toLocaleDateString()}</td>
           </tr>
         `).join('');
-      } catch (e) {
-        console.error('Users error:', e);
-      }
+      } catch (e) { console.error('Users error:', e); }
     }
     
     // Load withdrawals
     async function loadWithdrawals() {
       try {
-        const res = await fetch('/api/admin/withdrawals', {
-          headers: { 'x-admin-key': ADMIN_KEY }
-        });
+        const res = await fetch('/api/admin/withdrawals', { headers: { 'x-admin-key': ADMIN_KEY } });
         const data = await res.json();
         
         const table = document.getElementById('withdrawalsTable');
         const realWithdrawals = data.success ? data.withdrawals : [];
         
-        // Generate fake withdrawals
         const fakeWithdrawals = Array.from({ length: 25 }, () => ({
           username: randomItem(fakeUsernames) + Math.floor(Math.random() * 1000),
           coin: randomItem(fakeCoins),
@@ -640,23 +629,18 @@
         `).join('');
         
         lucide.createIcons();
-      } catch (e) {
-        console.error('Withdrawals error:', e);
-      }
+      } catch (e) { console.error('Withdrawals error:', e); }
     }
     
     // Load transactions
     async function loadTransactions() {
       try {
-        const res = await fetch('/api/admin/transactions?limit=100', {
-          headers: { 'x-admin-key': ADMIN_KEY }
-        });
+        const res = await fetch('/api/admin/transactions?limit=100', { headers: { 'x-admin-key': ADMIN_KEY } });
         const data = await res.json();
         
         const table = document.getElementById('transactionsTable');
         const realTxs = data.success ? data.transactions : [];
         
-        // Generate fake transactions
         const fakeTxs = Array.from({ length: 50 }, () => ({
           username: randomItem(fakeUsernames) + Math.floor(Math.random() * 1000),
           type: randomItem(['claim', 'withdraw', 'daily-bonus', 'referral']),
@@ -680,17 +664,13 @@
             <td class="p-3 text-zinc-400 text-sm">${new Date(t.createdAt?.toDate?.() || Date.now()).toLocaleString()}</td>
           </tr>
         `).join('');
-      } catch (e) {
-        console.error('Transactions error:', e);
-      }
+      } catch (e) { console.error('Transactions error:', e); }
     }
     
     // Load promos
     async function loadPromos() {
       try {
-        const res = await fetch('/api/admin/promo/list', {
-          headers: { 'x-admin-key': ADMIN_KEY }
-        });
+        const res = await fetch('/api/admin/promo/list', { headers: { 'x-admin-key': ADMIN_KEY } });
         const data = await res.json();
         
         const list = document.getElementById('promoList');
@@ -724,9 +704,7 @@
         }).join('');
         
         lucide.createIcons();
-      } catch (e) {
-        console.error('Promos error:', e);
-      }
+      } catch (e) { console.error('Promos error:', e); }
     }
     
     // Create promo
@@ -777,7 +755,7 @@
       }
     };
     
-    // Approve/Reject withdraw (placeholder)
+    // Approve/Reject withdraw
     window.approveWithdraw = (i) => alert('Approve withdrawal ' + i);
     window.rejectWithdraw = (i) => alert('Reject withdrawal ' + i);
     
@@ -790,6 +768,71 @@
       });
     });
     
+    // Maintenance mode
+    document.getElementById('enableMaintenance')?.addEventListener('click', async () => {
+      const duration = parseInt(document.getElementById('maintenanceDuration').value) || 60;
+      
+      try {
+        const res = await fetch('/api/admin/maintenance', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-admin-key': ADMIN_KEY
+          },
+          body: JSON.stringify({ enabled: true, duration })
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+          alert(`✅ Maintenance mode enabled for ${duration} minutes`);
+          checkMaintenanceStatus();
+        }
+      } catch (e) {
+        alert('❌ Error enabling maintenance');
+      }
+    });
+
+    document.getElementById('disableMaintenance')?.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/admin/maintenance', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-admin-key': ADMIN_KEY
+          },
+          body: JSON.stringify({ enabled: false })
+        });
+        
+        const result = await res.json();
+        if (result.success) {
+          alert('✅ Maintenance mode disabled');
+          checkMaintenanceStatus();
+        }
+      } catch (e) {
+        alert('❌ Error disabling maintenance');
+      }
+    });
+
+    async function checkMaintenanceStatus() {
+      try {
+        const res = await fetch('/api/maintenance');
+        const data = await res.json();
+        
+        const statusEl = document.getElementById('maintenanceStatus');
+        if (statusEl) {
+          if (data.enabled) {
+            statusEl.className = 'badge badge-red';
+            statusEl.textContent = 'Maintenance';
+          } else {
+            statusEl.className = 'badge badge-green';
+            statusEl.textContent = 'Live';
+          }
+        }
+      } catch (e) {
+        console.error('Maintenance status error:', e);
+      }
+    }
+    
     // Auto-refresh
     setInterval(() => {
       loadStats();
@@ -801,6 +844,7 @@
     loadStats();
     loadLiveWithdrawals();
     loadRecentActivity();
+    checkMaintenanceStatus();
     lucide.createIcons();
   </script>
 </body>
