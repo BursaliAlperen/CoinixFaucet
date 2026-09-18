@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#071c29">
+<title>Island Tycoon — Coral Cove</title>
+<style>
+:root{
+  --ink:#edfaff;--muted:#9dbbc7;--panel:rgba(8,29,42,.91);
+  --line:rgba(255,255,255,.12);--mint:#79f2bb;--gold:#ffd47b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;background:#04121d;
+  color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;
+  overscroll-behavior:none;
+}
+body{display:grid;place-items:center}
+button{font:inherit;cursor:pointer;color:inherit}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#game{
+  position:relative;width:min(100vw,56.25dvh);height:min(100dvh,177.7778vw);
+  background:#158aa4;overflow:hidden;isolation:isolate;touch-action:none;
+  box-shadow:0 0 100px #0009;
+}
+#world{position:absolute;inset:0}
+#world canvas{display:block;width:100%;height:100%}
+#shade{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(#071b3566,transparent 26%,transparent 68%,#061e3377);
+}
+#hud{position:absolute;inset:0;pointer-events:none}
+.top{padding: max(14px,env(safe-area-inset-top)) 16px 0}
+.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.eyebrow{font-size:9px;letter-spacing:2.5px;font-weight:800;color:var(--mint)}
+h1{font-size:21px;letter-spacing:-.6px;margin:3px 0}
+.island-tag{font-size:10px;color:#e4ffff;background:#153e50b3;padding:7px 9px;border-radius:20px}
+.stats{display:grid;grid-template-columns:1.25fr 1fr;gap:8px}
+.stat{
+  background:var(--panel);border:1px solid var(--line);border-radius:17px;
+  padding:10px 12px;display:flex;align-items:center;gap:9px;
+  box-shadow:0 8px 22px #00172422;
+}
+.icon{width:23px;height:23px;display:inline-block;flex-shrink:0}
+.stat small{display:block;color:var(--muted);font-size:9px;letter-spacing:1.1px}
+.stat strong{font-size:20px;line-height:1.35;font-variant-numeric:tabular-nums}
+.gold{color:var(--gold)}
+.mint{color:var(--mint)}
+.timebar{
+  display:flex;justify-content:space-between;gap:6px;margin:9px 2px;
+  font-size:10px;font-weight:650;color:#e5f9ff;text-shadow:0 2px 5px #003b50;
+}
+#mission{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:10px 12px;font-size:11px;display:flex;align-items:center;gap:9px;
+}
+#mission strong{display:block;font-size:11px;margin-bottom:3px}
+#mission small{font-size:10px;color:var(--muted)}
+.track{height:3px;background:#ffffff16;border-radius:4px;margin-top:6px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--mint);width:0;transition:width .3s}
+.tools{position:absolute;right:14px;top:265px;display:grid;gap:8px;pointer-events:auto}
+.tool{
+  width:39px;height:39px;border:1px solid var(--line);border-radius:13px;
+  background:var(--panel);display:grid;place-items:center;
+}
+.tool .icon{width:19px;height:19px}
+.tool.off{color:#8097a2}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.label{
+  position:absolute;left:0;top:0;transform:translate(-1000px,-1000px);
+  text-align:center;font-size:9px;white-space:nowrap;will-change:transform;
+}
+.label .pill{
+  display:inline-block;padding:5px 7px;border-radius:8px;
+  background:#082b3de8;border:1px solid #a7e8ef36;
+  box-shadow:0 3px 8px #00243233;
+}
+.label strong{font-size:9px;display:block;color:white}
+.label span{font-size:8px;color:var(--gold)}
+.label.locked{opacity:.55}
+.label.ready .pill{border-color:#79f2bb88}
+.label .mini{height:3px;background:#ffffff20;border-radius:4px;margin-top:3px;overflow:hidden}
+.label .mini i{display:block;height:100%;background:var(--mint)}
+#toast{
+  position:absolute;top:42%;left:50%;transform:translate(-50%,-10px);
+  width:max-content;max-width:88%;text-align:center;padding:11px 15px;
+  border-radius:12px;background:#092735f2;border:1px solid #79f2bb55;
+  font-size:12px;font-weight:650;opacity:0;transition:.22s;pointer-events:none;z-index:8;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#interaction{
+  position:absolute;bottom:184px;left:14px;right:14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:17px;
+  padding:12px;pointer-events:auto;box-shadow:0 8px 24px #00233233;
+}
+.interaction-top{display:flex;align-items:center;justify-content:space-between;gap:9px}
+#siteName{font-size:13px}
+#siteDetail{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5}
+#action{
+  border:0;border-radius:11px;padding:10px 12px;min-width:90px;
+  background:var(--mint);color:#08382f;font-weight:850;font-size:11px;
+}
+#action:disabled{background:#294554;color:#a4bdc6;cursor:default}
+#holdTrack{height:4px;background:#ffffff12;border-radius:8px;margin-top:9px;overflow:hidden}
+#holdFill{height:100%;width:0;background:var(--mint)}
+#controls{
+  position:absolute;bottom:max(24px,env(safe-area-inset-bottom));left:18px;right:18px;
+  height:139px;display:flex;align-items:center;justify-content:space-between;
+}
+#joystick{
+  width:128px;height:128px;border-radius:50%;background:#082d434a;
+  border:1px solid #e4faff40;pointer-events:auto;position:relative;
+  box-shadow:inset 0 0 25px #ddffff12;touch-action:none;
+}
+#joystick:before,#joystick:after{
+  content:"";position:absolute;background:#ffffff18;left:50%;top:14%;width:1px;height:72%;
+}
+#joystick:after{transform:rotate(90deg)}
+#stick{
+  position:absolute;left:42px;top:42px;width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(140deg,#e2ffffdd,#8cc9d8a8);
+  border:2px solid #e4ffffbb;box-shadow:0 5px 18px #00182755;
+  pointer-events:none;z-index:1;
+}
+.control-side{width:145px;text-align:right}
+#auto{
+  pointer-events:auto;border:1px solid #79f2bb55;background:#0b3545df;
+  border-radius:13px;padding:11px 12px;font-size:10px;font-weight:800;
+  display:inline-flex;align-items:center;gap:7px;
+}
+#auto .icon{width:17px;height:17px}
+#auto.active{color:var(--mint)}
+.hint{font-size:9px;color:#e2f9ffb3;line-height:1.65;margin-top:10px}
+.footer{
+  position:absolute;bottom:7px;width:100%;text-align:center;
+  font-size:8px;letter-spacing:1.8px;color:#d5f4ff80;
+}
+.overlay{
+  position:absolute;inset:0;z-index:20;background:#041d31ac;
+  backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center;
+  padding:23px;pointer-events:auto;
+}
+.card{
+  width:100%;max-height:92%;overflow:auto;background:linear-gradient(150deg,#123d50,#081e2d);
+  border:1px solid #b4edff25;border-radius:26px;padding:25px;
+  box-shadow:0 30px 80px #0006;
+}
+.card h2{font-size:31px;letter-spacing:-1px;margin:9px 0 12px;line-height:1.06}
+.card p{font-size:12px;color:#b5cfd9;line-height:1.8}
+.hero-icon{
+  width:60px;height:60px;border-radius:18px;background:#79f2bb14;
+  display:grid;place-items:center;color:var(--mint);margin-bottom:18px;
+}
+.hero-icon .icon{width:38px;height:38px}
+.instructions{display:grid;gap:12px;margin:20px 0}
+.instruction{display:flex;gap:11px;align-items:center;font-size:11px;line-height:1.5}
+.instruction .icon{color:var(--mint)}
+.instruction small{color:var(--muted);display:block;font-size:10px}
+.primary{
+  width:100%;border:0;border-radius:13px;background:var(--mint);color:#073b32;
+  padding:15px;font-size:13px;font-weight:850;
+}
+.secondary{
+  width:100%;background:transparent;border:1px solid var(--line);
+  padding:11px;border-radius:12px;margin-top:8px;font-size:11px;
+}
+.fine{font-size:9px!important;color:#809da9!important;text-align:center}
+#help{display:none}
+#loadingError{display:none;color:#ffd47b;font-size:12px;line-height:1.6;margin-top:14px}
+@media(max-height:650px){
+  .top{padding-top:9px}.brand{margin-bottom:5px}h1{font-size:18px}
+  .stat{padding:7px 9px}.stat strong{font-size:17px}
+  #mission{padding:7px 10px}.tools{top:221px}
+  #interaction{bottom:150px;padding:9px}
+  #controls{height:113px;bottom:22px}
+  #joystick{transform:scale(.85);transform-origin:left center}
+  .card{padding:19px}.card h2{font-size:26px}.instructions{gap:8px;margin:13px 0}
+}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="world"></div>
+  <div id="shade"></div>
+  <div id="labels"></div>
+
+<div id="hud">
+    <div class="top">
+      <div class="brand">
+        <div><div class="eyebrow">BUILD YOUR OWN PARADISE</div><h1>Coral Cove</h1></div>
+        <span class="island-tag" id="rank">NEW SETTLEMENT</span>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <span class="icon gold" data-icon="coin"></span>
+          <div><small>ISLAND BALANCE</small><strong class="gold" id="cash">$200</strong></div>
+        </div>
+        <div class="stat">
+          <span class="icon mint" data-icon="chart"></span>
+          <div><small>PASSIVE INCOME</small><strong id="income">$0<span>/s</span></strong></div>
+        </div>
+      </div>
+      <div class="timebar">
+        <span id="day">DAY 01 · 08:00</span>
+        <span id="session">PLAY TIME 00:00:00</span>
+      </div>
+      <div id="mission">
+        <span class="icon mint" data-icon="flag"></span>
+        <div style="flex:1">
+          <strong id="missionTitle">Your first business</strong>
+          <small id="missionText">Walk to the Juice Bar purchase pad.</small>
+          <div class="track"><i id="missionFill"></i></div>
+        </div>
+        <span class="gold" id="missionCount">0/6</span>
+      </div>
+    </div>
+
+<div class="tools">
+      <button class="tool" id="sound" aria-label="Toggle generated music" title="Music"><span class="icon" data-icon="music"></span></button>
+      <button class="tool" id="camera" aria-label="Change camera zoom" title="Camera zoom"><span class="icon" data-icon="focus"></span></button>
+      <button class="tool" id="helpButton" aria-label="Open game help" title="Help"><span class="icon" data-icon="help"></span></button>
+    </div>
+
+<div id="interaction">
+      <div class="interaction-top">
+        <div><strong id="siteName">Explore your island</strong><div id="siteDetail">Move onto a glowing purchase pad.</div></div>
+        <button id="action" disabled>EXPLORE</button>
+      </div>
+      <div id="holdTrack"><div id="holdFill"></div></div>
+    </div>
+
+<div id="controls">
+      <div id="joystick" role="application" aria-label="Movement joystick. Keyboard: WASD or arrow keys."><div id="stick"></div></div>
+      <div class="control-side">
+        <button id="auto" class="active"><span class="icon" data-icon="build"></span><span id="autoText">WALK BUY: ON</span></button>
+        <div class="hint">Move onto a pad to buy.<br>Construction is automatic.<br>WASD / arrows · E to interact</div>
+      </div>
+    </div>
+    <div class="footer">CORAL COVE / ISLAND TYCOON</div>
+  </div>
+
+<div id="toast" role="status"></div>
+
+<div class="overlay" id="welcome">
+    <div class="card">
+      <div class="hero-icon"><span class="icon" data-icon="island"></span></div>
+      <div class="eyebrow">A LITTLE ISLAND. A BIG DREAM.</div>
+      <h2>From empty sand<br>to island empire.</h2>
+      <p>Explore a living 3D island. Build businesses, welcome visitors, and turn your little cove into a thriving resort.</p>
+      <div class="instructions">
+        <div class="instruction"><span class="icon" data-icon="move"></span><div>Move with the joystick<small>Keyboard players can use WASD or arrows.</small></div></div>
+        <div class="instruction"><span class="icon" data-icon="coin"></span><div>Walk onto a purchase pad<small>Stand still briefly to purchase a new business.</small></div></div>
+        <div class="instruction"><span class="icon" data-icon="build"></span><div>Watch your island grow<small>Buildings construct automatically and earn cash.</small></div></div>
+      </div>
+      <button class="primary" id="start">START YOUR ISLAND</button>
+      <p class="fine">Original synthesized music · Local autosave · No account needed</p>
+      <div id="loadingError"></div>
+    </div>
+  </div>
+
+<div class="overlay" id="help">
+    <div class="card">
+      <div class="eyebrow">ISLAND FIELD GUIDE</div>
+      <h2>Build. Earn. Expand.</h2>
+      <p>Stand on a glowing pad for 1.4 seconds to purchase it when Walk Buy is enabled. You can also use the action button or press E.</p>
+      <p>Complete businesses in order to unlock the next site. Construction takes a few seconds. Completed buildings generate income automatically.</p>
+      <p>Revisit a completed business and press UPGRADE to increase its income. Each business supports five levels. Upgrades are never purchased automatically.</p>
+      <p>Your island autosaves on this browser. When you return, completed businesses can earn up to two hours of offline income. If browser storage is unavailable, keep the page open to retain progress.</p>
+      <p>A full island day lasts eight real minutes. The play timer tracks your active time. Use the camera button to switch between overview and close-up views.</p>
+      <button class="primary" id="closeHelp">BACK TO THE ISLAND</button>
+      <button class="secondary" id="reset">RESET ISLAND PROGRESS</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+const $ = id => document.getElementById(id);
+const iconPaths = {
+  coin:'<ellipse cx="12" cy="12" rx="8" ry="9"/><path d="M14.5 8.5h-3a2 2 0 0 0 0 4h1a2 2 0 0 1 0 4h-3M12 6v12"/>',
+  chart:'<path d="M4 4v16h17M8 15v-4m5 4V7m5 8V3"/>',
+  flag:'<path d="M5 21V3m0 1h13l-3 4 3 4H5"/>',
+  music:'<path d="M9 17V5l11-2v12M9 8l11-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="17" cy="16" rx="3" ry="2"/>',
+  focus:'<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><circle cx="12" cy="12" r="4"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3v.2"/>',
+  build:'<path d="M4 21V5h16v16M2 21h20M4 5l16 8M4 13l16 8M9 5V2h6v3M9 21v-5h6v5"/>',
+  island:'<path d="M3 19q9-7 18 0M2 22q3-2 6 0t6 0 6 0M12 17l2-11M14 6Q9 0 5 6q5-1 9 0M14 6q5-6 8 1-5-2-8-1M14 6q-4 1-5 6M14 6q5 2 4 6"/>',
+  move:'<path d="M12 3v18M3 12h18M8 7l4-4 4 4M8 17l4 4 4-4M7 8l-4 4 4 4m10-8 4 4-4 4"/>'
+};
+document.querySelectorAll('[data-icon]').forEach(el => {
+  el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+iconPaths[el.dataset.icon]+'</svg>';
+});
+
+if (!window.THREE) {
+  $('loadingError').style.display='block';
+  $('loadingError').textContent='The 3D engine could not load. Connect to the internet and reload this file.';
+  $('start').disabled=true;
+  return;
+}
+
+const T=THREE, SAVE_KEY='coral-cove-tycoon-v1';
+const sites=[
+  {name:'Juice Bar',x:-4,z:5.2,cost:100,rate:9,time:8,color:0xffb66d,type:0},
+  {name:'Beach Cabins',x:4,z:5.2,cost:260,rate:22,time:12,color:0x75d5d0,type:1},
+  {name:'Coral Cafe',x:-4,z:0,cost:680,rate:48,time:16,color:0xf6a3a6,type:2},
+  {name:'Surf Club',x:4,z:0,cost:1500,rate:95,time:20,color:0x80b5f5,type:3},
+  {name:'Palm Hotel',x:-4,z:-5.2,cost:3400,rate:190,time:25,color:0xd7b3fa,type:4},
+  {name:'Sky Lighthouse',x:4,z:-5.2,cost:7200,rate:380,time:30,color:0xffda89,type:5}
+];
+
+let money=200,playTime=0,walkBuy=true,musicOn=true,started=false;
+let nearby=-1,held=0,toastUntil=0,zoomClose=false,offlineReward=0;
+let storageOK=true,lastSave=0,lastUI=0,lastActiveSave=0;
+const keys={},input={x:0,y:0};
+const playerPos={x:0,z:7.3};
+let saved=null;
+
+try {
+  const raw=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
+  if(raw && raw.version===1 && Array.isArray(raw.sites) && raw.sites.length===6) saved=raw;
+} catch(e){storageOK=false}
+
+const finite=(v,d,min,max)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):d;
+
+if(saved){
+  money=finite(saved.money,200,0,1e15);
+  playTime=finite(saved.playTime,0,0,1e10);
+  walkBuy=saved.walkBuy!==false;
+  musicOn=saved.musicOn!==false;
+  playerPos.x=finite(saved.x,0,-8,8);
+  playerPos.z=finite(saved.z,7.3,-8,8);
+}
+sites.forEach((s,i)=>{
+  const p=saved?.sites[i]||{};
+  s.level=Math.floor(finite(p.level,0,0,5));
+  s.remaining=finite(p.remaining,0,0,120);
+  s.total=finite(p.total,s.time,1,120);
+  s.target=Math.floor(finite(p.target,s.level,0,5));
+  if(s.remaining>0 && s.target!==s.level+1){s.remaining=0;s.target=s.level}
+  s.padZ=s.z+1.7;
+});
+function income(){return sites.reduce((n,s)=>n+s.rate*s.level,0)}
+if(saved){
+  const elapsed=Math.max(0,Math.min(7200,(Date.now()-finite(saved.timestamp,Date.now(),0,Date.now()))/1000));
+  offlineReward=Math.floor(elapsed*income());
+  money+=offlineReward;
+  $('start').textContent='RETURN TO YOUR ISLAND';
+}
+
+function save(){
+  if(!started)return;
+  try{
+    localStorage.setItem(SAVE_KEY,JSON.stringify({
+      version:1,money,playTime,walkBuy,musicOn,x:player.position.x,z:player.position.z,
+      timestamp:Date.now(),
+      sites:sites.map(s=>({level:s.level,remaining:s.remaining,total:s.total,target:s.target}))
+    }));
+    storageOK=true;
+  }catch(e){storageOK=false}
+}
+function cash(n){
+  if(n>=1e9)return '$'+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=10000)return '$'+(n/1000).toFixed(1)+'K';
+  return '$'+Math.floor(n).toLocaleString('en-US');
+}
+function timeString(sec){
+  sec=Math.floor(sec);
+  return [Math.floor(sec/3600),Math.floor(sec/60)%60,sec%60].map(n=>String(n).padStart(2,'0')).join(':');
+}
+function toast(text){
+  $('toast').textContent=text;$('toast').classList.add('show');
+  toastUntil=performance.now()+3000;
+}
+
+let renderer;
+try{
+  renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+}catch(e){
+  $('loadingError').style.display='block';
+  $('loadingError').textContent='WebGL is unavailable. Please open this file in a browser with hardware acceleration enabled.';
+  $('start').disabled=true;return;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=T.PCFSoftShadowMap;
+renderer.outputColorSpace=T.SRGBColorSpace;
+renderer.setClearColor(0x329eb9);
+$('world').appendChild(renderer.domElement);
+
+const scene=new T.Scene();
+scene.fog=new T.Fog(0x65bbd0,48,100);
+const cam=new T.OrthographicCamera(-11,11,19.55,-19.55,.1,160);
+const hemi=new T.HemisphereLight(0xc6f2ff,0x61775a,2.4);
+scene.add(hemi);
+const sun=new T.DirectionalLight(0xffefcf,3);
+sun.position.set(-12,25,12);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:1,far:70});
+sun.shadow.bias=-.001;sun.shadow.normalBias=.035;
+scene.add(sun);
+
+const materials=new Map();
+function mat(color){
+  if(!materials.has(color))materials.set(color,new T.MeshStandardMaterial({color,roughness:.85,flatShading:true}));
+  return materials.get(color);
+}
+const boxGeo=new T.BoxGeometry(1,1,1);
+function box(parent,w,h,d,color,x=0,y=0,z=0){
+  const m=new T.Mesh(boxGeo,mat(color));m.scale.set(w,h,d);m.position.set(x,y,z);
+  m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+function cylinder(parent,r1,r2,h,color,x=0,y=0,z=0,sides=12){
+  const m=new T.Mesh(new T.CylinderGeometry(r1,r2,h,sides),mat(color));
+  m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+}
+function sphere(parent,r,color,x,y,z,sx=1,sy=1,sz=1){
+  const m=new T.Mesh(new T.IcosahedronGeometry(r,1),mat(color));
+  m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;parent.add(m);return m;
+}
+
+const sea=new T.Mesh(new T.PlaneGeometry(240,240),new T.MeshStandardMaterial({
+  color:0x218eac,roughness:.4,metalness:.18
+}));
+sea.rotation.x=-Math.PI/2;sea.position.y=-.42;scene.add(sea);
+const shallows=cylinder(scene,12.9,13.3,.08,0x48c8c3,0,-.36,0,64);
+shallows.scale.z=.98;
+const sand=cylinder(scene,10.8,11.8,.65,0xf3dfae,0,-.03,0,64);
+sand.scale.z=1.07;
+const grass=cylinder(scene,9.9,10.25,.23,0x83bc78,0,.39,0,48);
+grass.scale.z=1.06;
+const ground=.515;
+box(scene,1.35,.025,18.3,0xf1d8a3,0,ground+.018,0);
+[-5.2,0,5.2].forEach(z=>box(scene,11.3,.027,1.1,0xf1d8a3,0,ground+.02,z+1.7));
+box(scene,2.1,.2,4.2,0xb88453,0,.04,11.6);
+for(let z=9.8;z<13.8;z+=.35)box(scene,2.12,.035,.06,0x8a603e,0,.16,z);
+[-.87,.87].forEach(x=>[10.1,13.2].forEach(z=>cylinder(scene,.1,.12,1.2,0x8b603d,x,-.14,z,6)));
+
+const palms=[];
+function palm(x,z,scale=1){
+  const g=new T.Group();g.position.set(x,ground,z);g.scale.setScalar(scale);scene.add(g);
+  const trunk=cylinder(g,.12,.23,2.6,0xaa8150,.17,1.3,0,7);
+  trunk.rotation.z=-.12;
+  const crown=new T.Group();crown.position.set(.33,2.7,0);g.add(crown);
+  for(let j=0;j<7;j++){
+    const leaf=new T.Group();leaf.rotation.y=j*Math.PI*2/7;crown.add(leaf);
+    const shape=sphere(leaf,.75,j%2?0x399469:0x51ab70,0,-.13,.8,.35,.15,1.55);
+    shape.rotation.x=.23;
+  }
+  sphere(crown,.17,0x8b5f39,0,-.16,.15);
+  palms.push(crown);
+}
+[[-8,5],[-8,-2],[-7,-6.8],[-2,-9],[2.4,-9],[7,-6.6],[8,2.7],[7.6,6.5],[-5.7,8.5]]
+.forEach((p,i)=>palm(p[0],p[1],.8+(i%3)*.13));
+
+for(let i=0;i<22;i++){
+  const a=i*2.399,r=9.7+(i%3)*.22;
+  sphere(scene,.19+(i%4)*.04,i%2?0xabbda3:0xd5ccab,Math.cos(a)*r,.51,Math.sin(a)*r,1.5,.7,1);
+}
+for(let i=0;i<4;i++){
+  const g=new T.Group();scene.add(g);
+  g.position.set(i%2?-7.3:7.3,ground,i<2?4:-4);
+  cylinder(g,.025,.03,1.1,0xe7d9b4,0,.55,0,6);
+  cylinder(g,.04,.72,.28,i%2?0xf8b5a4:0xffe4a3,0,1.22,0,8);
+  box(g,.55,.12,1.1,0xffedce,.8,.17,.15);
+}
+
+const waveLines=[];
+for(let i=0;i<36;i++){
+  const a=i*2.399,r=14+(i%8)*2.3;
+  const m=box(scene,.7+(i%4)*.3,.012,.065,0x8ed8df,Math.cos(a)*r,-.39,Math.sin(a)*r);
+  m.castShadow=false;waveLines.push(m);
+}
+
+const padGeo=new T.CylinderGeometry(.86,.86,.045,40);
+sites.forEach((s,i)=>{
+  s.group=new T.Group();s.group.position.set(s.x,ground,s.z);scene.add(s.group);
+  s.model=new T.Group();s.group.add(s.model);
+  s.scaffold=new T.Group();s.group.add(s.scaffold);
+  box(s.group,2.85,.13,2.55,0xe5d0a6,0,.035,0);
+  for(const x of [-1.4,1.4])for(const z of [-1.25,1.25]){
+    box(s.scaffold,.07,3,.07,0xdba968,x,1.5,z);
+  }
+  [1,2,3].forEach(y=>{
+    box(s.scaffold,2.9,.065,.07,0xdba968,0,y,1.25);
+    box(s.scaffold,2.9,.065,.07,0xdba968,0,y,-1.25);
+  });
+  const pm=new T.MeshStandardMaterial({color:0x79efb6,emissive:0x32bc81,emissiveIntensity:.35,roughness:.65});
+  s.pad=new T.Mesh(padGeo,pm);s.pad.position.set(s.x,ground+.055,s.padZ);scene.add(s.pad);
+  const ring=new T.Mesh(new T.TorusGeometry(.94,.035,6,48),mat(0xe5fff2));
+  ring.rotation.x=Math.PI/2;ring.position.copy(s.pad.position);ring.position.y+=.025;scene.add(ring);s.ring=ring;
+  box(scene,.5,.035,.07,0xffffff,s.x,ground+.09,s.padZ);
+  box(scene,.07,.035,.5,0xffffff,s.x,ground+.09,s.padZ);
+  s.label=document.createElement('div');s.label.className='label';
+  $('labels').appendChild(s.label);
+  buildModel(s,s.remaining>0?s.target:s.level);
+});
+
+function clearModel(g){
+  while(g.children.length){
+    const obj=g.children[0];g.remove(obj);
+    obj.traverse(o=>{if(o.geometry&&o.geometry!==boxGeo)o.geometry.dispose()});
+  }
+}
+function windows(g,w,h,d){
+  for(let x=-w*.3;x<=w*.31;x+=w*.3){
+    box(g,.33,.38,.035,0x275973,x,h,d/2+.023);
+    box(g,.37,.045,.06,0xfff4d5,x,h-.23,d/2+.04);
+  }
+}
+function buildModel(s,level){
+  clearModel(s.model);
+  if(level===0)return;
+  const g=s.model,c=s.color;
+  if(s.type===0){
+    box(g,2,.95,1.4,c,0,.55,0);
+    box(g,2.25,.13,1.7,0xfff3d4,0,1.09,0);
+    [-.95,.95].forEach(x=>box(g,.09,1.1,.09,0xf8e8c4,x,1.65,-.55));
+    box(g,2.4,.18,1.9,0xf87865,0,2.2,0);
+    for(let j=-2;j<=2;j++)box(g,.2,.2,1.91,0xfff0cf,j*.44,2.22,0);
+    for(let j=-1;j<=1;j++)cylinder(g,.1,.09,.22,0xffc74e,j*.45,1.27,.35,8);
+  }else if(s.type===1){
+    [-.7,.7].forEach(x=>{
+      box(g,1.2,1.25,1.7,c,x,.72,0);
+      const roof=cylinder(g,.02,1.06,.8,0xb6754a,x,1.7,0,4);roof.rotation.y=Math.PI/4;
+      box(g,.35,.74,.04,0x315d67,x,.46,.87);
+      box(g,.36,.32,.04,0xffe1a1,x,1.04,.88);
+    });
+  }else if(s.type===2){
+    box(g,2.2,1.5,1.7,0xffefce,0,.85,0);
+    box(g,2.55,.2,2,c,0,1.65,0);
+    box(g,2.4,.1,.9,c,0,1.3,1.12);
+    windows(g,2.2,1,1.7);
+    [-.8,.8].forEach(x=>{
+      cylinder(g,.28,.28,.08,0xb97d53,x,.47,1.12);
+      cylinder(g,.06,.08,.4,0x675749,x,.23,1.12,6);
+    });
+  }else if(s.type===3){
+    box(g,2.3,1.4,1.65,c,0,.8,0);
+    const roof=box(g,2.8,.17,2.1,0xf8e7c2,0,1.65,0);roof.rotation.z=-.12;
+    windows(g,2.3,.95,1.65);
+    [-1,0,1].forEach((n)=>{
+      const surf=sphere(g,.45,n===0?0xffce70:0xf48778,n*.44,.8,1.01,.24,1.65,.13);
+      surf.rotation.z=n*.18;
+    });
+  }else if(s.type===4){
+    const floors=2+Math.floor((level-1)/2);
+    box(g,2.4,floors*.9,1.9,0xf9ead3,0,.16+floors*.45,0);
+    for(let j=0;j<floors;j++){
+      windows(g,2.4,.62+j*.9,1.9);
+      box(g,2.55,.11,2.03,c,0,.25+j*.9,0);
+    }
+    box(g,2.65,.18,2.15,c,0,.25+floors*.9,0);
+    box(g,.45,.7,.06,0x2a6372,0,.47,.98);
+  }else{
+    cylinder(g,.64,.9,3.6,0xfff1da,0,1.85,0,12);
+    cylinder(g,.71,.75,.48,c,0,2.25,0,12);
+    cylinder(g,1,1,.15,0x365b69,0,3.6,0,12);
+    cylinder(g,.63,.63,.64,0x78cbd2,0,3.98,0,10);
+    cylinder(g,0,.92,.64,0xee946f,0,4.55,0,10);
+    sphere(g,.25,0xffe3a1,0,4,0);
+  }
+  for(let i=0;i<level;i++){
+    box(g,.17,.09,.13,0xffd46b,-.48+i*.24,.15,1.23);
+  }
+  if(level>=3 && s.type!==4 && s.type!==5){
+    cylinder(g,.08,.08,1,0xffe4a5,1.12,2.7,-.6,6);
+    box(g,.57,.34,.045,c,1.36,3,-.6);
+  }
+}
+function unlocked(i){return i===0||sites[i-1].level>0}
+function costOf(s){return Math.floor(s.cost*(s.level===0?1:Math.pow(1.85,s.level)))}
+
+function person(shirt=0xffffff){
+  const g=new T.Group();
+  const torso=box(g,.34,.47,.24,shirt,0,.66,0);
+  sphere(g,.19,0xf4c599,0,1.04,0);
+  const hair=sphere(g,.2,0x3c3c46,0,1.13,-.025,1,.55,1);
+  const left=box(g,.115,.34,.14,0x234257,-.1,.26,0);
+  const right=box(g,.115,.34,.14,0x234257,.1,.26,0);
+  const arm1=box(g,.1,.38,.12,0xf4c599,-.24,.65,0);
+  const arm2=box(g,.1,.38,.12,0xf4c599,.24,.65,0);
+  g.userData={left,right,arm1,arm2,torso,hair};
+  return g;
+}
+const player=person(0xfff3d6);
+player.position.set(playerPos.x,ground,playerPos.z);scene.add(player);
+box(player,.26,.3,.13,0xed9768,0,.66,-.2);
+const marker=new T.Mesh(new T.TorusGeometry(.42,.035,6,30),mat(0xfff4be));
+marker.rotation.x=Math.PI/2;marker.position.y=.035;player.add(marker);
+
+const visitors=[];
+for(let i=0;i<9;i++){
+  const p=person([0xef9d9f,0x93d6dd,0xf2ca79,0xb4a2db][i%4]);
+  p.scale.setScalar(.72);p.position.set(0,ground,8.5);p.visible=false;scene.add(p);
+  visitors.push({mesh:p,target:new T.Vector3(),phase:i*3});
+}
+
+const boat=new T.Group();scene.add(boat);
+box(boat,1.25,.32,2.8,0xfff3d6,0,0,0);
+box(boat,.95,.22,1.8,0xa97c53,0,.22,.12);
+box(boat,.75,.65,1,0xffffff,0,.6,.05);
+box(boat,.77,.3,.5,0x4a9eb1,0,.64,-.24);
+box(boat,.96,.12,1.25,0xefab79,0,1,.05);
+
+const birds=[];
+for(let i=0;i<5;i++){
+  const g=new T.Group();const a=box(g,.48,.035,.1,0xffffff,-.22,0,0);
+  const b=box(g,.48,.035,.1,0xffffff,.22,0,0);
+  g.userData={a,b};scene.add(g);birds.push(g);
+}
+
+const particles=[];
+function celebrate(s){
+  for(let i=0;i<18;i++){
+    const p=box(scene,.1,.1,.1,[0xffd477,0x78edbd,0xffffff,s.color][i%4],s.x,ground+1,s.z);
+    p.castShadow=false;
+    particles.push({mesh:p,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,vz:(Math.random()-.5)*3,life:1.5});
+  }
+}
+
+/* Original procedural soundtrack, generated locally with Web Audio. */
+let audio=null,master=null,musicTimer=null,nextNote=0,beat=0;
+const melody=[76,79,83,79,74,78,81,78,72,76,79,76,74,78,81,86];
+function tone(note,at,duration,gain=.06,type='sine'){
+  if(!audio||!master)return;
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.type=type;o.frequency.value=440*Math.pow(2,(note-69)/12);
+  g.gain.setValueAtTime(0,at);
+  g.gain.linearRampToValueAtTime(gain,at+.018);
+  g.gain.exponentialRampToValueAtTime(.0001,at+duration);
+  o.connect(g);g.connect(master);o.start(at);o.stop(at+duration+.03);
+}
+function scheduleMusic(){
+  if(!audio||!musicOn||document.hidden||!started)return;
+  if(nextNote<audio.currentTime)nextNote=audio.currentTime+.03;
+  while(nextNote<audio.currentTime+.2){
+    tone(melody[beat%melody.length],nextNote,.65,.065,'sine');
+    if(beat%4===0){
+      const root=[48,50,45,43][Math.floor(beat/4)%4];
+      tone(root,nextNote,1.4,.055,'triangle');
+      tone(root+7,nextNote,1.1,.018,'sine');
+    }
+    beat++;nextNote+=.32;
+  }
+}
+function initAudio(){
+  try{
+    if(!audio){
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      audio=new AC();master=audio.createGain();master.gain.value=musicOn?.48:0;
+      master.connect(audio.destination);
+      musicTimer=setInterval(scheduleMusic,90);
+    }
+    audio.resume().catch(()=>{});
+    if(musicOn)nextNote=audio.currentTime+.04;
+  }catch(e){}
+}
+function chime(){
+  if(!musicOn||!audio)return;
+  [72,76,79,84].forEach((n,i)=>tone(n,audio.currentTime+i*.075,.4,.1));
+}
+
+function purchase(i){
+  if(!started||i<0||i!==nearby)return;
+  const s=sites[i];
+  if(!unlocked(i)){toast('Complete '+sites[i-1].name+' first.');return}
+  if(s.remaining>0){toast('Construction is already in progress.');return}
+  if(s.level>=5){toast('This business is fully upgraded.');return}
+  const cost=costOf(s);
+  if(money<cost){toast('You need '+cash(cost-money)+' more.');return}
+  money-=cost;s.target=s.level+1;s.total=s.time+(s.level*4);s.remaining=s.total;
+  buildModel(s,s.target);held=0;
+  toast(s.level===0?s.name+' construction started.':s.name+' upgrade started.');
+  chime();save();updateUI();
+}
+
+let joyPointer=null;
+function updateJoy(e){
+  const r=$('joystick').getBoundingClientRect();
+  let x=(e.clientX-r.left-r.width/2)/(r.width*.33);
+  let y=(e.clientY-r.top-r.height/2)/(r.height*.33);
+  const length=Math.hypot(x,y);
+  if(length>1){x/=length;y/=length}
+  input.x=x;input.y=y;
+  $('stick').style.transform=`translate(${x*39}px,${y*39}px)`;
+}
+$('joystick').addEventListener('pointerdown',e=>{
+  if(!started||joyPointer!==null)return;
+  e.preventDefault();joyPointer=e.pointerId;
+  $('joystick').setPointerCapture(e.pointerId);updateJoy(e);
+});
+$('joystick').addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)updateJoy(e)});
+function stopJoy(){joyPointer=null;input.x=input.y=0;$('stick').style.transform='translate(0,0)'}
+['pointerup','pointercancel','lostpointercapture'].forEach(type=>$('joystick').addEventListener(type,e=>{
+  if(e.pointerId===joyPointer)stopJoy();
+}));
+function stopControls(){stopJoy();Object.keys(keys).forEach(k=>delete keys[k])}
+window.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d','e',' '].includes(k))e.preventDefault();
+  keys[k]=true;
+  if(k==='e'&&!e.repeat&&$('help').style.display!=='flex')purchase(nearby);
+});
+window.addEventListener('keyup',e=>delete keys[e.key.toLowerCase()]);
+window.addEventListener('blur',stopControls);
+
+$('action').onclick=()=>purchase(nearby);
+$('auto').onclick=()=>{
+  walkBuy=!walkBuy;held=0;updateUI();save();
+  toast(walkBuy?'Stand on a new pad to buy automatically.':'Walk Buy off. Use BUY to purchase.');
+};
+$('sound').onclick=()=>{
+  musicOn=!musicOn;initAudio();
+  if(master)master.gain.setTargetAtTime(musicOn?.48:0,audio.currentTime,.1);
+  updateUI();save();
+};
+$('camera').onclick=()=>{zoomClose=!zoomClose;toast(zoomClose?'Close-up camera':'Island overview')};
+$('helpButton').onclick=()=>{$('help').style.display='flex';stopControls();held=0};
+$('closeHelp').onclick=()=>{$('help').style.display='none'};
+$('reset').onclick=()=>{
+  if(!confirm('Reset your island? All saved buildings, cash, and play time will be removed.'))return;
+  try{localStorage.removeItem(SAVE_KEY)}catch(e){}
+  started=false;location.reload();
+};
+$('start').onclick=()=>{
+  $('welcome').style.display='none';started=true;initAudio();
+  if(offlineReward>0)toast('Welcome back! Offline income: '+cash(offlineReward));
+  else toast('Walk to the Juice Bar to start your island.');
+  save();
+  if(!storageOK)setTimeout(()=>toast('Autosave unavailable. Progress will last for this session only.'),3400);
+};
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    save();stopControls();hiddenAt=Date.now();
+    if(audio)audio.suspend().catch(()=>{});
+  }else{
+    if(started&&hiddenAt){
+      const seconds=Math.min(7200,Math.max(0,(Date.now()-hiddenAt)/1000));
+      const earned=Math.floor(seconds*income());money+=earned;
+      if(earned>0)toast('While away: '+cash(earned));
+      save();
+    }
+    hiddenAt=0;last=performance.now();
+    if(audio&&started)audio.resume().catch(()=>{});
+  }
+});
+window.addEventListener('pagehide',save);
+
+let width=0,height=0;
+function resize(){
+  const r=$('game').getBoundingClientRect();width=r.width;height=r.height;
+  renderer.setSize(width,height,false);
+  const halfWidth=11.7,halfHeight=halfWidth*height/width;
+  cam.left=-halfWidth;cam.right=halfWidth;cam.top=halfHeight;cam.bottom=-halfHeight;
+  cam.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe($('game'));resize();
+
+const projected=new T.Vector3();
+const cameraTarget=new T.Vector3(0,0,0);
+const cameraOffset=new T.Vector3(17,25,22);
+const moveRight=new T.Vector3(22,0,-17).normalize();
+const moveDown=new T.Vector3(17,0,22).normalize();
+
+function updateUI(){
+  $('cash').textContent=cash(money);
+  $('income').textContent=cash(income())+'/s';
+  $('session').textContent='PLAY TIME '+timeString(playTime);
+  const clockMinutes=480+Math.floor(playTime*3);
+  const dayNumber=Math.floor(clockMinutes/1440)+1;
+  const hour=Math.floor(clockMinutes/60)%24,minute=clockMinutes%60;
+  $('day').textContent='DAY '+String(dayNumber).padStart(2,'0')+' · '+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
+  const built=sites.filter(s=>s.level>0).length,totalLevels=sites.reduce((a,s)=>a+s.level,0);
+  $('rank').textContent=['NEW SETTLEMENT','BEACH OUTPOST','COASTAL VILLAGE','ISLAND TOWN','RESORT ISLAND','TROPICAL CAPITAL','ISLAND EMPIRE'][built];
+  $('missionTitle').textContent=built===6?'Master your island':built===0?'Your first business':'Expand the cove';
+  $('missionText').textContent=built===6?'Upgrade every business to Level 5.':`Build ${sites[built].name} · ${cash(sites[built].cost)}`;
+  $('missionFill').style.width=(built===6?totalLevels/30:built/6)*100+'%';
+  $('missionCount').textContent=built===6?totalLevels+'/30':built+'/6';
+  $('auto').classList.toggle('active',walkBuy);
+  $('autoText').textContent='WALK BUY: '+(walkBuy?'ON':'OFF');
+  $('sound').classList.toggle('off',!musicOn);
+  $('sound').setAttribute('aria-pressed',String(musicOn));
+  $('auto').setAttribute('aria-pressed',String(walkBuy));
+
+sites.forEach((s,i)=>{
+    const active=s.remaining>0,locked=!unlocked(i);
+    s.label.className='label'+(locked?' locked':!s.level?' ready':'');
+    let detail=locked?'Build '+sites[i-1].name:active?'BUILDING · '+Math.ceil(s.remaining)+'s':s.level?'LV '+s.level+' · '+cash(s.rate*s.level)+'/s':cash(s.cost)+' · BUY';
+    s.label.innerHTML='<div class="pill"><strong>'+s.name+'</strong><span>'+detail+'</span>'+
+      (active?'<div class="mini"><i style="width:'+((1-s.remaining/s.total)*100)+'%"></i></div>':'')+'</div>';
+  });
+
+const action=$('action');
+  if(nearby<0){
+    $('siteName').textContent='Explore your island';
+    $('siteDetail').textContent='Move onto a glowing purchase pad.';
+    action.textContent='EXPLORE';action.disabled=true;return;
+  }
+  const s=sites[nearby];$('siteName').textContent=s.name;
+  if(!unlocked(nearby)){
+    $('siteDetail').textContent='Complete '+sites[nearby-1].name+' to unlock.';
+    action.textContent='LOCKED';action.disabled=true;
+  }else if(s.remaining>0){
+    $('siteDetail').textContent='Auto-building · '+Math.ceil(s.remaining)+' seconds remaining';
+    action.textContent=Math.floor((1-s.remaining/s.total)*100)+'%';action.disabled=true;
+  }else if(s.level>=5){
+    $('siteDetail').textContent='Level 5 · Maximum income '+cash(s.rate*s.level)+'/s';
+    action.textContent='MAX LEVEL';action.disabled=true;
+  }else{
+    const c=costOf(s);
+    $('siteDetail').textContent=s.level?
+      'Level '+s.level+' → '+(s.level+1)+' · +'+cash(s.rate)+'/s':
+      'Earn '+cash(s.rate)+'/s · Build time '+s.time+'s';
+    action.textContent=(s.level?'UPGRADE ':'BUY ')+cash(c);
+    action.disabled=money<c;
+    if(money<c)$('siteDetail').textContent+=' · Need '+cash(c-money);
+  }
+}
+
+function animatePerson(g,moving,t){
+  const d=g.userData,a=moving?Math.sin(t*10)*.45:0;
+  d.left.rotation.x=a;d.right.rotation.x=-a;
+  d.arm1.rotation.x=-a;d.arm2.rotation.x=a;
+}
+function validPosition(x,z){
+  if((x*x)/(10.0*10.0)+(z*z)/(10.35*10.35)>1)return false;
+  for(const s of sites){
+    if(Math.abs(x-s.x)<1.64&&Math.abs(z-s.z)<1.42)return false;
+  }
+  return true;
+}
+
+let last=performance.now(),hiddenAt=0;
+let visualTime=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
+  if(document.hidden)return;
+  visualTime+=dt;
+  const t=visualTime,playing=started;
+  if(playing){
+    playTime+=dt;money=Math.min(1e15,money+income()*dt);
+    const controlsAllowed=$('help').style.display!=='flex';
+    let ix=controlsAllowed?input.x:0,iy=controlsAllowed?input.y:0;
+    if(controlsAllowed){
+      ix+=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
+      iy+=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+    }
+    const length=Math.hypot(ix,iy);
+    if(length>1){ix/=length;iy/=length}
+    const dx=(moveRight.x*ix+moveDown.x*iy)*3.6*dt;
+    const dz=(moveRight.z*ix+moveDown.z*iy)*3.6*dt;
+    if(validPosition(player.position.x+dx,player.position.z))player.position.x+=dx;
+    if(validPosition(player.position.x,player.position.z+dz))player.position.z+=dz;
+    if(length>.08){
+      const targetAngle=Math.atan2(dx,dz);
+      let diff=targetAngle-player.rotation.y;
+      diff=Math.atan2(Math.sin(diff),Math.cos(diff));
+      player.rotation.y+=diff*Math.min(1,dt*14);
+    }
+    animatePerson(player,length>.08,t);
+    const previous=nearby;
+    nearby=-1;let closest=1.25;
+    sites.forEach((s,i)=>{
+      const dist=Math.hypot(player.position.x-s.x,player.position.z-s.padZ);
+      if(dist<closest){closest=dist;nearby=i}
+    });
+    if(previous!==nearby){held=0;updateUI()}
+    if(nearby>=0){
+      const s=sites[nearby];
+      if(controlsAllowed&&walkBuy&&s.level===0&&s.remaining===0&&unlocked(nearby)&&money>=s.cost&&length<.15){
+        held+=dt;if(held>=1.4)purchase(nearby);
+      }else held=0;
+    }else held=0;
+    sites.forEach(s=>{
+      if(s.remaining>0){
+        s.remaining=Math.max(0,s.remaining-dt);
+        if(s.remaining===0){
+          s.level=s.target;s.model.scale.set(1,1,1);
+          celebrate(s);chime();toast(s.name+' Level '+s.level+' is open!');save();updateUI();
+        }
+      }
+    });
+    if(now-lastSave>5000){save();lastSave=now}
+  }
+
+$('holdFill').style.width=(held/1.4*100)+'%';
+
+sites.forEach((s,i)=>{
+    const constructing=s.remaining>0;
+    s.scaffold.visible=constructing;
+    s.model.visible=s.level>0||constructing;
+    const progress=constructing?1-s.remaining/s.total:1;
+    s.model.scale.y=constructing?.08+.92*progress:1;
+    s.scaffold.rotation.y=Math.sin(t*2)*.007;
+    const enabled=unlocked(i);
+    const color=!enabled?0x9eaaa2:constructing?0xffce79:s.level?0x7dd4ec:0x79efb6;
+    s.pad.material.color.setHex(color);
+    s.pad.material.emissive.setHex(color);
+    s.pad.material.emissiveIntensity=enabled?.18+Math.sin(t*3+i)*.09:0;
+    s.ring.scale.setScalar(1+Math.sin(t*2+i)*.035);
+  });
+
+const built=sites.filter(s=>s.level>0);
+  visitors.forEach((v,i)=>{
+    v.mesh.visible=i<Math.min(9,built.length*2);
+    if(!v.mesh.visible)return;
+    const p=v.mesh.position;
+    if(p.distanceTo(v.target)<.2||v.target.lengthSq()===0){
+      const n=(Math.floor(t/8)+i)%Math.max(1,built.length);
+      const s=built[n];
+      v.target.set(i%3===0?0:s.x+(i%2?.65:-.65),ground,i%3===0?8:s.padZ+.35);
+    }
+    const dx=v.target.x-p.x,dz=v.target.z-p.z,d=Math.hypot(dx,dz);
+    if(d>.08){
+      p.x+=dx/d*dt*.75;p.z+=dz/d*dt*.75;
+      v.mesh.rotation.y=Math.atan2(dx,dz);
+    }
+    animatePerson(v.mesh,d>.08,t+v.phase);
+  });
+
+palms.forEach((p,i)=>{p.rotation.z=Math.sin(t*1.1+i)*.045;p.rotation.x=Math.cos(t*.7+i)*.025});
+  waveLines.forEach((m,i)=>{m.position.y=-.38+Math.sin(t*1.5+i)*.018;m.scale.x=(.7+(i%4)*.3)*(1+Math.sin(t+i)*.16)});
+  boat.position.set(Math.sin(t*.075)*15.4,-.04+Math.sin(t*1.7)*.045,Math.cos(t*.075)*15.4);
+  boat.rotation.set(Math.sin(t*1.2)*.025,t*.075+Math.PI/2,Math.sin(t)*.03);
+  birds.forEach((b,i)=>{
+    const a=t*.12+i*1.25;
+    b.position.set(Math.cos(a)*(8+i*.5),6+i*.3,Math.sin(a)*(8+i*.5));
+    b.rotation.y=-a;
+    b.userData.a.rotation.z=Math.sin(t*5+i)*.28;
+    b.userData.b.rotation.z=-Math.sin(t*5+i)*.28;
+  });
+
+for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];p.life-=dt;p.vy-=dt*4;
+    p.mesh.position.x+=p.vx*dt;p.mesh.position.y+=p.vy*dt;p.mesh.position.z+=p.vz*dt;
+    p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*3;
+    p.mesh.scale.setScalar(Math.max(.001,.1*p.life/1.5));
+    if(p.life<=0){scene.remove(p.mesh);particles.splice(i,1)}
+  }
+
+const dayPhase=(480+playTime*3)%1440/1440;
+  const daylight=Math.max(.15,Math.sin((dayPhase-.25)*Math.PI*2)*.5+.5);
+  hemi.intensity=1.15+daylight*1.25;sun.intensity=.8+daylight*2.2;
+  const sky=new T.Color(0x195274).lerp(new T.Color(0x329eb9),daylight);
+  renderer.setClearColor(sky);
+  sea.material.color.copy(new T.Color(0x12526e).lerp(new T.Color(0x218eac),daylight));
+
+const follow=zoomClose?.68:.10;
+  const desired=new T.Vector3(player.position.x*follow,0,player.position.z*follow-1.5);
+  cameraTarget.lerp(desired,1-Math.exp(-dt*3));
+  cam.position.copy(cameraTarget).add(cameraOffset);
+  cam.lookAt(cameraTarget);
+  cam.zoom+=( (zoomClose?1.4:1)-cam.zoom)*Math.min(1,dt*4);
+  cam.updateProjectionMatrix();
+  renderer.render(scene,cam);
+
+sites.forEach(s=>{
+    const y=s.type===5&&s.level>0?5.55:s.type===4&&s.level>0?4.5:3.35;
+    projected.set(s.x,y,s.z).project(cam);
+    const x=(projected.x*.5+.5)*width,yScreen=(-projected.y*.5+.5)*height;
+    s.label.style.transform=`translate(${x}px,${yScreen}px) translate(-50%,-100%)`;
+    s.label.style.visibility=projected.z>1||projected.z< -1?'hidden':'visible';
+  });
+  if(now-lastUI>160){updateUI();lastUI=now}
+  if(now>toastUntil)$('toast').classList.remove('show');
+}
+updateUI();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
