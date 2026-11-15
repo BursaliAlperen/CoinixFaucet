@@ -702,7 +702,7 @@ body {
 }
 
 .milestone-card::before {
-  content: "\\f091"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+  content: "\f091"; font-family: "Font Awesome 6 Free"; font-weight: 900;
   position: absolute;
   right: 20px;
   top: 50%;
@@ -1892,10 +1892,10 @@ function renderWithdrawCoins() {
     <div class="withdraw-card">
       <div class="withdraw-header"><div class="withdraw-coin-img"><i class="fa-solid fa-wallet" aria-hidden="true"></i></div>
         <div><div style="font-weight:800;">CNX → DOGE</div><div class="withdraw-balance">Balance: <strong>${balance.toFixed(6)} CNX</strong></div></div>
-        <div class="min-withdraw ${enough?'enough':'not-enough'}">${enough?'✓ Available':'✗ Not enough'}</div>
+        <div class="min-withdraw ${enough?'enough':'not-enough'}">${enough?'<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Available':'<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Not enough'}</div>
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Minimum: 300 CNX ($0.03). 10,000 CNX = $1.00. DOGE is calculated using the live DOGE/USD rate.</div>
-      <div style="font-size:12px;color:var(--success);margin-bottom:10px;">✓ Automatic FaucetPay DOGE payout</div>
+      <div style="font-size:12px;color:var(--success);margin-bottom:10px;"><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Automatic FaucetPay DOGE payout</div>
       <input type="email" id="withdraw-email-cnx" placeholder="FaucetPay Email" class="input-field" autocomplete="email">
       <input type="number" id="withdraw-amount-cnx" placeholder="Amount in CNX" class="input-field" step="0.000001" min="300">
       <div class="amount-presets">
