@@ -1807,8 +1807,10 @@ async function openOfferwall() {
   const tab = window.open('about:blank', '_blank');
   const res = await api('/api/offerwall/offerwall');
   if (res.url) {
-    if (window.Telegram?.WebApp?.openLink) window.Telegram.WebApp.openLink(res.url);
-    else if (tab) tab.location.href = res.url;
+    if (window.Telegram?.WebApp?.openLink) {
+      if (tab) tab.close();
+      window.Telegram.WebApp.openLink(res.url);
+    } else if (tab) tab.location.href = res.url;
     else window.location.href = res.url;
   } else {
     if (tab) tab.close();
