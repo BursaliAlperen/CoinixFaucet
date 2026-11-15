@@ -101,6 +101,29 @@ function initLanding() {
   $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
   $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
 
+  const mobileMenu = $('#mobileNavPanel');
+  const menuButton = $('#menuToggle');
+  menuButton?.addEventListener('click', () => {
+    if (!mobileMenu) return;
+    const opening = mobileMenu.hasAttribute('hidden');
+    mobileMenu.toggleAttribute('hidden', !opening);
+    menuButton.setAttribute('aria-expanded', String(opening));
+  });
+  mobileMenu?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    mobileMenu.setAttribute('hidden', '');
+    menuButton?.setAttribute('aria-expanded', 'false');
+  }));
+  $('#mobileLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
+  $('#mobileSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+  if ('IntersectionObserver' in window) {
+    const targets = $('#landingPage > section:not(:first-of-type), #landingPage footer');
+    targets.forEach(el => el.setAttribute('data-reveal', ''));
+    document.documentElement.classList.add('reveal-ready');
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+    }), { threshold: 0.12 });
+    targets.forEach(el => observer.observe(el));
+  }
   renderLandingCoins();
   loadLiveStats();
   loadLiveWithdraws();
@@ -140,7 +163,7 @@ async function loadLiveStats() {
       if ($('#statClaims')) $('#statClaims').textContent = (s.totalClaims || 0).toLocaleString();
       if ($('#statPaid')) $('#statPaid').textContent = fmtUSD(s.totalPaid || 0);
       if ($('#statAvg')) $('#statAvg').textContent = fmtUSD(s.totalClaims > 0 ? (s.totalPaid / s.totalClaims) : 0);
-      if ($('#heroOnline')) $('#heroOnline').textContent = (Math.min(s.totalUsers || 0, Math.floor((s.totalUsers || 0) * 0.15) + 50)).toLocaleString();
+      if ($('#heroOnline')) $('#heroOnline').textContent = (s.totalUsers || 0).toLocaleString();
     }
   } catch (e) { console.error('Stats error:', e); }
 }
@@ -494,7 +517,7 @@ const router = {
   },
   init() {
     window.addEventListener('hashchange', () => this.navigate());
-    $('#menuToggle')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
+    $('#menuToggle2')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
     if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
     else this.navigate();
   },

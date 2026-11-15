@@ -115,42 +115,18 @@ app.use(express.static(frontendPath));
 
 app.get('/sitemap.xml', (req, res) => {
   const today = new Date().toISOString().split('T')[0];
-  const siteUrl = process.env.SITE_URL || 'https://coinixfaucet.mine.bz';
-  
-  res.header('Content-Type', 'application/xml');
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${siteUrl}/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/#/about</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/#/faq</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/#/terms</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${siteUrl}/#/privacy</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-</urlset>`);
+  const siteUrl = (process.env.SITE_URL || 'https://coinixfaucet.mine.bz').replace(/\/$/, '');
+  const paths = [
+    { path: '/', priority: '1.0', changefreq: 'daily' },
+    { path: '/earn-crypto/', priority: '0.9', changefreq: 'monthly' },
+    { path: '/cnx-token/', priority: '0.8', changefreq: 'monthly' },
+    { path: '/faq/', priority: '0.8', changefreq: 'monthly' },
+    { path: '/about/', priority: '0.7', changefreq: 'monthly' },
+    { path: '/terms/', priority: '0.3', changefreq: 'yearly' },
+    { path: '/privacy/', priority: '0.3', changefreq: 'yearly' }
+  ];
+  const xml = paths.map(item => `  <url><loc>${siteUrl}${item.path}</loc><lastmod>${today}</lastmod><changefreq>${item.changefreq}</changefreq><priority>${item.priority}</priority></url>`).join('\n');
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${xml}\n</urlset>`);
 });
 
 app.get('/robots.txt', (req, res) => {
