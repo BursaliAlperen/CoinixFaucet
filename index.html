@@ -1726,7 +1726,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
       <div><strong>COINIX</strong><span>Earn. Collect. Grow.</span></div>
     </div>
     <div class="footer-copy">© 2026 CoinixFaucet · CNX Rewards</div>
-    <div class="footer-links"><a href="#page-dashboard" onclick="showPage('dashboard')">Back to top</a><a href="https://t.me/CoinixBot" target="_blank" rel="noopener">Telegram</a></div>
+    <div class="footer-links"><a href="#page-dashboard" onclick="showPage('dashboard')">Back to top</a><a id="footer-telegram-link" href="https://t.me/CoinixBot" target="_blank" rel="noopener">Telegram</a></div>
   </footer>
 
   <!-- Bottom Nav -->
@@ -1855,6 +1855,8 @@ async function setupAuthOptions() {
     if (note) note.textContent = 'Sign-in configuration could not be loaded. Please refresh.';
     return;
   }
+  const footerTelegramLink = document.getElementById('footer-telegram-link');
+  if (footerTelegramLink && authConfig.telegramBotUsername) footerTelegramLink.href = 'https://t.me/' + authConfig.telegramBotUsername.replace(/^@/, '');
   const telegramButton = document.getElementById('telegram-mini-login');
   if (telegramButton && !tg?.initData) telegramButton.style.display = 'none';
   if (telegramButton) telegramButton.addEventListener('click', async () => {
