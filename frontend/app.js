@@ -517,7 +517,17 @@ const router = {
   },
   init() {
     window.addEventListener('hashchange', () => this.navigate());
-    $('#menuToggle2')?.addEventListener('click', () => $('#sidebar')?.classList.toggle('open'));
+    const sidebar = $('#sidebar');
+    const menuToggle = $('#menuToggle2');
+    menuToggle?.addEventListener('click', () => {
+      const opening = !sidebar?.classList.contains('open');
+      sidebar?.classList.toggle('open', opening);
+      menuToggle.setAttribute('aria-expanded', String(opening));
+    });
+    $('#sidebarClose')?.addEventListener('click', () => {
+      sidebar?.classList.remove('open');
+      menuToggle?.setAttribute('aria-expanded', 'false');
+    });
     if (!location.hash.startsWith('#/')) location.hash = '#/dashboard';
     else this.navigate();
   },
@@ -530,6 +540,7 @@ const router = {
 
     if(window.innerWidth <= 1024) {
       $('#sidebar')?.classList.remove('open');
+      $('#menuToggle2')?.setAttribute('aria-expanded', 'false');
     }
 
     const c = $('#pageContainer');
@@ -552,53 +563,52 @@ async function renderDashboard() {
     const s = data.stats;
     const c = $('#pageContainer');
     if (!c) return;
+    const balanceCNX = Number(s.cnxBalance || state.profile.cnx || 0);
+    const balanceUSD = Number(s.totalBalanceUSD || 0);
+    const otherBalances = Object.entries(state.profile.balances || {})
+      .filter(([, amount]) => Number(amount) > 0)
+      .slice(0, 3);
 
     c.innerHTML = `
-      <div class="space-y-6 page-enter">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-zinc-500 text-sm">Welcome back,</p>
-            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">${escapeHtml(state.profile.username)}</h1>
+      <div class="nova-dashboard page-enter">
+        <header class="nova-dashboard-heading">
+          <div><span class="nova-section-kicker">YOUR COINIX SPACE</span><h1>Welcome back, ${escapeHtml(state.profile.username)}.</h1><p>Your rewards, activities and account overview — all in one place.</p></div>
+          <div class="nova-dashboard-badges"><span class="nova-level-badge"><i data-lucide="award"></i> Level ${s.level || 1}</span><span class="nova-streak-badge"><i data-lucide="flame"></i> ${s.dailyStreak || state.profile.dailyStreak || 0} day streak</span></div>
+        </header>
+
+        <section class="nova-balance-hero">
+          <div class="nova-balance-copy"><span class="nova-balance-label"><i data-lucide="wallet"></i> TOTAL PORTFOLIO VALUE</span><strong>${fmtUSD(balanceUSD)}</strong><p>Across your Coinix reward balances</p><div class="nova-balance-cnx"><span class="nova-cnx-token-mark">C</span><span><b>${fmt(balanceCNX, 2)} CNX</b><small>CNX reward balance · ${fmtUSD(s.cnxUSD || balanceCNX * 0.0001)}</small></span></div></div>
+          <div class="nova-balance-actions"><button onclick="router.go('#/faucet')" class="nova-balance-action-primary"><i data-lucide="droplets"></i> Make a claim</button><button onclick="router.go('#/withdraw')" class="nova-balance-action-secondary"><i data-lucide="arrow-up-right"></i> Withdraw</button></div>
+          <div class="nova-balance-decoration deco-one"></div><div class="nova-balance-decoration deco-two"></div>
+        </section>
+
+        <section class="nova-metric-grid">
+          <article class="nova-metric-card"><span class="nova-metric-icon violet"><i data-lucide="calendar-check"></i></span><div><small>Earned today</small><strong>${fmtUSD(s.todayEarnings)}</strong><em>Today's recorded claims</em></div></article>
+          <article class="nova-metric-card"><span class="nova-metric-icon teal"><i data-lucide="users"></i></span><div><small>Referral earnings</small><strong>${fmtUSD(s.referralEarnings)}</strong><em>Referral rewards recorded</em></div></article>
+          <article class="nova-metric-card"><span class="nova-metric-icon amber"><i data-lucide="receipt"></i></span><div><small>Total claims</small><strong>${Number(s.totalClaims || 0).toLocaleString()}</strong><em>Claims on your account</em></div></article>
+          <article class="nova-metric-card"><span class="nova-metric-icon blue"><i data-lucide="wallet-cards"></i></span><div><small>Total withdrawn</small><strong>${fmtUSD(s.totalWithdrawn)}</strong><em>Recorded withdrawal value</em></div></article>
+        </section>
+
+        <section class="nova-dashboard-section">
+          <div class="nova-section-heading compact"><div><span class="nova-section-kicker">PICK YOUR NEXT STEP</span><h2>Explore earning options</h2><p>Jump back into an activity whenever you're ready.</p></div><span class="nova-heading-aside">COINIX EARN <i data-lucide="sparkles"></i></span></div>
+          <div class="nova-dashboard-earn-grid">
+            <button class="nova-dashboard-earn-card earn-violet" onclick="router.go('#/faucet')"><span class="nova-dashboard-earn-icon"><i data-lucide="droplets"></i></span><span class="nova-dashboard-earn-text"><b>Manual Faucet</b><small>Claim CNX every 60 seconds</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
+            <button class="nova-dashboard-earn-card earn-teal" onclick="router.go('#/offerwall')"><span class="nova-dashboard-earn-icon"><i data-lucide="layout-grid"></i></span><span class="nova-dashboard-earn-text"><b>Partner Offerwalls</b><small>Explore available offers</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
+            <button class="nova-dashboard-earn-card earn-amber" onclick="router.go('#/ptc')"><span class="nova-dashboard-earn-icon"><i data-lucide="mouse-pointer-click"></i></span><span class="nova-dashboard-earn-text"><b>PTC Ads</b><small>Sponsored task area</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
+            <button class="nova-dashboard-earn-card earn-blue" onclick="router.go('#/daily-bonus')"><span class="nova-dashboard-earn-icon"><i data-lucide="gift"></i></span><span class="nova-dashboard-earn-text"><b>Daily Bonus</b><small>Check your reward streak</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
           </div>
-        </div>
-        
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="stat-glass-card">
-            <div class="stat-icon primary"><i data-lucide="wallet" class="w-5 h-5"></i></div>
-            <div class="stat-label">Main Balance</div>
-            <div class="stat-value">${fmtUSD(s.totalBalanceUSD)}</div>
-          </div>
-          <div class="stat-glass-card">
-            <div class="stat-icon green"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
-            <div class="stat-label">Today</div>
-            <div class="stat-value">${fmtUSD(s.todayEarnings)}</div>
-          </div>
-          <div class="stat-glass-card">
-            <div class="stat-icon purple"><i data-lucide="users" class="w-5 h-5"></i></div>
-            <div class="stat-label">Referral</div>
-            <div class="stat-value">${fmtUSD(s.referralEarnings)}</div>
-          </div>
-          <div class="stat-glass-card">
-            <div class="stat-icon cyan"><i data-lucide="arrow-down-circle" class="w-5 h-5"></i></div>
-            <div class="stat-label">Withdrawn</div>
-            <div class="stat-value">${fmtUSD(s.totalWithdrawn)}</div>
-          </div>
-        </div>
-        
-        <div class="flex gap-4">
-          <button onclick="router.go('#/faucet')" class="btn-primary flex-1">
-            <i data-lucide="droplets" class="w-5 h-5"></i> Claim Now
-          </button>
-          <button onclick="router.go('#/withdraw')" class="btn-ghost flex-1">
-            <i data-lucide="wallet" class="w-5 h-5"></i> Withdraw
-          </button>
-        </div>
+        </section>
+
+        <section class="nova-dashboard-bottom">
+          <article class="nova-dashboard-panel"><div class="nova-panel-title"><div><span class="nova-section-kicker">ACCOUNT SNAPSHOT</span><h3>Your progress</h3></div><span class="nova-panel-title-icon"><i data-lucide="activity"></i></span></div><div class="nova-progress-row"><span>Account level</span><b>Level ${s.level || 1}</b></div><div class="nova-progress-track"><span style="width:${Math.min(100, Math.max(4, Number(s.level || 1) * 8))}%"></span></div><div class="nova-snapshot-grid"><div><b>${s.dailyStreak || state.profile.dailyStreak || 0}</b><small>Day streak</small></div><div><b>${otherBalances.length}</b><small>Other coin balances</small></div><div><b>${fmt(s.coinsUSD ? s.coinsUSD : 0, 4)}</b><small>Other assets · USD</small></div></div></article>
+          <article class="nova-dashboard-panel nova-help-panel"><span class="nova-help-orb"><i data-lucide="messages-square"></i></span><span class="nova-section-kicker">STAY CONNECTED</span><h3>Grow with the Coinix community.</h3><p>Get product updates, share feedback and follow platform announcements.</p><a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener">Join community <i data-lucide="arrow-up-right"></i></a></article>
+        </section>
       </div>
     `;
-
     if (typeof lucide !== 'undefined') lucide.createIcons();
   } catch (e) { toast(e.message, 'error'); }
 }
+
 
 let faucetInterval = null;
 function renderFaucet() {

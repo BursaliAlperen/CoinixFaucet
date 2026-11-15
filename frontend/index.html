@@ -18,7 +18,11 @@
   <title>CoinixFaucet - Earn Free Cryptocurrency Every Day</title>
   
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#8b5cf6" />
+  <meta name="theme-color" content="#f7f8fc" />
+  <meta name="color-scheme" content="light" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/logo.svg" />
   
@@ -44,6 +48,7 @@
   <link rel="stylesheet" href="/styles/premium.css" />
   <link rel="stylesheet" href="/brand-refresh.css" />
   <link rel="stylesheet" href="/ui-v3.css" />
+  <link rel="stylesheet" href="/coinix-nova.css" />
 </head>
 <body class="min-h-screen">
   <!-- MAINTENANCE MODE -->
@@ -94,53 +99,63 @@
 <nav id="mobileNavPanel" class="mobile-nav-panel" aria-label="Mobile navigation" hidden>
 <a href="#features">Features</a><a href="/earn-crypto/">Ways to earn</a><a href="/cnx-token/">CNX token</a><a href="/faq/">FAQ</a><a href="/about/">About</a>
 <div class="mobile-nav-actions"><button id="mobileLoginBtn" class="btn-ghost" type="button">Log in</button><button id="mobileSignupBtn" class="btn-primary" type="button">Create account</button></div></nav>
-    <section id="main-content" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-16 px-4">
-      <div class="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-secondary-500/5"></div>
-      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
-      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary-500/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 3s;"></div>
-      
-      <div class="relative z-10 max-w-4xl mx-auto text-center">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-600 dark:text-primary-400 text-sm font-medium mb-6">
-          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          <span id="heroOnline">—</span> registered members
+    <section id="main-content" class="nova-hero">
+      <div class="nova-hero-orb nova-orb-one"></div>
+      <div class="nova-hero-orb nova-orb-two"></div>
+      <div class="nova-hero-layout">
+        <div class="nova-hero-copy">
+          <div class="nova-eyebrow"><span class="nova-live-dot"></span><span id="heroOnline">—</span> members in the Coinix community</div>
+          <h1>Small tasks.<br/><span>Real progress.</span></h1>
+          <p class="nova-hero-lead">Discover simple ways to earn crypto, collect CNX rewards and keep everything organized in one place.</p>
+          <div id="heroBtns" class="nova-hero-actions">
+            <button id="heroSignupBtn" class="btn-primary nova-btn-primary"><i data-lucide="sparkles" class="w-5 h-5"></i> Create free account</button>
+            <button id="heroLoginBtn" class="btn-ghost nova-btn-secondary"><i data-lucide="log-in" class="w-5 h-5"></i> Sign in</button>
+          </div>
+          <div class="nova-hero-note"><i data-lucide="shield-check" class="w-4 h-4"></i> One account · Multiple earning options · Clear reward tracking</div>
+          <div class="nova-stats-row">
+            <div class="nova-stat"><span>Registered members</span><strong id="statUsers">—</strong></div>
+            <div class="nova-stat"><span>Claims recorded</span><strong id="statClaims">—</strong></div>
+            <div class="nova-stat"><span>Recorded payouts</span><strong id="statPaid">—</strong></div>
+            <div class="nova-stat"><span>Average claim</span><strong id="statAvg">—</strong></div>
+          </div>
         </div>
-        
-        <h1 class="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-primary-600 via-secondary-500 to-primary-600 bg-clip-text text-transparent leading-tight">
-          Earn Free Cryptocurrency<br/>Every Single Day
-        </h1>
-        
-        <p class="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 mb-10 max-w-2xl mx-auto">
-          Earn CNX through supported activities, explore partner offerwalls and track your rewards in one simple dashboard.
-        </p>
-        
-        <div id="heroBtns" class="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button id="heroSignupBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
-            <i data-lucide="rocket" class="w-5 h-5"></i>
-            Start Earning — It's Free
-          </button>
-          <button id="heroLoginBtn" class="btn-ghost text-base px-10 py-5">
-            <i data-lucide="log-in" class="w-5 h-5"></i>
-            Login
-          </button>
+        <div class="nova-hero-visual" aria-label="CoinixFaucet feature preview">
+          <div class="nova-preview-glow"></div>
+          <div class="nova-preview-card">
+            <div class="nova-preview-top">
+              <div><span class="nova-preview-kicker">COINIX REWARDS</span><strong>Your earning hub</strong></div>
+              <span class="nova-preview-mark"><img src="/logo.svg" alt="" /></span>
+            </div>
+            <div class="nova-preview-balance">
+              <span>One place for your rewards</span>
+              <strong>CNX <i data-lucide="arrow-up-right"></i></strong>
+              <small>Track claims, tasks and wallet activity</small>
+              <div class="nova-preview-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+            <div class="nova-preview-list">
+              <div class="nova-preview-row"><span class="nova-preview-icon violet"><i data-lucide="droplets"></i></span><span><b>Manual Faucet</b><small>Claim CNX every 60 seconds</small></span><em>Faucet</em></div>
+              <div class="nova-preview-row"><span class="nova-preview-icon teal"><i data-lucide="layout-grid"></i></span><span><b>Partner Offerwalls</b><small>Explore available offers</small></span><em>Offers</em></div>
+              <div class="nova-preview-row"><span class="nova-preview-icon amber"><i data-lucide="mouse-pointer-click"></i></span><span><b>PTC Ads</b><small>Sponsored task area</small></span><em>Tasks</em></div>
+            </div>
+            <div class="nova-preview-foot"><span><i class="nova-live-dot"></i> Built around your rewards</span><span>COINIX / 01</span></div>
+          </div>
+          <div class="nova-float-tag nova-float-one"><i data-lucide="wallet"></i><span><b>CNX Wallet</b><small>Reward overview</small></span></div>
+          <div class="nova-float-tag nova-float-two"><i data-lucide="gift"></i><span><b>Daily bonus</b><small>Keep your streak</small></span></div>
         </div>
-        
-        <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-          <div class="stat-card">
-            <div class="stat-label">Registered Users</div>
-            <div class="stat-value" id="statUsers">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Total Claims</div>
-            <div class="stat-value" id="statClaims">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Total Paid Out</div>
-            <div class="stat-value" id="statPaid">—</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Avg Claim</div>
-            <div class="stat-value" id="statAvg">—</div>
-          </div>
+      </div>
+    </section>
+
+    <section id="earn-methods" class="nova-earn-section">
+      <div class="nova-section-wrap">
+        <div class="nova-section-heading">
+          <div><span class="nova-section-kicker">YOUR EARNING SPACE</span><h2>Choose how you earn</h2><p>Start with the activity that suits you. Available rewards and partner offers may vary.</p></div>
+          <span class="nova-heading-aside">FOUR WAYS TO START <i data-lucide="arrow-down-right"></i></span>
+        </div>
+        <div class="nova-earn-grid">
+          <article class="nova-earn-card earn-violet"><div class="nova-earn-card-top"><span class="nova-earn-icon"><i data-lucide="droplets"></i></span><span class="nova-card-number">01</span></div><h3>Manual Faucet</h3><p>Come back every 60 seconds to make a CNX claim.</p><div class="nova-earn-meta"><span>60s cooldown</span><span class="nova-earn-arrow"><i data-lucide="arrow-up-right"></i></span></div></article>
+          <article class="nova-earn-card earn-teal"><div class="nova-earn-card-top"><span class="nova-earn-icon"><i data-lucide="layout-grid"></i></span><span class="nova-card-number">02</span></div><h3>Partner Offerwalls</h3><p>Browse third-party offers and complete eligible partner activities.</p><div class="nova-earn-meta"><span>Partner offers</span><span class="nova-earn-arrow"><i data-lucide="arrow-up-right"></i></span></div></article>
+          <article class="nova-earn-card earn-amber"><div class="nova-earn-card-top"><span class="nova-earn-icon"><i data-lucide="mouse-pointer-click"></i></span><span class="nova-card-number">03</span></div><h3>PTC Ads</h3><p>Visit the sponsored task area and review available ad opportunities.</p><div class="nova-earn-meta"><span>Sponsored tasks</span><span class="nova-earn-arrow"><i data-lucide="arrow-up-right"></i></span></div></article>
+          <article class="nova-earn-card earn-blue"><div class="nova-earn-card-top"><span class="nova-earn-icon"><i data-lucide="users"></i></span><span class="nova-card-number">04</span></div><h3>Referrals</h3><p>Invite friends and track referral activity and credited earnings.</p><div class="nova-earn-meta"><span>Referral program</span><span class="nova-earn-arrow"><i data-lucide="arrow-up-right"></i></span></div></article>
         </div>
       </div>
     </section>
@@ -160,14 +175,14 @@
     <section id="features" class="py-20 px-4">
       <div class="max-w-6xl mx-auto">
         <div class="text-center mb-12">
-          <h2 class="text-4xl font-black mb-4">WHY CHOOSE US</h2>
+          <h2 class="text-4xl font-black mb-4">Everything in one rewards hub</h2>
           <p class="text-zinc-600 dark:text-zinc-400">Everything you need to earn crypto effortlessly</p>
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div class="feature-card">
             <div class="feature-icon primary"><i data-lucide="zap" class="w-6 h-6"></i></div>
-            <h3 class="text-xl font-bold mb-2">Instant FaucetPay</h3>
-            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Submit eligible withdrawal requests to your configured FaucetPay destination.</p>
+            <h3 class="text-xl font-bold mb-2">FaucetPay withdrawals</h3>
+            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Manage eligible withdrawal requests and follow their recorded processing status.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon secondary"><i data-lucide="layout-dashboard" class="w-6 h-6"></i></div>
@@ -181,8 +196,8 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon green"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
-            <h3 class="text-xl font-bold mb-2">Secure Platform</h3>
-            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Account verification and platform-level abuse controls.</p>
+            <h3 class="text-xl font-bold mb-2">Account protection</h3>
+            <p class="text-zinc-600 dark:text-zinc-400 text-sm">Email verification and platform-level abuse controls help protect account activity.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon cyan"><i data-lucide="gift" class="w-6 h-6"></i></div>
@@ -282,69 +297,40 @@
 
   <!-- APP SHELL -->
   <div id="appShell" class="hidden min-h-screen flex">
-    <aside id="sidebar" class="sidebar w-64 min-h-screen p-4 flex flex-col gap-2 border-r border-zinc-200 dark:border-zinc-800">
-      <div class="flex items-center gap-2 mb-6 px-2">
-        <img src="/logo.svg" alt="CoinixFaucet" class="w-10 h-10 rounded-full shadow-lg" />
-        <span class="font-bold text-lg">CoinixFaucet</span>
-      </div>
-      
-      <a href="#/dashboard" class="nav-link" data-route="dashboard">
-        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
-      </a>
-      <a href="#/faucet" class="nav-link" data-route="faucet">
-        <i data-lucide="droplets" class="w-5 h-5"></i> Manual Faucet
-      </a>
-      <a href="#/daily-bonus" class="nav-link" data-route="daily-bonus">
-        <i data-lucide="gift" class="w-5 h-5"></i> Daily Bonus
-      </a>
-      <a href="#/offerwall" class="nav-link" data-route="offerwall">
-        <i data-lucide="layout-grid" class="w-5 h-5"></i> Offerwall
-      </a>
-      <a href="/mining.html" class="nav-link"><i data-lucide="pickaxe" class="w-4 h-4"></i><span>Mining World</span></a>
-      <a href="#/games" class="nav-link" data-route="games">
-        <i data-lucide="gamepad-2" class="w-5 h-5"></i> Games
-      </a>
-      <a href="#/ptc" class="nav-link" data-route="ptc">
-        <i data-lucide="mouse-pointer-click" class="w-5 h-5"></i> PTC Ads
-      </a>
-      <a href="#/swap" class="nav-link" data-route="swap">
-        <i data-lucide="arrow-left-right" class="w-5 h-5"></i> Swap
-      </a>
-      <a href="#/referrals" class="nav-link" data-route="referrals">
-        <i data-lucide="users" class="w-5 h-5"></i> Referrals
-      </a>
-      <a href="#/withdraw" class="nav-link" data-route="withdraw">
-        <i data-lucide="wallet" class="w-5 h-5"></i> Withdraw
-      </a>
-      <a href="#/transactions" class="nav-link" data-route="transactions">
-        <i data-lucide="receipt" class="w-5 h-5"></i> Transactions
-      </a>
-      <a href="#/leaderboard" class="nav-link" data-route="leaderboard">
-        <i data-lucide="trophy" class="w-5 h-5"></i> Leaderboard
-      </a>
-      <a href="#/settings" class="nav-link" data-route="settings">
-        <i data-lucide="settings" class="w-5 h-5"></i> Settings
-      </a>
-      
-      <div class="mt-auto pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
-        <button id="darkModeToggle2" class="nav-link">
-          <i data-lucide="moon" class="w-5 h-5"></i> Dark Mode
-        </button>
-        <button id="logoutBtn" class="nav-link text-red-500 hover:text-red-600">
-          <i data-lucide="log-out" class="w-5 h-5"></i> Logout
-        </button>
+    <aside id="sidebar" class="sidebar">
+      <div class="nova-sidebar-brand"><img src="/logo.svg" alt="CoinixFaucet"/><span>CoinixFaucet<small>REWARDS PLATFORM</small></span><button id="sidebarClose" class="nova-sidebar-close" type="button" aria-label="Close menu"><i data-lucide="x"></i></button></div>
+      <div class="nova-nav-label">OVERVIEW</div>
+      <a href="#/dashboard" class="nav-link" data-route="dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></a>
+      <div class="nova-nav-label">EARN CRYPTO</div>
+      <a href="#/faucet" class="nav-link" data-route="faucet"><i data-lucide="droplets"></i><span>Manual Faucet</span><b class="nova-nav-tag">60s</b></a>
+      <a href="#/offerwall" class="nav-link" data-route="offerwall"><i data-lucide="layout-grid"></i><span>Offerwalls</span></a>
+      <a href="#/ptc" class="nav-link" data-route="ptc"><i data-lucide="mouse-pointer-click"></i><span>PTC Ads</span></a>
+      <a href="#/daily-bonus" class="nav-link" data-route="daily-bonus"><i data-lucide="gift"></i><span>Daily Bonus</span></a>
+      <a href="/mining.html" class="nav-link"><i data-lucide="pickaxe"></i><span>Mining World</span></a>
+      <a href="#/games" class="nav-link" data-route="games"><i data-lucide="gamepad-2"></i><span>Games</span></a>
+      <div class="nova-nav-label">WALLET & COMMUNITY</div>
+      <a href="#/withdraw" class="nav-link" data-route="withdraw"><i data-lucide="wallet"></i><span>Withdraw</span></a>
+      <a href="#/swap" class="nav-link" data-route="swap"><i data-lucide="arrow-left-right"></i><span>Swap</span></a>
+      <a href="#/transactions" class="nav-link" data-route="transactions"><i data-lucide="receipt"></i><span>Transactions</span></a>
+      <a href="#/referrals" class="nav-link" data-route="referrals"><i data-lucide="users"></i><span>Referrals</span></a>
+      <a href="#/leaderboard" class="nav-link" data-route="leaderboard"><i data-lucide="trophy"></i><span>Leaderboard</span></a>
+      <div class="nova-sidebar-bottom">
+        <div class="nova-sidebar-help"><span class="nova-help-icon"><i data-lucide="message-circle"></i></span><b>Need a hand?</b><small>Visit the Coinix community</small><a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener">Open community <i data-lucide="arrow-up-right"></i></a></div>
+        <a href="#/settings" class="nav-link" data-route="settings"><i data-lucide="settings"></i><span>Settings</span></a>
+        <button id="darkModeToggle2" class="nav-link"><i data-lucide="moon"></i><span>Dark mode</span></button>
+        <button id="logoutBtn" class="nav-link nova-logout"><i data-lucide="log-out"></i><span>Log out</span></button>
       </div>
     </aside>
 
-    <div class="flex-1 flex flex-col min-w-0">
+        <div class="flex-1 flex flex-col min-w-0">
       <nav class="top-nav">
-        <button id="menuToggle2" class="icon-btn lg:hidden">
+        <button id="menuToggle2" class="icon-btn" aria-label="Open navigation" aria-expanded="false">
           <i data-lucide="menu" class="w-5 h-5"></i>
         </button>
         <div class="flex items-center gap-3">
           <div class="stat-card flex items-center gap-2">
             <i data-lucide="wallet" class="w-4 h-4 text-primary-500"></i>
-            <span id="topBalance" class="font-bold">$0.0000</span>
+            <span class="nova-top-balance-label">Portfolio</span><span id="topBalance" class="font-bold">$0.0000</span>
           </div>
         </div>
         <div class="flex items-center gap-3">
@@ -491,60 +477,26 @@
   <template id="tpl-dashboard"></template>
   
   <template id="tpl-faucet">
-    <div class="space-y-6 page-enter">
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white mb-2">Manual Faucet</h1>
-        <p class="text-zinc-500 dark:text-zinc-400">Claim CNX coins every 60 seconds</p>
+    <div class="nova-page page-enter">
+      <div class="nova-page-heading"><div><span class="nova-section-kicker">CLAIM CENTER</span><h1>Manual Faucet</h1><p>Make a simple CNX claim every 60 seconds.</p></div><span class="nova-status-pill"><i class="nova-live-dot"></i> Faucet available</span></div>
+      <div class="nova-faucet-layout">
+        <section class="nova-faucet-info"><div class="nova-faucet-art"><span class="nova-faucet-orbit orbit-a"></span><span class="nova-faucet-orbit orbit-b"></span><span class="nova-faucet-drop"><i data-lucide="droplets"></i></span><span class="nova-faucet-spark spark-a"></span><span class="nova-faucet-spark spark-b"></span></div><span class="nova-section-kicker">YOUR NEXT REWARD</span><h2>Every claim moves you forward.</h2><p>Use the claim button when the timer reaches zero. Eligible rewards are added to your CNX balance.</p><div class="nova-faucet-facts"><div><i data-lucide="clock-3"></i><span><b>60 seconds</b><small>Claim cooldown</small></span></div><div><i data-lucide="coins"></i><span><b>CNX rewards</b><small>Credited to your account</small></span></div></div></section>
+        <section class="nova-claim-panel"><span class="nova-section-kicker">MANUAL CLAIM</span><div class="nova-claim-amount"><strong>CNX</strong><span>Reward unit</span></div><div class="nova-countdown-ring"><div><small>TIME UNTIL NEXT CLAIM</small><strong id="faucetCountdown">00:00</strong></div></div><button id="claimBtn" class="btn-primary nova-claim-button"><i data-lucide="droplet"></i><span>Claim reward</span><i data-lucide="arrow-right"></i></button><p class="nova-claim-footnote"><i data-lucide="shield-check"></i> Claims are checked by the platform before rewards are credited.</p></section>
       </div>
-      <div class="glass-card rounded-2xl p-4 text-center">
-        <p class="text-xs text-zinc-500 mb-2">Advertisement</p>
-        <div class="flex justify-center">
-          <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:728px; height:90px; border:0px; padding:0; overflow:hidden; max-width:100%;" allowtransparency="true"></iframe>
-        </div>
-      </div>
-      <div class="flex flex-col items-center justify-center py-12">
-        <button id="claimBtn" class="claim-btn">
-          <div class="claim-btn-inner">
-            <i data-lucide="droplets" class="w-12 h-12 text-primary-500"></i>
-            <span class="text-lg font-bold">Claim Reward</span>
-            <span id="faucetCountdown" class="text-sm text-zinc-500">00:00</span>
-          </div>
-        </button>
-      </div>
+      <div class="nova-ad-slot"><span>ADVERTISEMENT</span><div class="flex justify-center"><iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:728px;height:90px;border:0;padding:0;overflow:hidden;max-width:100%;" allowtransparency="true"></iframe></div></div>
     </div>
   </template>
-  
-  <template id="tpl-daily-bonus"></template>
+    <template id="tpl-daily-bonus"></template>
   
   <template id="tpl-offerwall">
-    <div class="space-y-6 page-enter">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Offerwall</h1>
-          <p class="text-zinc-500 dark:text-zinc-400 mt-1">Complete offers to earn CNX rewards</p>
-        </div>
-      </div>
-      <div class="glass-card rounded-2xl p-4 text-center">
-        <p class="text-xs text-zinc-500 mb-2">Advertisement</p>
-        <div class="flex justify-center">
-          <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:728px; height:90px; border:0px; padding:0; overflow:hidden; max-width:100%;" allowtransparency="true"></iframe>
-        </div>
-      </div>
-      <div class="glass-card rounded-3xl overflow-hidden" style="height: 70vh;">
-        <iframe id="offerwallFrame" class="w-full h-full border-0" src="" allow="camera; microphone; geolocation" scrolling="yes" style="min-height: 600px;"></iframe>
-      </div>
-      <div class="glass-card rounded-2xl p-6">
-        <h3 class="font-bold text-lg mb-3 text-zinc-900 dark:text-white">How it works?</h3>
-        <ul class="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-          <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 mt-0.5"></i> Complete offers from the wall above</li>
-          <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 mt-0.5"></i> Rewards are credited automatically</li>
-          <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 mt-0.5"></i> Some offers may take up to 24 hours to verify</li>
-        </ul>
-      </div>
+    <div class="nova-page page-enter">
+      <div class="nova-page-heading"><div><span class="nova-section-kicker">PARTNER TASKS</span><h1>Offerwalls</h1><p>Discover third-party offers and complete eligible activities to earn CNX.</p></div><span class="nova-status-pill">Partner platform</span></div>
+      <div class="nova-offer-intro"><div class="nova-offer-intro-icon"><i data-lucide="layers-3"></i></div><div><b>More ways to earn</b><p>Choose offers that match your interests. Partner verification and reward times may vary.</p></div><span class="nova-offer-intro-mark">CNX</span></div>
+      <div class="nova-offer-frame"><div class="nova-offer-frame-top"><span><i data-lucide="globe-2"></i> Offerwall partner</span><span class="nova-status-pill">External content</span></div><div class="nova-offer-frame-body"><iframe id="offerwallFrame" class="w-full h-full border-0" src="" allow="camera; microphone; geolocation" scrolling="yes"></iframe></div></div>
+      <div class="nova-info-note"><i data-lucide="info"></i><span>Some offers may require additional verification. Rewards are credited after the partner's postback is received and validated.</span></div>
     </div>
   </template>
-  
-  <template id="tpl-games">
+    <template id="tpl-games">
     <div class="space-y-6 page-enter">
       <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Games</h1>
       <p class="text-zinc-500 dark:text-zinc-400">Play games and earn CNX rewards</p>
