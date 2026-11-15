@@ -18,7 +18,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>COINIX Multi-Coin Faucet</title>
+<title>CoinixFaucet — Earn CNX, Get DOGE</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
 <script>
@@ -1094,6 +1094,127 @@ body {
 .earn-open{border:0;border-radius:10px;padding:9px 11px;background:var(--primary,#d4a017);color:#111;font-size:11px;font-weight:900;text-decoration:none;white-space:nowrap}
 .ad-container script{display:block;max-width:100%}
 @media(max-width:380px){.earn-actions{grid-template-columns:1fr}.earn-actions .earn-fullwall{grid-column:auto}.earn-offer{gap:8px;padding:10px}.earn-open{padding:8px}}
+
+
+/* ============================================
+   COINIX UI REFRESH — responsive product dashboard
+   ============================================ */
+:root {
+  color-scheme: dark;
+  --primary:#8b7cff; --primary-light:#b5aaff; --primary-dark:#6d5df0;
+  --bg:#080b16; --surface:#111729; --surface-2:#19223a;
+  --text:#f4f6ff; --text-secondary:#9aa6c4; --border:rgba(151,166,211,.15);
+  --success:#35d6a0; --danger:#ff6b82; --warning:#ffca72;
+  --radius:20px; --radius-sm:14px;
+  --shadow:0 12px 35px rgba(0,0,0,.22); --shadow-lg:0 20px 55px rgba(0,0,0,.34);
+  --glass:rgba(13,18,34,.86); --accent:#8b7cff;
+}
+[data-theme="light"] {
+  color-scheme:light;
+  --bg:#f4f6fc; --surface:#fff; --surface-2:#edf0fa;
+  --text:#171d32; --text-secondary:#69738f; --border:rgba(45,57,94,.12);
+  --glass:rgba(255,255,255,.88); --shadow:0 12px 35px rgba(38,48,85,.07);
+}
+html { scroll-behavior:smooth; }
+body {
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(109,93,240,.17),transparent 34rem),
+    radial-gradient(ellipse at 96% 20%,rgba(36,190,190,.09),transparent 30rem),
+    var(--bg);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  letter-spacing:-.01em;
+}
+button,a,input { -webkit-tap-highlight-color:transparent; }
+button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgba(139,124,255,.55);outline-offset:3px; }
+.header {
+  padding:14px max(20px,calc((100vw - 1160px)/2)); min-height:76px;
+  background:var(--glass); border-bottom:1px solid var(--border);
+  box-shadow:0 8px 30px rgba(0,0,0,.10);
+}
+.header-title { letter-spacing:-.06em;font-size:22px; }
+.header-logo { box-shadow:0 0 0 5px rgba(139,124,255,.12),0 8px 24px rgba(139,124,255,.2); }
+.balance-chip { background:linear-gradient(135deg,rgba(139,124,255,.18),rgba(47,207,185,.10));border:1px solid var(--border);padding:9px 15px; }
+.page { max-width:1160px;padding:30px 24px 110px; }
+.page.active { animation:pageEnter .28s ease both; }
+@keyframes pageEnter { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+.card,.coin-card,.withdraw-card,.payouts-ticker,.stat-card {
+  background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface) 86%,#6675bd 14%));
+  border:1px solid var(--border); border-radius:20px; box-shadow:var(--shadow);
+}
+.card,.withdraw-card { padding:24px; }
+.card-title { font-size:17px;letter-spacing:-.025em;margin-bottom:18px; }
+.welcome-card {
+  min-height:190px;padding:30px;border:1px solid rgba(255,255,255,.18);
+  background:radial-gradient(circle at 85% 15%,rgba(255,255,255,.24),transparent 20rem),linear-gradient(120deg,#5144c9 0%,#7768ed 55%,#22a99f 125%);
+  box-shadow:0 18px 45px rgba(91,78,214,.24);
+}
+.welcome-title { font-size:clamp(25px,4vw,34px);letter-spacing:-.045em; }
+.welcome-subtitle { font-size:14px;max-width:460px;line-height:1.65; }
+.stats-grid { grid-template-columns:repeat(4,minmax(0,1fr));gap:14px; }
+.stat-card { padding:20px 16px;text-align:left;transition:transform .2s,border-color .2s; }
+.stat-card:hover,.quick-action:hover,.coin-card:hover { transform:translateY(-3px);border-color:rgba(139,124,255,.45); }
+.stat-value { font-size:clamp(22px,3vw,29px);letter-spacing:-.04em; }
+.stat-label { letter-spacing:.08em;font-size:10px; }
+.quick-actions { gap:14px; }
+.quick-action { background:var(--surface);border:1px solid var(--border);border-radius:17px;padding:18px 10px; }
+.quick-action-icon { font-size:26px; }
+.coin-card { padding:24px; }
+.coin-image { border-radius:18px;animation:none;filter:none; }
+.coin-balance-value { font-size:clamp(30px,4vw,38px);letter-spacing:-.04em; }
+.btn { min-height:48px;border-radius:13px;letter-spacing:.01em; }
+.btn-primary { background:linear-gradient(115deg,#8b7cff,#6b8dff);color:#fff;box-shadow:0 8px 22px rgba(111,98,239,.2); }
+.btn-primary:hover { box-shadow:0 10px 28px rgba(111,98,239,.35); }
+.btn-secondary { background:var(--surface-2); }
+.input-field { background:var(--surface-2);border-color:var(--border);border-radius:13px; }
+.milestone-card { border-radius:20px;background:linear-gradient(120deg,#5144c9,#8a69dc); }
+.payouts-ticker { padding:22px; }
+.payout-item,.history-item { border-color:var(--border); }
+.bottom-nav {
+  left:50%;right:auto;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);
+  width:min(680px,calc(100% - 28px));padding:8px 10px;
+  border:1px solid var(--border);border-radius:20px;
+  background:rgba(14,19,36,.92);box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+[data-theme="light"] .bottom-nav { background:rgba(255,255,255,.94); }
+.nav-item { min-width:66px;border-radius:13px;padding:9px 13px; }
+.nav-item.active { color:#b5aaff;background:rgba(139,124,255,.14); }
+.nav-item .nav-icon { font-size:20px; }
+.toast { border-radius:14px;backdrop-filter:blur(16px); }
+.ad-container { border-color:rgba(139,124,255,.24);background:rgba(139,124,255,.045);border-radius:15px; }
+.earn-offer { border:1px solid var(--border);border-radius:16px;background:var(--surface);padding:14px; }
+.earn-open { border-radius:10px;background:linear-gradient(120deg,#8b7cff,#6b8dff);color:#fff; }
+@media (min-width:900px) {
+  #page-dashboard .stats-grid { margin-top:18px; }
+  #page-dashboard .quick-actions { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  #page-faucet,#page-earn,#page-withdraw,#page-referral,#page-history { padding-top:36px; }
+  .card { margin-bottom:20px; }
+}
+@media (max-width:700px) {
+  .header { padding:12px 15px;min-height:66px; }
+  .header-title { font-size:18px; }
+  .header-logo { width:36px;height:36px; }
+  .balance-chip { font-size:11px;padding:7px 9px; }
+  .page { padding:18px 14px 108px; }
+  .welcome-card { padding:23px;min-height:165px; }
+  .stats-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:10px; }
+  .stat-card { padding:16px 13px; }
+  .quick-actions { grid-template-columns:repeat(4,minmax(0,1fr));gap:8px; }
+  .quick-action { padding:13px 5px; }
+  .quick-action-icon { font-size:23px; }
+  .quick-action-label { font-size:10px; }
+  .card,.coin-card,.withdraw-card { padding:18px; }
+  .bottom-nav { bottom:max(8px,env(safe-area-inset-bottom)); }
+  .nav-item { min-width:0;flex:1;padding:8px 4px;font-size:10px; }
+  .nav-item .nav-icon { font-size:19px; }
+}
+@media (max-width:380px) {
+  .header-balance { gap:5px; }
+  .balance-chip { padding:6px 7px;font-size:10px; }
+  .quick-action-label { font-size:9px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; }
+}
 
 </style>
 </head>
