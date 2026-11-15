@@ -559,23 +559,57 @@ async function renderDashboard() {
   if (!state.profile) return;
   const c = $('#pageContainer');
   if (!c) return;
+  const cnx = Number(state.profile.cnx || 0);
+  const usd = cnx / 10000;
+  const level = Math.max(1, Number(state.profile.level || 1));
+  const streak = Math.max(0, Number(state.profile.dailyStreak || 0));
+  const otherWallets = Object.values(state.profile.balances || {}).filter(v => Number(v) > 0).length;
+  const username = escapeHtml(state.profile.username || 'Member');
   c.innerHTML = `
-    <div class="nova-dashboard nova-dashboard-v2 page-enter">
-      <header class="nova-dashboard-heading"><div><span class="nova-section-kicker">YOUR COINIX SPACE</span><h1>Welcome back, ${escapeHtml(state.profile.username)}.</h1><p>Your rewards, missions and progress — all in one place.</p></div><div class="nova-dashboard-badges"><span class="nova-level-badge"><i data-lucide="award"></i> Member</span><span class="nova-streak-badge"><i data-lucide="flame"></i> ${Number(state.profile.dailyStreak || 0)} day streak</span></div></header>
-      <section class="nova-wallet-grid">
-        <article class="nova-wallet-card nova-wallet-cnx"><div class="nova-wallet-card-head"><span class="nova-wallet-symbol">C</span><span class="nova-wallet-label">MAIN REWARDS WALLET</span><i data-lucide="arrow-up-right"></i></div><small>Available CNX balance</small><strong>${fmt(Number(state.profile.cnx || 0), 2)} <em>CNX</em></strong><div class="nova-wallet-card-foot"><span>10,000 CNX = $1 USD</span><button onclick="router.go('#/withdraw')">Open wallet <i data-lucide="chevron-right"></i></button></div></article>
-        <article class="nova-wallet-card nova-wallet-minex"><div class="nova-wallet-card-head"><span class="nova-wallet-symbol"><i data-lucide="pickaxe"></i></span><span class="nova-wallet-label">MINER PROGRESSION</span><span class="nova-coming-pill">COMING SOON</span></div><small>MINEX utility balance</small><strong>Not activated</strong><p>MINEX rewards and GPU purchases will appear here after the secure economy ledger is enabled.</p><div class="nova-wallet-card-foot"><span>Miner Garage</span><a href="/mining.html">Explore preview <i data-lucide="arrow-up-right"></i></a></div></article>
+    <div class="orbit-dashboard page-enter">
+      <header class="orbit-welcome">
+        <div class="orbit-welcome-copy">
+          <div class="orbit-overline"><span class="orbit-live-dot"></span> YOUR REWARDS COMMAND CENTER</div>
+          <h1>Good to see you, <span>${username}</span></h1>
+          <p>One place for your rewards, missions and next upgrade.</p>
+        </div>
+        <div class="orbit-welcome-meta">
+          <div class="orbit-member-chip"><span class="orbit-avatar-mini"><i data-lucide="user-round"></i></span><span><small>ACCOUNT LEVEL</small><b>Level ${level}</b></span></div>
+          <div class="orbit-member-chip"><span class="orbit-streak-mini"><i data-lucide="flame"></i></span><span><small>DAILY STREAK</small><b>${streak} days</b></span></div>
+        </div>
+      </header>
+
+      <section class="orbit-feature-grid">
+        <article class="orbit-balance-card">
+          <div class="orbit-balance-glow orbit-glow-one"></div><div class="orbit-balance-glow orbit-glow-two"></div>
+          <div class="orbit-balance-top"><div class="orbit-balance-brand"><span class="orbit-cnx-mark">C</span><span><b>COINIX WALLET</b><small>YOUR MAIN REWARDS BALANCE</small></span></div><span class="orbit-wallet-state"><i></i> ACCOUNT WALLET</span></div>
+          <div class="orbit-balance-main"><span>Available balance</span><strong>${fmt(cnx, 2)} <em>CNX</em></strong><div class="orbit-balance-usd">≈ $${usd.toFixed(4)} USD <span>·</span> 10,000 CNX = $1</div></div>
+          <div class="orbit-balance-bottom"><div class="orbit-balance-hint"><i data-lucide="shield-check"></i> Balance linked to your account</div><button class="orbit-balance-action" onclick="router.go('#/withdraw')">Withdraw <i data-lucide="arrow-up-right"></i></button></div>
+          <div class="orbit-coin-orbit orbit-orbit-a"></div><div class="orbit-coin-orbit orbit-orbit-b"></div><div class="orbit-floating-coin">C</div>
+        </article>
+        <article class="orbit-minex-card">
+          <div class="orbit-minex-head"><span class="orbit-minex-icon"><i data-lucide="pickaxe"></i></span><span class="orbit-preview-tag">IN DEVELOPMENT</span></div>
+          <div class="orbit-minex-copy"><span class="orbit-card-kicker">THE NEXT REWARD LAYER</span><h2>MINEX <span>Miner Economy</span></h2><p>A second reward track for collecting rigs, unlocking GPUs and building your miner garage.</p></div>
+          <div class="orbit-minex-footer"><div><small>MINEX WALLET</small><b>Not activated yet</b></div><a href="/mining.html">Explore preview <i data-lucide="arrow-up-right"></i></a></div>
+          <div class="orbit-minex-art"><span class="orbit-chip"><i data-lucide="cpu"></i></span><span class="orbit-circuit circuit-one"></span><span class="orbit-circuit circuit-two"></span></div>
+        </article>
       </section>
-      <section class="nova-dashboard-section"><div class="nova-section-heading compact"><div><span class="nova-section-kicker">PICK YOUR NEXT STEP</span><h2>Earn rewards</h2><p>Choose an activity and continue your progress.</p></div><span class="nova-heading-aside">COINIX EARN <i data-lucide="sparkles"></i></span></div><div class="nova-dashboard-earn-grid">
-        <button class="nova-dashboard-earn-card earn-violet" onclick="router.go('#/faucet')"><span class="nova-dashboard-earn-icon"><i data-lucide="droplets"></i></span><span class="nova-dashboard-earn-text"><b>Faucet</b><small>Make a CNX claim</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
-        <button class="nova-dashboard-earn-card earn-teal" onclick="router.go('#/offerwall')"><span class="nova-dashboard-earn-icon"><i data-lucide="layout-grid"></i></span><span class="nova-dashboard-earn-text"><b>Offerwalls</b><small>Partner activities</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
-        <button class="nova-dashboard-earn-card earn-amber" onclick="router.go('#/ptc')"><span class="nova-dashboard-earn-icon"><i data-lucide="mouse-pointer-click"></i></span><span class="nova-dashboard-earn-text"><b>PTC Ads</b><small>Sponsored tasks</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
-        <button class="nova-dashboard-earn-card earn-blue" onclick="router.go('#/daily-bonus')"><span class="nova-dashboard-earn-icon"><i data-lucide="gift"></i></span><span class="nova-dashboard-earn-text"><b>Daily Bonus</b><small>Check your streak</small></span><i data-lucide="arrow-up-right" class="nova-dashboard-earn-arrow"></i></button>
-      </div></section>
-      <section class="nova-v2-lower-grid">
-        <article class="nova-v2-panel"><div class="nova-v2-panel-title"><div><span class="nova-section-kicker">ACCOUNT OVERVIEW</span><h3>Your activity</h3></div><span class="nova-v2-icon"><i data-lucide="activity"></i></span></div><div class="nova-v2-stats"><div><small>Account level</small><strong>${Number(state.profile.level || 1)}</strong></div><div><small>Daily streak</small><strong>${Number(state.profile.dailyStreak || 0)} days</strong></div><div><small>Other coin wallets</small><strong>${Object.values(state.profile.balances || {}).filter(v => Number(v)>0).length}</strong></div></div><p class="nova-v2-note">Your latest account information is loaded from your existing Coinix profile.</p></article>
-        <article class="nova-v2-panel nova-v2-miner-panel"><div class="nova-v2-panel-title"><div><span class="nova-section-kicker">COLLECT · UPGRADE · PROGRESS</span><h3>Miner Garage</h3></div><span class="nova-v2-icon"><i data-lucide="cpu"></i></span></div><div class="nova-miner-art"><span class="nova-miner-chip"><i data-lucide="cpu"></i></span><span class="nova-miner-lines"></span><span class="nova-miner-spark">✦</span></div><p>Discover the GPU collection and mining-world interface. Real mining payouts are not enabled yet.</p><a href="/mining.html" class="nova-miner-link">Open Miner Garage <i data-lucide="arrow-up-right"></i></a></article>
+
+      <section class="orbit-earn-section">
+        <div class="orbit-section-heading"><div><span class="orbit-card-kicker">CHOOSE YOUR NEXT MOVE</span><h2>Earn more with Coinix</h2><p>Jump straight into an activity.</p></div><span class="orbit-section-count">04 <i data-lucide="grid-2x2"></i></span></div>
+        <div class="orbit-earn-grid">
+          <button class="orbit-earn-tile orbit-faucet" onclick="router.go('#/faucet')"><span class="orbit-earn-icon"><i data-lucide="droplets"></i></span><span class="orbit-earn-label"><b>Faucet</b><small>Claim your rewards</small></span><span class="orbit-earn-arrow"><i data-lucide="arrow-up-right"></i></span><span class="orbit-tile-index">01</span></button>
+          <button class="orbit-earn-tile orbit-offers" onclick="router.go('#/offerwall')"><span class="orbit-earn-icon"><i data-lucide="layers-3"></i></span><span class="orbit-earn-label"><b>Offerwalls</b><small>Partner opportunities</small></span><span class="orbit-earn-arrow"><i data-lucide="arrow-up-right"></i></span><span class="orbit-tile-index">02</span></button>
+          <button class="orbit-earn-tile orbit-ptc" onclick="router.go('#/ptc')"><span class="orbit-earn-icon"><i data-lucide="mouse-pointer-click"></i></span><span class="orbit-earn-label"><b>PTC Ads</b><small>Browse sponsored ads</small></span><span class="orbit-earn-arrow"><i data-lucide="arrow-up-right"></i></span><span class="orbit-tile-index">03</span></button>
+          <button class="orbit-earn-tile orbit-daily" onclick="router.go('#/daily-bonus')"><span class="orbit-earn-icon"><i data-lucide="calendar-check"></i></span><span class="orbit-earn-label"><b>Daily Bonus</b><small>Keep your streak alive</small></span><span class="orbit-earn-arrow"><i data-lucide="arrow-up-right"></i></span><span class="orbit-tile-index">04</span></button>
+        </div>
       </section>
+
+      <section class="orbit-bottom-grid">
+        <article class="orbit-panel orbit-account-panel"><div class="orbit-panel-heading"><div><span class="orbit-card-kicker">YOUR ACCOUNT</span><h3>Progress snapshot</h3></div><span class="orbit-panel-icon"><i data-lucide="chart-no-axes-combined"></i></span></div><div class="orbit-progress-list"><div class="orbit-progress-row"><span class="orbit-progress-symbol purple"><i data-lucide="badge-check"></i></span><span><small>Membership level</small><b>Level ${level}</b></span><span class="orbit-progress-value">LVL</span></div><div class="orbit-progress-row"><span class="orbit-progress-symbol orange"><i data-lucide="flame"></i></span><span><small>Daily streak</small><b>${streak} days</b></span><span class="orbit-progress-value">DAY</span></div><div class="orbit-progress-row"><span class="orbit-progress-symbol teal"><i data-lucide="wallet"></i></span><span><small>Other funded wallets</small><b>${otherWallets} assets</b></span><span class="orbit-progress-value">ASSET</span></div></div><a class="orbit-panel-link" href="#/transactions">View transaction history <i data-lucide="arrow-right"></i></a></article>
+        <article class="orbit-panel orbit-garage-panel"><div class="orbit-garage-visual"><div class="orbit-garage-ring ring-a"></div><div class="orbit-garage-ring ring-b"></div><span class="orbit-garage-gpu"><i data-lucide="cpu"></i></span><span class="orbit-garage-spark spark-a">✦</span><span class="orbit-garage-spark spark-b">✧</span></div><div class="orbit-garage-copy"><span class="orbit-card-kicker">BUILD YOUR COLLECTION</span><h3>Miner Garage</h3><p>Preview the GPU collection and the upcoming MINEX progression system.</p><a class="orbit-garage-link" href="/mining.html">Enter Miner Garage <i data-lucide="arrow-up-right"></i></a><small>Preview only · mining rewards are not active</small></div></article>
+      </section>
+      <footer class="orbit-dashboard-footer"><span>COINIXFAUCET</span><span>Earn · Collect · Level up</span><a href="/faq/">Need help? Visit FAQ</a></footer>
     </div>`;
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
