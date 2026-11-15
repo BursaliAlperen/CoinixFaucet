@@ -1161,8 +1161,9 @@ async function getLivePayouts(req, res) {
       const username = userDoc.exists ? (userDoc.data().username || `User${d.user_id.slice(0,4)}`) : `User${d.user_id.slice(0,4)}`;
       payouts.push({
         username,
-        amount: d.amount,
-        coin: COINS[d.coin]?.symbol || d.coin || 'DOGE',
+        amount: Number(d.doge_amount || d.amount || 0),
+        coin: 'DOGE',
+        cnx_amount: Number(d.amount_cnx || d.amount || 0),
         timestamp: tsToMillis(d.timestamp)
       });
     }
