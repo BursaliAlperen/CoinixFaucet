@@ -19,7 +19,7 @@ const fmt = (n, d = 4) => Number(n || 0).toFixed(d);
 const fmtUSD = n => '$' + Number(n || 0).toFixed(4);
 const uid = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 const now = () => Date.now();
-const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&', '<':'<', '>':'>', '"':'"', "'":'' }[c]));
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 
 // ============ DARK MODE ============
 function getDarkMode() { return localStorage.getItem('darkMode') === 'true'; }
@@ -101,34 +101,71 @@ function initLanding() {
   $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
   $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
 
-  const mobileMenu = $('#mobileNavPanel');
-  const menuButton = $('#menuToggle');
-  menuButton?.addEventListener('click', () => {
-    if (!mobileMenu) return;
-    const opening = mobileMenu.hasAttribute('hidden');
-    mobileMenu.toggleAttribute('hidden', !opening);
-    menuButton.setAttribute('aria-expanded', String(opening));
-  });
-  mobileMenu?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
-    mobileMenu.setAttribute('hidden', '');
-    menuButton?.setAttribute('aria-expanded', 'false');
-  }));
   $('#mobileLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
   $('#mobileSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
-  if ('IntersectionObserver' in window) {
-    const targets = $('#landingPage > section:not(:first-of-type), #landingPage footer');
-    targets.forEach(el => el.setAttribute('data-reveal', ''));
-    document.documentElement.classList.add('reveal-ready');
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
-    }), { threshold: 0.12 });
-    targets.forEach(el => observer.observe(el));
-  }
+  $('#earnSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+  $('#ctaSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
+  initLandingDrawer();
+  initLandingReveal();
   renderLandingCoins();
   loadLiveStats();
   loadLiveWithdraws();
   setInterval(loadLiveWithdraws, 10000);
   setInterval(loadLiveStats, 30000);
+}
+
+// Mobile navigation drawer (landing). Open/close state lives on #menuToggle[aria-expanded].
+function initLandingDrawer() {
+  const panel = $('#mobileNavPanel');
+  const btn = $('#menuToggle');
+  const backdrop = $('#cxDrawerBackdrop');
+  if (!panel || !btn) return;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let closeTimer = null;
+  const isOpen = () => btn.getAttribute('aria-expanded') === 'true';
+  const setOpen = (open) => {
+    clearTimeout(closeTimer);
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+    document.documentElement.classList.toggle('cx-lock', open);
+    if (open) {
+      panel.hidden = false;
+      if (backdrop) backdrop.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        panel.classList.add('is-open');
+        backdrop?.classList.add('is-open');
+      }));
+    } else {
+      panel.classList.remove('is-open');
+      backdrop?.classList.remove('is-open');
+      const done = () => { panel.hidden = true; if (backdrop) backdrop.hidden = true; };
+      if (reduce) done(); else closeTimer = setTimeout(done, 230);
+    }
+  };
+  btn.addEventListener('click', () => setOpen(!isOpen()));
+  backdrop?.addEventListener('click', () => setOpen(false));
+  panel.addEventListener('click', e => { if (e.target.closest('a, button')) setOpen(false); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && isOpen()) { setOpen(false); btn.focus(); }
+  });
+  const desktop = matchMedia('(min-width: 900px)');
+  const onChange = e => { if (e.matches && isOpen()) setOpen(false); };
+  desktop.addEventListener ? desktop.addEventListener('change', onChange) : desktop.addListener(onChange);
+}
+
+// Gentle scroll-reveal. Content is never hidden unless JS ran, and a timeout reveals everything as a fallback.
+function initLandingReveal() {
+  if (!('IntersectionObserver' in window)) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const targets = document.querySelectorAll('#landingPage .cx-section-head, #landingPage .cx-card, #landingPage .cx-stat, #landingPage .cx-final');
+  if (!targets.length) return;
+  targets.forEach(el => el.classList.add('cx-reveal'));
+  document.documentElement.classList.add('cx-reveal-on');
+  const io = new IntersectionObserver(entries => entries.forEach(en => {
+    if (en.isIntersecting) { en.target.classList.add('is-visible'); io.unobserve(en.target); }
+  }), { threshold: 0.08, rootMargin: '0px 0px -24px 0px' });
+  targets.forEach(el => io.observe(el));
+  setTimeout(() => targets.forEach(el => el.classList.add('is-visible')), 4000);
 }
 
 function renderLandingCoins() {
@@ -137,17 +174,15 @@ function renderLandingCoins() {
   grid.innerHTML = '';
   COINS.forEach(coin => {
     const m = COIN_META[coin];
+    if (!m) return;
     const card = document.createElement('div');
-    card.className = 'coin-landing-card group';
+    card.className = 'cx-coin';
+    card.style.setProperty('--coin', m.color);
     card.innerHTML = `
-      <div class="w-14 h-14 rounded-full flex items-center justify-center font-black text-white text-2xl mb-4 shadow-lg" style="background: linear-gradient(135deg, ${m.color}, ${m.color}80);">${coin[0]}</div>
-      <h3 class="text-xl font-bold mb-1 text-zinc-900 dark:text-white">${m.name}</h3>
-      <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-4">${coin}</p>
-      <div class="space-y-2 text-sm">
-        <div class="flex justify-between"><span class="text-zinc-500">Status</span><span class="badge badge-green">Active</span></div>
-        <div class="flex justify-between"><span class="text-zinc-500">Min Withdraw</span><span class="font-medium">$0.03</span></div>
-        <div class="flex justify-between"><span class="text-zinc-500">Payout</span><span class="font-medium">Instant</span></div>
-      </div>
+      <span class="cx-coin-badge" aria-hidden="true">${escapeHtml(coin[0])}</span>
+      <h3>${escapeHtml(m.name)}</h3>
+      <span class="cx-coin-ticker">${escapeHtml(coin)}</span>
+      <p class="cx-coin-min">Minimum withdrawal<b>$${Number(m.min).toFixed(2)}</b></p>
     `;
     grid.appendChild(card);
   });
@@ -163,7 +198,6 @@ async function loadLiveStats() {
       if ($('#statClaims')) $('#statClaims').textContent = (s.totalClaims || 0).toLocaleString();
       if ($('#statPaid')) $('#statPaid').textContent = fmtUSD(s.totalPaid || 0);
       if ($('#statAvg')) $('#statAvg').textContent = fmtUSD(s.totalClaims > 0 ? (s.totalPaid / s.totalClaims) : 0);
-      if ($('#heroOnline')) $('#heroOnline').textContent = (s.totalUsers || 0).toLocaleString();
     }
   } catch (e) { console.error('Stats error:', e); }
 }
@@ -171,27 +205,36 @@ async function loadLiveStats() {
 async function loadLiveWithdraws() {
   const table = $('#withdrawsBody');
   if (!table) return;
+  const stateRow = (cls, title, text) => `<tr class="cx-row-state"><td colspan="6"><div class="cx-state ${cls}"><strong>${title}</strong><span>${text}</span></div></td></tr>`;
   try {
     const res = await fetch('/api/live-withdraws');
     const data = await res.json();
-    table.innerHTML = '';
-    if (!data.success || !data.withdrawals.length) {
-      table.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-zinc-500">No withdrawals yet</td></tr>';
+    if (!data.success) throw new Error('bad response');
+    if (!data.withdrawals.length) {
+      table.innerHTML = stateRow('', 'No completed withdrawals yet', 'Completed payouts will appear here.');
       return;
     }
-    data.withdrawals.forEach(t => {
+    table.innerHTML = '';
+    data.withdrawals.slice(0, 10).forEach(t => {
       const row = document.createElement('tr');
+      const when = t.createdAt ? new Date(t.createdAt) : null;
+      const time = when && !isNaN(when) ? when.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
       row.innerHTML = `
-        <td class="p-4"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-xs">${(t.username || 'U')[0].toUpperCase()}</div></td>
-        <td class="p-4 font-medium">${escapeHtml(t.username || 'User')}</td>
-        <td class="p-4">${t.coin}</td>
-        <td class="p-4">${fmt(t.amount)}</td>
-        <td class="p-4">${fmtUSD(t.usdValue)}</td>
-        <td class="p-4"><span class="badge badge-green">Completed</span></td>
+        <td data-label="User">${escapeHtml(t.username || 'User')}</td>
+        <td data-label="Coin">${escapeHtml(t.coin)}</td>
+        <td data-label="Amount">${fmt(t.amount)}</td>
+        <td data-label="USD">${fmtUSD(t.usdValue)}</td>
+        <td data-label="Time">${escapeHtml(time)}</td>
+        <td data-label="Status"><span class="cx-badge cx-badge--success">Completed</span></td>
       `;
       table.appendChild(row);
     });
-  } catch (e) { console.error('Withdraws error:', e); }
+  } catch (e) {
+    console.error('Withdraws error:', e);
+    if (!table.querySelector('td[data-label]')) {
+      table.innerHTML = stateRow('cx-state--error', 'Could not load withdrawals', 'Please refresh the page in a moment.');
+    }
+  }
 }
 
 // ============ AUTH ============
@@ -404,19 +447,16 @@ function updateTopBar() {
     // GİRİŞ YAPILMAMIŞ - Login/Signup göster
     if (landingAuthBtns) {
       landingAuthBtns.innerHTML = `
-        <button id="openLoginBtn" class="btn-ghost text-sm">Login</button>
-        <button id="openSignupBtn" class="btn-primary text-sm">Sign Up</button>
+        <button id="openLoginBtn" class="cx-btn cx-btn--ghost" type="button">Log in</button>
+        <button id="openSignupBtn" class="cx-btn cx-btn--primary" type="button">Sign up</button>
       `;
       $('#openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
       $('#openSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
     }
     if (heroBtns) {
       heroBtns.innerHTML = `
-        <button id="heroSignupBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
-          <i data-lucide="zap" class="w-5 h-5"></i>
-          Start Earning — It's Free
-        </button>
-        <button id="heroLoginBtn" class="btn-ghost text-base px-10 py-5">Login</button>
+        <button id="heroSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button">Create free account</button>
+        <button id="heroLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg" type="button">Sign in</button>
       `;
       $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
       $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
@@ -428,9 +468,7 @@ function updateTopBar() {
   // GİRİŞ YAPILMIŞ - Dashboard butonu göster
   if (landingAuthBtns) {
     landingAuthBtns.innerHTML = `
-      <button id="landingDashboardBtn" class="btn-primary text-sm">
-        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-      </button>
+      <button id="landingDashboardBtn" class="cx-btn cx-btn--primary" type="button">Dashboard</button>
     `;
     $('#landingDashboardBtn')?.addEventListener('click', () => {
       $('#landingPage')?.classList.add('hidden');
@@ -441,10 +479,7 @@ function updateTopBar() {
   
   if (heroBtns) {
     heroBtns.innerHTML = `
-      <button id="heroDashboardBtn" class="btn-primary text-base px-10 py-5 shadow-2xl shadow-primary-500/40">
-        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-        Go to Dashboard
-      </button>
+      <button id="heroDashboardBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button">Go to Dashboard</button>
     `;
     $('#heroDashboardBtn')?.addEventListener('click', () => {
       $('#landingPage')?.classList.add('hidden');

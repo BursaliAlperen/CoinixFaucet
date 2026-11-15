@@ -1,0 +1,82 @@
+/* ==========================================================================
+   COINIX DESIGN TOKENS
+   Single source of truth for colour, type, spacing, radius, shadow, motion.
+   Light theme only. Other pages migrate to these tokens one page at a time.
+   ========================================================================== */
+:root {
+  /* Colour: brand */
+  --cx-violet-50:  #f4f1ff;
+  --cx-violet-100: #e9e3ff;
+  --cx-violet-200: #d4c9ff;
+  --cx-violet-500: #7357e8;
+  --cx-violet-600: #6246ea;
+  --cx-violet-700: #4f37c9;
+  --cx-teal-50:  #e7f8fa;
+  --cx-teal-100: #c6eef2;
+  --cx-teal-500: #0fa5b8;
+  --cx-teal-600: #0b8a9b;
+
+  /* Colour: neutrals (navy-tinted) */
+  --cx-ink:        #0f1b3d;  /* headings */
+  --cx-text:       #34425f;  /* body */
+  --cx-muted:      #5f6c87;  /* secondary text, AA on white */
+  --cx-line:       #e3e8f2;
+  --cx-line-strong:#cfd7e6;
+  --cx-bg:         #f6f8fc;
+  --cx-surface:    #ffffff;
+  --cx-surface-2:  #f9fafd;
+
+  /* Colour: status */
+  --cx-success: #0f8a5f;  --cx-success-bg: #e5f6ee;
+  --cx-warning: #a8620a;  --cx-warning-bg: #fdf1dc;
+  --cx-danger:  #c0322f;  --cx-danger-bg:  #fdecec;
+  --cx-info:    #2457c5;  --cx-info-bg:    #e8effd;
+
+  /* Typography */
+  --cx-font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cx-font-body:    "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cx-fs-xs:   0.75rem;
+  --cx-fs-sm:   0.875rem;
+  --cx-fs-base: 1rem;
+  --cx-fs-lg:   clamp(1.05rem, 0.98rem + 0.3vw, 1.2rem);
+  --cx-fs-h3:   clamp(1.05rem, 1rem + 0.3vw, 1.2rem);
+  --cx-fs-h2:   clamp(1.5rem, 1.15rem + 1.6vw, 2.25rem);
+  --cx-fs-h1:   clamp(1.85rem, 1.2rem + 3.1vw, 3.4rem);
+  --cx-fs-stat: clamp(1.35rem, 1.1rem + 1.2vw, 2rem);
+
+  /* Spacing (4px base) */
+  --cx-s-1: 4px;  --cx-s-2: 8px;   --cx-s-3: 12px; --cx-s-4: 16px;
+  --cx-s-5: 20px; --cx-s-6: 24px;  --cx-s-8: 32px; --cx-s-10: 40px;
+  --cx-s-12: 48px; --cx-s-16: 64px;
+  --cx-section-y: clamp(40px, 6vw, 80px);
+  --cx-gutter: clamp(16px, 4vw, 32px);
+  --cx-content-max: 1160px;
+
+  /* Radius */
+  --cx-r-sm: 8px; --cx-r-md: 12px; --cx-r-lg: 16px; --cx-r-xl: 22px; --cx-r-pill: 999px;
+
+  /* Shadow */
+  --cx-sh-xs: 0 1px 2px rgba(15, 27, 61, .06);
+  --cx-sh-sm: 0 2px 8px rgba(15, 27, 61, .06);
+  --cx-sh-md: 0 8px 24px rgba(15, 27, 61, .08);
+  --cx-sh-lg: 0 18px 48px rgba(52, 40, 140, .14);
+  --cx-ring:  0 0 0 3px rgba(98, 70, 234, .28);
+
+  /* Layout + motion */
+  --cx-touch: 44px;
+  --cx-header-h: 64px;
+  --cx-ease: cubic-bezier(.2, .7, .2, 1);
+  --cx-dur: 180ms;
+  --cx-safe-top:    env(safe-area-inset-top, 0px);
+  --cx-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --cx-safe-left:   env(safe-area-inset-left, 0px);
+  --cx-safe-right:  env(safe-area-inset-right, 0px);
+}
+
+@media (min-width: 900px) {
+  :root { --cx-header-h: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --cx-dur: 0.01ms; }
+}
