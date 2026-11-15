@@ -705,7 +705,7 @@ async function getReferral(req, res) {
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
     const d = doc.data();
     const link = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
-    res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings || 0, referral_balance: d.referral_balance || { doge: 0 } });
+    res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings || 0, referral_balance: { cnx: atomicToCnx(d.referral_cnx_atomic) } });
   } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
