@@ -215,6 +215,7 @@
       <button class="tab-btn" data-tab="transactions">
         <i data-lucide="receipt" class="w-4 h-4 inline"></i> Transactions
       </button>
+      <button class="tab-btn" data-tab="mining"><i data-lucide="pickaxe" class="w-4 h-4 inline"></i> Mining</button>
       <button class="tab-btn" data-tab="promos">
         <i data-lucide="ticket" class="w-4 h-4 inline"></i> Promo Codes
       </button>
@@ -377,6 +378,7 @@
     </div>
 
     <!-- Promo Codes Tab -->
+<div id="tab-mining" class="tab-content hidden glass p-5 mb-6"><h2 class="text-xl font-bold mb-4">Mining Economy</h2><form id="miningConfigForm" class="grid md:grid-cols-2 gap-4"><label>Block minutes<input id="mcMinutes" class="input mt-2" type="number" min="5" max="30" value="10"></label><label>Block pool CNX<input id="mcPool" class="input mt-2" type="number" min="1" max="100000" value="1200"></label><label>Daily cap CNX<input id="mcCap" class="input mt-2" type="number" min="100" max="5000000" value="120000"></label><label>GPU drop chance %<input id="mcDrop" class="input mt-2" type="number" min="0" max="10" step=".01" value="1.5"></label><label>Task bonus CNX<input id="mcBonus" class="input mt-2" type="number" min="0" max="10000" value="12"></label><label>Max user share %<input id="mcShare" class="input mt-2" type="number" min="1" max="25" step=".1" value="8"></label><label class="flex gap-2 items-center"><input id="mcAuto" type="checkbox" checked> Auto balance</label><div class="md:col-span-2 flex gap-3 items-center"><button class="btn" type="submit">Save settings</button><span id="mcStatus" class="text-sm text-zinc-400"></span></div></form><p class="text-xs text-zinc-500 mt-3">Parametreler kaydedilir. Gerçek blok ödemesi ve GPU sahipliği için transaction motoru gerekir.</p></div>
     <div id="tab-promos" class="tab-content hidden">
       <div class="grid md:grid-cols-2 gap-6">
         <!-- Create Promo -->
@@ -667,7 +669,8 @@
       } catch (e) { console.error('Transactions error:', e); }
     }
     
-    // Load promos
+    async function loadMiningSettings(){try{const d=await(await fetch('/api/mining/config')).json(),c=d.config;mcMinutes.value=c.blockMinutes;mcPool.value=c.blockPool;mcCap.value=c.dailyCap;mcDrop.value=(c.gpuDropChance*100).toFixed(2);mcBonus.value=c.taskBonus;mcShare.value=(c.maxUserShare*100).toFixed(1);mcAuto.checked=!!c.autoBalance;}catch(e){mcStatus.textContent='Load failed';}}document.getElementById('miningConfigForm')?.addEventListener('submit',async e=>{e.preventDefault();mcStatus.textContent='Saving…';const x={blockMinutes:+mcMinutes.value,blockPool:+mcPool.value,dailyCap:+mcCap.value,gpuDropChance:+mcDrop.value/100,taskBonus:+mcBonus.value,maxUserShare:+mcShare.value/100,autoBalance:mcAuto.checked};try{const d=await(await fetch('/api/admin/mining/config',{method:'PUT',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_KEY},body:JSON.stringify(x)})).json();if(!d.success)throw Error(d.message);mcStatus.textContent='Saved';}catch(err){mcStatus.textContent='Save failed: '+err.message;}});loadMiningSettings();
+// Load promos
     async function loadPromos() {
       try {
         const res = await fetch('/api/admin/promo/list', { headers: { 'x-admin-key': ADMIN_KEY } });

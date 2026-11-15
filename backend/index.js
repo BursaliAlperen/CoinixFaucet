@@ -1140,7 +1140,9 @@ app.get('/api/live-withdraws', async (req, res) => {
 });
 
 // ============================================
-// 🔐 ADMIN ENDPOINTS
+// const DEFAULT_MINING_CONFIG={"blockMinutes":10,"blockPool":1200,"dailyCap":120000,"gpuDropChance":0.015,"taskBonus":12,"autoBalance":true,"maxUserShare":0.08};
+app.get('/api/mining/config',async(req,res)=>{try{const s=await db.collection('global').doc('miningConfig').get();res.json({success:true,config:s.exists?{...DEFAULT_MINING_CONFIG,...s.data()}:DEFAULT_MINING_CONFIG});}catch(e){res.status(500).json({success:false,message:'Mining config unavailable'});}});
+🔐 ADMIN ENDPOINTS
 // ============================================
 
 app.post('/api/admin/maintenance', verifyAdmin, async (req, res) => {
@@ -1189,6 +1191,7 @@ app.get('/api/maintenance', async (req, res) => {
   }
 });
 
+app.put('/api/admin/mining/config',verifyAdmin,async(req,res)=>{try{const x=req.body||{};const c={blockMinutes:Math.min(30,Math.max(5,Number(x.blockMinutes)||10)),blockPool:Math.min(100000,Math.max(1,Number(x.blockPool)||1200)),dailyCap:Math.min(5000000,Math.max(100,Number(x.dailyCap)||120000)),gpuDropChance:Math.min(.1,Math.max(0,Number(x.gpuDropChance)||0)),taskBonus:Math.min(10000,Math.max(0,Number(x.taskBonus)||0)),autoBalance:x.autoBalance===true,maxUserShare:Math.min(.25,Math.max(.01,Number(x.maxUserShare)||.08)),updatedAt:FieldValue.serverTimestamp()};await db.collection('global').doc('miningConfig').set(c,{merge:true});res.json({success:true,config:c});}catch(e){res.status(500).json({success:false,message:'Mining settings save failed'});}});
 app.post('/api/admin/verify', verifyAdmin, (req, res) => {
   res.json({ success: true, message: 'Admin authenticated' });
 });
