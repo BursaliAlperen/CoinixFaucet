@@ -102,7 +102,7 @@ const CNX_SIGNUP_REFERRAL_BONUS = 50;
 const CNX_RETURN_BONUS = 10;
 const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
-const BONUS_TYPES = ['ptc', 'shortlink', 'offer', 'task', 'game'];
+const BONUS_TYPES = ['ptc', 'video', 'shortlink', 'offer', 'task', 'microtask', 'game'];
 const WITHDRAW_USD_MIN = 0.03;
 
 function validateCriticalConfig() {
@@ -129,13 +129,13 @@ function setupSecurity(app) {
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://telegram.org", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro", "https://adbits.online"],
+        defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://telegram.org", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro", "https://adbits.online"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://richinfo.co", "https://*.richinfo.co"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://richinfo.co", "https://*.richinfo.co"],
-        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://richinfo.co", "https://*.richinfo.co", "https://adbits.online"],
+        connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co"],
+        frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co", "https://adbits.online"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: []
       }
@@ -1394,25 +1394,21 @@ async function adminUnbanUser(req, res) {
 async function adminAddBalance(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
   try {
-    const { userId, amount, coin, reason } = req.body;
-    if (!userId || !amount) return res.status(400).json({ error: 'userId and amount required' });
-    const targetCoin = coin || 'doge';
-    if (!COINS[targetCoin]) return res.status(400).json({ error: 'Invalid coin' });
-    const amt = Number(amount);
+    const { userId, amount, reason } = req.body;
+    if (!userId || amount === undefined) return res.status(400).json({ error: 'userId and amount required' });
+    const amt = Number(amount), atomic = cnxToAtomic(amt);
+    if (!Number.isFinite(amt) || !Number.isSafeInteger(atomic) || atomic === 0) return res.status(400).json({ error: 'Invalid CNX amount (up to 6 decimals)' });
     await db.runTransaction(async (t) => {
       const u = await t.get(db.collection('users').doc(String(userId)));
       if (!u.exists) throw new Error('User not found');
-      t.update(u.ref, { [`balances.${targetCoin}`]: increment(amt), last_active: serverTimestamp() });
-      const txRef = db.collection('transactions').doc();
-      t.set(txRef, {
-        user_id: String(userId), type: 'admin_edit', amount: amt,
-        currency: COINS[targetCoin].symbol,
-        description: `Admin balance edit: ${reason || 'No reason'}`,
-        metadata: { adminId: req.user.userId, reason, coin: targetCoin },
-        timestamp: serverTimestamp()
+      t.update(u.ref, { cnx_atomic: increment(atomic), last_active: serverTimestamp() });
+      t.set(db.collection('transactions').doc(), {
+        user_id: String(userId), type: 'admin_edit', amount: amt, currency: 'CNX',
+        description: `Admin CNX balance edit: ${reason || 'No reason'}`,
+        metadata: { adminId: req.user.userId, reason, coin: 'cnx' }, timestamp: serverTimestamp()
       });
     });
-    await logAction('admin_add_balance', req.user.userId, { userId: String(userId), amount, coin: targetCoin, reason });
+    await logAction('admin_add_balance', req.user.userId, { userId: String(userId), amount: amt, coin: 'CNX', reason });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message || 'Failed' }); }
 }
