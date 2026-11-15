@@ -19,6 +19,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CoinixFaucet — Earn CNX, Get DOGE</title>
+<link rel="icon" type="image/png" href="./coinix.png">
+<link rel="apple-touch-icon" href="./coinix.png">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" referrerpolicy="no-referrer">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -1377,6 +1379,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 .panel-period {border:1px solid var(--border);border-radius:9px;padding:7px 9px;color:#b7adff;font-size:9px;font-weight:900;letter-spacing:.1em;white-space:nowrap}
 .earnings-chart-wrap {height:205px;position:relative}
 .chart-empty {position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--text-secondary);font-size:12px;padding:24px}
+.chart-empty[hidden] {display:none}
 .level-top {display:flex;align-items:center;gap:13px}
 .level-emblem {width:46px;height:46px;flex:none;border-radius:15px;display:grid;place-items:center;color:#c7bdff;font-size:20px;background:linear-gradient(140deg,rgba(139,124,255,.23),rgba(44,202,182,.13));border:1px solid rgba(139,124,255,.22)}
 .level-copy {flex:1;min-width:0}
@@ -1723,7 +1726,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
       <div><strong>COINIX</strong><span>Earn. Collect. Grow.</span></div>
     </div>
     <div class="footer-copy">© 2026 CoinixFaucet · CNX Rewards</div>
-    <div class="footer-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    <div class="footer-links"><a href="#page-dashboard" onclick="showPage('dashboard')">Back to top</a><a href="https://t.me/CoinixBot" target="_blank" rel="noopener">Telegram</a></div>
   </footer>
 
   <!-- Bottom Nav -->
@@ -1853,6 +1856,7 @@ async function setupAuthOptions() {
     return;
   }
   const telegramButton = document.getElementById('telegram-mini-login');
+  if (telegramButton && !tg?.initData) telegramButton.style.display = 'none';
   if (telegramButton) telegramButton.addEventListener('click', async () => {
     if (tg?.initData) {
       const ok = await authenticate();
