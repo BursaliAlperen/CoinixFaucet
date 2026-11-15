@@ -566,8 +566,7 @@ async function renderDashboard() {
     const balanceCNX = Number(s.cnxBalance || state.profile.cnx || 0);
     const balanceUSD = Number(s.totalBalanceUSD || 0);
     const otherBalances = Object.entries(state.profile.balances || {})
-      .filter(([, amount]) => Number(amount) > 0)
-      .slice(0, 3);
+      .filter(([, amount]) => Number(amount) > 0);
     const otherAssetsUSD = Object.entries(state.profile.balances || {}).reduce(
       (sum, [coin, amount]) => sum + Number(amount || 0) * Number(COIN_META[coin]?.usd || 0), 0
     );
@@ -603,7 +602,7 @@ async function renderDashboard() {
         </section>
 
         <section class="nova-dashboard-bottom">
-          <article class="nova-dashboard-panel"><div class="nova-panel-title"><div><span class="nova-section-kicker">ACCOUNT SNAPSHOT</span><h3>Your progress</h3></div><span class="nova-panel-title-icon"><i data-lucide="activity"></i></span></div><div class="nova-progress-row"><span>Account level</span><b>Level ${s.level || 1}</b></div><div class="nova-progress-track"><span style="width:${Math.min(100, Math.max(4, Number(s.level || 1) * 8))}%"></span></div><div class="nova-snapshot-grid"><div><b>${s.dailyStreak || state.profile.dailyStreak || 0}</b><small>Day streak</small></div><div><b>${otherBalances.length}</b><small>Other coin balances</small></div><div><b>${fmtUSD(otherAssetsUSD)}</b><small>Other assets · USD</small></div></div></article>
+          <article class="nova-dashboard-panel"><div class="nova-panel-title"><div><span class="nova-section-kicker">ACCOUNT SNAPSHOT</span><h3>Your progress</h3></div><span class="nova-panel-title-icon"><i data-lucide="activity"></i></span></div><div class="nova-progress-row"><span>Current account level</span><b>Level ${s.level || 1}</b></div><div class="nova-snapshot-grid"><div><b>${s.dailyStreak || state.profile.dailyStreak || 0}</b><small>Day streak</small></div><div><b>${otherBalances.length}</b><small>Other coin balances</small></div><div><b>${fmtUSD(otherAssetsUSD)}</b><small>Other assets · USD</small></div></div></article>
           <article class="nova-dashboard-panel nova-help-panel"><span class="nova-help-orb"><i data-lucide="messages-square"></i></span><span class="nova-section-kicker">STAY CONNECTED</span><h3>Grow with the Coinix community.</h3><p>Get product updates, share feedback and follow platform announcements.</p><a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener">Join community <i data-lucide="arrow-up-right"></i></a></article>
         </section>
       </div>
