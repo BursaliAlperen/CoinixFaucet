@@ -1692,7 +1692,7 @@ async function loadWithdrawHistory() {
         <div class="history-type">
           <div class="history-icon">💸</div>
           <div>
-            <div class="history-desc">${Number(w.amount_cnx ?? w.amount).toFixed(6)} CNX → ${Number(w.doge_amount || 0).toFixed(8)} DOGE</div>
+            <div class="history-desc">${w.coin === "cnx" ? `${Number(w.amount_cnx ?? w.amount).toFixed(6)} CNX → ${Number(w.doge_amount || 0).toFixed(8)} DOGE` : `${Number(w.amount || 0)} ${String(w.coin || w.currency || "DOGE").toUpperCase()}`}</div>
             <div class="history-time">${timeAgo(w.timestamp)} • ${w.status}</div>
           </div>
         </div>
