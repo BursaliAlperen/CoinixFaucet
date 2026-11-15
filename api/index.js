@@ -876,11 +876,21 @@ async function authOAuth(req, res) {
     if (provider === 'google') {
       const clientId = process.env.GOOGLE_CLIENT_ID;
       if (!clientId) return res.status(503).json({ error: 'Google sign-in is not configured yet' });
-      const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken));
-      if (!response.ok) return res.status(401).json({ error: 'Google token rejected' });
-      const claims = await response.json();
-      if (claims.aud !== clientId || claims.email_verified !== 'true' || !claims.sub ||
-          !['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)) {
+      const decoded = jwt.decode(idToken, { complete: true });
+      const kid = decoded?.header?.kid;
+      if (!kid || decoded.header.alg !== 'RS256') return res.status(401).json({ error: 'Invalid Google identity token' });
+      const keysResponse = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+      if (!keysResponse.ok) throw new Error('Google public keys unavailable');
+      const keySet = await keysResponse.json();
+      const jwk = (keySet.keys || []).find(key => key.kid === kid);
+      if (!jwk) return res.status(401).json({ error: 'Google signing key not found' });
+      const publicKey = crypto.createPublicKey({ key: jwk, format: 'jwk' });
+      const claims = jwt.verify(idToken, publicKey, {
+        algorithms: ['RS256'],
+        issuer: ['accounts.google.com', 'https://accounts.google.com'],
+        audience: clientId
+      });
+      if (claims.email_verified !== true || !claims.sub) {
         return res.status(401).json({ error: 'Google identity could not be verified' });
       }
       return issueProviderSession('google', {
