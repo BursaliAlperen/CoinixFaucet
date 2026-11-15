@@ -1,0 +1,1 @@
+const setViewport=()=>document.documentElement.style.setProperty('--cx-vh',innerHeight+'px');setViewport();addEventListener('resize',setViewport,{passive:true});

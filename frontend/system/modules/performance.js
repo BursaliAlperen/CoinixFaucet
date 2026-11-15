@@ -1,0 +1,1 @@
+if('requestIdleCallback'in window)requestIdleCallback(()=>document.documentElement.classList.add('cx-idle-ready'));else setTimeout(()=>document.documentElement.classList.add('cx-idle-ready'),1);

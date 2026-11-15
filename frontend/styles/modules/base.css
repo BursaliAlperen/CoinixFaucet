@@ -1,0 +1,1 @@
+*,*::before,*::after{box-sizing:border-box}html{min-width:320px}body{min-height:100svh;overflow-x:clip}img,svg{max-width:100%}button,a,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}

@@ -1,0 +1,1 @@
+@media(max-width:767px){.cx-container{width:min(100% - 28px,1240px)}.cx-hide-mobile{display:none!important}.cx-dashboard-grid{gap:12px}}@media(min-width:768px){.cx-show-mobile{display:none!important}}@media(orientation:portrait) and (max-width:600px){.cx-phone-safe{padding-bottom:max(16px,env(safe-area-inset-bottom))}}

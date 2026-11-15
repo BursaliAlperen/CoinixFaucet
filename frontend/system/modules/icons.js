@@ -1,0 +1,1 @@
+const refreshIcons=()=>window.lucide?.createIcons();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refreshIcons,{once:true});else refreshIcons();

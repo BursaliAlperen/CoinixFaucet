@@ -1,3 +1,16 @@
+@import url("./modules/tokens.css");
+@import url("./modules/base.css");
+@import url("./modules/layout.css");
+@import url("./modules/cards.css");
+@import url("./modules/buttons.css");
+@import url("./modules/forms.css");
+@import url("./modules/navigation.css");
+@import url("./modules/dashboard.css");
+@import url("./modules/motion.css");
+@import url("./modules/responsive.css");
+@import url("./modules/accessibility.css");
+@import url("./modules/utilities.css");
+@import url("./modules/print.css");
 /* CoinixFaucet Premium UI / responsive design system */
 :root{--cx-bg:#070914;--cx-line:rgba(151,170,255,.14);--cx-muted:#9ba6c5;--cx-glow:0 18px 60px rgba(81,63,190,.2)}
 html{scroll-behavior:smooth;scroll-padding-top:100px}body{background:radial-gradient(ellipse at 12% 0%,rgba(99,58,190,.16),transparent 34%),radial-gradient(ellipse at 90% 18%,rgba(6,182,212,.12),transparent 32%),#070914;color:#f5f7ff}

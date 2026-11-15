@@ -1,0 +1,1 @@
+addEventListener('online',()=>document.documentElement.classList.remove('cx-offline'));addEventListener('offline',()=>document.documentElement.classList.add('cx-offline'));

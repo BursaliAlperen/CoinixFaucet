@@ -1,0 +1,1 @@
+.cx-container{width:min(100% - 32px,1240px);margin-inline:auto}.cx-stack{display:flex;flex-direction:column;gap:var(--cx-space-4)}.cx-cluster{display:flex;align-items:center;flex-wrap:wrap;gap:var(--cx-space-3)}.cx-grid{display:grid;gap:var(--cx-space-4);grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}.cx-section{padding-block:clamp(48px,7vw,96px)}

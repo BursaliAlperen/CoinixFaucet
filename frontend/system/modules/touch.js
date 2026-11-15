@@ -1,0 +1,1 @@
+document.addEventListener('touchstart',()=>document.documentElement.classList.add('cx-touch'),{once:true,passive:true});
