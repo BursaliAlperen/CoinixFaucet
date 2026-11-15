@@ -280,7 +280,10 @@ async function createNotification(userId, title, message, type = 'general') {
 }
 
 function getClientIP(req) {
-  return (req.headers['x-forwarded-for'] || '0.0.0.0').split(',')[0].trim();
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const cfConnecting = String(req.headers['cf-connecting-ip'] || '').trim();
+  const candidate = cfConnecting || forwarded || req.ip || req.socket?.remoteAddress || '0.0.0.0';
+  return String(candidate).replace(/^::ffff:/i, '').trim();
 }
 
 function startOfTodayTs() {
@@ -610,12 +613,12 @@ async function postback(req, res) {
       });
     });
     if (!duplicate && status === 1) {
-      await giveReferralBonus(subId, totalAmount, taskType);
+      await giveReferralBonus(subId, baseAmount, taskType);
       await logTransaction(subId, 'offerwall', totalAmount, 'CNX',
         `Offerwall.me: ${body.offer_name || taskType}`,
         { transId, taskType, bonus: bonusAmount });
     } else if (!duplicate && status === 2) {
-      await logTransaction(subId, 'chargeback', -appliedAmount, 'CNX',
+      await logTransaction(subId, 'chargeback', appliedAmount, 'CNX',
         `Offerwall.me reversal: ${body.offer_name || taskType}`,
         { transId, taskType, unrecoveredAtomic });
     }
