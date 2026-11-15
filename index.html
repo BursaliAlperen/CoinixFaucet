@@ -951,6 +951,123 @@ body {
   border-radius: 10px;
   margin-left: 4px;
 }
+
+/* COINIX 2026 visual refresh */
+:root {
+  --bg: #080d18;
+  --surface: #101a2b;
+  --surface-2: #17243a;
+  --text: #edf4ff;
+  --text-secondary: #9aaac2;
+  --border: rgba(148,163,184,.16);
+  --shadow: 0 12px 34px rgba(0,0,0,.22);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,.32);
+  --glass: rgba(8,13,24,.88);
+}
+[data-theme="dark"] {
+  --bg: #080d18;
+  --surface: #101a2b;
+  --surface-2: #17243a;
+  --text: #edf4ff;
+  --text-secondary: #9aaac2;
+  --border: rgba(148,163,184,.16);
+  --shadow: 0 12px 34px rgba(0,0,0,.22);
+  --shadow-lg: 0 18px 48px rgba(0,0,0,.32);
+  --glass: rgba(8,13,24,.88);
+}
+body {
+  background:
+    radial-gradient(ellipse at 12% -8%, rgba(245,158,11,.12), transparent 34%),
+    radial-gradient(ellipse at 92% 18%, rgba(59,130,246,.10), transparent 30%),
+    var(--bg);
+}
+#app { padding-bottom: calc(94px + env(safe-area-inset-bottom)); }
+.header {
+  padding: 14px max(18px, calc((100vw - 1120px)/2));
+  background: rgba(8,13,24,.82);
+  border-bottom-color: rgba(148,163,184,.14);
+  box-shadow: 0 8px 28px rgba(0,0,0,.16);
+}
+.header-logo { box-shadow: 0 0 0 5px rgba(245,158,11,.10); }
+.header-title { letter-spacing: 1.5px; }
+.balance-chip {
+  background: rgba(245,158,11,.10);
+  border: 1px solid rgba(245,158,11,.18);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+.page { max-width: 1040px; padding: 26px 20px 42px; }
+.welcome-card {
+  padding: 30px;
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 18px 46px rgba(217,119,6,.18);
+}
+.welcome-title { font-size: clamp(24px, 4vw, 34px); letter-spacing: -.7px; }
+.welcome-subtitle { font-size: 15px; }
+.stats-grid { gap: 14px; }
+.stat-card, .card, .coin-card, .withdraw-card, .payouts-ticker {
+  background: linear-gradient(145deg, rgba(20,32,52,.96), rgba(13,22,38,.98));
+  border-color: rgba(148,163,184,.15);
+  box-shadow: 0 12px 30px rgba(0,0,0,.16);
+}
+.stat-card {
+  padding: 20px 14px;
+  border-radius: 16px;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.stat-card:hover { transform: translateY(-3px); border-color: rgba(245,158,11,.4); }
+.stat-value { font-size: clamp(22px, 3vw, 29px); }
+.stat-label { letter-spacing: 1.2px; }
+.card, .coin-card, .withdraw-card { padding: 22px; border-radius: 18px; }
+.card-title { letter-spacing: -.2px; }
+.coin-card { transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+.coin-card:hover { border-color: rgba(245,158,11,.38); }
+.input-field {
+  background: rgba(5,10,20,.58);
+  border-color: rgba(148,163,184,.22);
+  color: #f8fafc;
+}
+.input-field::placeholder { color: #8292aa; }
+.btn { min-height: 48px; border-radius: 13px; letter-spacing: .1px; }
+.btn-primary { box-shadow: 0 8px 20px rgba(245,158,11,.14); }
+.btn-secondary { background: rgba(148,163,184,.09); border-color: rgba(148,163,184,.2); }
+.quick-actions { gap: 12px; }
+.quick-action {
+  background: rgba(148,163,184,.07);
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 15px;
+  padding: 18px 10px;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+.quick-action:hover { transform: translateY(-3px); border-color: rgba(245,158,11,.38); background: rgba(245,158,11,.08); }
+.quick-action-icon { font-size: 27px; }
+.bottom-nav {
+  background: rgba(8,13,24,.94);
+  border-top-color: rgba(148,163,184,.16);
+  box-shadow: 0 -12px 30px rgba(0,0,0,.22);
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+.nav-item { min-width: 62px; }
+.nav-item.active { color: #fbbf24; }
+.toast { background: #111c2e; border-color: rgba(148,163,184,.2); color: #f8fafc; }
+.payout-item { gap: 12px; }
+.payout-amount { white-space: nowrap; }
+@media (min-width: 760px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .quick-actions { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 560px) {
+  .page { padding: 18px 14px 30px; }
+  .header { padding: 12px 14px; }
+  .header-title { font-size: 18px; }
+  .header-balance { gap: 6px; }
+  .balance-chip { font-size: 11px; padding: 6px 8px; }
+  .welcome-card { padding: 24px 20px; }
+  .card, .coin-card, .withdraw-card { padding: 17px; }
+  .stat-card { padding: 15px 8px; }
+}
+
 </style>
 </head>
 <body>
@@ -1624,7 +1741,7 @@ async function doWithdraw(coinKey) {
     body: JSON.stringify({ faucetpay_email: email, amount, coin: coinKey, nonce: crypto.randomUUID(), timestamp: Date.now() })
   });
   if (res.error) { showToast(res.error, 'error'); return; }
-  showToast('Withdrawal submitted!');
+  showToast(res.status === 'paid' ? `FaucetPay sent: ${res.amount} ${res.coin}` : 'Withdrawal is being verified.');
   await loadUserData();
   renderWithdrawCoins();
   loadWithdrawHistory();
