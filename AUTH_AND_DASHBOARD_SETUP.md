@@ -21,7 +21,7 @@ The Telegram Mini App path `POST /api/auth` remains available and unchanged.
 5. Copy the Web Client ID into Render as `GOOGLE_CLIENT_ID`.
 6. Deploy and test the Google sign-in button.
 
-The browser receives a Google ID token. The backend checks its signature/claims with Google's token verification endpoint, checks the exact configured audience and verified email, and then issues the site's own JWT.
+The browser receives a Google ID token. The backend verifies its RS256 signature against Google's rotating public JWKS, checks issuer, expiry, exact configured audience and verified email, and then issues the site's own JWT.
 
 ## Apple (optional; not fully free)
 
