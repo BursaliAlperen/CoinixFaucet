@@ -702,7 +702,7 @@ body {
 }
 
 .milestone-card::before {
-  content: '🏆';
+  content: "\\f091"; font-family: "Font Awesome 6 Free"; font-weight: 900;
   position: absolute;
   right: 20px;
   top: 50%;
@@ -1303,6 +1303,20 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
  .quick-action,.dashboard-wallet-actions button {transition:none}
 }
 
+
+.currency-mark {
+ display:flex;flex-direction:column;align-items:center;gap:7px;min-width:72px;
+ color:#c0b7ff;font-size:26px;
+}
+.currency-mark span {font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--text-secondary)}
+.currency-mark.doge-mark {color:#e8c36f}
+.coin-image {display:grid;place-items:center;font-size:28px;color:#c2baff}
+.withdraw-coin-img {display:grid;place-items:center;font-size:21px;color:#c2baff}
+.history-icon {color:#b9afff}
+.milestone-card::before {font-size:42px;opacity:.32}
+.milestone-title i {margin-right:7px}
+.earn-feed-empty>span {font-size:25px;color:#b7adff}
+
 </style>
 </head>
 <body>
@@ -1320,7 +1334,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
       <div class="loading-progress-fill" id="loading-progress"></div>
     </div>
     <div id="loading-cta">
-      <button class="btn-glow" id="btn-go-faucet">🚀 Go to Faucet</button>
+      <button class="btn-glow" id="btn-go-faucet"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Go to Faucet</button>
       <p class="loading-hint">Tap to start earning free crypto</p>
     </div>
   </div>
@@ -1397,7 +1411,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 
     <!-- Milestone Card -->
     <div class="milestone-card">
-      <div class="milestone-title">🏆 Next Milestone</div>
+      <div class="milestone-title"><i class="fa-solid fa-trophy" aria-hidden="true"></i> Next Milestone</div>
       <div class="milestone-subtitle" id="milestone-text">Milestone rewards are paid in CNX</div>
       <div class="milestone-progress">
         <div class="milestone-progress-fill" id="milestone-fill" style="width:0%"></div>
@@ -1455,8 +1469,8 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
     <div class="card" style="text-align:center;margin-bottom:20px;">
       <div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">Site Reward Currency</div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <div style="text-align:center;"><div style="font-size:32px;">🪙</div><div style="font-size:11px;font-weight:700;">CNX</div></div>
-        <div style="text-align:center;"><div style="font-size:32px;">🐕</div><div style="font-size:11px;font-weight:700;">DOGE payouts</div></div>
+        <div class="currency-mark"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>CNX</span></div>
+        <div class="currency-mark doge-mark"><i class="fa-solid fa-dog" aria-hidden="true"></i><span>DOGE PAYOUTS</span></div>
       </div>
     </div>
 
@@ -1494,7 +1508,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
         <button class="btn btn-primary earn-fullwall" onclick="openOfferwall()"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Open Full Offerwall <small>All available campaigns</small></button>
       </div>
       <div class="earn-feed" id="earn-feed">
-        <div class="earn-feed-empty"><span>🪙</span><strong>Choose an earning category</strong><small>Available campaigns will appear here.</small></div>
+        <div class="earn-feed-empty"><span><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span><strong>Choose an earning category</strong><small>Available campaigns will appear here.</small></div>
       </div>
     </div>
 
@@ -1604,7 +1618,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 // CONFIG
 // ============================================
 const API_URL = window.location.origin;
-const CNX = { symbol: 'CNX', name: 'Coinix Token', decimals: 6, usdRate: 10000, faucetReward: 5, icon: '🪙' };
+const CNX = { symbol: 'CNX', name: 'Coinix Token', decimals: 6, usdRate: 10000, faucetReward: 5, icon: 'fa-solid fa-coins' };
 
 // ============================================
 // STATE
@@ -1816,7 +1830,7 @@ function renderFaucetCoins() {
   document.getElementById('faucet-coins').innerHTML = `
     <div class="coin-card" style="--coin-color:#d4a017">
       <div class="coin-header">
-        <div class="coin-image" style="font-size:32px;">🪙</div>
+        <div class="coin-image"><i class="fa-solid fa-coins" aria-hidden="true"></i></div>
         <div class="coin-info"><div class="coin-name">Coinix Token (CNX)</div><div class="coin-price">10,000 CNX = $1.00 USD</div></div>
       </div>
       <div class="coin-balance"><div class="coin-balance-value">${balance.toFixed(6)} CNX</div><div class="coin-balance-usd">~ $${(balance / 10000).toFixed(4)} USD</div></div>
@@ -1876,7 +1890,7 @@ function renderWithdrawCoins() {
   const balance=Number(userData?.balances?.cnx||0),min=300,enough=balance>=min;
   document.getElementById('withdraw-coins').innerHTML=`
     <div class="withdraw-card">
-      <div class="withdraw-header"><div class="withdraw-coin-img" style="font-size:24px;">🪙</div>
+      <div class="withdraw-header"><div class="withdraw-coin-img"><i class="fa-solid fa-wallet" aria-hidden="true"></i></div>
         <div><div style="font-weight:800;">CNX → DOGE</div><div class="withdraw-balance">Balance: <strong>${balance.toFixed(6)} CNX</strong></div></div>
         <div class="min-withdraw ${enough?'enough':'not-enough'}">${enough?'✓ Available':'✗ Not enough'}</div>
       </div>
@@ -1914,7 +1928,7 @@ async function loadWithdrawHistory() {
     container.innerHTML = res.map(w => `
       <div class="history-item">
         <div class="history-type">
-          <div class="history-icon">💸</div>
+          <div class="history-icon"><i class="fa-solid fa-money-bill-transfer" aria-hidden="true"></i></div>
           <div>
             <div class="history-desc">${w.coin === "cnx" ? `${Number(w.amount_cnx ?? w.amount).toFixed(6)} CNX → ${Number(w.doge_amount || 0).toFixed(8)} DOGE` : `${Number(w.amount || 0)} ${String(w.coin || w.currency || "DOGE").toUpperCase()}`}</div>
             <div class="history-time">${timeAgo(w.timestamp)} • ${w.status}</div>
@@ -1944,7 +1958,7 @@ async function loadReferral() {
     listContainer.innerHTML = listRes.list.map(r => `
       <div class="history-item">
         <div class="history-type">
-          <div class="history-icon">👤</div>
+          <div class="history-icon"><i class="fa-solid fa-user-check" aria-hidden="true"></i></div>
           <div>
             <div class="history-desc">${r.first_name || r.username || 'User'}</div>
             <div class="history-time">Joined ${timeAgo(r.created_at)}</div>
@@ -2017,8 +2031,17 @@ async function loadTransactionHistory() {
 }
 
 function getTxIcon(type) {
-  const icons = { faucet_claim: '🚰', promo: '', referral: '👥', milestone: '🏆', withdraw: '', swap: '🔄', offerwall: '📺', return_bonus: '' };
-  return icons[type] || '💰';
+  const icons = {
+    faucet_claim: 'fa-faucet-drip',
+    promo: 'fa-ticket',
+    referral: 'fa-user-group',
+    milestone: 'fa-trophy',
+    withdraw: 'fa-wallet',
+    swap: 'fa-arrow-right-arrow-left',
+    offerwall: 'fa-list-check',
+    return_bonus: 'fa-gift'
+  };
+  return '<i class="fa-solid ' + (icons[type] || 'fa-coins') + '" aria-hidden="true"></i>';
 }
 
 // ============================================
@@ -2055,19 +2078,19 @@ async function loadEarnFeed(kind) {
   container.innerHTML = '<div class="earn-feed-empty"><span>⏳</span><strong>Loading campaigns…</strong><small>Checking Offerwall.me availability</small></div>';
   const res = await api(config.url);
   if (res.error) {
-    container.innerHTML = '<div class="earn-feed-empty"><span>⚠️</span><strong>Campaigns could not be loaded</strong><small>' + escapeHtml(res.error) + '</small></div>';
+    container.innerHTML = '<div class="earn-feed-empty"><span><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span><strong>Campaigns could not be loaded</strong><small>' + escapeHtml(res.error) + '</small></div>';
     return;
   }
   const items = Array.isArray(res[config.key]) ? res[config.key] : [];
   if (!items.length) {
-    container.innerHTML = '<div class="earn-feed-empty"><span>🔎</span><strong>No ' + escapeHtml(config.title.toLowerCase()) + ' available right now</strong><small>Try the full Offerwall or check again later.</small></div>';
+    container.innerHTML = '<div class="earn-feed-empty"><span><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></span><strong>No ' + escapeHtml(config.title.toLowerCase()) + ' available right now</strong><small>Try the full Offerwall or check again later.</small></div>';
     return;
   }
   const cards = items.map(item => {
     const title = item.title || item.name || config.title;
     const image = item.image && /^https?:\/\//i.test(item.image)
       ? '<img class="earn-offer-image" src="' + escapeHtml(item.image) + '" alt="">'
-      : '<div class="earn-offer-image" style="display:grid;place-items:center;font-size:21px;">🪙</div>';
+      : '<div class="earn-offer-image" style="display:grid;place-items:center;font-size:18px;"><i class="fa-solid fa-coins" aria-hidden="true"></i></div>';
     const details = [item.duration ? item.duration + ' sec' : '', item.remaining ? item.remaining + ' left' : '', item.provider || ''].filter(Boolean).join(' · ');
     return '<article class="earn-offer">' + image +
       '<div class="earn-offer-body"><div class="earn-offer-title">' + escapeHtml(title) + '</div>' +
