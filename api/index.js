@@ -566,16 +566,23 @@ async function postback(req, res) {
     const eligible = BONUS_TYPES.some(type => taskType.includes(type));
     const bonusAmount = status === 1 && eligible ? roundCnx(baseAmount * BONUS_PERCENT / 100) : 0;
     const totalAmount = roundCnx(baseAmount + bonusAmount);
-    const baseAtomic = cnxToAtomic(baseAmount);
     let duplicate = false, appliedAmount = 0, unrecoveredAtomic = 0;
     await db.runTransaction(async t => {
       const priorEvent = await t.get(eventRef);
-      if (priorEvent.exists) { duplicate = true; return; }
+      const legacyEvents = await t.get(db.collection('offerwall_completions').where('trans_id', '==', transId));
+      const legacyDocs = legacyEvents.docs.map(doc => doc.data());
+      const hasPriorCredit = legacyDocs.some(item => item.status === 'completed');
+      const hasPriorReversal = legacyDocs.some(item => item.status === 'chargeback');
+      if (priorEvent.exists || (status === 1 && hasPriorCredit) || (status === 2 && hasPriorReversal)) {
+        duplicate = true;
+        return;
+      }
       const userDoc = await t.get(userRef);
       if (!userDoc.exists) throw new Error('User not found');
       const user = userDoc.data();
       if (user.banned) throw new Error('User banned');
       const original = status === 2 ? await t.get(originalRef) : null;
+      const legacyOriginal = status === 2 ? legacyDocs.find(item => item.status === 'completed') : null;
       if (status === 1) {
         appliedAmount = totalAmount;
         t.update(userRef, {
@@ -584,7 +591,9 @@ async function postback(req, res) {
           total_offerwall_earned: increment(totalAmount)
         });
       } else {
-        const reversalAmount = original && original.exists ? Number(original.data().amount || baseAmount) : baseAmount;
+        const reversalAmount = original && original.exists
+          ? Number(original.data().amount || baseAmount)
+          : (legacyOriginal ? Number(legacyOriginal.amount || baseAmount) : baseAmount);
         const requestedAtomic = cnxToAtomic(reversalAmount);
         const currentAtomic = Math.max(0, Number(user.cnx_atomic || 0));
         const debitAtomic = Math.min(currentAtomic, requestedAtomic);
