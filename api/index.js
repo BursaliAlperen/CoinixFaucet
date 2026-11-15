@@ -587,8 +587,8 @@ async function postback(req, res) {
         appliedAmount = totalAmount;
         t.update(userRef, {
           cnx_atomic: increment(cnxToAtomic(totalAmount)),
-          total_earned: increment(totalAmount),
-          total_offerwall_earned: increment(totalAmount)
+          total_earned_cnx: increment(totalAmount),
+          total_offerwall_earned_cnx: increment(totalAmount)
         });
       } else {
         const reversalAmount = original && original.exists
@@ -602,8 +602,8 @@ async function postback(req, res) {
         if (debitAtomic > 0) {
           t.update(userRef, {
             cnx_atomic: increment(-debitAtomic),
-            total_earned: increment(-appliedAmount),
-            total_offerwall_earned: increment(-appliedAmount)
+            total_earned_cnx: increment(-appliedAmount),
+            total_offerwall_earned_cnx: increment(-appliedAmount)
           });
         }
       }
@@ -704,13 +704,17 @@ async function auth(req, res) {
         referral_balance: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
         cnx_atomic: 0,
         referral_cnx_atomic: 0,
-        total_earned: 0,
+        total_earned: 0, // legacy total retained for historical records
+        total_earned_cnx: 0,
         total_claims: 0,
         total_withdrawals: 0,
-        total_offerwall_earned: 0,
-        total_promo_earned: 0,
+        total_offerwall_earned: 0, // legacy total retained
+        total_offerwall_earned_cnx: 0,
+        total_promo_earned: 0, // legacy total retained
+        total_promo_earned_cnx: 0,
         referrals: 0,
-        referral_earnings: 0,
+        referral_earnings: 0, // legacy referral total retained
+        referral_earnings_cnx: 0,
         referred_by: ref || null,
         banned: false,
         is_admin: String(userId) === String(ADMIN_TELEGRAM_ID),
@@ -741,7 +745,7 @@ async function auth(req, res) {
               t.update(refRef, {
                 referrals: increment(1),
                 referral_cnx_atomic: increment(cnxToAtomic(CNX_SIGNUP_REFERRAL_BONUS)),
-                referral_earnings: increment(CNX_SIGNUP_REFERRAL_BONUS)
+                referral_earnings_cnx: increment(CNX_SIGNUP_REFERRAL_BONUS)
               });
               const rbRef = db.collection('referralBonuses').doc();
               t.set(rbRef, {
@@ -786,10 +790,10 @@ async function getMe(req, res) {
     res.json({
       telegram_id: d.telegram_id, username: d.username, first_name: d.first_name, photo_url: d.photo_url || null,
       balances: { cnx }, balancesUSD: { cnx: cnx / CNX_PER_USD }, totalUSD: cnx / CNX_PER_USD,
-      total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
-      total_withdrawals: d.total_withdrawals || 0, total_offerwall_earned: d.total_offerwall_earned || 0,
-      total_promo_earned: d.total_promo_earned || 0, referrals: d.referrals || 0,
-      referral_earnings: d.referral_earnings || 0, referral_balance: { cnx: referralCnx },
+      total_earned: d.total_earned_cnx || 0, total_claims: d.total_claims || 0,
+      total_withdrawals: d.total_withdrawals || 0, total_offerwall_earned: d.total_offerwall_earned_cnx || 0,
+      total_promo_earned: d.total_promo_earned_cnx || 0, referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings_cnx || 0, referral_balance: { cnx: referralCnx },
       daily_claims: d.daily_claims || 0, last_claim: tsToMillis(d.last_claim),
       last_opened: tsToMillis(d.last_opened), banned: d.banned || false,
       is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID),
@@ -807,8 +811,9 @@ async function getBalance(req, res) {
     res.json({
       balances: { cnx: atomicToCnx(d.cnx_atomic) },
       referral_balance: { cnx: atomicToCnx(d.referral_cnx_atomic) },
-      total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
-      referrals: d.referrals || 0, last_claim: tsToMillis(d.last_claim), daily_claims: d.daily_claims || 0
+      total_earned: d.total_earned_cnx || 0, total_claims: d.total_claims || 0,
+      referrals: d.referrals || 0, referral_earnings: d.referral_earnings_cnx || 0,
+      last_claim: tsToMillis(d.last_claim), daily_claims: d.daily_claims || 0
     });
   } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
@@ -844,7 +849,7 @@ async function getReferral(req, res) {
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
     const d = doc.data();
     const link = `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
-    res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings || 0, referral_balance: { cnx: atomicToCnx(d.referral_cnx_atomic) } });
+    res.json({ link, referrals: d.referrals || 0, earnings: d.referral_earnings_cnx || 0, referral_balance: { cnx: atomicToCnx(d.referral_cnx_atomic) } });
   } catch (err) { res.status(500).json({ error: 'Failed' }); }
 }
 
@@ -864,7 +869,7 @@ async function getReferralList(req, res) {
         first_name: x.first_name || null,
         username: x.username || null,
         photo_url: x.photo_url || null,
-        total_earned: x.total_earned || 0,
+        total_earned: x.total_earned_cnx || 0,
         created_at: tsToMillis(x.created_at)
       };
     });
@@ -887,7 +892,7 @@ async function giveReferralBonus(userId, amount, type) {
     const referrerRef = db.collection('users').doc(referrerId);
     await db.runTransaction(async t => {
       const refDoc = await t.get(referrerRef);
-      if (refDoc.exists) t.update(referrerRef, { referral_cnx_atomic: increment(bonusAtomic), referral_earnings: increment(bonusAmount) });
+      if (refDoc.exists) t.update(referrerRef, { referral_cnx_atomic: increment(bonusAtomic), referral_earnings_cnx: increment(bonusAmount) });
     });
     await db.collection('referralBonuses').add({ referrer: referrerId, referred: userId, amount: bonusAmount, currency: 'CNX', type: type || 'unknown', timestamp: serverTimestamp() });
     await logTransaction(referrerId, 'referral', bonusAmount, 'CNX', `Referral bonus from ${userId}`, { referred: userId, sourceType: type });
@@ -934,7 +939,7 @@ async function updateActivity(req, res) {
     if (lastOpened && (now - lastOpened) >= threeDays && !d.return_bonus_claimed) {
       updates.cnx_atomic = increment(cnxToAtomic(CNX_RETURN_BONUS));
       updates.return_bonus_claimed = true;
-      updates.total_earned = increment(CNX_RETURN_BONUS);
+      updates.total_earned_cnx = increment(CNX_RETURN_BONUS);
       bonusGranted = true;
       await logTransaction(userId, 'return_bonus', CNX_RETURN_BONUS, 'CNX', 'Return after inactivity bonus');
       await createNotification(userId, 'Welcome Back!', `You received ${CNX_RETURN_BONUS} CNX for coming back!`, 'reward');
@@ -1053,7 +1058,7 @@ async function claim(req, res) {
       const totalAtomic = claimAtomic + cnxToAtomic(milestoneReward);
       newBalance = atomicToCnx(Number(d.cnx_atomic || 0) + totalAtomic);
       t.update(userRef, {
-        cnx_atomic: increment(totalAtomic), total_earned: increment(CNX_FAUCET_REWARD + milestoneReward),
+        cnx_atomic: increment(totalAtomic), total_earned_cnx: increment(CNX_FAUCET_REWARD + milestoneReward),
         total_claims: increment(1), last_claim: serverTimestamp(), last_active: serverTimestamp(),
         daily_claims: dailyClaims, last_claim_date: todayStr
       });
@@ -1229,7 +1234,7 @@ async function redeemPromo(req, res) {
       if ((fp.usedCount || 0) >= (fp.usageLimit || fp.maxUses || 0)) throw new Error('Code usage limit reached');
       if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('Already used');
       const rewardAtomic = cnxToAtomic(reward);
-      t.update(userRef, { cnx_atomic: increment(rewardAtomic), total_earned: increment(roundCnx(reward)), total_promo_earned: increment(roundCnx(reward)), last_active: serverTimestamp() });
+      t.update(userRef, { cnx_atomic: increment(rewardAtomic), total_earned_cnx: increment(roundCnx(reward)), total_promo_earned_cnx: increment(roundCnx(reward)), last_active: serverTimestamp() });
       t.update(promoRef, {
         usedCount: increment(1),
         usedBy: FieldValue ? FieldValue.arrayUnion(userId) : [...(fp.usedBy || []), userId]
