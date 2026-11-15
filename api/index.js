@@ -82,9 +82,9 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
 })();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
-const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID;
-const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
-const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
+const OFFERWALLAPI_API_KEY = process.env.OFFERWALLAPI_API_KEY || '';
+const OFFERWALLAPI_SECRET_KEY = process.env.OFFERWALLAPI_SECRET_KEY || '';
+const OFFERWALLAPI_BEARER_TOKEN = process.env.OFFERWALLAPI_BEARER_TOKEN || '';
 const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
 const PORT = process.env.PORT || 10000;
 const FAUCETPAY_API_KEY = process.env.FAUCETPAY_API_KEY || '';
@@ -93,7 +93,13 @@ const FAUCETPAY_CURRENCIES = { doge: 'DOGE', dgb: 'DGB', feyorra: 'FEY' };
 const FAUCETPAY_ATOMIC_UNITS = { doge: 100000000, dgb: 100000000, feyorra: 100000000 };
 
 const FAUCET_COOLDOWN = 180000; // 3 minutes
-const REFERRAL_SIGNUP_BONUS = 0.01; // DOGE
+const CNX_DECIMALS = 6;
+const CNX_SCALE = 10 ** CNX_DECIMALS;
+const CNX_PER_USD = 10000;
+const CNX_MIN_WITHDRAW = 300;
+const CNX_FAUCET_REWARD = 5;
+const CNX_SIGNUP_REFERRAL_BONUS = 50;
+const CNX_RETURN_BONUS = 10;
 const REFERRAL_COMMISSION_PERCENT = 20;
 const BONUS_PERCENT = 20;
 const BONUS_TYPES = ['ptc', 'shortlink', 'offer', 'task', 'game'];
@@ -103,6 +109,8 @@ function validateCriticalConfig() {
   const missing = [];
   if (!BOT_TOKEN) missing.push('BOT_TOKEN');
   if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
+  if (!OFFERWALLAPI_API_KEY) missing.push('OFFERWALLAPI_API_KEY (OfferwallAPI disabled until configured)');
+  if (!OFFERWALLAPI_SECRET_KEY) missing.push('OFFERWALLAPI_SECRET_KEY (postbacks disabled until configured)');
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON && !process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
     missing.push('FIREBASE_SERVICE_ACCOUNT_JSON or BASE64');
   }
@@ -378,14 +386,13 @@ function getMinWithdrawAmount(coinKey) {
   return WITHDRAW_USD_MIN / price;
 }
 
+function cnxToAtomic(value) { const n = Number(value); return Number.isFinite(n) ? Math.round(n * CNX_SCALE) : 0; }
+function atomicToCnx(value) { return Number(value || 0) / CNX_SCALE; }
+function roundCnx(value) { return Math.round(Number(value || 0) * CNX_SCALE) / CNX_SCALE; }
 function getMilestoneReward(totalClaims) {
   if (totalClaims < 25) return 0;
-  let base = 25, reward = 0.01;
-  while (base <= totalClaims) {
-    if (totalClaims === base) return reward;
-    base *= 10;
-    reward *= 10;
-  }
+  let base = 25, reward = 10;
+  while (base <= totalClaims) { if (totalClaims === base) return reward; base *= 10; reward *= 10; }
   return 0;
 }
 
@@ -400,167 +407,104 @@ fetchCoinPrices();
 setInterval(fetchCoinPrices, 120000);
 
 // ============================================
-// OFFERWALL.ME
+// OFFERWALLAPI
 // ============================================
-async function getOfferwallUrl(req, res) {
-  if (!db) return res.status(503).json({ error: 'DB not available' });
+async function offerwallFetch(url) {
+  const headers={Accept:'application/json'};
+  if(OFFERWALLAPI_BEARER_TOKEN)headers.Authorization=`Bearer ${OFFERWALLAPI_BEARER_TOKEN}`;
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+  try{return await fetch(url,{headers,signal:controller.signal});}finally{clearTimeout(timeout);}
+}
+async function getOfferwallUrl(req,res) {
+  if(!db)return res.status(503).json({error:'DB not available'});
+  if(!OFFERWALLAPI_API_KEY)return res.status(503).json({error:'OfferwallAPI is not configured.'});
+  const userId=String(req.user.userId);
+  const url=`https://offerwallapi.com/offerwall/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}`;
+  res.json({success:true,url,user_id:userId});
+}
+async function getPTCAds(req,res) {
+  if(!db)return res.status(503).json({error:'DB not available'});
   try {
-    const userId = String(req.user.userId);
-    const url = `https://offerwall.me/offerwall/${OFFERWALL_APP_ID}/${userId}`;
-    res.json({ success: true, url, user_id: userId });
-  } catch (err) { res.status(500).json({ error: 'Failed' }); }
+    const userId=String(req.user.userId);
+    if(!OFFERWALLAPI_API_KEY||!OFFERWALLAPI_BEARER_TOKEN)return res.json({success:true,ads:[],total:0,configured:false});
+    const url=`https://offerwallapi.com/ptc-api/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}/${encodeURIComponent(getClientIP(req))}`;
+    const response=await offerwallFetch(url); if(!response.ok)return res.status(502).json({error:'OfferwallAPI PTC feed error'});
+    const data=await response.json(); if(String(data.status)!=='200')return res.json({success:true,ads:[],total:0,message:data.message||'No ads available'});
+    const ads=(data.data||[]).map(x=>({id:String(x.id||''),title:x.title||'PTC Ad',description:x.description||'',reward:Number(x.reward)||0,currency:x.currency_name||'CNX',duration:Number(x.duration)||30,url:x.url||'',type:x.ad_type||'Window'})).filter(x=>x.url);
+    res.json({success:true,ads,total:ads.length});
+  }catch(e){logger.error('OfferwallAPI PTC error',{error:e.message});res.status(500).json({error:'Failed to load PTC ads'});}
+}
+async function getShortlinks(req,res) {
+  if(!db)return res.status(503).json({error:'DB not available'});
+  try {
+    const userId=String(req.user.userId);
+    if(!OFFERWALLAPI_API_KEY||!OFFERWALLAPI_BEARER_TOKEN)return res.json({success:true,shortlinks:[],total:0,configured:false});
+    const url=`https://offerwallapi.com/sl-api/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}/${encodeURIComponent(getClientIP(req))}`;
+    const response=await offerwallFetch(url);if(!response.ok)return res.status(502).json({error:'OfferwallAPI shortlink feed error'});
+    const data=await response.json();if(String(data.status)!=='200')return res.json({success:true,shortlinks:[],total:0,message:data.message||'No shortlinks available'});
+    const shortlinks=(data.data||[]).map(x=>({id:String(x.id||''),name:x.title||'Shortlink',reward:Number(x.reward)||0,currency:x.currency_name||'CNX',url:x.url||'',remaining_views:Number(x.available)||0,daily_limit:Number(x.limit)||0})).filter(x=>x.url);
+    res.json({success:true,shortlinks,total:shortlinks.length});
+  }catch(e){logger.error('OfferwallAPI shortlink error',{error:e.message});res.status(500).json({error:'Failed to load shortlinks'});}
+}
+async function getGames(req,res) {
+  if(!db)return res.status(503).json({error:'DB not available'});
+  try {
+    const userId=String(req.user.userId);
+    if(!OFFERWALLAPI_API_KEY||!OFFERWALLAPI_BEARER_TOKEN)return res.json({success:true,videos:[],total:0,configured:false});
+    const url=`https://offerwallapi.com/video-api/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}/${encodeURIComponent(getClientIP(req))}`;
+    const response=await offerwallFetch(url);if(!response.ok)return res.status(502).json({error:'OfferwallAPI video feed error'});
+    const data=await response.json();if(String(data.status)!=='200')return res.json({success:true,videos:[],total:0,message:data.message||'No videos available'});
+    const videos=(data.data||[]).map(x=>({id:String(x.id||''),title:x.title||'Video',description:x.description||'',reward:Number(x.reward)||0,duration:Number(x.duration)||0,url:x.url||'',type:x.ad_type||'Iframe'})).filter(x=>x.url);
+    res.json({success:true,videos,total:videos.length});
+  }catch(e){logger.error('OfferwallAPI video error',{error:e.message});res.status(500).json({error:'Failed to load videos'});}
 }
 
-async function getPTCAds(req, res) {
-  if (!db) return res.status(503).json({ error: 'DB not available' });
-  try {
-    const userId = String(req.user.userId);
-    if (!OFFERWALL_APP_ID || !OFFERWALL_API_TOKEN) return res.json({ success: true, ads: [], total: 0 });
-    const userIp = getClientIP(req);
-    const country = req.headers['cf-ipcountry'] || 'US';
-    const apiUrl = `https://offerwall.me/api.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
-    clearTimeout(timeout);
-    if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
-    const data = await response.json();
-    if (data.status !== 200) return res.json({ success: false, ads: [], message: data.message });
-    const ads = (data.data || []).map(ad => ({
-      id: ad.id || String(Math.random()),
-      title: ad.title || 'Ad',
-      description: ad.description || '',
-      reward: Number(ad.reward) || 0,
-      duration: ad.duration || 30,
-      url: ad.url || '',
-      type: ad.type || 1,
-      max: ad.max || 0
-    }));
-    res.json({ success: true, ads, total: ads.length });
-  } catch (err) {
-    logger.error('PTC Ads error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
 
-async function getShortlinks(req, res) {
-  if (!db) return res.status(503).json({ error: 'DB not available' });
-  try {
-    const userId = String(req.user.userId);
-    if (!OFFERWALL_APP_ID || !OFFERWALL_API_TOKEN) return res.json({ success: true, shortlinks: [], total: 0 });
-    const userIp = getClientIP(req);
-    const country = req.headers['cf-ipcountry'] || 'US';
-    const apiUrl = `https://offerwall.me/slapi.php?api=${OFFERWALL_APP_ID}&id=${userId}&ip=${userIp}&token=${OFFERWALL_API_TOKEN}&country=${country}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
-    clearTimeout(timeout);
-    if (!response.ok) return res.status(502).json({ error: 'Offerwall API error' });
-    const data = await response.json();
-    if (data.status !== 200) return res.json({ success: false, shortlinks: [], message: data.message });
-    const shortlinks = (data.data || []).map(link => ({
-      id: link.id || String(Math.random()),
-      name: link.name || 'Link',
-      reward: Number(link.reward) || 0,
-      url: link.url || '',
-      remaining_views: link.remaining_views || 0,
-      daily_limit: link.daily_limit || 0
-    }));
-    res.json({ success: true, shortlinks, total: shortlinks.length });
-  } catch (err) {
-    logger.error('Shortlinks error', { error: err.message });
-    res.status(500).json({ error: 'Failed' });
-  }
-}
-
-async function getGames(req, res) {
-  if (!db) return res.status(503).json({ error: 'DB not available' });
-  try {
-    const userId = String(req.user.userId);
-    const url = `https://offerwall.me/games/${OFFERWALL_APP_ID}/${userId}`;
-    res.json({ success: true, url, user_id: userId });
-  } catch (err) { res.status(500).json({ error: 'Failed' }); }
-}
 
 // ============================================
 // POSTBACK
 // ============================================
-const OFFERWALL_IPS = ['95.216.65.163', '2a01:4f9:2b:1dc::2'];
-function isOfferwallIP(ip) {
-  if (!ip) return false;
-  return OFFERWALL_IPS.some(a => ip.toLowerCase() === a.toLowerCase());
-}
-
-async function postback(req, res) {
+async function postback(req,res) {
   try {
-    const clientIp = getClientIP(req);
-    if (!isOfferwallIP(clientIp)) return res.status(403).send('ERROR: Invalid source');
-    const { subId, transId, reward, signature, status = '1', offer_name, offer_type, reward_name, reward_value, payout, userIp, country, debug } = req.body;
-    if (!subId || !transId || !reward || !signature) return res.status(400).send('ERROR: Missing params');
-    const expectedSig = crypto.createHash('md5').update(`${subId}.${transId}.${reward}.${OFFERWALL_SECRET_KEY}`).digest('hex');
-    if (signature !== expectedSig) {
-      logger.warn('Postback signature mismatch', { subId, transId, reward });
-      return res.status(403).send('ERROR: Signature mismatch');
-    }
-    const userRef = db.collection('users').doc(subId);
-    const doc = await userRef.get();
-    if (!doc.exists) return res.status(404).send('ERROR: User not found');
-    if (doc.data().banned) return res.status(403).send('ERROR: User banned');
-    const existingTx = await db.collection('offerwall_completions').where('trans_id', '==', transId).limit(1).get();
-    if (!existingTx.empty) return res.status(200).send('ok');
-    const baseAmt = Number(reward);
-    if (isNaN(baseAmt) || baseAmt <= 0) return res.status(400).send('ERROR: Invalid reward');
-    const taskType = String(offer_type || 'offer').toLowerCase();
-    const isBonusEligible = BONUS_TYPES.some(t => taskType.includes(t));
-    const bonusAmt = isBonusEligible ? Math.round(baseAmt * BONUS_PERCENT) / 100 : 0;
-    const totalAmt = Math.round((baseAmt + bonusAmt) * 100) / 100;
-    const numericStatus = parseInt(status) || 1;
-    await db.runTransaction(async (t) => {
-      const userDoc = await t.get(userRef);
-      if (!userDoc.exists) throw new Error('User not found');
-      const userData = userDoc.data();
-      const currentBalance = userData.balances?.doge || 0;
-      if (numericStatus === 1) {
-        t.update(userRef, {
-          'balances.doge': increment(totalAmt),
-          total_earned: increment(totalAmt),
-          total_offerwall_earned: increment(totalAmt)
-        });
-      } else if (numericStatus === 2) {
-        const deductAmt = Math.min(baseAmt, currentBalance);
-        if (deductAmt > 0) {
-          t.update(userRef, {
-            'balances.doge': increment(-deductAmt),
-            total_earned: increment(-deductAmt),
-            total_offerwall_earned: increment(-deductAmt)
-          });
-        }
+    if(!OFFERWALLAPI_SECRET_KEY)return res.status(503).send('ERROR: OfferwallAPI secret not configured');
+    const b=req.body||{},subId=String(b.subId??''),transId=String(b.transId??''),rewardRaw=String(b.reward??'');
+    const signature=String(b.signature??''),signature2=String(b.signature2??''),status=Number.parseInt(b.status??'1',10);
+    if(!subId||!transId||!rewardRaw||subId.length>64||transId.length>240)return res.status(400).send('ERROR: Missing params');
+    if(!/^\d+(?:\.\d+)?$/.test(rewardRaw))return res.status(400).send('ERROR: Invalid reward');
+    const safeEq=(a,c)=>{if(!a||!c||a.length!==c.length)return false;try{return crypto.timingSafeEqual(Buffer.from(a,'hex'),Buffer.from(c,'hex'));}catch(_){return false;}};
+    const message=subId+transId+rewardRaw;
+    const expected2=crypto.createHmac('sha256',OFFERWALLAPI_SECRET_KEY).update(message).digest('hex');
+    const expected1=crypto.createHash('md5').update(message+OFFERWALLAPI_SECRET_KEY).digest('hex');
+    if(!safeEq(expected2,signature2)&&!safeEq(expected1,signature)){logger.warn('OfferwallAPI signature mismatch',{subId,transId});return res.status(403).send('ERROR: Signature mismatch');}
+    const baseAmt=Number(rewardRaw);
+    if(!Number.isFinite(baseAmt)||baseAmt<=0||baseAmt>1e9||![1,2].includes(status))return res.status(400).send('ERROR: Invalid reward/status');
+    if(String(b.debug||'0')==='1')return res.status(200).send('ok');
+    const userRef=db.collection('users').doc(subId),completionId=crypto.createHash('sha256').update(transId).digest('hex'),completionRef=db.collection('offerwall_completions').doc(completionId);
+    const taskType=String(b.offer_type||'offer').toLowerCase().slice(0,40),eligible=BONUS_TYPES.some(t=>taskType.includes(t));
+    const bonusAmt=status===1&&eligible?roundCnx(baseAmt*BONUS_PERCENT/100):0,totalAmt=roundCnx(baseAmt+bonusAmt);
+    const baseAtomic=cnxToAtomic(baseAmt),totalAtomic=cnxToAtomic(totalAmt);let duplicate=false;
+    await db.runTransaction(async t=>{
+      const old=await t.get(completionRef);if(old.exists){duplicate=true;return;}
+      const user=await t.get(userRef);if(!user.exists)throw new Error('User not found');
+      const d=user.data();if(d.banned)throw new Error('User banned');
+      if(status===1)t.update(userRef,{cnx_atomic:increment(totalAtomic),total_earned:increment(totalAmt),total_offerwall_earned:increment(totalAmt)});
+      else {
+        const debit=Math.min(baseAtomic,Math.max(0,Number(d.cnx_atomic||0)));
+        if(debit>0)t.update(userRef,{cnx_atomic:increment(-debit),total_earned:increment(-atomicToCnx(debit)),total_offerwall_earned:increment(-atomicToCnx(debit))});
       }
-      t.set(db.collection('offerwall_completions').doc(transId), {
-        user_id: subId, trans_id: transId, task_type: taskType,
-        offer_name: offer_name || 'Unknown',
-        reward_name: reward_name || null,
-        reward_value: reward_value || null,
-        payout: payout || null,
-        user_ip: userIp || clientIp,
-        country: country || null,
-        debug: debug || null,
-        base_amount: baseAmt, bonus_amount: bonusAmt, amount: totalAmt,
-        status: numericStatus === 1 ? 'completed' : 'chargeback',
-        timestamp: serverTimestamp()
-      });
+      t.create(completionRef,{user_id:subId,trans_id:transId,task_type:taskType,offer_name:String(b.offer_name||'OfferwallAPI').slice(0,200),reward_name:b.reward_name||'CNX',reward_value:b.reward_value||String(CNX_PER_USD),payout:b.payout||null,user_ip:b.userIp||null,country:b.country||null,debug:b.debug||'0',base_amount:baseAmt,bonus_amount:bonusAmt,amount:status===1?totalAmt:baseAmt,currency:'CNX',status:status===1?'completed':'chargeback',timestamp:serverTimestamp()});
     });
-    if (numericStatus === 1) {
-      await giveReferralBonus(subId, baseAmt, taskType);
-      await logTransaction(subId, 'offerwall', totalAmt, 'DOGE', `Offerwall: ${offer_name || 'Unknown'}`, { transId, taskType, bonus: bonusAmt });
-    }
-    await logAction('offerwall_completed', subId, { transId, totalAmt, offer_name, country, debug });
-    res.status(200).send('ok');
-  } catch (err) {
-    logger.error('Postback error', { error: err.message });
-    res.status(500).send('ERROR: Server error');
+    if(!duplicate&&status===1){await giveReferralBonus(subId,baseAmt,taskType);await logTransaction(subId,'offerwall',totalAmt,'CNX',`OfferwallAPI: ${b.offer_name||'Task'}`,{transId,taskType,bonus:bonusAmt});}
+    if(!duplicate)await logAction('offerwallapi_postback',subId,{transId,amount:baseAmt,status,taskType});
+    return res.status(200).send('ok');
+  }catch(e){
+    if(e.message==='User not found')return res.status(404).send('ERROR: User not found');
+    if(e.message==='User banned')return res.status(403).send('ERROR: User banned');
+    logger.error('OfferwallAPI postback error',{error:e.message});return res.status(500).send('ERROR: Server error');
   }
 }
+
+
 
 // ============================================
 // AUTH
@@ -617,8 +561,10 @@ async function auth(req, res) {
         username: user.username || null,
         first_name: user.first_name || null,
         photo_url: user.photo_url || null,
-        balances: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+        balances: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 }, // legacy balances retained, not spendable
         referral_balance: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+        cnx_atomic: 0,
+        referral_cnx_atomic: 0,
         total_earned: 0,
         total_claims: 0,
         total_withdrawals: 0,
@@ -655,12 +601,12 @@ async function auth(req, res) {
               if (!rdoc.exists) return;
               t.update(refRef, {
                 referrals: increment(1),
-                'referral_balance.doge': increment(REFERRAL_SIGNUP_BONUS),
-                referral_earnings: increment(REFERRAL_SIGNUP_BONUS)
+                referral_cnx_atomic: increment(cnxToAtomic(CNX_SIGNUP_REFERRAL_BONUS)),
+                referral_earnings: increment(CNX_SIGNUP_REFERRAL_BONUS)
               });
               const rbRef = db.collection('referralBonuses').doc();
               t.set(rbRef, {
-                referrer: String(ref), referred: userId, amount: REFERRAL_SIGNUP_BONUS,
+                referrer: String(ref), referred: userId, amount: CNX_SIGNUP_REFERRAL_BONUS, currency: 'CNX',
                 type: 'signup', timestamp: serverTimestamp()
               });
             });
@@ -668,7 +614,7 @@ async function auth(req, res) {
         }
       }
       await logAction('user_register', userId, { ref });
-      await logTransaction(userId, 'signup', 0, 'DOGE', 'Account created', { ref });
+      await logTransaction(userId, 'signup', 0, 'CNX', 'Account created', { ref });
       await notifyAdminNewUser(newUser, ref);
     } else {
       if (doc.data().banned) return res.status(403).json({ error: 'User banned' });
@@ -697,28 +643,18 @@ async function getMe(req, res) {
     const userId = String(req.user.userId);
     const doc = await db.collection('users').doc(userId).get();
     if (!doc.exists) return res.status(404).json({ error: 'User not found' });
-    const d = doc.data();
-    const balances = d.balances || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 };
-    const balancesUSD = {};
-    for (const [key, val] of Object.entries(balances)) {
-      balancesUSD[key] = val * getCoinPrice(key);
-    }
-    const totalUSD = Object.values(balancesUSD).reduce((a, b) => a + b, 0);
+    const d = doc.data(), cnx = atomicToCnx(d.cnx_atomic), referralCnx = atomicToCnx(d.referral_cnx_atomic);
     res.json({
       telegram_id: d.telegram_id, username: d.username, first_name: d.first_name, photo_url: d.photo_url || null,
-      balances, balancesUSD, totalUSD,
+      balances: { cnx }, balancesUSD: { cnx: cnx / CNX_PER_USD }, totalUSD: cnx / CNX_PER_USD,
       total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
-      total_withdrawals: d.total_withdrawals || 0,
-      total_offerwall_earned: d.total_offerwall_earned || 0,
-      total_promo_earned: d.total_promo_earned || 0,
-      referrals: d.referrals || 0,
-      referral_earnings: d.referral_earnings || 0,
-      referral_balance: d.referral_balance || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
-      daily_claims: d.daily_claims || 0,
-      last_claim: tsToMillis(d.last_claim),
-      last_opened: tsToMillis(d.last_opened),
-      banned: d.banned || false,
-      is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID)
+      total_withdrawals: d.total_withdrawals || 0, total_offerwall_earned: d.total_offerwall_earned || 0,
+      total_promo_earned: d.total_promo_earned || 0, referrals: d.referrals || 0,
+      referral_earnings: d.referral_earnings || 0, referral_balance: { cnx: referralCnx },
+      daily_claims: d.daily_claims || 0, last_claim: tsToMillis(d.last_claim),
+      last_opened: tsToMillis(d.last_opened), banned: d.banned || false,
+      is_admin: String(d.telegram_id) === String(ADMIN_TELEGRAM_ID),
+      currency: { code: 'CNX', decimals: CNX_DECIMALS, units_per_usd: CNX_PER_USD }
     });
   } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
@@ -727,19 +663,18 @@ async function getBalance(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
   try {
     const doc = await db.collection('users').doc(String(req.user.userId)).get();
-    if (!doc.exists) return res.json({ balances: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 }, total_claims: 0 });
+    if (!doc.exists) return res.json({ balances: { cnx: 0 }, referral_balance: { cnx: 0 }, total_claims: 0 });
     const d = doc.data();
     res.json({
-      balances: d.balances || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
-      referral_balance: d.referral_balance || { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+      balances: { cnx: atomicToCnx(d.cnx_atomic) },
+      referral_balance: { cnx: atomicToCnx(d.referral_cnx_atomic) },
       total_earned: d.total_earned || 0, total_claims: d.total_claims || 0,
-      referrals: d.referrals || 0,
-      referral_earnings: d.referral_earnings || 0,
-      last_claim: tsToMillis(d.last_claim),
-      daily_claims: d.daily_claims || 0
+      referrals: d.referrals || 0, last_claim: tsToMillis(d.last_claim), daily_claims: d.daily_claims || 0
     });
   } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
+
+
 
 async function getTodayEarnings(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
@@ -805,52 +740,41 @@ async function giveReferralBonus(userId, amount, type) {
   if (!db || amount <= 0) return;
   try {
     const userDoc = await db.collection('users').doc(userId).get();
-    if (!userDoc.exists) return;
-    const userData = userDoc.data();
-    if (!userData.referred_by) return;
-    const referrerId = userData.referred_by;
-    const bonusAmount = Math.round(amount * (REFERRAL_COMMISSION_PERCENT / 100) * 1e8) / 1e8;
-    if (bonusAmount <= 0) return;
+    if (!userDoc.exists || !userDoc.data().referred_by) return;
+    const referrerId = userDoc.data().referred_by;
+    const bonusAmount = roundCnx(amount * REFERRAL_COMMISSION_PERCENT / 100);
+    const bonusAtomic = cnxToAtomic(bonusAmount);
+    if (bonusAtomic <= 0) return;
     const referrerRef = db.collection('users').doc(referrerId);
-    await db.runTransaction(async (t) => {
+    await db.runTransaction(async t => {
       const refDoc = await t.get(referrerRef);
-      if (!refDoc.exists) return;
-      t.update(referrerRef, {
-        'referral_balance.doge': increment(bonusAmount),
-        referral_earnings: increment(bonusAmount)
-      });
+      if (refDoc.exists) t.update(referrerRef, { referral_cnx_atomic: increment(bonusAtomic), referral_earnings: increment(bonusAmount) });
     });
-    await db.collection('referralBonuses').add({
-      referrer: referrerId, referred: userId, amount: bonusAmount,
-      type: type || 'unknown', timestamp: serverTimestamp()
-    });
-    await logTransaction(referrerId, 'referral', bonusAmount, 'DOGE', `Referral bonus from ${userId}`, { referred: userId, sourceType: type });
+    await db.collection('referralBonuses').add({ referrer: referrerId, referred: userId, amount: bonusAmount, currency: 'CNX', type: type || 'unknown', timestamp: serverTimestamp() });
+    await logTransaction(referrerId, 'referral', bonusAmount, 'CNX', `Referral bonus from ${userId}`, { referred: userId, sourceType: type });
   } catch (e) { logger.error('Referral bonus error', { error: e.message }); }
 }
 
 async function collectReferralBonus(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
-  const userId = String(req.user.userId);
-  const userRef = db.collection('users').doc(userId);
+  const userId = String(req.user.userId), userRef = db.collection('users').doc(userId);
   try {
-    let collected = 0;
-    await db.runTransaction(async (t) => {
+    let amountAtomic = 0;
+    await db.runTransaction(async t => {
       const doc = await t.get(userRef);
       if (!doc.exists) throw new Error('User not found');
-      const d = doc.data();
-      const rb = d.referral_balance?.doge || 0;
-      if (rb <= 0) throw new Error('No referral balance');
-      collected = rb;
-      t.update(userRef, {
-        'balances.doge': increment(rb),
-        'referral_balance.doge': increment(-rb)
-      });
+      amountAtomic = Number(doc.data().referral_cnx_atomic || 0);
+      if (amountAtomic <= 0) throw new Error('No referral balance');
+      t.update(userRef, { cnx_atomic: increment(amountAtomic), referral_cnx_atomic: increment(-amountAtomic) });
     });
-    await logAction('referral_collected', userId, { amount: collected });
-    await logTransaction(userId, 'referral_collect', collected, 'DOGE', 'Collected referral earnings');
-    res.json({ success: true, amount: collected });
+    const amount = atomicToCnx(amountAtomic);
+    await logAction('referral_collected', userId, { amount, currency: 'CNX' });
+    await logTransaction(userId, 'referral_collect', amount, 'CNX', 'Collected referral earnings');
+    res.json({ success: true, amount, coin: 'CNX' });
   } catch (err) { res.status(400).json({ error: err.message }); }
 }
+
+
 
 // ============================================
 // ACTIVITY & RETURN BONUS
@@ -869,18 +793,18 @@ async function updateActivity(req, res) {
     let bonusGranted = false;
     const updates = { last_opened: serverTimestamp(), last_active: serverTimestamp() };
     if (lastOpened && (now - lastOpened) >= threeDays && !d.return_bonus_claimed) {
-      updates['balances.doge'] = increment(0.01);
+      updates.cnx_atomic = increment(cnxToAtomic(CNX_RETURN_BONUS));
       updates.return_bonus_claimed = true;
-      updates.total_earned = increment(0.01);
+      updates.total_earned = increment(CNX_RETURN_BONUS);
       bonusGranted = true;
-      await logTransaction(userId, 'return_bonus', 0.01, 'DOGE', 'Return after inactivity bonus');
-      await createNotification(userId, 'Welcome Back!', 'You received 0.01 DOGE for coming back!', 'reward');
+      await logTransaction(userId, 'return_bonus', CNX_RETURN_BONUS, 'CNX', 'Return after inactivity bonus');
+      await createNotification(userId, 'Welcome Back!', `You received ${CNX_RETURN_BONUS} CNX for coming back!`, 'reward');
     }
     if (d.inactivity_reminder_sent) {
       updates.inactivity_reminder_sent = false;
     }
     await userRef.update(updates);
-    res.json({ success: true, bonusGranted, bonusAmount: bonusGranted ? 0.01 : 0 });
+    res.json({ success: true, bonusGranted, bonusAmount: bonusGranted ? CNX_RETURN_BONUS : 0, coin: 'CNX' });
   } catch (err) { res.status(500).json({ error: 'Server error' }); }
 }
 
@@ -964,294 +888,110 @@ async function verifyCaptchaEndpoint(req, res) {
 // ============================================
 async function claim(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
-  const userId = String(req.user.userId);
-  const { coin, captchaAnswer, nonce, timestamp } = req.body;
-  if (!coin || !COINS[coin]) return res.status(400).json({ error: 'Invalid coin' });
+  const userId = String(req.user.userId), { captchaAnswer, nonce, timestamp } = req.body;
   if (!captchaAnswer) return res.status(400).json({ error: 'Captcha required', captchaRequired: true });
-  if (nonce && timestamp) {
-    const nonceCheck = validateNonce(nonce, timestamp);
-    if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
-  }
+  if (nonce && timestamp) { const n = validateNonce(nonce, timestamp); if (!n.valid) return res.status(403).json({ error: n.error }); }
   const captchaResult = verifyIconCaptcha(userId, captchaAnswer);
   if (!captchaResult.valid) return res.status(403).json({ error: captchaResult.error, captchaRequired: true });
   const userRef = db.collection('users').doc(userId);
   try {
-    const now = Date.now();
-    const todayStr = new Date().toDateString();
-    let newBalance = 0;
-    let milestoneReward = 0;
-    let milestoneHit = false;
-    await db.runTransaction(async (t) => {
+    const now = Date.now(), todayStr = new Date().toDateString();
+    let newBalance = 0, milestoneReward = 0, milestoneHit = false;
+    const claimAtomic = cnxToAtomic(CNX_FAUCET_REWARD);
+    await db.runTransaction(async t => {
       const doc = await t.get(userRef);
       if (!doc.exists) throw new Error('User not found');
       const d = doc.data();
       if (d.banned) throw new Error('User banned');
       const lastClaim = d.last_claim ? d.last_claim.toMillis() : 0;
-      if (now - lastClaim < FAUCET_COOLDOWN) {
-        throw new Error(`Cooldown|${FAUCET_COOLDOWN - (now - lastClaim)}`);
-      }
-      const recentClaims = await db.collection('transactions')
-        .where('user_id', '==', userId)
-        .where('type', '==', 'faucet_claim')
-        .where('timestamp', '>=', Timestamp.fromMillis(now - 5000))
-        .limit(1)
-        .get();
-      if (!recentClaims.empty) throw new Error('Duplicate claim detected');
-      const claimAmount = COINS[coin].claimAmount;
-      const balanceKey = `balances.${coin}`;
-      const currentBalance = d.balances?.[coin] || 0;
-      newBalance = currentBalance + claimAmount;
-      // Daily claims reset
-      let dailyClaims = d.daily_claims || 0;
-      if (d.last_claim_date !== todayStr) {
-        dailyClaims = 0;
-      }
-      dailyClaims += 1;
+      if (now - lastClaim < FAUCET_COOLDOWN) throw new Error(`Cooldown|${FAUCET_COOLDOWN - (now - lastClaim)}`);
+      const recent = await db.collection('transactions').where('user_id','==',userId).where('type','==','faucet_claim').where('timestamp','>=',Timestamp.fromMillis(now-5000)).limit(1).get();
+      if (!recent.empty) throw new Error('Duplicate claim detected');
       const totalClaims = (d.total_claims || 0) + 1;
-      // Milestone check
-      const msReward = getMilestoneReward(totalClaims);
-      if (msReward > 0) {
-        milestoneReward = msReward;
-        milestoneHit = true;
-      }
-      const updates = {
-        [balanceKey]: increment(claimAmount),
-        total_earned: increment(claimAmount),
-        total_claims: increment(1),
-        last_claim: serverTimestamp(),
-        last_active: serverTimestamp(),
-        daily_claims: dailyClaims,
-        last_claim_date: todayStr
-      };
-      if (milestoneHit) {
-        updates['balances.doge'] = increment(milestoneReward);
-        updates.total_earned = increment(milestoneReward);
-      }
-      t.update(userRef, updates);
-      const txRef = db.collection('transactions').doc();
-      t.set(txRef, {
-        user_id: userId, type: 'faucet_claim', amount: claimAmount,
-        currency: COINS[coin].symbol, description: `Faucet claim ${COINS[coin].symbol}`,
-        metadata: { coin, milestone: milestoneHit ? milestoneReward : 0 },
-        timestamp: serverTimestamp()
+      let dailyClaims = d.last_claim_date !== todayStr ? 0 : (d.daily_claims || 0);
+      dailyClaims++;
+      milestoneReward = getMilestoneReward(totalClaims); milestoneHit = milestoneReward > 0;
+      const totalAtomic = claimAtomic + cnxToAtomic(milestoneReward);
+      newBalance = atomicToCnx(Number(d.cnx_atomic || 0) + totalAtomic);
+      t.update(userRef, {
+        cnx_atomic: increment(totalAtomic), total_earned: increment(CNX_FAUCET_REWARD + milestoneReward),
+        total_claims: increment(1), last_claim: serverTimestamp(), last_active: serverTimestamp(),
+        daily_claims: dailyClaims, last_claim_date: todayStr
       });
-      if (milestoneHit) {
-        const msTxRef = db.collection('transactions').doc();
-        t.set(msTxRef, {
-          user_id: userId, type: 'milestone', amount: milestoneReward,
-          currency: 'DOGE', description: `Milestone reward: ${totalClaims} claims`,
-          metadata: { totalClaims }, timestamp: serverTimestamp()
-        });
-      }
+      t.set(db.collection('transactions').doc(), { user_id:userId, type:'faucet_claim', amount:CNX_FAUCET_REWARD, currency:'CNX', description:'Faucet claim CNX', metadata:{ milestone:milestoneReward }, timestamp:serverTimestamp() });
+      if (milestoneHit) t.set(db.collection('transactions').doc(), { user_id:userId, type:'milestone', amount:milestoneReward, currency:'CNX', description:`Milestone reward: ${totalClaims} claims`, metadata:{ totalClaims }, timestamp:serverTimestamp() });
     });
-    await giveReferralBonus(userId, COINS[coin].claimAmount, 'faucet');
-    await logAction('faucet_claim', userId, { coin, amount: COINS[coin].claimAmount, milestone: milestoneHit });
-    if (milestoneHit) {
-      await createNotification(userId, '🏆 Milestone!', `You reached ${getMilestoneReward((await userRef.get()).data().total_claims)} claims milestone! +${milestoneReward} DOGE bonus!`, 'milestone');
-    }
-    res.json({ success: true, amount: COINS[coin].claimAmount, balance: newBalance, coin: COINS[coin].symbol, milestone: milestoneHit, milestoneReward });
+    await giveReferralBonus(userId, CNX_FAUCET_REWARD, 'faucet');
+    await logAction('faucet_claim', userId, { amount: CNX_FAUCET_REWARD, currency:'CNX', milestone: milestoneHit });
+    if (milestoneHit) await createNotification(userId, '🏆 Milestone!', `Milestone reached! +${milestoneReward} CNX bonus!`, 'milestone');
+    res.json({ success:true, amount:CNX_FAUCET_REWARD, balance:newBalance, coin:'CNX', milestone:milestoneHit, milestoneReward });
   } catch (err) {
-    const msg = err.message || '';
-    if (msg.includes('Cooldown')) {
-      const wait = parseInt(msg.split('|')[1]) || FAUCET_COOLDOWN;
-      return res.status(429).json({ error: 'Cooldown active', wait });
-    }
-    if (msg.includes('User banned')) return res.status(403).json({ error: 'User banned' });
-    if (msg.includes('User not found')) return res.status(404).json({ error: 'User not found' });
-    if (msg.includes('Duplicate')) return res.status(429).json({ error: 'Duplicate claim detected' });
-    res.status(500).json({ error: 'Claim failed' });
+    const msg=err.message||'';
+    if (msg.includes('Cooldown')) return res.status(429).json({ error:'Cooldown active', wait:parseInt(msg.split('|')[1])||FAUCET_COOLDOWN });
+    if (msg.includes('User banned')) return res.status(403).json({ error:'User banned' });
+    if (msg.includes('User not found')) return res.status(404).json({ error:'User not found' });
+    if (msg.includes('Duplicate')) return res.status(429).json({ error:'Duplicate claim detected' });
+    logger.error('CNX claim failed',{userId,error:msg}); return res.status(500).json({ error:'Claim failed' });
   }
 }
+
+
 
 // ============================================
 // WITHDRAW
 // ============================================
 async function withdraw(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
-  if (!FAUCETPAY_API_KEY) return res.status(503).json({ error: 'FaucetPay is not configured yet. Please try again later.' });
-
-  const userId = String(req.user.userId);
-  const { faucetpay_email, amount, coin, nonce, timestamp } = req.body;
-  const amt = Number(amount);
-  if (!coin || !COINS[coin]) return res.status(400).json({ error: 'Invalid coin' });
-
-  const faucetpayCurrency = FAUCETPAY_CURRENCIES[coin];
-  if (!faucetpayCurrency) {
-    return res.status(400).json({ error: `${COINS[coin].symbol} withdrawals are not supported by FaucetPay. Choose DOGE, DGB or FEY.` });
-  }
-  if (!Number.isFinite(amt) || amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
-  if (typeof faucetpay_email !== 'string' || faucetpay_email.length > 160 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(faucetpay_email.trim())) {
-    return res.status(400).json({ error: 'Enter a valid FaucetPay email address.' });
-  }
-  if (nonce && timestamp) {
-    const nonceCheck = validateNonce(nonce, timestamp);
-    if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
-  }
-
-  const minWithdraw = getMinWithdrawAmount(coin);
-  if (amt < minWithdraw) {
-    return res.status(400).json({ error: `Minimum withdrawal: ${minWithdraw.toFixed(COINS[coin].decimals)} ${COINS[coin].symbol} (~$${WITHDRAW_USD_MIN} USD)` });
-  }
-
-  const atomicAmount = Math.round(amt * FAUCETPAY_ATOMIC_UNITS[coin]);
-  if (!Number.isSafeInteger(atomicAmount) || atomicAmount <= 0) {
-    return res.status(400).json({ error: 'Amount is outside FaucetPay supported range.' });
-  }
-
-  const userRef = db.collection('users').doc(userId);
-  const wdRef = db.collection('withdrawals').doc();
-  const idempotencyKey = wdRef.id;
-
+  if (!FAUCETPAY_API_KEY) return res.status(503).json({ error: 'FaucetPay is not configured yet.' });
+  const userId=String(req.user.userId), {faucetpay_email,amount,nonce,timestamp}=req.body, amt=Number(amount);
+  if (!Number.isFinite(amt)||amt<=0) return res.status(400).json({error:'Invalid CNX amount'});
+  const cnxAtomic=cnxToAtomic(amt);
+  if (!Number.isSafeInteger(cnxAtomic)||cnxAtomic<=0||Math.abs(atomicToCnx(cnxAtomic)-amt)>1e-8) return res.status(400).json({error:'CNX supports up to 6 decimal places.'});
+  if (amt<CNX_MIN_WITHDRAW) return res.status(400).json({error:`Minimum withdrawal: ${CNX_MIN_WITHDRAW} CNX ($0.03)`});
+  if (typeof faucetpay_email!=='string'||faucetpay_email.length>160||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(faucetpay_email.trim())) return res.status(400).json({error:'Enter a valid FaucetPay email address.'});
+  if (nonce&&timestamp) { const n=validateNonce(nonce,timestamp); if(!n.valid)return res.status(403).json({error:n.error}); }
+  const dogePrice=getCoinPrice('doge');
+  if(!Number.isFinite(dogePrice)||dogePrice<=0)return res.status(503).json({error:'DOGE/USD price is temporarily unavailable.'});
+  const usdAmount=amt/CNX_PER_USD, atomicAmount=Math.round((usdAmount/dogePrice)*1e8);
+  if(!Number.isSafeInteger(atomicAmount)||atomicAmount<=0)return res.status(400).json({error:'Converted DOGE amount is too small.'});
+  const dogeAmount=atomicAmount/1e8, userRef=db.collection('users').doc(userId), wdRef=db.collection('withdrawals').doc(), idempotencyKey=wdRef.id;
   try {
-    // Reserve the user's balance and create a unique payout record before calling FaucetPay.
-    await db.runTransaction(async (t) => {
-      const doc = await t.get(userRef);
-      if (!doc.exists) throw new Error('User not found');
-      const d = doc.data();
-      if (d.banned) throw new Error('User banned');
-      const currentBalance = Number(d.balances?.[coin] || 0);
-      if (currentBalance + 1e-12 < amt) throw new Error(`Insufficient ${COINS[coin].symbol} balance`);
-
-      const recentWds = await db.collection('transactions')
-        .where('user_id', '==', userId)
-        .where('type', '==', 'withdraw')
-        .where('timestamp', '>=', Timestamp.fromMillis(Date.now() - 5000))
-        .limit(1)
-        .get();
-      if (!recentWds.empty) throw new Error('Duplicate withdrawal detected');
-
-      t.update(userRef, {
-        [`balances.${coin}`]: increment(-amt),
-        total_withdrawals: increment(1),
-        last_active: serverTimestamp()
-      });
-      t.set(wdRef, {
-        user_id: userId,
-        faucetpay_email: faucetpay_email.trim(),
-        amount: amt,
-        amount_atomic: atomicAmount,
-        coin,
-        currency: faucetpayCurrency,
-        status: 'processing',
-        provider: 'faucetpay',
-        idempotency_key: idempotencyKey,
-        timestamp: serverTimestamp()
-      });
-      const txRef = db.collection('transactions').doc();
-      t.set(txRef, {
-        user_id: userId,
-        type: 'withdraw',
-        amount: amt,
-        currency: COINS[coin].symbol,
-        description: `FaucetPay withdrawal ${COINS[coin].symbol}`,
-        metadata: { faucetpay_email: faucetpay_email.trim(), coin, withdrawal_id: wdRef.id },
-        timestamp: serverTimestamp()
-      });
+    await db.runTransaction(async t=>{
+      const doc=await t.get(userRef); if(!doc.exists)throw new Error('User not found');
+      const d=doc.data(); if(d.banned)throw new Error('User banned');
+      if(Number(d.cnx_atomic||0)<cnxAtomic)throw new Error('Insufficient CNX balance');
+      const recent=await db.collection('transactions').where('user_id','==',userId).where('type','==','withdraw').where('timestamp','>=',Timestamp.fromMillis(Date.now()-5000)).limit(1).get();
+      if(!recent.empty)throw new Error('Duplicate withdrawal detected');
+      t.update(userRef,{cnx_atomic:increment(-cnxAtomic),total_withdrawals:increment(1),last_active:serverTimestamp()});
+      t.set(wdRef,{user_id:userId,faucetpay_email:faucetpay_email.trim(),amount:amt,amount_cnx:amt,amount_usd:usdAmount,doge_amount:dogeAmount,amount_atomic:atomicAmount,coin:'cnx',currency:'DOGE',status:'processing',provider:'faucetpay',idempotency_key:idempotencyKey,timestamp:serverTimestamp()});
+      t.set(db.collection('transactions').doc(),{user_id:userId,type:'withdraw',amount:amt,currency:'CNX',description:'CNX to DOGE FaucetPay withdrawal',metadata:{faucetpay_email:faucetpay_email.trim(),cnx:amt,usd:usdAmount,doge:dogeAmount,withdrawal_id:wdRef.id},timestamp:serverTimestamp()});
     });
-
     let providerResponse;
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      const response = await fetch(FAUCETPAY_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${FAUCETPAY_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          idempotency_key: idempotencyKey,
-          to: faucetpay_email.trim(),
-          amount: atomicAmount,
-          currency: faucetpayCurrency,
-          ip_address: getClientIP(req)
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-      providerResponse = await response.json().catch(() => ({}));
-
-      if (!response.ok || providerResponse.success !== true) {
-        const providerMessage = String(providerResponse.message || 'FaucetPay rejected this payout').slice(0, 240);
-        const err = new Error(providerMessage);
-        err.faucetpayDefinitiveFailure = true;
-        throw err;
-      }
-    } catch (providerErr) {
-      if (!providerErr.faucetpayDefinitiveFailure) {
-        // A timeout/network interruption can happen after the provider accepted the payout.
-        // Keep the reservation in processing; retrying with the same idempotency key is safe.
-        await wdRef.update({
-          status: 'processing',
-          provider_note: 'Provider response not confirmed; payout requires reconciliation.',
-          updated_at: serverTimestamp()
-        }).catch(() => {});
-        logger.error('FaucetPay payout result uncertain', { withdrawalId: wdRef.id, error: providerErr.message });
-        return res.status(202).json({
-          success: true,
-          id: wdRef.id,
-          status: 'processing',
-          message: 'Your withdrawal is being verified. Do not submit it again.'
-        });
-      }
-
-      // A definitive provider rejection means no payout was sent: return the reserved balance.
-      await db.runTransaction(async (t) => {
-        const userDoc = await t.get(userRef);
-        if (userDoc.exists) t.update(userRef, { [`balances.${coin}`]: increment(amt) });
-        t.update(wdRef, {
-          status: 'failed',
-          failure_reason: String(providerErr.message || 'FaucetPay rejected payout').slice(0, 240),
-          failed_at: serverTimestamp()
-        });
-        const refundTx = db.collection('transactions').doc();
-        t.set(refundTx, {
-          user_id: userId,
-          type: 'withdraw_refund',
-          amount: amt,
-          currency: COINS[coin].symbol,
-          description: `Refunded failed FaucetPay withdrawal ${COINS[coin].symbol}`,
-          metadata: { withdrawal_id: wdRef.id },
-          timestamp: serverTimestamp()
-        });
-      });
-      logger.warn('FaucetPay payout rejected', { withdrawalId: wdRef.id, message: providerErr.message });
-      return res.status(502).json({ error: `FaucetPay payment failed: ${providerErr.message}. Your balance has been returned.` });
+      const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),15000);
+      const response=await fetch(FAUCETPAY_API_URL,{method:'POST',headers:{Authorization:`Bearer ${FAUCETPAY_API_KEY}`,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({idempotency_key:idempotencyKey,to:faucetpay_email.trim(),amount:atomicAmount,currency:'DOGE',ip_address:getClientIP(req)}),signal:controller.signal});
+      clearTimeout(timeout); providerResponse=await response.json().catch(()=>({}));
+      if(!response.ok||providerResponse.success!==true){const e=new Error(String(providerResponse.message||'FaucetPay rejected payout').slice(0,240));e.faucetpayDefinitiveFailure=true;throw e;}
+    } catch(e) {
+      if(!e.faucetpayDefinitiveFailure){await wdRef.update({status:'processing',provider_note:'Provider response not confirmed; payout requires reconciliation.',updated_at:serverTimestamp()}).catch(()=>{});return res.status(202).json({success:true,id:wdRef.id,status:'processing',message:'Withdrawal is being verified. Do not submit again.'});}
+      await db.runTransaction(async t=>{const u=await t.get(userRef);if(u.exists)t.update(userRef,{cnx_atomic:increment(cnxAtomic)});t.update(wdRef,{status:'failed',failure_reason:String(e.message).slice(0,240),failed_at:serverTimestamp()});t.set(db.collection('transactions').doc(),{user_id:userId,type:'withdraw_refund',amount:amt,currency:'CNX',description:'Refunded failed CNX withdrawal',metadata:{withdrawal_id:wdRef.id},timestamp:serverTimestamp()});});
+      return res.status(502).json({error:`FaucetPay payment failed: ${e.message}. Your CNX was returned.`});
     }
-
-    const payoutData = providerResponse.data || {};
-    await wdRef.update({
-      status: 'approved',
-      payout_id: payoutData.payout_id || null,
-      payout_user_hash: payoutData.payout_user_hash || null,
-      provider_message: providerResponse.message || 'OK',
-      completed_at: serverTimestamp()
-    });
-    await logAction('faucetpay_withdrawal_paid', userId, {
-      withdrawalId: wdRef.id,
-      amount: amt,
-      coin,
-      faucetpayCurrency,
-      payoutId: payoutData.payout_id || null
-    });
-    return res.json({
-      success: true,
-      id: wdRef.id,
-      status: 'paid',
-      payout_id: payoutData.payout_id || null,
-      coin: faucetpayCurrency,
-      amount: amt
-    });
-  } catch (err) {
-    if (err.message?.includes('Insufficient')) return res.status(400).json({ error: err.message });
-    if (err.message?.includes('Duplicate')) return res.status(429).json({ error: err.message });
-    if (err.message?.includes('User banned')) return res.status(403).json({ error: 'User banned' });
-    if (err.message?.includes('User not found')) return res.status(404).json({ error: 'User not found' });
-    logger.error('Withdrawal processing failed', { userId, withdrawalId: wdRef.id, error: err.message });
-    return res.status(500).json({ error: 'Withdrawal could not be processed. Contact support before retrying.' });
+    const payout=providerResponse.data||{};
+    await wdRef.update({status:'approved',payout_id:payout.payout_id||null,payout_user_hash:payout.payout_user_hash||null,provider_message:providerResponse.message||'OK',completed_at:serverTimestamp()});
+    await logAction('faucetpay_withdrawal_paid',userId,{withdrawalId:wdRef.id,cnx:amt,usd:usdAmount,doge:dogeAmount,payoutId:payout.payout_id||null});
+    return res.json({success:true,id:wdRef.id,status:'paid',payout_id:payout.payout_id||null,coin:'DOGE',amount:dogeAmount,amount_cnx:amt,amount_usd:usdAmount});
+  } catch(err) {
+    if(err.message?.includes('Insufficient'))return res.status(400).json({error:err.message});
+    if(err.message?.includes('Duplicate'))return res.status(429).json({error:err.message});
+    if(err.message?.includes('User banned'))return res.status(403).json({error:'User banned'});
+    if(err.message?.includes('User not found'))return res.status(404).json({error:'User not found'});
+    logger.error('CNX withdrawal failed',{userId,withdrawalId:wdRef.id,error:err.message});
+    return res.status(500).json({error:'Withdrawal could not be processed. Contact support before retrying.'});
   }
 }
+
+
 
 async function getWithdrawHistory(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
@@ -1319,8 +1059,7 @@ async function redeemPromo(req, res) {
   try {
     const code = validatePromoCode(req.body.code);
     if (!code) return res.status(400).json({ error: 'Invalid code' });
-    const targetCoin = req.body.targetCoin || 'doge';
-    if (!COINS[targetCoin]) return res.status(400).json({ error: 'Invalid target coin' });
+    const targetCoin = 'cnx';
     const userId = String(req.user.userId);
     const promoRef = db.collection('promoCodes').doc(code);
     const promoDoc = await promoRef.get();
@@ -1349,31 +1088,26 @@ async function redeemPromo(req, res) {
       }
       if ((fp.usedCount || 0) >= (fp.usageLimit || fp.maxUses || 0)) throw new Error('Code usage limit reached');
       if (fp.usedBy && Array.isArray(fp.usedBy) && fp.usedBy.includes(userId)) throw new Error('Already used');
-      const balanceKey = `balances.${targetCoin}`;
-      t.update(userRef, {
-        [balanceKey]: increment(reward),
-        total_earned: increment(reward),
-        total_promo_earned: increment(reward),
-        last_active: serverTimestamp()
-      });
+      const rewardAtomic = cnxToAtomic(reward);
+      t.update(userRef, { cnx_atomic: increment(rewardAtomic), total_earned: increment(roundCnx(reward)), total_promo_earned: increment(roundCnx(reward)), last_active: serverTimestamp() });
       t.update(promoRef, {
         usedCount: increment(1),
         usedBy: FieldValue ? FieldValue.arrayUnion(userId) : [...(fp.usedBy || []), userId]
       });
       const useRef = db.collection('promo_uses').doc();
       t.set(useRef, {
-        user_id: userId, code, reward, coin: targetCoin,
+        user_id: userId, code, reward: roundCnx(reward), coin: 'cnx', currency: 'CNX',
         timestamp: serverTimestamp()
       });
       const txRef = db.collection('transactions').doc();
       t.set(txRef, {
         user_id: userId, type: 'promo', amount: reward,
-        currency: COINS[targetCoin].symbol, description: `Promo code: ${code}`,
-        metadata: { code, targetCoin }, timestamp: serverTimestamp()
+        currency: 'CNX', description: `Promo code: ${code}`,
+        metadata: { code, targetCoin: 'cnx' }, timestamp: serverTimestamp()
       });
     });
     await logAction('promo_redeem', userId, { code, reward, coin: targetCoin });
-    res.json({ success: true, code, reward, coin: COINS[targetCoin].symbol });
+    res.json({ success: true, code, reward: roundCnx(reward), coin: 'CNX' });
   } catch (err) {
     return res.status(400).json({ error: err.message || 'Failed to redeem' });
   }
@@ -1851,8 +1585,8 @@ app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
 app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
 app.get('/api/offerwall/games', jwtAuth, getGames);
-app.post('/api/postback', postbackLimiter, postback);
-app.post('/api/offerwall-postback', postbackLimiter, postback);
+app.post('/api/offerwallapi/postback', postbackLimiter, postback);
+app.post('/api/postback', postbackLimiter, postback); // legacy alias
 app.post('/api/promo/redeem', promoLimiter, jwtAuth, redeemPromo);
 app.get('/api/promo/history', jwtAuth, getPromoHistory);
 app.get('/api/notifications', jwtAuth, getNotifications);
