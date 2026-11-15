@@ -11,3 +11,5 @@ services:
     value: production
   - key: PORT
     value: 10000
+  - key: FAUCETPAY_API_KEY
+    sync: false
