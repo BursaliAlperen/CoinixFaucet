@@ -13,3 +13,11 @@ services:
     value: 10000
   - key: FAUCETPAY_API_KEY
     sync: false
+  - key: APP_URL
+    value: https://coinixfaucet.mine.bz
+  - key: OFFERWALLAPI_API_KEY
+    sync: false
+  - key: OFFERWALLAPI_SECRET_KEY
+    sync: false
+  - key: OFFERWALLAPI_BEARER_TOKEN
+    sync: false
