@@ -101,13 +101,12 @@ for (const p of possiblePaths) {
   }
 }
 
-if (!frontendPath) {
-  console.error('❌ index.html not found');
-  process.exit(1);
+if (frontendPath) {
+  console.log('📁 Serving frontend from:', frontendPath);
+  app.use(express.static(frontendPath));
+} else {
+  console.warn('⚠️ Frontend directory not found; continuing in API-only mode.');
 }
-
-console.log('📁 Serving frontend from:', frontendPath);
-app.use(express.static(frontendPath));
 
 // ============================================
 // 🗺️ SITEMAP.XML
@@ -1131,9 +1130,38 @@ app.get('/api/live-withdraws', async (req, res) => {
 });
 
 // ============================================
-// const DEFAULT_MINING_CONFIG={"blockMinutes":10,"blockPool":1200,"dailyCap":120000,"gpuDropChance":0.015,"taskBonus":12,"autoBalance":true,"maxUserShare":0.08};
-app.get('/api/mining/config',async(req,res)=>{try{const s=await db.collection('global').doc('miningConfig').get();res.json({success:true,config:s.exists?{...DEFAULT_MINING_CONFIG,...s.data()}:DEFAULT_MINING_CONFIG});}catch(e){res.status(500).json({success:false,message:'Mining config unavailable'});}});
-🔐 ADMIN ENDPOINTS
+// MINING CONFIGURATION
+// ============================================
+const DEFAULT_MINING_CONFIG = {
+  blockMinutes: 10,
+  blockPool: 1200,
+  dailyCap: 120000,
+  gpuDropChance: 0.015,
+  taskBonus: 12,
+  autoBalance: true,
+  maxUserShare: 0.08
+};
+
+app.get('/api/mining/config', async (req, res) => {
+  if (!db) {
+    return res.json({ success: true, mode: 'limited', config: DEFAULT_MINING_CONFIG });
+  }
+  try {
+    const snapshot = await db.collection('global').doc('miningConfig').get();
+    res.json({
+      success: true,
+      config: snapshot.exists
+        ? { ...DEFAULT_MINING_CONFIG, ...snapshot.data() }
+        : DEFAULT_MINING_CONFIG
+    });
+  } catch (error) {
+    console.error('Mining config error:', error.message);
+    res.status(503).json({ success: false, message: 'Mining config unavailable' });
+  }
+});
+
+// ============================================
+// ADMIN ENDPOINTS
 // ============================================
 
 app.post('/api/admin/maintenance', verifyAdmin, async (req, res) => {
@@ -1350,12 +1378,12 @@ app.delete('/api/admin/promo/:id', verifyAdmin, async (req, res) => {
 // ============================================
 
 app.get('*', (req, res) => {
-  const indexPath = join(frontendPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.status(404).send('Frontend not found');
+  if (!frontendPath) {
+    return res.status(404).json({ success: false, message: 'Frontend is not deployed on this service.' });
   }
+  const indexPath = join(frontendPath, 'index.html');
+  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  return res.status(404).send('Frontend not found');
 });
 
 app.use((err, req, res, next) => {
@@ -1381,7 +1409,7 @@ function startSelfPing() {
 app.listen(PORT, () => {
   console.log('========================================');
   console.log(`🚀 CoinixFaucet v2.1 running on port ${PORT}`);
-  console.log(`📁 Frontend: ${frontendPath}`);
+  console.log(`📁 Frontend: ${frontendPath || 'API-only mode'}`);
   console.log(`🌍 URL: ${process.env.SITE_URL || `http://localhost:${PORT}`}`);
   console.log('========================================');
   startSelfPing();
