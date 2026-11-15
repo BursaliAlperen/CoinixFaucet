@@ -22,6 +22,8 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" referrerpolicy="no-referrer">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script async src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
 <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
 <script>
   if (window.TelegramAdsController) {
@@ -1326,6 +1328,82 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 }
 .dashboard-history-link:hover {background:rgba(139,124,255,.12)}
 
+
+/* Brand, sign-in and gamified dashboard */
+.header-logo,.loading-logo,.footer-logo {
+ object-fit:contain;display:block;filter:drop-shadow(0 5px 12px rgba(124,93,255,.28));
+}
+.header-logo {width:42px;height:42px;border-radius:13px;padding:2px;background:rgba(139,124,255,.08)}
+.loading-logo {width:112px;height:112px;border-radius:28px;animation:logoPulse 2s ease-in-out infinite}
+.auth-gate {width:min(360px,calc(100vw - 42px));margin:20px auto 0;text-align:center}
+.auth-gate-title {font-size:17px;font-weight:900;color:var(--text);margin:0 0 5px}
+.auth-gate-subtitle,.auth-gate-note {font-size:11px;color:var(--text-secondary);line-height:1.55;margin:0 0 13px}
+.auth-provider {
+ width:100%;min-height:48px;border:1px solid var(--border);border-radius:13px;
+ display:flex;align-items:center;justify-content:center;gap:11px;margin:9px 0;
+ font-size:13px;font-weight:800;cursor:pointer;transition:transform .18s,filter .18s;
+}
+.auth-provider:hover {transform:translateY(-2px);filter:brightness(1.08)}
+.auth-provider i {font-size:18px}
+.telegram-provider {background:#229ed9;color:#fff;border-color:#229ed9}
+.apple-provider {background:#090b12;color:#fff;border-color:#343849}
+.google-signin-container {min-height:44px;display:flex;justify-content:center;margin:8px 0}
+.telegram-widget-container {display:flex;justify-content:center;margin:8px 0}
+.auth-gate-note {margin:12px 0 0}
+.telegram-mini-only {display:none;margin:10px auto 0}
+.auth-gate.is-mini .auth-provider,.auth-gate.is-mini .google-signin-container,.auth-gate.is-mini .telegram-widget-container {display:none}
+.auth-gate.is-mini .telegram-mini-only {display:inline-flex}
+.site-footer {
+ max-width:1160px;margin:26px auto 100px;padding:20px 24px;
+ border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:18px;
+ color:var(--text-secondary);font-size:11px;
+}
+.footer-brand {display:flex;align-items:center;gap:10px}
+.footer-logo {width:36px;height:36px;border-radius:10px}
+.footer-brand strong {display:block;color:var(--text);font-size:13px;letter-spacing:.12em}
+.footer-brand span {display:block;font-size:10px;margin-top:2px}
+.footer-links {display:flex;gap:14px}
+.footer-links a {color:var(--text-secondary);text-decoration:none}
+.dashboard-panel {
+ margin:17px 0;padding:22px;border:1px solid var(--border);border-radius:21px;
+ background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface) 88%,#6675bd 12%));
+ box-shadow:var(--shadow);
+}
+.dashboard-panel-head {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.panel-kicker {font-size:9px;font-weight:900;letter-spacing:.16em;color:#a99cff}
+.dashboard-panel-head h3,.level-copy h3 {margin:5px 0 4px;color:var(--text);font-size:17px;letter-spacing:-.03em}
+.dashboard-panel-head h3 i {color:#b7adff;margin-right:7px}
+.dashboard-panel-head p,.level-copy p {margin:0;color:var(--text-secondary);font-size:11px}
+.panel-period {border:1px solid var(--border);border-radius:9px;padding:7px 9px;color:#b7adff;font-size:9px;font-weight:900;letter-spacing:.1em;white-space:nowrap}
+.earnings-chart-wrap {height:205px;position:relative}
+.chart-empty {position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--text-secondary);font-size:12px;padding:24px}
+.level-top {display:flex;align-items:center;gap:13px}
+.level-emblem {width:46px;height:46px;flex:none;border-radius:15px;display:grid;place-items:center;color:#c7bdff;font-size:20px;background:linear-gradient(140deg,rgba(139,124,255,.23),rgba(44,202,182,.13));border:1px solid rgba(139,124,255,.22)}
+.level-copy {flex:1;min-width:0}
+.level-copy h3 {font-size:16px}
+.level-badge {background:linear-gradient(135deg,#8b7cff,#5b8cff);color:white;padding:8px 10px;border-radius:10px;font-size:9px;font-weight:900;letter-spacing:.08em}
+.xp-track {height:9px;margin-top:19px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.xp-track-fill {height:100%;border-radius:99px;background:linear-gradient(90deg,#8b7cff,#44d6bd);transition:width .5s ease}
+.xp-track-labels {display:flex;justify-content:space-between;color:var(--text-secondary);font-size:10px;margin-top:7px}
+.achievement-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.achievement-card {display:flex;align-items:center;gap:11px;padding:12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);min-width:0;opacity:.62}
+.achievement-card.unlocked {opacity:1;border-color:rgba(139,124,255,.34);background:linear-gradient(135deg,rgba(139,124,255,.12),rgba(44,202,182,.06))}
+.achievement-icon {width:37px;height:37px;flex:none;border-radius:12px;display:grid;place-items:center;color:#9ba5bd;background:rgba(148,163,184,.1);font-size:15px}
+.achievement-card.unlocked .achievement-icon {color:#c5bcff;background:rgba(139,124,255,.17)}
+.achievement-copy {min-width:0}
+.achievement-copy strong {display:block;color:var(--text);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.achievement-copy span {display:block;color:var(--text-secondary);font-size:9px;line-height:1.4;margin-top:3px}
+.achievement-loading {grid-column:1/-1;color:var(--text-secondary);font-size:12px;padding:12px}
+@media(max-width:600px) {
+ .site-footer {margin:20px 14px 105px;padding:17px 4px;flex-wrap:wrap}
+ .footer-copy {order:3;width:100%}
+ .dashboard-panel {padding:18px}
+ .earnings-chart-wrap {height:185px}
+ .achievement-grid {gap:8px}
+ .achievement-card {padding:10px;gap:8px}
+ .achievement-icon {width:32px;height:32px}
+}
+
 </style>
 </head>
 <body>
@@ -1342,9 +1420,15 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
     <div class="loading-progress-bar">
       <div class="loading-progress-fill" id="loading-progress"></div>
     </div>
-    <div id="loading-cta">
-      <button class="btn-glow" id="btn-go-faucet"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Go to Faucet</button>
-      <p class="loading-hint">Tap to start earning free crypto</p>
+    <div id="loading-cta" class="auth-gate">
+      <p class="auth-gate-title">Choose how to sign in</p>
+      <p class="auth-gate-subtitle">Your rewards account, one secure login away.</p>
+      <button class="auth-provider telegram-provider" id="telegram-mini-login"><i class="fa-brands fa-telegram" aria-hidden="true"></i><span>Continue with Telegram</span></button>
+      <div id="telegram-widget-container" class="telegram-widget-container"></div>
+      <div id="google-signin-container" class="google-signin-container"></div>
+      <button class="auth-provider apple-provider" id="apple-signin" type="button"><i class="fa-brands fa-apple" aria-hidden="true"></i><span>Continue with Apple</span></button>
+      <p class="auth-gate-note" id="auth-gate-note">Secure sign-in. Your balance is linked to your account.</p>
+      <button class="btn-glow telegram-mini-only" id="btn-go-faucet"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Open Mini App</button>
     </div>
   </div>
 </div>
@@ -1411,6 +1495,34 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
         <div class="stat-label">Total Earned</div>
       </div>
     </div>
+
+    <section class="dashboard-panel earnings-panel">
+      <div class="dashboard-panel-head">
+        <div><span class="panel-kicker">PERFORMANCE</span><h3><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Earnings overview</h3><p>Daily CNX rewards · last 14 days</p></div>
+        <span class="panel-period">14 DAYS</span>
+      </div>
+      <div class="earnings-chart-wrap"><canvas id="earnings-chart" aria-label="CNX earnings over the last 14 days" role="img"></canvas><div id="earnings-chart-empty" class="chart-empty" hidden>No earnings history yet. Complete a task to start your chart.</div></div>
+    </section>
+
+    <section class="dashboard-panel level-panel">
+      <div class="level-top">
+        <div class="level-emblem"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+        <div class="level-copy"><span class="panel-kicker">YOUR JOURNEY</span><h3>Level <span id="user-level">1</span> Explorer</h3><p><strong id="user-xp">0 XP</strong> earned · <span id="next-level-xp">250 XP</span> next level</p></div>
+        <div class="level-badge">LVL <span id="level-badge-number">1</span></div>
+      </div>
+      <div class="xp-track"><div class="xp-track-fill" id="xp-progress-fill" style="width:0%"></div></div>
+      <div class="xp-track-labels"><span id="xp-current-label">0 XP</span><span id="xp-next-label">250 XP</span></div>
+    </section>
+
+    <section class="dashboard-panel achievements-panel">
+      <div class="dashboard-panel-head">
+        <div><span class="panel-kicker">MILESTONES</span><h3><i class="fa-solid fa-award" aria-hidden="true"></i> Achievements</h3><p>Unlock badges as you earn CNX.</p></div>
+        <span class="panel-period" id="achievement-count">0 / 7</span>
+      </div>
+      <div class="achievement-grid" id="achievement-grid">
+        <div class="achievement-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading achievements…</div>
+      </div>
+    </section>
 
     <!-- Ad: ADBits -->
     <div class="ad-container ad-728x90">
@@ -1604,6 +1716,15 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
       </div>
     </div>
   </div>
+
+  <footer class="site-footer">
+    <div class="footer-brand">
+      <img src="./coinix.png" alt="Coinix logo" class="footer-logo">
+      <div><strong>COINIX</strong><span>Earn. Collect. Grow.</span></div>
+    </div>
+    <div class="footer-copy">© 2026 CoinixFaucet · CNX Rewards</div>
+    <div class="footer-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+  </footer>
 
   <!-- Bottom Nav -->
   <nav class="bottom-nav" aria-label="Main navigation">
