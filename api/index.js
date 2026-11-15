@@ -82,9 +82,9 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
 })();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
-const OFFERWALLAPI_API_KEY = process.env.OFFERWALLAPI_API_KEY || '';
-const OFFERWALLAPI_SECRET_KEY = process.env.OFFERWALLAPI_SECRET_KEY || '';
-const OFFERWALLAPI_BEARER_TOKEN = process.env.OFFERWALLAPI_BEARER_TOKEN || '';
+const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID || ''; // Offerwall.me public API key
+const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY || ''; // Private placement secret
+const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || ''; // Private API bearer token
 const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
 const PORT = process.env.PORT || 10000;
 const FAUCETPAY_API_KEY = process.env.FAUCETPAY_API_KEY || '';
@@ -109,8 +109,9 @@ function validateCriticalConfig() {
   const missing = [];
   if (!BOT_TOKEN) missing.push('BOT_TOKEN');
   if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
-  if (!OFFERWALLAPI_API_KEY) missing.push('OFFERWALLAPI_API_KEY (OfferwallAPI disabled until configured)');
-  if (!OFFERWALLAPI_SECRET_KEY) missing.push('OFFERWALLAPI_SECRET_KEY (postbacks disabled until configured)');
+  if (!OFFERWALL_APP_ID || !OFFERWALL_SECRET_KEY || !OFFERWALL_API_TOKEN) {
+    logger.warn('[Offerwall.me] Configure OFFERWALL_APP_ID, OFFERWALL_SECRET_KEY and OFFERWALL_API_TOKEN in the host environment.');
+  }
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON && !process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
     missing.push('FIREBASE_SERVICE_ACCOUNT_JSON or BASE64');
   }
@@ -407,100 +408,226 @@ fetchCoinPrices();
 setInterval(fetchCoinPrices, 120000);
 
 // ============================================
-// OFFERWALLAPI
+// OFFERWALL.ME PUBLISHER INTEGRATION
 // ============================================
-async function offerwallFetch(url) {
-  const headers={Accept:'application/json'};
-  if(OFFERWALLAPI_BEARER_TOKEN)headers.Authorization=`Bearer ${OFFERWALLAPI_BEARER_TOKEN}`;
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
-  try{return await fetch(url,{headers,signal:controller.signal});}finally{clearTimeout(timeout);}
+function offerwallConfigured() {
+  return Boolean(OFFERWALL_APP_ID && OFFERWALL_SECRET_KEY && OFFERWALL_API_TOKEN);
 }
-async function getOfferwallUrl(req,res) {
-  if(!db)return res.status(503).json({error:'DB not available'});
-  if(!OFFERWALLAPI_API_KEY)return res.status(503).json({error:'OfferwallAPI is not configured.'});
-  const userId=String(req.user.userId);
-  const url=`https://offerwallapi.com/offerwall/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}`;
-  res.json({success:true,url,user_id:userId});
+function offerwallIdentity(userId) {
+  if (!OFFERWALL_APP_ID || !OFFERWALL_SECRET_KEY) throw new Error('Offerwall.me credentials are not configured.');
+  const expires = String(Math.floor(Date.now() / 1000) + 3600);
+  const message = ['offerwall-user-v1', OFFERWALL_APP_ID, String(userId), expires].join('\n');
+  const signature = crypto.createHmac('sha256', OFFERWALL_SECRET_KEY).update(message, 'utf8').digest('hex');
+  return { identityExpires: expires, identitySignature: signature };
 }
-async function getPTCAds(req,res) {
-  if(!db)return res.status(503).json({error:'DB not available'});
+function offerwallApiUrl(endpoint, userId, req, includeCountry = true) {
+  if (!offerwallConfigured()) throw new Error('Offerwall.me API credentials are not configured.');
+  const identity = offerwallIdentity(userId);
+  const params = new URLSearchParams({
+    api: OFFERWALL_APP_ID,
+    token: OFFERWALL_API_TOKEN,
+    id: String(userId),
+    ip: getClientIP(req),
+    ...identity
+  });
+  if (includeCountry) params.set('country', String(req.headers['cf-ipcountry'] || 'TR').toUpperCase().slice(0, 2));
+  if (req.headers['user-agent']) params.set('user_agent', String(req.headers['user-agent']).slice(0, 300));
+  return `https://offerwall.me/${endpoint}?${params.toString()}`;
+}
+async function fetchOfferwallFeed(endpoint, userId, req) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
   try {
-    const userId=String(req.user.userId);
-    if(!OFFERWALLAPI_API_KEY||!OFFERWALLAPI_BEARER_TOKEN)return res.json({success:true,ads:[],total:0,configured:false});
-    const url=`https://offerwallapi.com/ptc-api/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}/${encodeURIComponent(getClientIP(req))}`;
-    const response=await offerwallFetch(url); if(!response.ok)return res.status(502).json({error:'OfferwallAPI PTC feed error'});
-    const data=await response.json(); if(String(data.status)!=='200')return res.json({success:true,ads:[],total:0,message:data.message||'No ads available'});
-    const ads=(data.data||[]).map(x=>({id:String(x.id||''),title:x.title||'PTC Ad',description:x.description||'',reward:Number(x.reward)||0,currency:x.currency_name||'CNX',duration:Number(x.duration)||30,url:x.url||'',type:x.ad_type||'Window'})).filter(x=>x.url);
-    res.json({success:true,ads,total:ads.length});
-  }catch(e){logger.error('OfferwallAPI PTC error',{error:e.message});res.status(500).json({error:'Failed to load PTC ads'});}
-}
-async function getShortlinks(req,res) {
-  if(!db)return res.status(503).json({error:'DB not available'});
-  try {
-    const userId=String(req.user.userId);
-    if(!OFFERWALLAPI_API_KEY||!OFFERWALLAPI_BEARER_TOKEN)return res.json({success:true,shortlinks:[],total:0,configured:false});
-    const url=`https://offerwallapi.com/sl-api/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}/${encodeURIComponent(getClientIP(req))}`;
-    const response=await offerwallFetch(url);if(!response.ok)return res.status(502).json({error:'OfferwallAPI shortlink feed error'});
-    const data=await response.json();if(String(data.status)!=='200')return res.json({success:true,shortlinks:[],total:0,message:data.message||'No shortlinks available'});
-    const shortlinks=(data.data||[]).map(x=>({id:String(x.id||''),name:x.title||'Shortlink',reward:Number(x.reward)||0,currency:x.currency_name||'CNX',url:x.url||'',remaining_views:Number(x.available)||0,daily_limit:Number(x.limit)||0})).filter(x=>x.url);
-    res.json({success:true,shortlinks,total:shortlinks.length});
-  }catch(e){logger.error('OfferwallAPI shortlink error',{error:e.message});res.status(500).json({error:'Failed to load shortlinks'});}
-}
-async function getGames(req,res) {
-  if(!db)return res.status(503).json({error:'DB not available'});
-  try {
-    const userId=String(req.user.userId);
-    if(!OFFERWALLAPI_API_KEY||!OFFERWALLAPI_BEARER_TOKEN)return res.json({success:true,videos:[],total:0,configured:false});
-    const url=`https://offerwallapi.com/video-api/${encodeURIComponent(OFFERWALLAPI_API_KEY)}/${encodeURIComponent(userId)}/${encodeURIComponent(getClientIP(req))}`;
-    const response=await offerwallFetch(url);if(!response.ok)return res.status(502).json({error:'OfferwallAPI video feed error'});
-    const data=await response.json();if(String(data.status)!=='200')return res.json({success:true,videos:[],total:0,message:data.message||'No videos available'});
-    const videos=(data.data||[]).map(x=>({id:String(x.id||''),title:x.title||'Video',description:x.description||'',reward:Number(x.reward)||0,duration:Number(x.duration)||0,url:x.url||'',type:x.ad_type||'Iframe'})).filter(x=>x.url);
-    res.json({success:true,videos,total:videos.length});
-  }catch(e){logger.error('OfferwallAPI video error',{error:e.message});res.status(500).json({error:'Failed to load videos'});}
-}
-
-
-
-// ============================================
-// POSTBACK
-// ============================================
-async function postback(req,res) {
-  try {
-    if(!OFFERWALLAPI_SECRET_KEY)return res.status(503).send('ERROR: OfferwallAPI secret not configured');
-    const b=req.body||{},subId=String(b.subId??''),transId=String(b.transId??''),rewardRaw=String(b.reward??'');
-    const signature=String(b.signature??''),signature2=String(b.signature2??''),status=Number.parseInt(b.status??'1',10);
-    if(!subId||!transId||!rewardRaw||subId.length>64||transId.length>240)return res.status(400).send('ERROR: Missing params');
-    if(!/^\d+(?:\.\d+)?$/.test(rewardRaw))return res.status(400).send('ERROR: Invalid reward');
-    const safeEq=(a,c)=>{if(!a||!c||a.length!==c.length)return false;try{return crypto.timingSafeEqual(Buffer.from(a,'hex'),Buffer.from(c,'hex'));}catch(_){return false;}};
-    const message=subId+transId+rewardRaw;
-    const expected2=crypto.createHmac('sha256',OFFERWALLAPI_SECRET_KEY).update(message).digest('hex');
-    const expected1=crypto.createHash('md5').update(message+OFFERWALLAPI_SECRET_KEY).digest('hex');
-    if(!safeEq(expected2,signature2)&&!safeEq(expected1,signature)){logger.warn('OfferwallAPI signature mismatch',{subId,transId});return res.status(403).send('ERROR: Signature mismatch');}
-    const baseAmt=Number(rewardRaw);
-    if(!Number.isFinite(baseAmt)||baseAmt<=0||baseAmt>1e9||![1,2].includes(status))return res.status(400).send('ERROR: Invalid reward/status');
-    if(String(b.debug||'0')==='1')return res.status(200).send('ok');
-    const userRef=db.collection('users').doc(subId),completionId=crypto.createHash('sha256').update(transId).digest('hex'),completionRef=db.collection('offerwall_completions').doc(completionId);
-    const taskType=String(b.offer_type||'offer').toLowerCase().slice(0,40),eligible=BONUS_TYPES.some(t=>taskType.includes(t));
-    const bonusAmt=status===1&&eligible?roundCnx(baseAmt*BONUS_PERCENT/100):0,totalAmt=roundCnx(baseAmt+bonusAmt);
-    const baseAtomic=cnxToAtomic(baseAmt),totalAtomic=cnxToAtomic(totalAmt);let duplicate=false;
-    await db.runTransaction(async t=>{
-      const old=await t.get(completionRef);if(old.exists){duplicate=true;return;}
-      const user=await t.get(userRef);if(!user.exists)throw new Error('User not found');
-      const d=user.data();if(d.banned)throw new Error('User banned');
-      if(status===1)t.update(userRef,{cnx_atomic:increment(totalAtomic),total_earned:increment(totalAmt),total_offerwall_earned:increment(totalAmt)});
-      else {
-        const debit=Math.min(baseAtomic,Math.max(0,Number(d.cnx_atomic||0)));
-        if(debit>0)t.update(userRef,{cnx_atomic:increment(-debit),total_earned:increment(-atomicToCnx(debit)),total_offerwall_earned:increment(-atomicToCnx(debit))});
-      }
-      t.create(completionRef,{user_id:subId,trans_id:transId,task_type:taskType,offer_name:String(b.offer_name||'OfferwallAPI').slice(0,200),reward_name:b.reward_name||'CNX',reward_value:b.reward_value||String(CNX_PER_USD),payout:b.payout||null,user_ip:b.userIp||null,country:b.country||null,debug:b.debug||'0',base_amount:baseAmt,bonus_amount:bonusAmt,amount:status===1?totalAmt:baseAmt,currency:'CNX',status:status===1?'completed':'chargeback',timestamp:serverTimestamp()});
+    const response = await fetch(offerwallApiUrl(endpoint, userId, req), {
+      headers: { Accept: 'application/json' },
+      signal: controller.signal
     });
-    if(!duplicate&&status===1){await giveReferralBonus(subId,baseAmt,taskType);await logTransaction(subId,'offerwall',totalAmt,'CNX',`OfferwallAPI: ${b.offer_name||'Task'}`,{transId,taskType,bonus:bonusAmt});}
-    if(!duplicate)await logAction('offerwallapi_postback',subId,{transId,amount:baseAmt,status,taskType});
+    if (!response.ok) throw new Error(`Offerwall.me returned HTTP ${response.status}`);
+    const data = await response.json();
+    if (Number(data.status) !== 200) return { success: true, data: [], message: data.message || 'No campaigns available' };
+    return { success: true, data: Array.isArray(data.data) ? data.data : [] };
+  } finally { clearTimeout(timeout); }
+}
+async function getOfferwallUrl(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const identity = offerwallIdentity(userId);
+    const params = new URLSearchParams(identity);
+    const url = `https://offerwall.me/offerwall/${encodeURIComponent(OFFERWALL_APP_ID)}/${encodeURIComponent(userId)}?${params.toString()}`;
+    res.json({ success: true, url, user_id: userId, expires_at: Number(identity.identityExpires) });
+  } catch (err) {
+    logger.error('Offerwall.me URL error', { error: err.message });
+    res.status(503).json({ error: err.message || 'Offerwall.me is not configured.' });
+  }
+}
+async function getPTCAds(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const result = await fetchOfferwallFeed('api.php', String(req.user.userId), req);
+    const ads = result.data.map(ad => ({
+      id: String(ad.id || ''), title: ad.title || 'PTC Ad',
+      description: ad.description || '', reward: Number(ad.reward) || 0,
+      duration: Number(ad.duration) || 15, type: Number(ad.type) || 0,
+      image: ad.image || '', url: ad.url || ''
+    })).filter(ad => /^https?:\/\//i.test(ad.url));
+    res.json({ success: true, ads, total: ads.length, message: result.message });
+  } catch (err) {
+    logger.error('Offerwall.me PTC feed error', { error: err.message });
+    res.status(502).json({ error: 'Could not load PTC ads. Please open the full Offerwall.' });
+  }
+}
+async function getShortlinks(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const result = await fetchOfferwallFeed('slapi.php', String(req.user.userId), req);
+    const links = result.data.map(item => ({
+      id: String(item.id || ''), title: item.name || item.shortlink || 'Shortlink',
+      reward: Number(item.reward) || 0, remaining: Number(item.remaining_views) || 0,
+      dailyLimit: Number(item.daily_limit) || 0, url: item.url || ''
+    })).filter(item => /^https?:\/\//i.test(item.url));
+    res.json({ success: true, shortlinks: links, total: links.length, message: result.message });
+  } catch (err) {
+    logger.error('Offerwall.me shortlink feed error', { error: err.message });
+    res.status(502).json({ error: 'Could not load shortlinks. Please open the full Offerwall.' });
+  }
+}
+async function getOffers(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const result = await fetchOfferwallFeed('offerapi.php', String(req.user.userId), req);
+    const offers = result.data.map(item => ({
+      id: String(item.id || ''), title: item.title || item.name || 'Offer',
+      description: item.description || '', reward: Number(item.reward) || 0,
+      image: item.image || '', provider: item.provider || 'Offerwall.me',
+      url: item.url || '', countries: item.countries || []
+    })).filter(item => /^https?:\/\//i.test(item.url));
+    res.json({ success: true, offers, total: offers.length, message: result.message });
+  } catch (err) {
+    logger.error('Offerwall.me offer feed error', { error: err.message });
+    res.status(502).json({ error: 'Could not load offers. Please open the full Offerwall.' });
+  }
+}
+async function getSurveys(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const result = await fetchOfferwallFeed('surveyapi.php', String(req.user.userId), req);
+    const surveys = result.data.map(item => ({
+      id: String(item.id || ''), title: item.title || item.name || 'Survey',
+      description: item.description || '', reward: Number(item.reward) || 0,
+      duration: Number(item.loi) || 0, provider: item.provider || 'Survey provider',
+      url: item.url || ''
+    })).filter(item => /^https?:\/\//i.test(item.url));
+    res.json({ success: true, surveys, total: surveys.length, message: result.message });
+  } catch (err) {
+    logger.error('Offerwall.me survey feed error', { error: err.message });
+    res.status(502).json({ error: 'Could not load surveys. Please open the full Offerwall.' });
+  }
+}
+
+
+async function postback(req, res) {
+  try {
+    if (!OFFERWALL_SECRET_KEY) return res.status(503).send('ERROR: Offerwall.me secret is not configured');
+    const body = req.body || {};
+    const subId = String(body.subId ?? '');
+    const transId = String(body.transId ?? '');
+    const rewardRaw = String(body.reward ?? '');
+    const signature = String(body.signature ?? '').toLowerCase();
+    const status = Number.parseInt(body.status ?? '1', 10);
+    if (!subId || !transId || !rewardRaw || !signature) return res.status(400).send('ERROR: Missing parameters');
+    if (!/^\d+(?:\.\d{1,6})?$/.test(rewardRaw)) return res.status(400).send('ERROR: Invalid CNX reward precision');
+    if (![1, 2].includes(status)) return res.status(400).send('ERROR: Invalid status');
+    const expected = crypto.createHash('md5').update(subId + transId + rewardRaw + OFFERWALL_SECRET_KEY, 'utf8').digest('hex');
+    const supplied = Buffer.from(signature, 'hex');
+    const expectedBuffer = Buffer.from(expected, 'hex');
+    if (supplied.length !== expectedBuffer.length || !crypto.timingSafeEqual(supplied, expectedBuffer)) {
+      logger.warn('Offerwall.me postback signature mismatch', { subId, transId });
+      return res.status(403).send('ERROR: Invalid signature');
+    }
+    const baseAmount = roundCnx(Number(rewardRaw));
+    if (!Number.isFinite(baseAmount) || baseAmount <= 0 || baseAmount > 1e9) return res.status(400).send('ERROR: Invalid reward');
+    if (String(body.reward_name || 'CNX').toUpperCase() !== 'CNX') {
+      logger.warn('Offerwall.me reward currency mismatch', { rewardName: body.reward_name });
+      return res.status(400).send('ERROR: Placement currency must be CNX');
+    }
+    const expectedRate = Number(body.reward_value || CNX_PER_USD);
+    if (Number.isFinite(expectedRate) && expectedRate !== CNX_PER_USD) {
+      logger.warn('Offerwall.me exchange-rate mismatch', { rewardValue: body.reward_value, expected: CNX_PER_USD });
+    }
+    const userRef = db.collection('users').doc(subId);
+    const eventId = crypto.createHash('sha256').update(`${transId}:${status}`).digest('hex');
+    const eventRef = db.collection('offerwall_completions').doc(eventId);
+    const originalRef = db.collection('offerwall_completions').doc(crypto.createHash('sha256').update(`${transId}:1`).digest('hex'));
+    const taskType = String(body.offer_type || 'offer').toLowerCase().slice(0, 40);
+    const eligible = BONUS_TYPES.some(type => taskType.includes(type));
+    const bonusAmount = status === 1 && eligible ? roundCnx(baseAmount * BONUS_PERCENT / 100) : 0;
+    const totalAmount = roundCnx(baseAmount + bonusAmount);
+    const baseAtomic = cnxToAtomic(baseAmount);
+    let duplicate = false, appliedAmount = 0, unrecoveredAtomic = 0;
+    await db.runTransaction(async t => {
+      const priorEvent = await t.get(eventRef);
+      if (priorEvent.exists) { duplicate = true; return; }
+      const userDoc = await t.get(userRef);
+      if (!userDoc.exists) throw new Error('User not found');
+      const user = userDoc.data();
+      if (user.banned) throw new Error('User banned');
+      const original = status === 2 ? await t.get(originalRef) : null;
+      if (status === 1) {
+        appliedAmount = totalAmount;
+        t.update(userRef, {
+          cnx_atomic: increment(cnxToAtomic(totalAmount)),
+          total_earned: increment(totalAmount),
+          total_offerwall_earned: increment(totalAmount)
+        });
+      } else {
+        const reversalAmount = original && original.exists ? Number(original.data().amount || baseAmount) : baseAmount;
+        const requestedAtomic = cnxToAtomic(reversalAmount);
+        const currentAtomic = Math.max(0, Number(user.cnx_atomic || 0));
+        const debitAtomic = Math.min(currentAtomic, requestedAtomic);
+        unrecoveredAtomic = requestedAtomic - debitAtomic;
+        appliedAmount = atomicToCnx(debitAtomic);
+        if (debitAtomic > 0) {
+          t.update(userRef, {
+            cnx_atomic: increment(-debitAtomic),
+            total_earned: increment(-appliedAmount),
+            total_offerwall_earned: increment(-appliedAmount)
+          });
+        }
+      }
+      t.create(eventRef, {
+        user_id: subId, trans_id: transId, task_type: taskType,
+        offer_name: String(body.offer_name || 'Offerwall.me task').slice(0, 200),
+        reward_name: 'CNX', reward_value: Number(body.reward_value || CNX_PER_USD),
+        payout: body.payout || null, user_ip: body.userIp || null,
+        country: String(body.country || '').slice(0, 2).toUpperCase() || null,
+        base_amount: baseAmount, bonus_amount: bonusAmount,
+        amount: status === 1 ? totalAmount : appliedAmount,
+        requested_reversal: status === 2 ? baseAmount : null,
+        unrecovered_atomic: unrecoveredAtomic,
+        currency: 'CNX', status: status === 1 ? 'completed' : 'chargeback',
+        timestamp: serverTimestamp()
+      });
+    });
+    if (!duplicate && status === 1) {
+      await giveReferralBonus(subId, totalAmount, taskType);
+      await logTransaction(subId, 'offerwall', totalAmount, 'CNX',
+        `Offerwall.me: ${body.offer_name || taskType}`,
+        { transId, taskType, bonus: bonusAmount });
+    } else if (!duplicate && status === 2) {
+      await logTransaction(subId, 'chargeback', -appliedAmount, 'CNX',
+        `Offerwall.me reversal: ${body.offer_name || taskType}`,
+        { transId, taskType, unrecoveredAtomic });
+    }
+    if (!duplicate) await logAction('offerwall_postback', subId, {
+      transId, amount: appliedAmount, status, taskType, rewardName: body.reward_name || 'CNX'
+    });
     return res.status(200).send('ok');
-  }catch(e){
-    if(e.message==='User not found')return res.status(404).send('ERROR: User not found');
-    if(e.message==='User banned')return res.status(403).send('ERROR: User banned');
-    logger.error('OfferwallAPI postback error',{error:e.message});return res.status(500).send('ERROR: Server error');
+  } catch (err) {
+    if (err.message === 'User not found') return res.status(404).send('ERROR: User not found');
+    if (err.message === 'User banned') return res.status(403).send('ERROR: User banned');
+    logger.error('Offerwall.me postback error', { error: err.message });
+    return res.status(500).send('ERROR: Server error');
   }
 }
 
@@ -1580,8 +1707,10 @@ app.post('/api/activity', jwtAuth, updateActivity);
 app.get('/api/offerwall/offerwall', jwtAuth, getOfferwallUrl);
 app.get('/api/offerwall/ptc', jwtAuth, getPTCAds);
 app.get('/api/offerwall/shortlinks', jwtAuth, getShortlinks);
-app.get('/api/offerwall/games', jwtAuth, getGames);
-app.post('/api/offerwallapi/postback', postbackLimiter, postback);
+app.get('/api/offerwall/offers', jwtAuth, getOffers);
+app.get('/api/offerwall/surveys', jwtAuth, getSurveys);
+app.post('/api/offerwall/postback', postbackLimiter, postback);
+app.post('/api/offerwallapi/postback', postbackLimiter, postback); // previous integration alias
 app.post('/api/postback', postbackLimiter, postback); // legacy alias
 app.post('/api/promo/redeem', promoLimiter, jwtAuth, redeemPromo);
 app.get('/api/promo/history', jwtAuth, getPromoHistory);
