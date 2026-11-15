@@ -87,6 +87,10 @@ const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY;
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || '';
 const APP_URL = process.env.APP_URL || 'https://coinixfaucet.onrender.com';
 const PORT = process.env.PORT || 10000;
+const FAUCETPAY_API_KEY = process.env.FAUCETPAY_API_KEY || '';
+const FAUCETPAY_API_URL = 'https://faucetpay.io/api/v2/send';
+const FAUCETPAY_CURRENCIES = { doge: 'DOGE', dgb: 'DGB', feyorra: 'FEY' };
+const FAUCETPAY_ATOMIC_UNITS = { doge: 100000000, dgb: 100000000, feyorra: 100000000 };
 
 const FAUCET_COOLDOWN = 180000; // 3 minutes
 const REFERRAL_SIGNUP_BONUS = 0.01; // DOGE
@@ -1064,29 +1068,50 @@ async function claim(req, res) {
 // ============================================
 async function withdraw(req, res) {
   if (!db) return res.status(503).json({ error: 'DB not available' });
+  if (!FAUCETPAY_API_KEY) return res.status(503).json({ error: 'FaucetPay is not configured yet. Please try again later.' });
+
   const userId = String(req.user.userId);
   const { faucetpay_email, amount, coin, nonce, timestamp } = req.body;
   const amt = Number(amount);
   if (!coin || !COINS[coin]) return res.status(400).json({ error: 'Invalid coin' });
-  if (!amt || amt <= 0 || isNaN(amt)) return res.status(400).json({ error: 'Invalid amount' });
-  if (!faucetpay_email || !faucetpay_email.includes('@')) return res.status(400).json({ error: 'Invalid email' });
+
+  const faucetpayCurrency = FAUCETPAY_CURRENCIES[coin];
+  if (!faucetpayCurrency) {
+    return res.status(400).json({ error: `${COINS[coin].symbol} withdrawals are not supported by FaucetPay. Choose DOGE, DGB or FEY.` });
+  }
+  if (!Number.isFinite(amt) || amt <= 0) return res.status(400).json({ error: 'Invalid amount' });
+  if (typeof faucetpay_email !== 'string' || faucetpay_email.length > 160 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(faucetpay_email.trim())) {
+    return res.status(400).json({ error: 'Enter a valid FaucetPay email address.' });
+  }
   if (nonce && timestamp) {
     const nonceCheck = validateNonce(nonce, timestamp);
     if (!nonceCheck.valid) return res.status(403).json({ error: nonceCheck.error });
   }
+
   const minWithdraw = getMinWithdrawAmount(coin);
   if (amt < minWithdraw) {
     return res.status(400).json({ error: `Minimum withdrawal: ${minWithdraw.toFixed(COINS[coin].decimals)} ${COINS[coin].symbol} (~$${WITHDRAW_USD_MIN} USD)` });
   }
+
+  const atomicAmount = Math.round(amt * FAUCETPAY_ATOMIC_UNITS[coin]);
+  if (!Number.isSafeInteger(atomicAmount) || atomicAmount <= 0) {
+    return res.status(400).json({ error: 'Amount is outside FaucetPay supported range.' });
+  }
+
   const userRef = db.collection('users').doc(userId);
+  const wdRef = db.collection('withdrawals').doc();
+  const idempotencyKey = wdRef.id;
+
   try {
+    // Reserve the user's balance and create a unique payout record before calling FaucetPay.
     await db.runTransaction(async (t) => {
       const doc = await t.get(userRef);
       if (!doc.exists) throw new Error('User not found');
       const d = doc.data();
       if (d.banned) throw new Error('User banned');
-      const currentBalance = d.balances?.[coin] || 0;
-      if (currentBalance < amt) throw new Error(`Insufficient ${COINS[coin].symbol} balance`);
+      const currentBalance = Number(d.balances?.[coin] || 0);
+      if (currentBalance + 1e-12 < amt) throw new Error(`Insufficient ${COINS[coin].symbol} balance`);
+
       const recentWds = await db.collection('transactions')
         .where('user_id', '==', userId)
         .where('type', '==', 'withdraw')
@@ -1094,24 +1119,137 @@ async function withdraw(req, res) {
         .limit(1)
         .get();
       if (!recentWds.empty) throw new Error('Duplicate withdrawal detected');
-      const balanceKey = `balances.${coin}`;
-      t.update(userRef, { [balanceKey]: increment(-amt), total_withdrawals: increment(1), last_active: serverTimestamp() });
+
+      t.update(userRef, {
+        [`balances.${coin}`]: increment(-amt),
+        total_withdrawals: increment(1),
+        last_active: serverTimestamp()
+      });
+      t.set(wdRef, {
+        user_id: userId,
+        faucetpay_email: faucetpay_email.trim(),
+        amount: amt,
+        amount_atomic: atomicAmount,
+        coin,
+        currency: faucetpayCurrency,
+        status: 'processing',
+        provider: 'faucetpay',
+        idempotency_key: idempotencyKey,
+        timestamp: serverTimestamp()
+      });
       const txRef = db.collection('transactions').doc();
       t.set(txRef, {
-        user_id: userId, type: 'withdraw', amount: amt,
-        currency: COINS[coin].symbol, description: `Withdraw ${COINS[coin].symbol} to ${faucetpay_email}`,
-        metadata: { faucetpay_email, coin }, timestamp: serverTimestamp()
+        user_id: userId,
+        type: 'withdraw',
+        amount: amt,
+        currency: COINS[coin].symbol,
+        description: `FaucetPay withdrawal ${COINS[coin].symbol}`,
+        metadata: { faucetpay_email: faucetpay_email.trim(), coin, withdrawal_id: wdRef.id },
+        timestamp: serverTimestamp()
       });
     });
-    const ref = await db.collection('withdrawals').add({
-      user_id: userId, faucetpay_email, amount: amt, coin, status: 'pending', timestamp: serverTimestamp()
+
+    let providerResponse;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(FAUCETPAY_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${FAUCETPAY_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          idempotency_key: idempotencyKey,
+          to: faucetpay_email.trim(),
+          amount: atomicAmount,
+          currency: faucetpayCurrency,
+          ip_address: getClientIP(req)
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      providerResponse = await response.json().catch(() => ({}));
+
+      if (!response.ok || providerResponse.success !== true) {
+        const providerMessage = String(providerResponse.message || 'FaucetPay rejected this payout').slice(0, 240);
+        const err = new Error(providerMessage);
+        err.faucetpayDefinitiveFailure = true;
+        throw err;
+      }
+    } catch (providerErr) {
+      if (!providerErr.faucetpayDefinitiveFailure) {
+        // A timeout/network interruption can happen after the provider accepted the payout.
+        // Keep the reservation in processing; retrying with the same idempotency key is safe.
+        await wdRef.update({
+          status: 'processing',
+          provider_note: 'Provider response not confirmed; payout requires reconciliation.',
+          updated_at: serverTimestamp()
+        }).catch(() => {});
+        logger.error('FaucetPay payout result uncertain', { withdrawalId: wdRef.id, error: providerErr.message });
+        return res.status(202).json({
+          success: true,
+          id: wdRef.id,
+          status: 'processing',
+          message: 'Your withdrawal is being verified. Do not submit it again.'
+        });
+      }
+
+      // A definitive provider rejection means no payout was sent: return the reserved balance.
+      await db.runTransaction(async (t) => {
+        const userDoc = await t.get(userRef);
+        if (userDoc.exists) t.update(userRef, { [`balances.${coin}`]: increment(amt) });
+        t.update(wdRef, {
+          status: 'failed',
+          failure_reason: String(providerErr.message || 'FaucetPay rejected payout').slice(0, 240),
+          failed_at: serverTimestamp()
+        });
+        const refundTx = db.collection('transactions').doc();
+        t.set(refundTx, {
+          user_id: userId,
+          type: 'withdraw_refund',
+          amount: amt,
+          currency: COINS[coin].symbol,
+          description: `Refunded failed FaucetPay withdrawal ${COINS[coin].symbol}`,
+          metadata: { withdrawal_id: wdRef.id },
+          timestamp: serverTimestamp()
+        });
+      });
+      logger.warn('FaucetPay payout rejected', { withdrawalId: wdRef.id, message: providerErr.message });
+      return res.status(502).json({ error: `FaucetPay payment failed: ${providerErr.message}. Your balance has been returned.` });
+    }
+
+    const payoutData = providerResponse.data || {};
+    await wdRef.update({
+      status: 'approved',
+      payout_id: payoutData.payout_id || null,
+      payout_user_hash: payoutData.payout_user_hash || null,
+      provider_message: providerResponse.message || 'OK',
+      completed_at: serverTimestamp()
     });
-    await logAction('withdraw', userId, { amount: amt, coin, faucetpay_email });
-    res.json({ success: true, id: ref.id });
+    await logAction('faucetpay_withdrawal_paid', userId, {
+      withdrawalId: wdRef.id,
+      amount: amt,
+      coin,
+      faucetpayCurrency,
+      payoutId: payoutData.payout_id || null
+    });
+    return res.json({
+      success: true,
+      id: wdRef.id,
+      status: 'paid',
+      payout_id: payoutData.payout_id || null,
+      coin: faucetpayCurrency,
+      amount: amt
+    });
   } catch (err) {
-    if (err.message?.includes('Insufficient') || err.message?.includes('Minimum')) return res.status(400).json({ error: err.message });
+    if (err.message?.includes('Insufficient')) return res.status(400).json({ error: err.message });
     if (err.message?.includes('Duplicate')) return res.status(429).json({ error: err.message });
-    res.status(500).json({ error: 'Withdrawal failed' });
+    if (err.message?.includes('User banned')) return res.status(403).json({ error: 'User banned' });
+    if (err.message?.includes('User not found')) return res.status(404).json({ error: 'User not found' });
+    logger.error('Withdrawal processing failed', { userId, withdrawalId: wdRef.id, error: err.message });
+    return res.status(500).json({ error: 'Withdrawal could not be processed. Contact support before retrying.' });
   }
 }
 
