@@ -41,7 +41,7 @@ const auth = admin.auth();
 
 // Constants
 const COIN_PRICES = {
-  CNX: 0.01,
+  CNX: 0.0001,
   PEPE: 0.000008,
   DOGE: 0.15,
   DGB: 0.01,
@@ -63,7 +63,7 @@ const ALL_COINS = ['CNX', 'PEPE', 'DOGE', 'DGB', 'FEY', 'POL'];
 const WITHDRAW_MINIMUM_USD = 0.03;
 const CLAIM_COOLDOWN_MS = 60000;
 const REFERRAL_RATE = 0.20;
-const CNX_RATE = 0.01;
+const CNX_RATE = 0.0001;
 const SWAP_FEE = 0.02; // %2
 
 // Express App
