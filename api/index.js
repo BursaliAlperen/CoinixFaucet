@@ -777,6 +777,203 @@ async function auth(req, res) {
   }
 }
 
+
+async function issueProviderSession(provider, profile, req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  const rawId = String(profile.id || '');
+  if (!rawId || !/^[A-Za-z0-9._:-]{2,180}$/.test(rawId)) return res.status(400).json({ error: 'Invalid provider identity' });
+  const userId = provider === 'telegram' ? rawId : provider + '_' + rawId;
+  const userRef = db.collection('users').doc(userId);
+  try {
+    const snap = await userRef.get();
+    const isNew = !snap.exists;
+    if (isNew) {
+      const username = profile.username || (profile.email ? profile.email.split('@')[0] : null);
+      const newUser = {
+        auth_provider: provider,
+        provider_id: rawId,
+        email: profile.email || null,
+        telegram_id: provider === 'telegram' ? rawId : null,
+        username: username || null,
+        first_name: profile.first_name || profile.name || null,
+        photo_url: profile.photo_url || null,
+        balances: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+        referral_balance: { doge: 0, pepe: 0, pol: 0, feyorra: 0, dgb: 0 },
+        cnx_atomic: 0, referral_cnx_atomic: 0,
+        total_earned: 0, total_earned_cnx: 0, total_claims: 0,
+        total_withdrawals: 0, total_offerwall_earned: 0,
+        total_offerwall_earned_cnx: 0, total_promo_earned: 0,
+        total_promo_earned_cnx: 0, referrals: 0,
+        referral_earnings: 0, referral_earnings_cnx: 0,
+        referred_by: null, banned: false,
+        is_admin: provider === 'telegram' && rawId === String(ADMIN_TELEGRAM_ID),
+        last_claim: null, last_opened: null,
+        last_active: serverTimestamp(), inactivity_reminder_sent: false,
+        return_bonus_claimed: false, daily_claims: 0, last_claim_date: null,
+        created_at: serverTimestamp(), country: req.headers['cf-ipcountry'] || null
+      };
+      await userRef.set(newUser);
+      await logAction('user_register', userId, { provider });
+      await logTransaction(userId, 'signup', 0, 'CNX', 'Account created', { provider });
+      if (provider === 'telegram') await notifyAdminNewUser(newUser, null);
+    } else {
+      const existing = snap.data();
+      if (existing.banned) return res.status(403).json({ error: 'User banned' });
+      await userRef.update({
+        last_active: serverTimestamp(),
+        auth_provider: existing.auth_provider || provider,
+        username: profile.username || existing.username || null,
+        first_name: profile.first_name || profile.name || existing.first_name || null,
+        photo_url: profile.photo_url || existing.photo_url || null,
+        email: profile.email || existing.email || null
+      });
+    }
+    const isAdmin = provider === 'telegram' && rawId === String(ADMIN_TELEGRAM_ID);
+    const token = jwt.sign({ userId, username: profile.username || profile.name || '', is_admin: isAdmin }, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({ success: true, user_id: userId, username: profile.username || profile.name || null, token, isNew, is_admin: isAdmin, provider });
+  } catch (err) {
+    logger.error('Provider auth error', { provider, error: err.message });
+    return res.status(500).json({ error: 'Authentication failed' });
+  }
+}
+
+function getAuthConfig(req, res) {
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    telegramBotUsername: BOT_USERNAME || null,
+    googleClientId: process.env.GOOGLE_CLIENT_ID || null,
+    appleClientId: process.env.APPLE_CLIENT_ID || null,
+    appleRedirectUri: process.env.APPLE_REDIRECT_URI || null
+  });
+}
+
+async function authTelegramWidget(req, res) {
+  if (!BOT_TOKEN) return res.status(503).json({ error: 'Telegram login is not configured' });
+  const data = req.body || {};
+  const suppliedHash = String(data.hash || '').toLowerCase();
+  const authDate = Number(data.auth_date || 0);
+  if (!suppliedHash || !Number.isFinite(authDate) || Math.abs(Date.now() / 1000 - authDate) > 86400) {
+    return res.status(403).json({ error: 'Telegram login data expired or incomplete' });
+  }
+  const fields = Object.keys(data).filter(key => key !== 'hash' && data[key] !== undefined && data[key] !== null)
+    .sort().map(key => key + '=' + String(data[key]));
+  const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  const expected = crypto.createHmac('sha256', secret).update(fields.join('\\n')).digest('hex');
+  const a = Buffer.from(suppliedHash, 'hex'), b = Buffer.from(expected, 'hex');
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(403).json({ error: 'Invalid Telegram signature' });
+  if (!data.id) return res.status(400).json({ error: 'Missing Telegram user ID' });
+  return issueProviderSession('telegram', {
+    id: data.id, username: data.username || null,
+    first_name: data.first_name || null, photo_url: data.photo_url || null
+  }, req, res);
+}
+
+async function authOAuth(req, res) {
+  const provider = String(req.body?.provider || '').toLowerCase();
+  const idToken = String(req.body?.idToken || '');
+  if (!idToken) return res.status(400).json({ error: 'Missing identity token' });
+  try {
+    if (provider === 'google') {
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      if (!clientId) return res.status(503).json({ error: 'Google sign-in is not configured yet' });
+      const response = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken));
+      if (!response.ok) return res.status(401).json({ error: 'Google token rejected' });
+      const claims = await response.json();
+      if (claims.aud !== clientId || claims.email_verified !== 'true' || !claims.sub ||
+          !['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss)) {
+        return res.status(401).json({ error: 'Google identity could not be verified' });
+      }
+      return issueProviderSession('google', {
+        id: claims.sub, email: claims.email || null,
+        name: claims.name || claims.given_name || null,
+        photo_url: claims.picture || null
+      }, req, res);
+    }
+    if (provider === 'apple') {
+      const clientId = process.env.APPLE_CLIENT_ID;
+      if (!clientId) return res.status(503).json({ error: 'Apple sign-in is not configured yet' });
+      const decoded = jwt.decode(idToken, { complete: true });
+      const kid = decoded?.header?.kid;
+      if (!kid || decoded.header.alg !== 'RS256') return res.status(401).json({ error: 'Invalid Apple identity token' });
+      const keysResponse = await fetch('https://appleid.apple.com/auth/keys');
+      if (!keysResponse.ok) throw new Error('Apple public keys unavailable');
+      const keySet = await keysResponse.json();
+      const jwk = (keySet.keys || []).find(key => key.kid === kid);
+      if (!jwk) return res.status(401).json({ error: 'Apple signing key not found' });
+      const publicKey = crypto.createPublicKey({ key: jwk, format: 'jwk' });
+      const claims = jwt.verify(idToken, publicKey, {
+        algorithms: ['RS256'], issuer: 'https://appleid.apple.com', audience: clientId
+      });
+      if (!claims.sub) return res.status(401).json({ error: 'Invalid Apple account' });
+      return issueProviderSession('apple', {
+        id: claims.sub, email: claims.email || null,
+        name: req.body?.user?.name?.firstName || null
+      }, req, res);
+    }
+    return res.status(400).json({ error: 'Unsupported sign-in provider' });
+  } catch (err) {
+    logger.warn('OAuth verification failed', { provider, error: err.message });
+    return res.status(401).json({ error: 'Identity verification failed' });
+  }
+}
+
+async function getDashboardStats(req, res) {
+  if (!db) return res.status(503).json({ error: 'DB not available' });
+  try {
+    const userId = String(req.user.userId);
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) return res.status(404).json({ error: 'User not found' });
+    const user = userDoc.data();
+    const snap = await db.collection('transactions').where('user_id', '==', userId)
+      .orderBy('timestamp', 'desc').limit(500).get();
+    const days = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const day = new Date(now);
+      day.setUTCHours(0, 0, 0, 0);
+      day.setUTCDate(day.getUTCDate() - i);
+      days.push({ key: day.toISOString().slice(0, 10), label: day.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }), amount: 0 });
+    }
+    const dayMap = new Map(days.map(day => [day.key, day]));
+    for (const doc of snap.docs) {
+      const tx = doc.data();
+      if (String(tx.currency || '').toUpperCase() !== 'CNX' || !tx.timestamp) continue;
+      if (['withdraw', 'chargeback'].includes(String(tx.type || '').toLowerCase())) continue;
+      const ms = tsToMillis(tx.timestamp);
+      if (!ms) continue;
+      const key = new Date(ms).toISOString().slice(0, 10);
+      const day = dayMap.get(key);
+      if (day) day.amount += Number(tx.amount || 0);
+    }
+    const claims = Number(user.total_claims || 0);
+    const referrals = Number(user.referrals || 0);
+    const earned = Number(user.total_earned_cnx || 0);
+    const xp = Math.max(0, claims * 10 + referrals * 25 + Math.floor(earned / 5));
+    const level = Math.floor(xp / 250) + 1;
+    const currentLevelXp = (level - 1) * 250;
+    const nextLevelXp = level * 250;
+    const achievements = [
+      { id: 'first_claim', title: 'First Drop', description: 'Complete your first faucet claim', icon: 'fa-faucet-drip', unlocked: claims >= 1 },
+      { id: 'ten_claims', title: 'Regular', description: 'Reach 10 faucet claims', icon: 'fa-fire', unlocked: claims >= 10 },
+      { id: 'hundred_claims', title: 'Dedicated', description: 'Reach 100 faucet claims', icon: 'fa-medal', unlocked: claims >= 100 },
+      { id: 'first_offer', title: 'Task Hunter', description: 'Complete your first offerwall task', icon: 'fa-bullseye', unlocked: Number(user.total_offerwall_earned_cnx || 0) > 0 },
+      { id: 'first_referral', title: 'Connector', description: 'Invite your first friend', icon: 'fa-user-group', unlocked: referrals >= 1 },
+      { id: 'ten_referrals', title: 'Community Builder', description: 'Invite 10 friends', icon: 'fa-people-group', unlocked: referrals >= 10 },
+      { id: 'thousand_cnx', title: 'CNX Collector', description: 'Earn 1,000 CNX in total', icon: 'fa-coins', unlocked: earned >= 1000 }
+    ];
+    res.json({
+      chart: { labels: days.map(day => day.label), values: days.map(day => Number(day.amount.toFixed(6))) },
+      xp, level, currentLevelXp, nextLevelXp,
+      levelProgress: Math.min(100, Math.max(0, ((xp - currentLevelXp) / 250) * 100)),
+      achievements,
+      totals: { claims, referrals, earnedCnx: earned }
+    });
+  } catch (err) {
+    logger.error('Dashboard stats error', { error: err.message });
+    res.status(500).json({ error: 'Could not load dashboard stats' });
+  }
+}
+
 // ============================================
 // USER ENDPOINTS
 // ============================================
@@ -1708,6 +1905,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/ping', (req, res) => res.status(200).send('OK'));
 app.get('/api/health', (req, res) => res.json({ ok: true, db: firebaseInitialized, ts: Date.now() }));
 app.post('/api/auth', authLimiter, auth);
+app.get('/api/auth/config', getAuthConfig);
+app.post('/api/auth/telegram', authLimiter, authTelegramWidget);
+app.post('/api/auth/oauth', authLimiter, authOAuth);
+app.get('/api/dashboard/stats', jwtAuth, getDashboardStats);
 app.use('/api', generalLimiter);
 app.get('/api/me', jwtAuth, getMe);
 app.get('/api/balance', jwtAuth, getBalance);
