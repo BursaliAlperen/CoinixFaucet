@@ -858,7 +858,7 @@ async function authTelegramWidget(req, res) {
   const fields = Object.keys(data).filter(key => key !== 'hash' && data[key] !== undefined && data[key] !== null)
     .sort().map(key => key + '=' + String(data[key]));
   const secret = crypto.createHash('sha256').update(BOT_TOKEN).digest();
-  const expected = crypto.createHmac('sha256', secret).update(fields.join('\\n')).digest('hex');
+  const expected = crypto.createHmac('sha256', secret).update(fields.join('\n')).digest('hex');
   const a = Buffer.from(suppliedHash, 'hex'), b = Buffer.from(expected, 'hex');
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(403).json({ error: 'Invalid Telegram signature' });
   if (!data.id) return res.status(400).json({ error: 'Missing Telegram user ID' });
