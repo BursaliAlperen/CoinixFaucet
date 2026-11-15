@@ -53,6 +53,7 @@
   <link rel="stylesheet" href="/coinix-design-tokens.css" />
   <link rel="stylesheet" href="/coinix-components.css" />
   <link rel="stylesheet" href="/coinix-landing.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/css/flag-icons.min.css" />
 </head>
 <body class="min-h-screen">
   <!-- MAINTENANCE MODE -->
@@ -87,15 +88,16 @@
           <span>CoinixFaucet</span>
         </a>
         <nav class="cx-nav" aria-label="Primary">
-          <a href="#how-it-works">How it works</a>
-          <a href="#earn-methods">Ways to earn</a>
-          <a href="#cnx">CNX</a>
-          <a href="#faq">FAQ</a>
+          <a href="#how-it-works" data-i18n="how.k">How it works</a>
+          <a href="#earn-methods" data-i18n="earn.k">Ways to earn</a>
+          <a href="#cnx" data-i18n="cnx.k">CNX</a>
+          <a href="#faq" data-i18n="faq.k">FAQ</a>
         </nav>
         <div id="landingAuthBtns" class="cx-header-actions">
-          <button id="openLoginBtn" class="cx-btn cx-btn--ghost" type="button">Log in</button>
-          <button id="openSignupBtn" class="cx-btn cx-btn--primary" type="button">Sign up</button>
+          <button id="openLoginBtn" class="cx-btn cx-btn--ghost" type="button" data-i18n="login">Log in</button>
+          <button id="openSignupBtn" class="cx-btn cx-btn--primary" type="button" data-i18n="signup">Sign up</button>
         </div>
+        <div id="cxLang" class="cx-lang"></div>
         <button id="menuToggle" class="cx-menu-btn" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobileNavPanel">
           <span class="cx-menu-icon" aria-hidden="true"><i></i><i></i><i></i></span>
         </button>
@@ -105,15 +107,15 @@
     <div id="cxDrawerBackdrop" class="cx-drawer-backdrop" hidden></div>
     <nav id="mobileNavPanel" class="cx-drawer" aria-label="Mobile navigation" hidden>
       <div class="cx-drawer-links">
-        <a href="#how-it-works">How it works</a>
-        <a href="#earn-methods">Ways to earn</a>
-        <a href="#cnx">CNX token</a>
-        <a href="#faq">FAQ</a>
-        <a href="/about/">About</a>
+        <a href="#how-it-works" data-i18n="how.k">How it works</a>
+        <a href="#earn-methods" data-i18n="earn.k">Ways to earn</a>
+        <a href="#cnx" data-i18n="cnx.token">CNX token</a>
+        <a href="#faq" data-i18n="faq.k">FAQ</a>
+        <a href="/about/" data-i18n="about">About</a>
       </div>
       <div class="cx-drawer-actions">
-        <button id="mobileSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg cx-btn--block" type="button">Create free account</button>
-        <button id="mobileLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg cx-btn--block" type="button">Log in</button>
+        <button id="mobileSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg cx-btn--block" type="button" data-i18n="create">Create free account</button>
+        <button id="mobileLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg cx-btn--block" type="button" data-i18n="login">Log in</button>
       </div>
     </nav>
 
@@ -123,17 +125,17 @@
       <section class="cx-hero" aria-labelledby="heroTitle">
         <div class="cx-container cx-hero-grid">
           <div class="cx-hero-copy">
-            <span class="cx-pill"><i class="cx-dot" aria-hidden="true"></i> Crypto rewards platform</span>
-            <h1 id="heroTitle">Earn CNX rewards with simple online tasks.</h1>
-            <p class="cx-hero-lead">CoinixFaucet lets you claim from a faucet every 60 seconds, complete partner offers and invite friends. Track every reward in one dashboard and withdraw eligible balances through FaucetPay.</p>
+            <span class="cx-pill"><i class="cx-dot" aria-hidden="true"></i> <span data-i18n="pill">Crypto rewards platform</span></span>
+            <h1 id="heroTitle" data-i18n="title">Earn CNX rewards with simple online tasks.</h1>
+            <p class="cx-hero-lead" data-i18n="lead">CoinixFaucet lets you claim from a faucet every 60 seconds, complete partner offers and invite friends. Track every reward in one dashboard and withdraw eligible balances through FaucetPay.</p>
             <div id="heroBtns" class="cx-hero-actions">
-              <button id="heroSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button">Create free account</button>
-              <button id="heroLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg" type="button">Sign in</button>
+              <button id="heroSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button" data-i18n="create">Create free account</button>
+              <button id="heroLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg" type="button" data-i18n="signin">Sign in</button>
             </div>
             <ul class="cx-hero-facts" aria-label="Key facts">
-              <li>Free to join</li>
-              <li>60-second faucet cooldown</li>
-              <li>Withdrawals from $0.03</li>
+              <li data-i18n="f1">Free to join</li>
+              <li data-i18n="f2">60-second faucet cooldown</li>
+              <li data-i18n="f3">Withdrawals from $0.03</li>
             </ul>
           </div>
 
@@ -159,10 +161,10 @@
       <section class="cx-section cx-section--tight" aria-label="Platform statistics">
         <div class="cx-container">
           <dl class="cx-stats">
-            <div class="cx-stat"><dt>Registered members</dt><dd id="statUsers">—</dd></div>
-            <div class="cx-stat"><dt>Claims recorded</dt><dd id="statClaims">—</dd></div>
-            <div class="cx-stat"><dt>Recorded payouts</dt><dd id="statPaid">—</dd></div>
-            <div class="cx-stat"><dt>Average claim</dt><dd id="statAvg">—</dd></div>
+            <div class="cx-stat"><dt data-i18n="s.users">Registered members</dt><dd id="statUsers">—</dd></div>
+            <div class="cx-stat"><dt data-i18n="s.claims">Claims recorded</dt><dd id="statClaims">—</dd></div>
+            <div class="cx-stat"><dt data-i18n="s.payouts">Recorded payouts</dt><dd id="statPaid">—</dd></div>
+            <div class="cx-stat"><dt data-i18n="s.avg">Average claim</dt><dd id="statAvg">—</dd></div>
           </dl>
         </div>
       </section>
@@ -171,13 +173,13 @@
       <section id="how-it-works" class="cx-section" aria-labelledby="howTitle">
         <div class="cx-container">
           <header class="cx-section-head">
-            <span class="cx-kicker">How it works</span>
-            <h2 id="howTitle" class="cx-h2">Three steps from sign-up to payout</h2>
+            <span class="cx-kicker" data-i18n="how.k">How it works</span>
+            <h2 id="howTitle" class="cx-h2" data-i18n="how.title">Three steps from sign-up to payout</h2>
           </header>
           <ol class="cx-steps">
-            <li class="cx-card cx-step"><span class="cx-step-num">1</span><h3>Create your account</h3><p>Sign up for free and verify your email address to activate your account.</p></li>
-            <li class="cx-card cx-step"><span class="cx-step-num">2</span><h3>Earn CNX rewards</h3><p>Use the faucet, partner offers, sponsored tasks and your daily bonus to build your balance.</p></li>
-            <li class="cx-card cx-step"><span class="cx-step-num">3</span><h3>Withdraw via FaucetPay</h3><p>Once your balance reaches the minimum, request a withdrawal and follow its status in your history.</p></li>
+            <li class="cx-card cx-step"><span class="cx-step-num">1</span><h3 data-i18n="step1">Create your account</h3><p>Sign up for free and verify your email address to activate your account.</p></li>
+            <li class="cx-card cx-step"><span class="cx-step-num">2</span><h3 data-i18n="step2">Earn CNX rewards</h3><p>Use the faucet, partner offers, sponsored tasks and your daily bonus to build your balance.</p></li>
+            <li class="cx-card cx-step"><span class="cx-step-num">3</span><h3 data-i18n="step3">Withdraw via FaucetPay</h3><p>Once your balance reaches the minimum, request a withdrawal and follow its status in your history.</p></li>
           </ol>
         </div>
       </section>
@@ -186,8 +188,8 @@
       <section id="earn-methods" class="cx-section cx-section--alt" aria-labelledby="earnTitle">
         <div class="cx-container">
           <header class="cx-section-head">
-            <span class="cx-kicker">Ways to earn</span>
-            <h2 id="earnTitle" class="cx-h2">Choose how you earn</h2>
+            <span class="cx-kicker" data-i18n="earn.k">Ways to earn</span>
+            <h2 id="earnTitle" class="cx-h2" data-i18n="earn.title">Choose how you earn</h2>
             <p class="cx-lead">Start with the activity that suits you. Available rewards and partner offers may vary.</p>
           </header>
           <div class="cx-earn-grid">
@@ -196,7 +198,7 @@
             <article class="cx-card cx-earn"><span class="cx-ico cx-ico--amber"><i data-lucide="mouse-pointer-click"></i></span><h3>Sponsored tasks</h3><p>Visit the sponsored task area to view ads and collect task rewards where available.</p></article>
             <article class="cx-card cx-earn"><span class="cx-ico cx-ico--blue"><i data-lucide="users"></i></span><h3>Referrals</h3><p>Invite friends and earn 20% of the reward from each claim they make.</p></article>
           </div>
-          <div class="cx-cta-row"><button id="earnSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button">Start earning free</button></div>
+          <div class="cx-cta-row"><button id="earnSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button" data-i18n="earn.btn">Start earning free</button></div>
         </div>
       </section>
 
@@ -234,8 +236,8 @@
       <section id="cnx" class="cx-section cx-section--alt" aria-labelledby="cnxTitle">
         <div class="cx-container">
           <header class="cx-section-head">
-            <span class="cx-kicker">CNX token</span>
-            <h2 id="cnxTitle" class="cx-h2">CNX is your reward balance</h2>
+            <span class="cx-kicker" data-i18n="cnx.token">CNX token</span>
+            <h2 id="cnxTitle" class="cx-h2" data-i18n="cnx.title">CNX is your reward balance</h2>
             <p class="cx-lead">CNX is an internal platform reward unit. Your balance is shown with a USD estimate and can be withdrawn to a supported coin through FaucetPay.</p>
           </header>
           <div id="landingCoinsGrid" class="cx-coins" aria-label="Supported withdrawal coins"></div>
@@ -248,7 +250,7 @@
         <div class="cx-container">
           <header class="cx-section-head">
             <span class="cx-kicker">Recent activity</span>
-            <h2 id="wdTitle" class="cx-h2">Latest completed withdrawals</h2>
+            <h2 id="wdTitle" class="cx-h2" data-i18n="wd.title">Latest completed withdrawals</h2>
           </header>
           <div class="cx-card cx-table-card">
             <div class="cx-table-wrap">
@@ -280,14 +282,14 @@
       <section id="faq" class="cx-section cx-section--alt" aria-labelledby="faqTitle">
         <div class="cx-container cx-narrow">
           <header class="cx-section-head">
-            <span class="cx-kicker">FAQ</span>
-            <h2 id="faqTitle" class="cx-h2">Quick answers</h2>
+            <span class="cx-kicker" data-i18n="faq.k">FAQ</span>
+            <h2 id="faqTitle" class="cx-h2" data-i18n="faq.title">Quick answers</h2>
           </header>
           <details class="cx-accordion"><summary>How do I claim crypto?</summary><p>Create a free account, verify your email, open the Manual Faucet page and claim once the cooldown ends.</p></details>
           <details class="cx-accordion"><summary>How often can I claim?</summary><p>Once every 60 seconds.</p></details>
           <details class="cx-accordion"><summary>What is the minimum withdrawal?</summary><p>The minimum is $0.03 for each supported coin.</p></details>
           <details class="cx-accordion"><summary>How long do withdrawals take?</summary><p>Withdrawal requests are recorded for processing. Availability and processing times depend on platform configuration.</p></details>
-          <div class="cx-cta-row"><a class="cx-btn cx-btn--secondary" href="/faq/">See all questions</a></div>
+          <div class="cx-cta-row"><a class="cx-btn cx-btn--secondary" href="/faq/" data-i18n="faq.all">See all questions</a></div>
         </div>
       </section>
 
@@ -295,9 +297,9 @@
       <section class="cx-section" aria-labelledby="ctaTitle">
         <div class="cx-container">
           <div class="cx-final">
-            <h2 id="ctaTitle">Ready to start earning CNX?</h2>
-            <p>Create a free account in under a minute.</p>
-            <button id="ctaSignupBtn" class="cx-btn cx-btn--lg cx-btn--light" type="button">Create free account</button>
+            <h2 id="ctaTitle" data-i18n="final.title">Ready to start earning CNX?</h2>
+            <p data-i18n="final.sub">Create a free account in under a minute.</p>
+            <button id="ctaSignupBtn" class="cx-btn cx-btn--lg cx-btn--light" type="button" data-i18n="create">Create free account</button>
           </div>
         </div>
       </section>
@@ -310,7 +312,7 @@
           <a class="cx-social" href="https://t.me/CoinixCommunity" target="_blank" rel="noopener noreferrer">Telegram community</a>
         </div>
         <nav class="cx-footer-links" aria-label="Footer">
-          <a href="/earn-crypto/">Ways to earn</a><a href="/cnx-token/">CNX token</a><a href="/faq/">FAQ</a><a href="/about/">About</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
+          <a href="/earn-crypto/" data-i18n="earn.k">Ways to earn</a><a href="/cnx-token/" data-i18n="cnx.token">CNX token</a><a href="/faq/" data-i18n="faq.k">FAQ</a><a href="/about/" data-i18n="about">About</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
         </nav>
         <p class="cx-footer-legal">A rewards platform interface. Crypto rewards are subject to eligibility, availability and platform rules. CNX is an internal platform reward unit; displayed estimates are not a promise of market value or guaranteed income.</p>
       </div>
@@ -634,5 +636,6 @@
 
   <script type="module" src="/app.js"></script>
   <script type="module" src="/system/ui.js"></script>
+  <script type="module" src="/i18n.js"></script>
 </body>
 </html>

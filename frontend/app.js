@@ -447,20 +447,21 @@ function updateTopBar() {
     // GİRİŞ YAPILMAMIŞ - Login/Signup göster
     if (landingAuthBtns) {
       landingAuthBtns.innerHTML = `
-        <button id="openLoginBtn" class="cx-btn cx-btn--ghost" type="button">Log in</button>
-        <button id="openSignupBtn" class="cx-btn cx-btn--primary" type="button">Sign up</button>
+        <button id="openLoginBtn" class="cx-btn cx-btn--ghost" type="button" data-i18n="login">Log in</button>
+        <button id="openSignupBtn" class="cx-btn cx-btn--primary" type="button" data-i18n="signup">Sign up</button>
       `;
       $('#openLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
       $('#openSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
     }
     if (heroBtns) {
       heroBtns.innerHTML = `
-        <button id="heroSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button">Create free account</button>
-        <button id="heroLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg" type="button">Sign in</button>
+        <button id="heroSignupBtn" class="cx-btn cx-btn--primary cx-btn--lg" type="button" data-i18n="create">Create free account</button>
+        <button id="heroLoginBtn" class="cx-btn cx-btn--secondary cx-btn--lg" type="button" data-i18n="signin">Sign in</button>
       `;
       $('#heroLoginBtn')?.addEventListener('click', () => openAuthModal('login'));
       $('#heroSignupBtn')?.addEventListener('click', () => openAuthModal('register'));
     }
+    window.cxI18n?.refresh();
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }

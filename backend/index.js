@@ -101,6 +101,54 @@ for (const p of possiblePaths) {
   }
 }
 
+// ============================================
+// 🛡️ VPN / PROXY GUARD (opt-in: VPN_BLOCK_ENABLED=true)
+// Uses proxycheck.io (optional PROXYCHECK_API_KEY for higher limits).
+// Applies to page loads and the money-moving POST routes only. Fails OPEN on lookup errors.
+// ============================================
+const VPN_BLOCK_ENABLED = process.env.VPN_BLOCK_ENABLED === 'true';
+const VPN_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const vpnCache = new Map();
+const VPN_EXEMPT_PATHS = ['/vpn-blocked.html', '/admin', '/robots.txt', '/sitemap.xml'];
+const VPN_GUARDED_POSTS = ['/api/claim', '/api/withdraw'];
+
+const isPrivateIp = (ip) => !ip || /^(::1|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|fc|fd|fe80)/i.test(ip.replace(/^::ffff:/, ''));
+
+async function isVpnIp(rawIp) {
+  const ip = String(rawIp || '').replace(/^::ffff:/, '');
+  if (isPrivateIp(ip)) return false;
+  const hit = vpnCache.get(ip);
+  if (hit && hit.exp > Date.now()) return hit.blocked;
+  try {
+    const key = process.env.PROXYCHECK_API_KEY ? `&key=${encodeURIComponent(process.env.PROXYCHECK_API_KEY)}` : '';
+    const r = await fetch(`https://proxycheck.io/v2/${encodeURIComponent(ip)}?vpn=1${key}`, { signal: AbortSignal.timeout(2500) });
+    const j = await r.json();
+    const blocked = j?.status === 'ok' && j?.[ip]?.proxy === 'yes';
+    if (vpnCache.size > 5000) vpnCache.clear();
+    vpnCache.set(ip, { blocked, exp: Date.now() + VPN_CACHE_TTL_MS });
+    return blocked;
+  } catch (e) {
+    return false; // fail open: never lock users out because the lookup failed
+  }
+}
+
+const vpnGuard = async (req, res, next) => {
+  if (!VPN_BLOCK_ENABLED) return next();
+  if (VPN_EXEMPT_PATHS.some(p => req.path === p || req.path.startsWith(p + '/'))) return next();
+  const isPage = req.method === 'GET' && !req.path.startsWith('/api/') && (req.headers.accept || '').includes('text/html');
+  const isGuardedPost = req.method === 'POST' && VPN_GUARDED_POSTS.includes(req.path);
+  if (!isPage && !isGuardedPost) return next();
+  if (!(await isVpnIp(req.ip))) return next();
+  if (isGuardedPost) {
+    return res.status(403).json({ success: false, code: 'VPN_BLOCKED', message: 'Please turn off your VPN or proxy and try again.' });
+  }
+  const blockedPage = frontendPath && join(frontendPath, 'vpn-blocked.html');
+  res.set('Cache-Control', 'no-store');
+  if (blockedPage && fs.existsSync(blockedPage)) return res.status(404).sendFile(blockedPage);
+  return res.status(404).send('404 - Please turn off your VPN or proxy and reload.');
+};
+app.use(vpnGuard);
+
 if (frontendPath) {
   console.log('📁 Serving frontend from:', frontendPath);
   app.use(express.static(frontendPath));
@@ -310,23 +358,28 @@ app.post('/api/claim', verifyToken, requireEmailVerified, claimLimiter, async (r
   try {
     const { recaptchaToken } = req.body;
 
-    if (recaptchaToken && process.env.RECAPTCHA_SECRET_KEY) {
-      try {
-        const recaptchaRes = await fetch(
-          'https://www.google.com/recaptcha/api/siteverify',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
-          }
-        );
-        const recaptchaData = await recaptchaRes.json();
-        if (!recaptchaData.success || recaptchaData.score < 0.5) {
-          return res.status(403).json({ success: false, message: 'Bot detected' });
-        }
-      } catch (e) {
-        console.log('reCAPTCHA error (continuing):', e.message);
+    // reCAPTCHA is mandatory and fails closed: no token, no secret, or a failed check all reject the claim.
+    if (!process.env.RECAPTCHA_SECRET_KEY) {
+      console.error('RECAPTCHA_SECRET_KEY is not set; rejecting claim');
+      return res.status(503).json({ success: false, message: 'Captcha is not available right now' });
+    }
+    if (!recaptchaToken || typeof recaptchaToken !== 'string') {
+      return res.status(400).json({ success: false, message: 'Captcha required' });
+    }
+    try {
+      const recaptchaRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ secret: process.env.RECAPTCHA_SECRET_KEY, response: recaptchaToken }),
+        signal: AbortSignal.timeout(5000)
+      });
+      const recaptchaData = await recaptchaRes.json();
+      if (!recaptchaData.success || (typeof recaptchaData.score === 'number' && recaptchaData.score < 0.5)) {
+        return res.status(403).json({ success: false, message: 'Captcha failed' });
       }
+    } catch (e) {
+      console.error('reCAPTCHA verification error:', e.message);
+      return res.status(503).json({ success: false, message: 'Captcha check failed, please try again' });
     }
 
     const userRef = db.collection('users').doc(req.user.uid);
