@@ -1068,6 +1068,33 @@ body {
   .stat-card { padding: 15px 8px; }
 }
 
+
+/* CNX / Offerwall.me refresh */
+.earn-hub{border:1px solid rgba(212,160,23,.28);background:linear-gradient(145deg,var(--surface),var(--surface-2));}
+.earn-hub-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.earn-subtitle{color:var(--text-secondary);font-size:13px;line-height:1.55;margin:0 0 16px}
+.earn-rate{padding:9px 12px;border-radius:14px;background:rgba(212,160,23,.12);color:#d4a017;font-size:13px;font-weight:900;white-space:nowrap}
+.earn-rate span{display:block;color:var(--text-secondary);font-size:11px;font-weight:600;text-align:center}
+.earn-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.earn-actions .btn{min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:14px;font-weight:800}
+.earn-actions .btn small{display:block;font-size:10px;font-weight:600;opacity:.72}
+.earn-actions .earn-fullwall{grid-column:1/-1;min-height:58px}
+.earn-feed{margin-top:16px;display:grid;gap:10px}
+.earn-feed-empty{padding:26px 14px;border:1px dashed var(--border);border-radius:16px;text-align:center;display:grid;gap:6px;color:var(--text-secondary)}
+.earn-feed-empty span{font-size:28px}
+.earn-feed-empty strong{color:var(--text)}
+.earn-feed-empty small{font-size:12px}
+.earn-feed-title{font-size:13px;font-weight:900;display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.earn-offer{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--border);border-radius:15px;background:var(--surface-2);min-width:0}
+.earn-offer-image{width:42px;height:42px;border-radius:12px;object-fit:cover;flex:0 0 42px;background:var(--surface)}
+.earn-offer-body{min-width:0;flex:1}
+.earn-offer-title{font-size:13px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+.earn-offer-desc{font-size:11px;color:var(--text-secondary);line-height:1.4;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.earn-offer-meta{font-size:11px;color:#d4a017;font-weight:800;margin-top:5px}
+.earn-open{border:0;border-radius:10px;padding:9px 11px;background:var(--primary,#d4a017);color:#111;font-size:11px;font-weight:900;text-decoration:none;white-space:nowrap}
+.ad-container script{display:block;max-width:100%}
+@media(max-width:380px){.earn-actions{grid-template-columns:1fr}.earn-actions .earn-fullwall{grid-column:auto}.earn-offer{gap:8px;padding:10px}.earn-open{padding:8px}}
+
 </style>
 </head>
 <body>
@@ -1140,7 +1167,7 @@ body {
     <!-- Ad: ADBits -->
     <div class="ad-container ad-728x90">
       <span class="ad-label">Sponsored</span>
-      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+      <script async src="https://offerwall.me/api/public/banner-code.js" data-placement="26tgnfk7s0fce1tscysrcpfeesr398" data-size="728x90" data-frame-origin="https://offerwall.me"></script>
     </div>
 
     <!-- Milestone Card -->
@@ -1211,7 +1238,7 @@ body {
     <!-- Ad: 300x250 -->
     <div class="ad-container ad-300x250">
       <span class="ad-label">Sponsored</span>
-      <div style="color:var(--text-secondary);font-size:13px;">Ad Space 300x250</div>
+      <script async src="https://offerwall.me/api/public/banner-code.js" data-placement="26tgnfk7s0fce1tscysrcpfeesr398" data-size="300x250" data-frame-origin="https://offerwall.me"></script>
     </div>
 
     <!-- Coin Cards -->
@@ -1220,26 +1247,36 @@ body {
     <!-- Ad: ADBits -->
     <div class="ad-container ad-728x90">
       <span class="ad-label">Sponsored</span>
-      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+      <script async src="https://offerwall.me/api/public/banner-code.js" data-placement="26tgnfk7s0fce1tscysrcpfeesr398" data-size="728x90" data-frame-origin="https://offerwall.me"></script>
     </div>
   </div>
 
   <!-- Earn Page -->
   <div class="page" id="page-earn">
-    <div class="card">
-      <div class="card-title">💰 Earn Zone</div>
-      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">Complete tasks and earn crypto instantly</p>
-      <div style="display:grid;gap:12px;">
-        <button class="btn btn-primary" onclick="openOfferwall()"> PTC Ads <span style="opacity:0.7;font-size:12px;">+20% bonus</span></button>
-        <button class="btn btn-secondary" onclick="openShortlinks()">🔗 Shortlinks <span style="opacity:0.7;font-size:12px;">+20% bonus</span></button>
-        <button class="btn btn-secondary" onclick="openGames()">🎮 Games <span style="opacity:0.7;font-size:12px;">+20% bonus</span></button>
+    <div class="card earn-hub">
+      <div class="earn-hub-head">
+        <div>
+          <div class="card-title">⚡ Earn Center</div>
+          <p class="earn-subtitle">Explore verified Offerwall.me campaigns. All rewards are credited in CNX.</p>
+        </div>
+        <div class="earn-rate">10K CNX <span>= $1</span></div>
+      </div>
+      <div class="earn-actions">
+        <button class="btn btn-primary" onclick="loadEarnFeed('ptc')">👀 PTC Ads <small>View & earn</small></button>
+        <button class="btn btn-secondary" onclick="loadEarnFeed('shortlinks')">🔗 Shortlinks <small>Visit & earn</small></button>
+        <button class="btn btn-secondary" onclick="loadEarnFeed('offers')">🎯 Offers <small>Install & complete</small></button>
+        <button class="btn btn-secondary" onclick="loadEarnFeed('surveys')">📝 Surveys <small>Share opinions</small></button>
+        <button class="btn btn-primary earn-fullwall" onclick="openOfferwall()">🚀 Open Full Offerwall <small>All available campaigns</small></button>
+      </div>
+      <div class="earn-feed" id="earn-feed">
+        <div class="earn-feed-empty"><span>🪙</span><strong>Choose an earning category</strong><small>Available campaigns will appear here.</small></div>
       </div>
     </div>
 
     <!-- Ad -->
     <div class="ad-container ad-728x90">
       <span class="ad-label">Sponsored</span>
-      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+      <script async src="https://offerwall.me/api/public/banner-code.js" data-placement="26tgnfk7s0fce1tscysrcpfeesr398" data-size="728x90" data-frame-origin="https://offerwall.me"></script>
     </div>
   </div>
 
@@ -1253,7 +1290,7 @@ body {
     <!-- Ad -->
     <div class="ad-container ad-300x250">
       <span class="ad-label">Sponsored</span>
-      <div style="color:var(--text-secondary);font-size:13px;">Ad Space 300x250</div>
+      <script async src="https://offerwall.me/api/public/banner-code.js" data-placement="26tgnfk7s0fce1tscysrcpfeesr398" data-size="300x250" data-frame-origin="https://offerwall.me"></script>
     </div>
 
     <div id="withdraw-coins"></div>
@@ -1296,7 +1333,7 @@ body {
     <!-- Ad -->
     <div class="ad-container ad-728x90">
       <span class="ad-label">Sponsored</span>
-      <iframe src="https://adbits.online/bits-ads.php?type=1&&ids=754" scrolling="no" style="width:100%;max-width:728px;height:90px;border:0;padding:0;overflow:hidden;display:block;margin:0 auto;" allowtransparency="true"></iframe>
+      <script async src="https://offerwall.me/api/public/banner-code.js" data-placement="26tgnfk7s0fce1tscysrcpfeesr398" data-size="728x90" data-frame-origin="https://offerwall.me"></script>
     </div>
 
     <div class="card">
@@ -1761,28 +1798,64 @@ function getTxIcon(type) {
 }
 
 // ============================================
-// OFFERWALL
+// OFFERWALL.ME EARNING FEEDS
 // ============================================
-async function openOfferwall() {
-  const res = await api('/api/offerwall/offerwall');
-  if (res.url) window.open(res.url, '_blank');
-  else showToast(res.error || 'Offerwall is not configured yet', 'error');
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
-
-async function openShortlinks() {
-  const res = await api('/api/offerwall/shortlinks');
-  if (res.shortlinks && res.shortlinks.length > 0) {
-    res.shortlinks.forEach(link => window.open(link.url, '_blank'));
+async function openOfferwall() {
+  const tab = window.open('about:blank', '_blank');
+  const res = await api('/api/offerwall/offerwall');
+  if (res.url) {
+    if (window.Telegram?.WebApp?.openLink) window.Telegram.WebApp.openLink(res.url);
+    else if (tab) tab.location.href = res.url;
+    else window.location.href = res.url;
   } else {
-    showToast(res.message || 'No shortlinks available', 'error');
+    if (tab) tab.close();
+    showToast(res.error || 'Offerwall.me is not configured', 'error');
   }
 }
-
-async function openGames() {
-  const res = await api('/api/offerwall/games');
-  if (res.videos && res.videos.length) res.videos.forEach(video => window.open(video.url, '_blank'));
-  else showToast(res.message || 'No videos available', 'error');
+async function loadEarnFeed(kind) {
+  const container = document.getElementById('earn-feed');
+  if (!container) return;
+  const routes = {
+    ptc: {url:'/api/offerwall/ptc', key:'ads', title:'PTC Ads'},
+    shortlinks: {url:'/api/offerwall/shortlinks', key:'shortlinks', title:'Shortlinks'},
+    offers: {url:'/api/offerwall/offers', key:'offers', title:'Offers'},
+    surveys: {url:'/api/offerwall/surveys', key:'surveys', title:'Surveys'}
+  };
+  const config = routes[kind];
+  if (!config) return;
+  container.innerHTML = '<div class="earn-feed-empty"><span>⏳</span><strong>Loading campaigns…</strong><small>Checking Offerwall.me availability</small></div>';
+  const res = await api(config.url);
+  if (res.error) {
+    container.innerHTML = '<div class="earn-feed-empty"><span>⚠️</span><strong>Campaigns could not be loaded</strong><small>' + escapeHtml(res.error) + '</small></div>';
+    return;
+  }
+  const items = Array.isArray(res[config.key]) ? res[config.key] : [];
+  if (!items.length) {
+    container.innerHTML = '<div class="earn-feed-empty"><span>🔎</span><strong>No ' + escapeHtml(config.title.toLowerCase()) + ' available right now</strong><small>Try the full Offerwall or check again later.</small></div>';
+    return;
+  }
+  const cards = items.map(item => {
+    const title = item.title || item.name || config.title;
+    const image = item.image && /^https?:\/\//i.test(item.image)
+      ? '<img class="earn-offer-image" src="' + escapeHtml(item.image) + '" alt="">'
+      : '<div class="earn-offer-image" style="display:grid;place-items:center;font-size:21px;">🪙</div>';
+    const details = [item.duration ? item.duration + ' sec' : '', item.remaining ? item.remaining + ' left' : '', item.provider || ''].filter(Boolean).join(' · ');
+    return '<article class="earn-offer">' + image +
+      '<div class="earn-offer-body"><div class="earn-offer-title">' + escapeHtml(title) + '</div>' +
+      '<div class="earn-offer-desc">' + escapeHtml(item.description || details || 'Complete the campaign requirements.') + '</div>' +
+      '<div class="earn-offer-meta">+' + Number(item.reward || 0).toFixed(6) + ' CNX</div></div>' +
+      '<a class="earn-open" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">OPEN</a></article>';
+  }).join('');
+  container.innerHTML = '<div class="earn-feed-title"><span>' + escapeHtml(config.title) + '</span><span>' + items.length + ' available</span></div>' + cards;
 }
+// Keep legacy button names working if an older cached UI calls them.
+async function openShortlinks() { return loadEarnFeed('shortlinks'); }
+async function openGames() { return loadEarnFeed('offers'); }
+
+
 
 // ============================================
 // ACTIVITY
