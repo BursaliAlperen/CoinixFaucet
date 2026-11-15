@@ -1761,6 +1761,8 @@ let userData = null;
 let prices = {};
 let currentCaptcha = null;
 let claimCooldowns = {};
+let authConfig = {};
+let earningsChart = null;
 
 // ============================================
 // TELEGRAM INIT
@@ -1772,14 +1774,16 @@ if (tg) {
   if (tg.colorScheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
-  tg.setHeaderColor?.('#f59e0b');
-  tg.setBackgroundColor?.('#f8fafc');
+  tg.setHeaderColor?.('#5144c9');
+  tg.setBackgroundColor?.('#080b16');
+  document.getElementById('loading-cta')?.classList.add('is-mini');
 }
 
 // ============================================
 // LOADING
 // ============================================
 window.addEventListener('load', () => {
+  setupAuthOptions();
   const progress = document.getElementById('loading-progress');
   setTimeout(() => { progress.style.width = '100%'; }, 100);
   setTimeout(() => {
@@ -1823,7 +1827,7 @@ function showToast(msg, type = 'success') {
 // ============================================
 async function authenticate() {
   if (!tg?.initData) {
-    showToast('Open in Telegram', 'error');
+    showToast('Choose a sign-in provider', 'error');
     return false;
   }
   const res = await api('/api/auth', {
@@ -1837,6 +1841,114 @@ async function authenticate() {
   token = res.token;
   localStorage.setItem('coinix_token', token);
   return true;
+}
+
+async function setupAuthOptions() {
+  const note = document.getElementById('auth-gate-note');
+  try {
+    const response = await fetch(API_URL + '/api/auth/config', { cache: 'no-store' });
+    authConfig = await response.json();
+  } catch (error) {
+    if (note) note.textContent = 'Sign-in configuration could not be loaded. Please refresh.';
+    return;
+  }
+  const telegramButton = document.getElementById('telegram-mini-login');
+  if (telegramButton) telegramButton.addEventListener('click', async () => {
+    if (tg?.initData) {
+      const ok = await authenticate();
+      if (ok) launchAuthenticatedApp();
+    } else showToast('Use the Telegram Login button below.', 'info');
+  });
+  if (!tg?.initData && authConfig.telegramBotUsername) {
+    const container = document.getElementById('telegram-widget-container');
+    if (container) {
+      const widget = document.createElement('script');
+      widget.async = true;
+      widget.src = 'https://telegram.org/js/telegram-widget.js?22';
+      widget.dataset.telegramLogin = authConfig.telegramBotUsername;
+      widget.dataset.size = 'large';
+      widget.dataset.userpic = 'false';
+      widget.dataset.onauth = 'onTelegramAuth(user)';
+      container.appendChild(widget);
+    }
+  }
+  if (authConfig.googleClientId) {
+    const googleScript = document.createElement('script');
+    googleScript.src = 'https://accounts.google.com/gsi/client';
+    googleScript.async = true;
+    googleScript.defer = true;
+    googleScript.onload = () => {
+      if (!window.google?.accounts?.id) return;
+      google.accounts.id.initialize({ client_id: authConfig.googleClientId, callback: handleGoogleCredential, auto_select: false });
+      google.accounts.id.renderButton(document.getElementById('google-signin-container'), {
+        theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', width: 300
+      });
+    };
+    document.head.appendChild(googleScript);
+  } else {
+    const googleContainer = document.getElementById('google-signin-container');
+    if (googleContainer) googleContainer.innerHTML = '<button class="auth-provider google-provider" type="button" disabled><i class="fa-brands fa-google"></i><span>Google · setup required</span></button>';
+  }
+  const appleButton = document.getElementById('apple-signin');
+  if (appleButton) {
+    if (!authConfig.appleClientId) {
+      appleButton.disabled = true;
+      appleButton.title = 'Apple Developer configuration required';
+      appleButton.innerHTML = '<i class="fa-brands fa-apple" aria-hidden="true"></i><span>Apple · setup required</span>';
+      appleButton.style.opacity = '.55';
+    } else appleButton.addEventListener('click', startAppleSignIn);
+  }
+}
+
+async function onTelegramAuth(profile) {
+  try {
+    const result = await api('/api/auth/telegram', { method: 'POST', body: JSON.stringify(profile) });
+    if (result.error) { showToast(result.error, 'error'); return; }
+    setLoginToken(result);
+  } catch (error) { showToast('Telegram sign-in failed. Try again.', 'error'); }
+}
+window.onTelegramAuth = onTelegramAuth;
+
+async function handleGoogleCredential(response) {
+  if (!response?.credential) { showToast('Google did not return an identity token.', 'error'); return; }
+  const result = await api('/api/auth/oauth', {
+    method: 'POST', body: JSON.stringify({ provider: 'google', idToken: response.credential })
+  });
+  if (result.error) { showToast(result.error, 'error'); return; }
+  setLoginToken(result);
+}
+
+async function startAppleSignIn() {
+  try {
+    if (!window.AppleID?.auth) { showToast('Apple sign-in is still loading.', 'error'); return; }
+    AppleID.auth.init({
+      clientId: authConfig.appleClientId, scope: 'name email',
+      redirectURI: authConfig.appleRedirectUri || window.location.origin, usePopup: true
+    });
+    const response = await AppleID.auth.signIn();
+    const result = await api('/api/auth/oauth', {
+      method: 'POST',
+      body: JSON.stringify({ provider: 'apple', idToken: response.authorization?.id_token, user: response.user || null })
+    });
+    if (result.error) { showToast(result.error, 'error'); return; }
+    setLoginToken(result);
+  } catch (error) { showToast('Apple sign-in was cancelled or failed.', 'error'); }
+}
+
+function setLoginToken(result) {
+  token = result.token;
+  localStorage.setItem('coinix_token', token);
+  launchAuthenticatedApp();
+}
+
+function launchAuthenticatedApp() {
+  const screen = document.getElementById('loading-screen');
+  screen.style.opacity = '0';
+  setTimeout(() => {
+    screen.style.display = 'none';
+    document.getElementById('app').classList.add('show');
+    initApp();
+  }, 250);
 }
 
 // ============================================
@@ -1911,12 +2023,58 @@ function updateDashboard() {
   document.getElementById('stat-referrals').textContent = userData.referrals || 0;
   const nextMs = getNextMilestone(userData.total_claims || 0);
   document.getElementById('stat-milestone').textContent = nextMs;
-  document.getElementById('stat-earned').textContent = `$${((userData.total_earned || 0) / 10000).toFixed(4)}`;
+  document.getElementById('stat-earned').textContent = `${(Number(userData.total_earned_cnx || 0) / 10000).toFixed(4)}`;
+  loadDashboardStats();
   const prevMs = nextMs / 10;
   const progress = Math.min(100, ((userData.total_claims || 0) - prevMs) / (nextMs - prevMs) * 100);
   document.getElementById('milestone-fill').style.width = `${progress}%`;
   document.getElementById('milestone-text').textContent = `${nextMs} claims = CNX milestone bonus`;
 }
+async function loadDashboardStats() {
+  const res = await api('/api/dashboard/stats');
+  if (res.error) return;
+  const level = Number(res.level || 1), xp = Number(res.xp || 0);
+  document.getElementById('user-level').textContent = level;
+  document.getElementById('level-badge-number').textContent = level;
+  document.getElementById('user-xp').textContent = xp.toLocaleString() + ' XP';
+  document.getElementById('next-level-xp').textContent = Number(res.nextLevelXp || 250).toLocaleString() + ' XP';
+  document.getElementById('xp-current-label').textContent = xp.toLocaleString() + ' XP';
+  document.getElementById('xp-next-label').textContent = Number(res.nextLevelXp || 250).toLocaleString() + ' XP';
+  document.getElementById('xp-progress-fill').style.width = Number(res.levelProgress || 0) + '%';
+  const achievements = Array.isArray(res.achievements) ? res.achievements : [];
+  const unlocked = achievements.filter(item => item.unlocked).length;
+  document.getElementById('achievement-count').textContent = unlocked + ' / ' + achievements.length;
+  document.getElementById('achievement-grid').innerHTML = achievements.map(item => `
+    <div class="achievement-card ${item.unlocked ? 'unlocked' : ''}">
+      <div class="achievement-icon"><i class="fa-solid ${item.icon}" aria-hidden="true"></i></div>
+      <div class="achievement-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.description)}</span></div>
+    </div>`).join('');
+  const chartData = res.chart || { labels: [], values: [] };
+  const hasActivity = chartData.values.some(value => Number(value) > 0);
+  const empty = document.getElementById('earnings-chart-empty');
+  empty.hidden = hasActivity;
+  const canvas = document.getElementById('earnings-chart');
+  if (!window.Chart || !canvas) return;
+  if (earningsChart) earningsChart.destroy();
+  earningsChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: chartData.labels, datasets: [{
+      label: 'CNX earned', data: chartData.values,
+      borderColor: '#9a8cff', backgroundColor: 'rgba(139,124,255,.14)',
+      borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5,
+      pointBackgroundColor: '#55d8c0', tension: .38, fill: true
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => Number(context.parsed.y).toFixed(6) + ' CNX' } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#98a4c0', maxTicksLimit: 7, font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(148,163,184,.10)' }, ticks: { color: '#98a4c0', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
 function updateHeader() {
   if (!userData) return;
   document.getElementById('header-cnx').textContent = `${Number(userData.balances?.cnx || 0).toFixed(2)} CNX`;
