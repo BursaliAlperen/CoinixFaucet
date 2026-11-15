@@ -1317,6 +1317,15 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 .milestone-title i {margin-right:7px}
 .earn-feed-empty>span {font-size:25px;color:#b7adff}
 
+
+.payouts-title {justify-content:space-between}
+.dashboard-history-link {
+ display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;
+ color:#bdb4ff;font:inherit;font-size:11px;font-weight:850;cursor:pointer;
+ padding:7px 9px;border-radius:9px;
+}
+.dashboard-history-link:hover {background:rgba(139,124,255,.12)}
+
 </style>
 </head>
 <body>
@@ -1447,7 +1456,10 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 
     <!-- Live Payouts -->
     <div class="payouts-ticker">
-      <div class="payouts-title"><i class="fa-solid fa-signal ui-icon" aria-hidden="true"></i> Live Payouts</div>
+      <div class="payouts-title">
+        <span><i class="fa-solid fa-signal ui-icon" aria-hidden="true"></i> Live Payouts</span>
+        <button class="dashboard-history-link" onclick="showPage('history')">Activity <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+      </div>
       <div class="payouts-list" id="live-payouts">
         <div style="text-align:center;color:var(--text-secondary);padding:20px;">Loading...</div>
       </div>
@@ -1895,7 +1907,7 @@ function renderWithdrawCoins() {
         <div class="min-withdraw ${enough?'enough':'not-enough'}">${enough?'<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Available':'<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Not enough'}</div>
       </div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Minimum: 300 CNX ($0.03). 10,000 CNX = $1.00. DOGE is calculated using the live DOGE/USD rate.</div>
-      <div style="font-size:12px;color:var(--success);margin-bottom:10px;"><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Automatic FaucetPay DOGE payout</div>
+      <div style="font-size:12px;color:var(--success);margin-bottom:10px;"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Automatic FaucetPay DOGE payout</div>
       <input type="email" id="withdraw-email-cnx" placeholder="FaucetPay Email" class="input-field" autocomplete="email">
       <input type="number" id="withdraw-amount-cnx" placeholder="Amount in CNX" class="input-field" step="0.000001" min="300">
       <div class="amount-presets">
