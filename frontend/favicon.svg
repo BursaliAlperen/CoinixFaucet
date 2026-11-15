@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:1" />
-    </linearGradient>
-  </defs>
-  <circle cx="16" cy="16" r="15" fill="url(#grad)"/>
-  <text x="16" y="22" font-family="Arial Black, sans-serif" font-size="20" font-weight="900" fill="white" text-anchor="middle">C</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title"><title id="title">Coinix brand mark</title><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e879f9"/><stop offset=".48" stop-color="#7c3aed"/><stop offset="1" stop-color="#22d3ee"/></linearGradient><linearGradient id="h" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="12" y="12" width="232" height="232" rx="64" fill="#090d20" stroke="#27345f" stroke-width="5"/><path d="M190 66a88 88 0 1 0 0 124" fill="none" stroke="url(#g)" stroke-width="23" stroke-linecap="round" filter="url(#glow)"/><path d="M190 66a88 88 0 0 1 0 124" fill="none" stroke="#22d3ee" stroke-width="7" stroke-linecap="round"/><path d="m128 66 57 33v66l-57 33-57-33V99z" fill="#111a3a" stroke="url(#h)" stroke-width="8"/><path d="m128 91 35 20v40l-35 20-35-20v-40z" fill="url(#g)" stroke="#baf7ff" stroke-width="3"/><path d="m128 104 8 17 18 7-18 8-8 17-8-17-18-8 18-7z" fill="#fff" filter="url(#glow)"/><circle cx="195" cy="62" r="8" fill="#22d3ee"/><circle cx="61" cy="190" r="6" fill="#e879f9"/></svg>
