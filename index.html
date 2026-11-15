@@ -19,6 +19,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CoinixFaucet — Earn CNX, Get DOGE</title>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" referrerpolicy="no-referrer">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
 <script>
@@ -1216,6 +1218,91 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
   *,*::before,*::after { scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; }
 }
 
+
+/* Coinix polished dashboard + Font Awesome icon-font system */
+.fa-solid,.fas { font-weight:900; }
+.ui-icon { color:var(--primary-light);margin-right:7px;font-size:.95em; }
+.loading-brand-icons { gap:15px; }
+.loading-brand-icons span {
+  width:52px;height:52px;border-radius:17px;display:grid;place-items:center;
+  color:#d8d3ff;font-size:21px;
+  background:linear-gradient(145deg,rgba(139,124,255,.22),rgba(47,207,185,.10));
+  border:1px solid rgba(181,170,255,.22);
+  box-shadow:0 12px 25px rgba(0,0,0,.18);
+}
+.loading-brand-icons span:nth-child(2){transform:translateY(-5px);color:#9be9d5}
+.loading-brand-icons span:nth-child(3){transform:translateY(3px)}
+.loading-brand-icons span:nth-child(4){transform:translateY(-3px);color:#f2d9ff}
+.header-balance .coin-icon{font-size:14px;color:#c3baff}
+.welcome-card { min-height:205px; }
+.welcome-eyebrow {
+  position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;
+  padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.2);font-size:10px;font-weight:900;
+  letter-spacing:.14em;margin-bottom:17px;
+}
+.welcome-title,.welcome-subtitle { position:relative;z-index:1; }
+.welcome-decoration {
+  position:absolute;right:34px;top:50%;transform:translateY(-50%) rotate(-14deg);
+  font-size:100px;color:rgba(255,255,255,.12);pointer-events:none;
+}
+.dashboard-wallet {
+  position:relative;overflow:hidden;margin:-3px 0 19px;padding:23px 25px;
+  border-radius:22px;border:1px solid rgba(160,149,255,.26);
+  background:radial-gradient(ellipse at 92% 0%,rgba(52,211,190,.13),transparent 30%),
+    linear-gradient(130deg,rgba(26,31,62,.98),rgba(17,24,45,.98));
+  box-shadow:0 16px 42px rgba(0,0,0,.2);
+}
+.dashboard-wallet::after {
+  content:"";position:absolute;width:210px;height:210px;right:-95px;bottom:-140px;
+  border:1px solid rgba(181,170,255,.16);border-radius:50%;
+  box-shadow:0 0 0 22px rgba(181,170,255,.025),0 0 0 48px rgba(181,170,255,.02);
+}
+.dashboard-wallet-top,.dashboard-wallet-bottom,.dashboard-wallet-actions {
+  position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:14px;
+}
+.dashboard-wallet-label { display:flex;align-items:center;gap:9px;color:#c4bcff;font-size:11px;font-weight:900;letter-spacing:.13em; }
+.dashboard-wallet-label i {font-size:15px}
+.dashboard-wallet-caption {color:#9ca9c7;font-size:12px;margin-top:6px}
+.wallet-status {display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border-radius:999px;background:rgba(53,214,160,.09);color:#6fe4bb;font-size:9px;font-weight:900;letter-spacing:.1em}
+.wallet-status span {width:6px;height:6px;border-radius:50%;background:#35d6a0;box-shadow:0 0 10px #35d6a0}
+.dashboard-wallet-balance {position:relative;z-index:1;margin:22px 0 17px;color:#fff;font-size:clamp(32px,5vw,44px);font-weight:900;letter-spacing:-.055em;overflow-wrap:anywhere}
+.dashboard-wallet-balance small {margin-left:9px;color:#a9a5e9;font-size:14px;letter-spacing:.04em}
+.dashboard-wallet-bottom {justify-content:flex-start;align-items:flex-end;padding-bottom:19px;border-bottom:1px solid rgba(181,170,255,.14)}
+.dashboard-wallet-bottom>div:first-child {display:grid;gap:4px}
+.wallet-usd-label {color:#9ca9c7;font-size:11px}
+.dashboard-wallet-bottom strong {color:#d6f8ef;font-size:15px;font-weight:800}
+.wallet-rate {margin-left:auto;color:#aeb9d5;font-size:10px;white-space:nowrap}
+.wallet-rate i {color:#8cddc9;margin-right:5px}
+.dashboard-wallet-actions {justify-content:flex-start;margin-top:17px}
+.dashboard-wallet-actions button {
+  min-height:42px;padding:0 16px;border-radius:12px;border:1px solid transparent;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-size:12px;font-weight:850;cursor:pointer;transition:transform .2s,filter .2s;
+}
+.dashboard-wallet-actions button:hover {transform:translateY(-2px);filter:brightness(1.08)}
+.wallet-action-primary {color:#fff;background:linear-gradient(115deg,#8b7cff,#6f82ff);box-shadow:0 8px 20px rgba(111,98,239,.23)}
+.wallet-action-secondary {color:#d9d8ff;background:rgba(139,124,255,.10);border-color:rgba(181,170,255,.24)!important}
+.quick-action {width:100%;font:inherit;color:var(--text);cursor:pointer;}
+.quick-action-icon {display:grid;place-items:center;color:#b8adff;height:31px;font-size:23px}
+.quick-action:nth-child(2) .quick-action-icon {color:#72ddc4}
+.quick-action:nth-child(3) .quick-action-icon {color:#91b7ff}
+.quick-action:nth-child(4) .quick-action-icon {color:#f1bd80}
+.nav-item {gap:5px;}
+.nav-item .nav-icon {display:grid;place-items:center;height:22px;font-size:17px;}
+.nav-item.active .nav-icon {filter:drop-shadow(0 0 8px rgba(139,124,255,.5))}
+.earn-actions .btn i {font-size:17px;margin-bottom:2px;color:inherit}
+@media(max-width:560px) {
+ .dashboard-wallet {padding:19px 17px;border-radius:19px}
+ .dashboard-wallet-balance {font-size:32px}
+ .dashboard-wallet-actions button {flex:1;padding:0 9px}
+ .welcome-decoration {right:18px;font-size:76px}
+ .welcome-eyebrow {font-size:9px}
+}
+@media(prefers-reduced-motion:reduce) {
+ .quick-action,.dashboard-wallet-actions button {transition:none}
+}
+
 </style>
 </head>
 <body>
@@ -1226,12 +1313,8 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
     <img src="./coinix.png" alt="Coinix" class="loading-logo" onerror="this.style.display='none'">
     <h1 class="loading-title">Coinix Faucet</h1>
     <p class="loading-subtitle">We Support Coins</p>
-    <div class="loading-coins-row">
-      <div class="loading-coin">🐕</div>
-      <div class="loading-coin">🐸</div>
-      <div class="loading-coin"></div>
-      <div class="loading-coin">💎</div>
-      <div class="loading-coin">⚡</div>
+    <div class="loading-coins-row loading-brand-icons" aria-hidden="true">
+      <span><i class="fa-solid fa-coins"></i></span><span><i class="fa-solid fa-bolt"></i></span><span><i class="fa-solid fa-wallet"></i></span><span><i class="fa-solid fa-gem"></i></span>
     </div>
     <div class="loading-progress-bar">
       <div class="loading-progress-fill" id="loading-progress"></div>
@@ -1255,16 +1338,37 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
       <span class="header-title">COINIX</span>
     </div>
     <div class="header-balance">
-      <div class="balance-chip"><span class="coin-icon">🪙</span><span id="header-cnx">0 CNX</span></div>
+      <div class="balance-chip"><i class="fa-solid fa-coins coin-icon" aria-hidden="true"></i><span id="header-cnx">0 CNX</span></div>
     </div>
   </div>
 
   <!-- Dashboard Page -->
   <div class="page active" id="page-dashboard">
     <div class="welcome-card">
+      <div class="welcome-eyebrow"><i class="fa-solid fa-sparkles" aria-hidden="true"></i> YOUR REWARDS DASHBOARD</div>
       <div class="welcome-title" id="welcome-title">Welcome back!</div>
-      <div class="welcome-subtitle">Start earning crypto today</div>
+      <div class="welcome-subtitle">Your next reward is only a few actions away. Complete tasks, collect CNX and build your balance.</div>
+      <div class="welcome-decoration" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></div>
     </div>
+
+    <section class="dashboard-wallet" aria-label="CNX wallet summary">
+      <div class="dashboard-wallet-top">
+        <div>
+          <div class="dashboard-wallet-label"><i class="fa-solid fa-wallet" aria-hidden="true"></i> CNX WALLET</div>
+          <div class="dashboard-wallet-caption">Your available rewards balance</div>
+        </div>
+        <span class="wallet-status"><span></span> ACTIVE</span>
+      </div>
+      <div class="dashboard-wallet-balance"><span id="dashboard-cnx-balance">0.000000</span><small>CNX</small></div>
+      <div class="dashboard-wallet-bottom">
+        <div><span class="wallet-usd-label">Estimated value</span><strong id="dashboard-usd-value">$0.0000 USD</strong></div>
+        <div class="wallet-rate"><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i> 10,000 CNX = $1</div>
+      </div>
+      <div class="dashboard-wallet-actions">
+        <button class="wallet-action-primary" onclick="showPage('earn')"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Earn CNX</button>
+        <button class="wallet-action-secondary" onclick="showPage('withdraw')"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Withdraw</button>
+      </div>
+    </section>
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -1302,24 +1406,24 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 
     <!-- Quick Actions -->
     <div class="card">
-      <div class="card-title">⚡ Quick Actions</div>
+      <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles ui-icon" aria-hidden="true"></i> Quick Actions</div>
       <div class="quick-actions">
-        <div class="quick-action" onclick="showPage('faucet')">
-          <div class="quick-action-icon">🚰</div>
-          <div class="quick-action-label">Faucet</div>
-        </div>
-        <div class="quick-action" onclick="showPage('earn')">
-          <div class="quick-action-icon">💰</div>
-          <div class="quick-action-label">Earn</div>
-        </div>
-        <div class="quick-action" onclick="showPage('withdraw')">
-          <div class="quick-action-icon"></div>
-          <div class="quick-action-label">Withdraw</div>
-        </div>
-        <div class="quick-action" onclick="showPage('referral')">
-          <div class="quick-action-icon">👥</div>
-          <div class="quick-action-label">Refer</div>
-        </div>
+        <button class="quick-action" onclick="showPage('faucet')">
+          <span class="quick-action-icon"><i class="fa-solid fa-faucet-drip" aria-hidden="true"></i></span>
+          <span class="quick-action-label">Faucet</span>
+        </button>
+        <button class="quick-action" onclick="showPage('earn')">
+          <span class="quick-action-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+          <span class="quick-action-label">Earn</span>
+        </button>
+        <button class="quick-action" onclick="showPage('withdraw')">
+          <span class="quick-action-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
+          <span class="quick-action-label">Withdraw</span>
+        </button>
+        <button class="quick-action" onclick="showPage('referral')">
+          <span class="quick-action-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
+          <span class="quick-action-label">Invite</span>
+        </button>
       </div>
     </div>
 
@@ -1329,7 +1433,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 
     <!-- Live Payouts -->
     <div class="payouts-ticker">
-      <div class="payouts-title">🔴 Live Payouts</div>
+      <div class="payouts-title"><i class="fa-solid fa-signal ui-icon" aria-hidden="true"></i> Live Payouts</div>
       <div class="payouts-list" id="live-payouts">
         <div style="text-align:center;color:var(--text-secondary);padding:20px;">Loading...</div>
       </div>
@@ -1337,7 +1441,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 
     <!-- Promo Code -->
     <div class="card">
-      <div class="card-title">🎁 Promo Code</div>
+      <div class="card-title"><i class="fa-solid fa-ticket ui-icon" aria-hidden="true"></i> Promo Code</div>
       <div class="input-group">
         <input type="text" id="promo-code-input" placeholder="Enter code" class="input-field">
         <div class="input-field" style="max-width:120px;text-align:center;">CNX</div>
@@ -1377,17 +1481,17 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
     <div class="card earn-hub">
       <div class="earn-hub-head">
         <div>
-          <div class="card-title">⚡ Earn Center</div>
+          <div class="card-title"><i class="fa-solid fa-bolt ui-icon" aria-hidden="true"></i> Earn Center</div>
           <p class="earn-subtitle">Explore Offerwall.me campaigns. Verified completions credit CNX automatically. Eligible categories include a 20% bonus.</p>
         </div>
         <div class="earn-rate">10K CNX <span>= $1</span></div>
       </div>
       <div class="earn-actions">
-        <button class="btn btn-primary" onclick="loadEarnFeed('ptc')">👀 PTC Ads <small>View & earn</small></button>
-        <button class="btn btn-secondary" onclick="loadEarnFeed('shortlinks')">🔗 Shortlinks <small>Visit & earn</small></button>
-        <button class="btn btn-secondary" onclick="loadEarnFeed('offers')">🎯 Offers <small>Install & complete</small></button>
-        <button class="btn btn-secondary" onclick="loadEarnFeed('surveys')">📝 Surveys <small>Share opinions</small></button>
-        <button class="btn btn-primary earn-fullwall" onclick="openOfferwall()">🚀 Open Full Offerwall <small>All available campaigns</small></button>
+        <button class="btn btn-primary" onclick="loadEarnFeed('ptc')"><i class="fa-solid fa-eye" aria-hidden="true"></i> PTC Ads <small>View & earn</small></button>
+        <button class="btn btn-secondary" onclick="loadEarnFeed('shortlinks')"><i class="fa-solid fa-link" aria-hidden="true"></i> Shortlinks <small>Visit & earn</small></button>
+        <button class="btn btn-secondary" onclick="loadEarnFeed('offers')"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Offers <small>Install & complete</small></button>
+        <button class="btn btn-secondary" onclick="loadEarnFeed('surveys')"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Surveys <small>Share opinions</small></button>
+        <button class="btn btn-primary earn-fullwall" onclick="openOfferwall()"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Open Full Offerwall <small>All available campaigns</small></button>
       </div>
       <div class="earn-feed" id="earn-feed">
         <div class="earn-feed-empty"><span>🪙</span><strong>Choose an earning category</strong><small>Available campaigns will appear here.</small></div>
@@ -1404,7 +1508,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
   <!-- Withdraw Page -->
   <div class="page" id="page-withdraw">
     <div class="card" style="text-align:center;margin-bottom:20px;">
-      <div class="card-title" style="justify-content:center;">💸 Withdraw Crypto</div>
+      <div class="card-title" style="justify-content:center;"><i class="fa-solid fa-arrow-up-from-bracket ui-icon" aria-hidden="true"></i> Withdraw Crypto</div>
       <p style="color:var(--text-secondary);font-size:13px;">Withdraw CNX to FaucetPay as DOGE. 10,000 CNX = $1.00. Minimum: 300 CNX.</p>
     </div>
 
@@ -1432,7 +1536,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
   <!-- Referral Page -->
   <div class="page" id="page-referral">
     <div class="card">
-      <div class="card-title">👥 Referrals</div>
+      <div class="card-title"><i class="fa-solid fa-user-group ui-icon" aria-hidden="true"></i> Referrals</div>
       <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Earn <strong style="color:var(--success);">+50 CNX</strong> per signup + <strong style="color:var(--success);">20% lifetime</strong> commission</p>
       <div class="referral-link-box">
         <span class="referral-link" id="referral-link">Loading...</span>
@@ -1468,7 +1572,7 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
   <!-- History Page -->
   <div class="page" id="page-history">
     <div class="card">
-      <div class="card-title"> Transaction History</div>
+      <div class="card-title"><i class="fa-solid fa-clock-rotate-left ui-icon" aria-hidden="true"></i> Transaction History</div>
       <div id="transaction-history">
         <div style="text-align:center;color:var(--text-secondary);padding:20px;">Loading...</div>
       </div>
@@ -1476,28 +1580,23 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
   </div>
 
   <!-- Bottom Nav -->
-  <div class="bottom-nav">
-    <button class="nav-item active" onclick="showPage('dashboard')">
-      <span class="nav-icon">🏠</span>
-      <span>Home</span>
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')" aria-label="Home">
+      <span class="nav-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></span><span>Home</span>
     </button>
-    <button class="nav-item" onclick="showPage('faucet')">
-      <span class="nav-icon">🚰</span>
-      <span>Faucet</span>
+    <button class="nav-item" data-page="faucet" onclick="showPage('faucet')" aria-label="Faucet">
+      <span class="nav-icon"><i class="fa-solid fa-faucet-drip" aria-hidden="true"></i></span><span>Faucet</span>
     </button>
-    <button class="nav-item" onclick="showPage('earn')">
-      <span class="nav-icon">💰</span>
-      <span>Earn</span>
+    <button class="nav-item" data-page="earn" onclick="showPage('earn')" aria-label="Earn">
+      <span class="nav-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span><span>Earn</span>
     </button>
-    <button class="nav-item" onclick="showPage('withdraw')">
-      <span class="nav-icon"></span>
-      <span>Withdraw</span>
+    <button class="nav-item" data-page="withdraw" onclick="showPage('withdraw')" aria-label="Withdraw">
+      <span class="nav-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span><span>Wallet</span>
     </button>
-    <button class="nav-item" onclick="showPage('referral')">
-      <span class="nav-icon">👥</span>
-      <span>Refs</span>
+    <button class="nav-item" data-page="referral" onclick="showPage('referral')" aria-label="Referrals">
+      <span class="nav-icon"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span><span>Invite</span>
     </button>
-  </div>
+  </nav>
 </div>
 
 <script>
@@ -1656,6 +1755,11 @@ function timeAgo(ts) {
 function updateDashboard() {
   if (!userData) return;
   document.getElementById('welcome-title').textContent = `Welcome, ${userData.username || 'User'}!`;
+  const cnxBalance = Number(userData.balances?.cnx || 0);
+  const walletBalance = document.getElementById('dashboard-cnx-balance');
+  const walletUsd = document.getElementById('dashboard-usd-value');
+  if (walletBalance) walletBalance.textContent = cnxBalance.toFixed(6);
+  if (walletUsd) walletUsd.textContent = `${(cnxBalance / 10000).toFixed(4)} USD`;
   document.getElementById('stat-claims').textContent = userData.daily_claims || 0;
   document.getElementById('stat-referrals').textContent = userData.referrals || 0;
   const nextMs = getNextMilestone(userData.total_claims || 0);
@@ -1692,9 +1796,8 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navMap = { dashboard: 0, faucet: 1, earn: 2, withdraw: 3, referral: 4 };
-  const navItems = document.querySelectorAll('.nav-item');
-  if (navItems[navMap[page]]) navItems[navMap[page]].classList.add('active');
+  const activeNav = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (activeNav) activeNav.classList.add('active');
   if (page === 'withdraw') loadWithdrawHistory();
   if (page === 'history') loadTransactionHistory();
   if (page === 'referral') loadReferral();
