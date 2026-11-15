@@ -1176,11 +1176,12 @@ async function getLivePayouts(req, res) {
       const d = doc.data();
       const userDoc = await db.collection('users').doc(String(d.user_id)).get();
       const username = userDoc.exists ? (userDoc.data().username || `User${d.user_id.slice(0,4)}`) : `User${d.user_id.slice(0,4)}`;
+      const isCnxWithdrawal = d.coin === 'cnx';
       payouts.push({
         username,
-        amount: Number(d.doge_amount || d.amount || 0),
-        coin: 'DOGE',
-        cnx_amount: Number(d.amount_cnx || d.amount || 0),
+        amount: Number(isCnxWithdrawal ? (d.doge_amount || 0) : (d.amount || 0)),
+        coin: isCnxWithdrawal ? 'DOGE' : (COINS[d.coin]?.symbol || d.currency || d.coin || 'DOGE'),
+        cnx_amount: isCnxWithdrawal ? Number(d.amount_cnx || d.amount || 0) : null,
         timestamp: tsToMillis(d.timestamp)
       });
     }
