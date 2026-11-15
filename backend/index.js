@@ -17,27 +17,29 @@ const __dirname = dirname(__filename);
 
 console.log('🚀 Starting CoinixFaucet Backend v2.1...');
 
-// Firebase Admin Init
-if (!admin.apps.length) {
+// Optional Firebase Admin: the public site can run without Firebase.
+// Database-backed features return a controlled 503 until Firebase is configured.
+let db = null;
+let auth = null;
+
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+if (serviceAccountJson) {
   try {
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!serviceAccountJson) {
-      console.error('❌ FIREBASE_SERVICE_ACCOUNT not set!');
-      process.exit(1);
-    }
     const serviceAccount = JSON.parse(serviceAccountJson);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    }
+    db = getFirestore();
+    auth = admin.auth();
     console.log('✅ Firebase Admin initialized');
   } catch (error) {
-    console.error('❌ Firebase Admin init failed:', error.message);
-    process.exit(1);
+    console.error('⚠️ Firebase unavailable; starting in limited mode:', error.message);
   }
+} else {
+  console.warn('⚠️ FIREBASE_SERVICE_ACCOUNT not set; starting in public-site mode.');
 }
-
-const db = getFirestore();
-const auth = admin.auth();
 
 // Constants
 const COIN_PRICES = {
@@ -192,6 +194,13 @@ const withdrawLimiter = rateLimit({
 // ============================================
 
 const verifyToken = async (req, res, next) => {
+  if (!auth || !db) {
+    return res.status(503).json({
+      success: false,
+      code: 'FIREBASE_UNAVAILABLE',
+      message: 'Authentication and account features are temporarily unavailable.'
+    });
+  }
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -237,7 +246,13 @@ app.get('/api/keep-alive', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.1.0' });
+  res.json({
+    status: 'ok',
+    mode: db ? 'full' : 'limited',
+    database: db ? 'connected' : 'unavailable',
+    timestamp: new Date().toISOString(),
+    version: '2.1.1'
+  });
 });
 
 // ============================================
