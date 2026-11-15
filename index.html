@@ -1107,8 +1107,7 @@ body {
       <span class="header-title">COINIX</span>
     </div>
     <div class="header-balance">
-      <div class="balance-chip"><span class="coin-icon"></span><span id="header-doge">0</span></div>
-      <div class="balance-chip"><span class="coin-icon">🐸</span><span id="header-pepe">0</span></div>
+      <div class="balance-chip"><span class="coin-icon">🪙</span><span id="header-cnx">0 CNX</span></div>
     </div>
   </div>
 
@@ -1193,13 +1192,7 @@ body {
       <div class="card-title">🎁 Promo Code</div>
       <div class="input-group">
         <input type="text" id="promo-code-input" placeholder="Enter code" class="input-field">
-        <select id="promo-coin-select" class="input-field" style="max-width:120px;">
-          <option value="doge">DOGE</option>
-          <option value="pepe">PEPE</option>
-          <option value="pol">POL</option>
-          <option value="feyorra">FEYORRA</option>
-          <option value="dgb">DGB</option>
-        </select>
+        <div class="input-field" style="max-width:120px;text-align:center;">CNX</div>
       </div>
       <button class="btn btn-primary" onclick="redeemPromo()">Redeem Code</button>
     </div>
@@ -1208,13 +1201,10 @@ body {
   <!-- Faucet Page -->
   <div class="page" id="page-faucet">
     <div class="card" style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">We Support Coins</div>
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">Site Reward Currency</div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <div style="text-align:center;"><div style="font-size:32px;">🐕</div><div style="font-size:11px;font-weight:700;">DOGE</div></div>
-        <div style="text-align:center;"><div style="font-size:32px;">🐸</div><div style="font-size:11px;font-weight:700;">PEPE</div></div>
-        <div style="text-align:center;"><div style="font-size:32px;"></div><div style="font-size:11px;font-weight:700;">POL</div></div>
-        <div style="text-align:center;"><div style="font-size:32px;">💎</div><div style="font-size:11px;font-weight:700;">FEYORRA</div></div>
-        <div style="text-align:center;"><div style="font-size:32px;">⚡</div><div style="font-size:11px;font-weight:700;">DGB</div></div>
+        <div style="text-align:center;"><div style="font-size:32px;">🪙</div><div style="font-size:11px;font-weight:700;">CNX</div></div>
+        <div style="text-align:center;"><div style="font-size:32px;">🐕</div><div style="font-size:11px;font-weight:700;">DOGE payouts</div></div>
       </div>
     </div>
 
@@ -1257,7 +1247,7 @@ body {
   <div class="page" id="page-withdraw">
     <div class="card" style="text-align:center;margin-bottom:20px;">
       <div class="card-title" style="justify-content:center;">💸 Withdraw Crypto</div>
-      <p style="color:var(--text-secondary);font-size:13px;">Send to your FaucetPay email. Min: ~$0.03 USD</p>
+      <p style="color:var(--text-secondary);font-size:13px;">Withdraw CNX to FaucetPay as DOGE. 10,000 CNX = $1.00. Minimum: 300 CNX.</p>
     </div>
 
     <!-- Ad -->
@@ -1285,7 +1275,7 @@ body {
   <div class="page" id="page-referral">
     <div class="card">
       <div class="card-title">👥 Referrals</div>
-      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Earn <strong style="color:var(--success);">+0.01 DOGE</strong> per signup + <strong style="color:var(--success);">20% lifetime</strong> commission</p>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">Earn <strong style="color:var(--success);">+50 CNX</strong> per signup + <strong style="color:var(--success);">20% lifetime</strong> commission</p>
       <div class="referral-link-box">
         <span class="referral-link" id="referral-link">Loading...</span>
         <button class="copy-btn" onclick="copyReferral()">Copy</button>
@@ -1297,7 +1287,7 @@ body {
         </div>
         <div class="stat-card">
           <div class="stat-value" id="ref-earnings">0</div>
-          <div class="stat-label">DOGE Earned</div>
+          <div class="stat-label">CNX Earned</div>
         </div>
       </div>
       <button class="btn btn-success" onclick="collectReferral()" style="margin-top:12px;">Collect Referral Earnings</button>
@@ -1357,14 +1347,7 @@ body {
 // CONFIG
 // ============================================
 const API_URL = window.location.origin;
-const COINS = {
-  doge:    { symbol: 'DOGE',    name: 'Dogecoin',  claimAmount: 0.004,  decimals: 4, color: '#c2a633', icon: '🐕' },
-  pepe:    { symbol: 'PEPE',    name: 'Pepe',      claimAmount: 1000,   decimals: 0, color: '#4caf50', icon: '🐸' },
-  pol:     { symbol: 'POL',     name: 'Polygon',   claimAmount: 0.05,   decimals: 2, color: '#8247e5', icon: '⬡' },
-  feyorra: { symbol: 'FEYORRA', name: 'Feyorra',   claimAmount: 1,      decimals: 0, color: '#00d4ff', icon: '💎' },
-  dgb:     { symbol: 'DGB',     name: 'DigiByte',  claimAmount: 1.5,    decimals: 2, color: '#0066ff', icon: '⚡' }
-};
-const COIN_ORDER = ['doge', 'pepe', 'pol', 'feyorra', 'dgb'];
+const CNX = { symbol: 'CNX', name: 'Coinix Token', decimals: 6, usdRate: 10000, faucetReward: 5, icon: '🪙' };
 
 // ============================================
 // STATE
@@ -1519,19 +1502,18 @@ function updateDashboard() {
   document.getElementById('stat-referrals').textContent = userData.referrals || 0;
   const nextMs = getNextMilestone(userData.total_claims || 0);
   document.getElementById('stat-milestone').textContent = nextMs;
-  document.getElementById('stat-earned').textContent = `$${(userData.total_earned || 0).toFixed(2)}`;
-  // Milestone progress
+  document.getElementById('stat-earned').textContent = `$${((userData.total_earned || 0) / 10000).toFixed(4)}`;
   const prevMs = nextMs / 10;
   const progress = Math.min(100, ((userData.total_claims || 0) - prevMs) / (nextMs - prevMs) * 100);
   document.getElementById('milestone-fill').style.width = `${progress}%`;
-  document.getElementById('milestone-text').textContent = `${nextMs} claims = ${nextMs >= 2500 ? 1 : nextMs >= 250 ? 0.1 : 0.01} DOGE bonus`;
+  document.getElementById('milestone-text').textContent = `${nextMs} claims = CNX milestone bonus`;
 }
-
 function updateHeader() {
   if (!userData) return;
-  document.getElementById('header-doge').textContent = (userData.balances?.doge || 0).toFixed(4);
-  document.getElementById('header-pepe').textContent = formatNumber(userData.balances?.pepe || 0);
+  document.getElementById('header-cnx').textContent = `${Number(userData.balances?.cnx || 0).toFixed(2)} CNX`;
 }
+
+
 
 function formatNumber(n) {
   if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
@@ -1565,191 +1547,104 @@ function showPage(page) {
 // FAUCET
 // ============================================
 function renderFaucetCoins() {
-  const container = document.getElementById('faucet-coins');
-  container.innerHTML = COIN_ORDER.map(coinKey => {
-    const coin = COINS[coinKey];
-    const faucetPaySupported = ['doge', 'dgb', 'feyorra'].includes(coinKey);
-    const balance = userData?.balances?.[coinKey] || 0;
-    const price = prices[coinKey]?.price || 0;
-    const usdValue = balance * price;
-    const dailyClaims = userData?.daily_claims || 0;
-    const dailyProgress = Math.min(100, (dailyClaims / 100) * 100);
-    const cooldown = claimCooldowns[coinKey] || 0;
-    const canClaim = cooldown <= 0;
-    return `
-      <div class="coin-card" style="--coin-color:${coin.color}">
-        <div class="coin-header">
-          <div class="coin-image" style="font-size:32px;display:flex;align-items:center;justify-content:center;">${coin.icon}</div>
-          <div class="coin-info">
-            <div class="coin-name">${coin.name}</div>
-            <div class="coin-price">1 ${coin.symbol} = $${price ? price.toFixed(coin.decimals + 2) : '0.00'}</div>
-          </div>
-        </div>
-        <div class="coin-balance">
-          <div class="coin-balance-value">${balance.toFixed(coin.decimals)} ${coin.symbol}</div>
-          <div class="coin-balance-usd">~ $${usdValue.toFixed(4)} USD</div>
-        </div>
-        <div class="daily-progress">
-          <div class="daily-progress-label">
-            <span>Daily Progress</span>
-            <span>${dailyClaims}/100</span>
-          </div>
-          <div class="daily-progress-bar">
-            <div class="daily-progress-fill" style="width:${dailyProgress}%"></div>
-          </div>
-        </div>
-        <div class="captcha-box" id="captcha-${coinKey}">
-          <div class="captcha-title"> Security Check</div>
-          <div class="captcha-instruction">Find the matching icon:</div>
-          <div class="captcha-icons" id="captcha-icons-${coinKey}">
-            <div style="color:var(--text-secondary);font-size:13px;">Loading captcha...</div>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="claim-btn-${coinKey}" onclick="claimCoin('${coinKey}')" ${!canClaim ? 'disabled' : ''}>
-          ${canClaim ? `CLAIM ${coin.symbol}` : `Wait ${Math.ceil(cooldown/1000)}s`}
-        </button>
+  const balance = Number(userData?.balances?.cnx || 0);
+  const dailyClaims = userData?.daily_claims || 0;
+  const dailyProgress = Math.min(100, dailyClaims);
+  const cooldown = claimCooldowns.cnx || 0;
+  const canClaim = cooldown <= 0;
+  document.getElementById('faucet-coins').innerHTML = `
+    <div class="coin-card" style="--coin-color:#d4a017">
+      <div class="coin-header">
+        <div class="coin-image" style="font-size:32px;">🪙</div>
+        <div class="coin-info"><div class="coin-name">Coinix Token (CNX)</div><div class="coin-price">10,000 CNX = $1.00 USD</div></div>
       </div>
-    `;
-  }).join('');
+      <div class="coin-balance"><div class="coin-balance-value">${balance.toFixed(6)} CNX</div><div class="coin-balance-usd">~ $${(balance / 10000).toFixed(4)} USD</div></div>
+      <div class="daily-progress">
+        <div class="daily-progress-label"><span>Daily Progress</span><span>${dailyClaims}/100</span></div>
+        <div class="daily-progress-bar"><div class="daily-progress-fill" style="width:${dailyProgress}%"></div></div>
+      </div>
+      <div class="captcha-box" id="captcha-cnx"><div class="captcha-title">Security Check</div><div class="captcha-instruction">Find the matching icon:</div>
+        <div class="captcha-icons" id="captcha-icons-cnx"><div style="color:var(--text-secondary);font-size:13px;">Loading captcha...</div></div>
+      </div>
+      <button class="btn btn-primary" id="claim-btn-cnx" onclick="claimCoin()" ${!canClaim ? 'disabled' : ''}>${canClaim ? 'CLAIM 5 CNX' : `Wait ${Math.ceil(cooldown/1000)}s`}</button>
+    </div>`;
 }
-
-async function loadCaptchaForAll() {
-  for (const coinKey of COIN_ORDER) {
-    await loadCaptcha(coinKey);
-  }
-}
-
-async function loadCaptcha(coinKey) {
+async function loadCaptchaForAll() { await loadCaptcha('cnx'); }
+async function loadCaptcha() {
   const res = await api('/api/captcha');
   if (res.success) {
     currentCaptcha = res;
-    const container = document.getElementById(`captcha-icons-${coinKey}`);
-    if (container) {
-      container.innerHTML = res.icons.map((icon, i) => `
-        <div class="captcha-icon-btn" onclick="selectCaptcha('${coinKey}', '${icon}', this)">${icon}</div>
-      `).join('');
-    }
+    const container = document.getElementById('captcha-icons-cnx');
+    if (container) container.innerHTML = res.icons.map(icon => `<div class="captcha-icon-btn" onclick="selectCaptcha('cnx','${icon}',this)">${icon}</div>`).join('');
   }
 }
-
 function selectCaptcha(coinKey, icon, el) {
-  const container = document.getElementById(`captcha-icons-${coinKey}`);
+  const container = document.getElementById('captcha-icons-cnx');
+  if (!container) return;
   container.querySelectorAll('.captcha-icon-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  el.dataset.selected = icon;
+  el.classList.add('selected'); el.dataset.selected = icon;
 }
-
-async function claimCoin(coinKey) {
-  const btn = document.getElementById(`claim-btn-${coinKey}`);
-  const selected = document.querySelector(`#captcha-icons-${coinKey} .captcha-icon-btn.selected`);
-  if (!selected) {
-    showToast('Select the correct icon', 'error');
-    return;
-  }
-  const answer = selected.dataset.selected;
-  btn.disabled = true;
-  btn.textContent = 'Claiming...';
-  const res = await api('/api/claim', {
-    method: 'POST',
-    body: JSON.stringify({ coin: coinKey, captchaAnswer: answer, nonce: crypto.randomUUID(), timestamp: Date.now() })
-  });
+async function claimCoin() {
+  const btn = document.getElementById('claim-btn-cnx');
+  const selected = document.querySelector('#captcha-icons-cnx .captcha-icon-btn.selected');
+  if (!selected) { showToast('Select the correct icon', 'error'); return; }
+  btn.disabled = true; btn.textContent = 'Claiming...';
+  const res = await api('/api/claim', {method:'POST',body:JSON.stringify({captchaAnswer:selected.dataset.selected,nonce:crypto.randomUUID(),timestamp:Date.now()})});
   if (res.error) {
-    showToast(res.error, 'error');
-    if (res.captchaRequired) await loadCaptcha(coinKey);
-    btn.disabled = false;
-    btn.textContent = `CLAIM ${COINS[coinKey].symbol}`;
-    return;
+    showToast(res.error,'error'); if(res.captchaRequired)await loadCaptcha();
+    btn.disabled=false;btn.textContent='CLAIM 5 CNX';return;
   }
-  showToast(`+${res.amount} ${res.coin} claimed!${res.milestone ? '  Milestone!' : ''}`);
-  claimCooldowns[coinKey] = 180000;
-  startCooldown(coinKey);
-  await loadUserData();
-  await loadCaptcha(coinKey);
+  showToast(`+${Number(res.amount).toFixed(6)} CNX claimed!${res.milestone?' Milestone!':''}`);
+  claimCooldowns.cnx=180000;startCooldown();await loadUserData();await loadCaptcha();
+}
+function startCooldown() {
+  let remaining=180000;
+  const interval=setInterval(()=>{
+    remaining-=1000;claimCooldowns.cnx=remaining;
+    const btn=document.getElementById('claim-btn-cnx');
+    if(btn){if(remaining<=0){clearInterval(interval);btn.disabled=false;btn.textContent='CLAIM 5 CNX';claimCooldowns.cnx=0;}else{btn.disabled=true;btn.textContent=`Wait ${Math.ceil(remaining/1000)}s`;}}
+  },1000);
 }
 
-function startCooldown(coinKey) {
-  let remaining = 180000;
-  const interval = setInterval(() => {
-    remaining -= 1000;
-    claimCooldowns[coinKey] = remaining;
-    const btn = document.getElementById(`claim-btn-${coinKey}`);
-    if (btn) {
-      if (remaining <= 0) {
-        clearInterval(interval);
-        btn.disabled = false;
-        btn.textContent = `CLAIM ${COINS[coinKey].symbol}`;
-        claimCooldowns[coinKey] = 0;
-      } else {
-        btn.disabled = true;
-        btn.textContent = `Wait ${Math.ceil(remaining/1000)}s`;
-      }
-    }
-  }, 1000);
-}
+
 
 // ============================================
 // WITHDRAW
 // ============================================
 function renderWithdrawCoins() {
-  const container = document.getElementById('withdraw-coins');
-  container.innerHTML = COIN_ORDER.map(coinKey => {
-    const coin = COINS[coinKey];
-    const balance = userData?.balances?.[coinKey] || 0;
-    const price = prices[coinKey]?.price || 0;
-    const minWithdraw = prices[coinKey]?.minWithdraw || 0;
-    const enough = balance >= minWithdraw;
-    return `
-      <div class="withdraw-card">
-        <div class="withdraw-header">
-          <div class="withdraw-coin-img" style="font-size:24px;display:flex;align-items:center;justify-content:center;">${coin.icon}</div>
-          <div>
-            <div style="font-weight:800;">${coin.name}</div>
-            <div class="withdraw-balance">Balance: <strong>${balance.toFixed(coin.decimals)} ${coin.symbol}</strong></div>
-          </div>
-          <div class="min-withdraw ${enough ? 'enough' : 'not-enough'}">
-            ${enough ? '✓ Available' : '✗ Not enough'}
-          </div>
-        </div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
-          Min: ${minWithdraw.toFixed(coin.decimals)} ${coin.symbol} (~$0.03)
-        </div>
-        ${faucetPaySupported
-          ? '<div style="font-size:12px;color:var(--success);margin-bottom:10px;">✓ FaucetPay automatic payout enabled</div>'
-          : '<div style="font-size:12px;color:var(--danger);margin-bottom:10px;">FaucetPay does not currently support this coin.</div>'}
-        <input type="email" id="withdraw-email-${coinKey}" placeholder="FaucetPay Email" class="input-field" autocomplete="email" ${faucetPaySupported ? '' : 'disabled'}>
-        <input type="number" id="withdraw-amount-${coinKey}" placeholder="Amount" class="input-field" step="0.0001" ${faucetPaySupported ? '' : 'disabled'}>
-        <div class="amount-presets">
-          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.25)">25%</div>
-          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.5)">50%</div>
-          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.75)">75%</div>
-          <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 1)">MAX</div>
-        </div>
-        <button class="btn btn-primary" onclick="doWithdraw('${coinKey}')" ${faucetPaySupported ? '' : 'disabled'}>Withdraw ${coin.symbol}</button>
+  const balance=Number(userData?.balances?.cnx||0),min=300,enough=balance>=min;
+  document.getElementById('withdraw-coins').innerHTML=`
+    <div class="withdraw-card">
+      <div class="withdraw-header"><div class="withdraw-coin-img" style="font-size:24px;">🪙</div>
+        <div><div style="font-weight:800;">CNX → DOGE</div><div class="withdraw-balance">Balance: <strong>${balance.toFixed(6)} CNX</strong></div></div>
+        <div class="min-withdraw ${enough?'enough':'not-enough'}">${enough?'✓ Available':'✗ Not enough'}</div>
       </div>
-    `;
-  }).join('');
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Minimum: 300 CNX ($0.03). 10,000 CNX = $1.00. DOGE is calculated using the live DOGE/USD rate.</div>
+      <div style="font-size:12px;color:var(--success);margin-bottom:10px;">✓ Automatic FaucetPay DOGE payout</div>
+      <input type="email" id="withdraw-email-cnx" placeholder="FaucetPay Email" class="input-field" autocomplete="email">
+      <input type="number" id="withdraw-amount-cnx" placeholder="Amount in CNX" class="input-field" step="0.000001" min="300">
+      <div class="amount-presets">
+        <div class="amount-preset" onclick="setWithdrawAmount('cnx',0.25)">25%</div><div class="amount-preset" onclick="setWithdrawAmount('cnx',0.5)">50%</div>
+        <div class="amount-preset" onclick="setWithdrawAmount('cnx',0.75)">75%</div><div class="amount-preset" onclick="setWithdrawAmount('cnx',1)">MAX</div>
+      </div>
+      <button class="btn btn-primary" onclick="doWithdraw()">Withdraw as DOGE</button>
+    </div>`;
+}
+function setWithdrawAmount(coinKey,fraction) {
+  const balance=Number(userData?.balances?.cnx||0);
+  document.getElementById('withdraw-amount-cnx').value=(balance*fraction).toFixed(6);
+}
+async function doWithdraw() {
+  const email=document.getElementById('withdraw-email-cnx').value,amount=Number(document.getElementById('withdraw-amount-cnx').value);
+  if(!email||!email.includes('@')){showToast('Invalid email','error');return;}
+  if(!Number.isFinite(amount)||amount<300){showToast('Minimum withdrawal is 300 CNX','error');return;}
+  const res=await api('/api/withdraw',{method:'POST',body:JSON.stringify({faucetpay_email:email,amount,nonce:crypto.randomUUID(),timestamp:Date.now()})});
+  if(res.error){showToast(res.error,'error');return;}
+  showToast(res.status==='paid'?`FaucetPay sent: ${res.amount} DOGE (${res.amount_cnx} CNX)`:'Withdrawal is being verified.');
+  await loadUserData();renderWithdrawCoins();loadWithdrawHistory();
 }
 
-function setWithdrawAmount(coinKey, fraction) {
-  const balance = userData?.balances?.[coinKey] || 0;
-  document.getElementById(`withdraw-amount-${coinKey}`).value = (balance * fraction).toFixed(COINS[coinKey].decimals);
-}
 
-async function doWithdraw(coinKey) {
-  const email = document.getElementById(`withdraw-email-${coinKey}`).value;
-  const amount = parseFloat(document.getElementById(`withdraw-amount-${coinKey}`).value);
-  if (!email || !email.includes('@')) { showToast('Invalid email', 'error'); return; }
-  if (!amount || amount <= 0) { showToast('Invalid amount', 'error'); return; }
-  const res = await api('/api/withdraw', {
-    method: 'POST',
-    body: JSON.stringify({ faucetpay_email: email, amount, coin: coinKey, nonce: crypto.randomUUID(), timestamp: Date.now() })
-  });
-  if (res.error) { showToast(res.error, 'error'); return; }
-  showToast(res.status === 'paid' ? `FaucetPay sent: ${res.amount} ${res.coin}` : 'Withdrawal is being verified.');
-  await loadUserData();
-  renderWithdrawCoins();
-  loadWithdrawHistory();
-}
 
 async function loadWithdrawHistory() {
   const res = await api('/api/withdrawals');
@@ -1760,7 +1655,7 @@ async function loadWithdrawHistory() {
         <div class="history-type">
           <div class="history-icon">💸</div>
           <div>
-            <div class="history-desc">${w.amount} ${COINS[w.coin]?.symbol || w.coin}</div>
+            <div class="history-desc">${Number(w.amount_cnx ?? w.amount).toFixed(6)} CNX → ${Number(w.doge_amount || 0).toFixed(8)} DOGE</div>
             <div class="history-time">${timeAgo(w.timestamp)} • ${w.status}</div>
           </div>
         </div>
@@ -1779,7 +1674,7 @@ async function loadReferral() {
   if (res.link) {
     document.getElementById('referral-link').textContent = res.link;
     document.getElementById('ref-count').textContent = res.referrals || 0;
-    document.getElementById('ref-earnings').textContent = (res.referral_balance?.doge || 0).toFixed(4);
+    document.getElementById('ref-earnings').textContent = `${Number(res.referral_balance?.cnx || 0).toFixed(6)} CNX`;
   }
   const listRes = await api('/api/referral/list');
   const listContainer = document.getElementById('referral-list');
@@ -1809,7 +1704,7 @@ function copyReferral() {
 async function collectReferral() {
   const res = await api('/api/referral/collect', { method: 'POST' });
   if (res.error) { showToast(res.error, 'error'); return; }
-  showToast(`Collected ${res.amount} DOGE!`);
+  showToast(`Collected ${Number(res.amount).toFixed(6)} CNX!`);
   await loadUserData();
   loadReferral();
 }
@@ -1819,14 +1714,14 @@ async function collectReferral() {
 // ============================================
 async function redeemPromo() {
   const code = document.getElementById('promo-code-input').value;
-  const coin = document.getElementById('promo-coin-select').value;
+  const coin = 'cnx';
   if (!code) { showToast('Enter a code', 'error'); return; }
   const res = await api('/api/promo/redeem', {
     method: 'POST',
-    body: JSON.stringify({ code, targetCoin: coin })
+    body: JSON.stringify({ code, targetCoin: 'cnx' })
   });
   if (res.error) { showToast(res.error, 'error'); return; }
-  showToast(`Redeemed! +${res.reward} ${res.coin}`);
+  showToast(`Redeemed! +${Number(res.reward).toFixed(6)} CNX`);
   document.getElementById('promo-code-input').value = '';
   await loadUserData();
 }
@@ -1871,20 +1766,22 @@ function getTxIcon(type) {
 async function openOfferwall() {
   const res = await api('/api/offerwall/offerwall');
   if (res.url) window.open(res.url, '_blank');
+  else showToast(res.error || 'Offerwall is not configured yet', 'error');
 }
 
 async function openShortlinks() {
   const res = await api('/api/offerwall/shortlinks');
   if (res.shortlinks && res.shortlinks.length > 0) {
-    window.open(res.shortlinks[0].url, '_blank');
+    res.shortlinks.forEach(link => window.open(link.url, '_blank'));
   } else {
-    showToast('No shortlinks available', 'error');
+    showToast(res.message || 'No shortlinks available', 'error');
   }
 }
 
 async function openGames() {
   const res = await api('/api/offerwall/games');
-  if (res.url) window.open(res.url, '_blank');
+  if (res.videos && res.videos.length) res.videos.forEach(video => window.open(video.url, '_blank'));
+  else showToast(res.message || 'No videos available', 'error');
 }
 
 // ============================================
