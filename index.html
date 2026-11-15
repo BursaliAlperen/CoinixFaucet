@@ -1970,6 +1970,7 @@ async function initApp() {
   renderWithdrawCoins();
   setInterval(loadPrices, 120000);
   setInterval(loadLivePayouts, 30000);
+  setInterval(loadDashboardStats, 60000);
 }
 
 async function loadUserData() {
