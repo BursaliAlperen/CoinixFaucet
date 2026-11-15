@@ -568,6 +568,9 @@ async function renderDashboard() {
     const otherBalances = Object.entries(state.profile.balances || {})
       .filter(([, amount]) => Number(amount) > 0)
       .slice(0, 3);
+    const otherAssetsUSD = Object.entries(state.profile.balances || {}).reduce(
+      (sum, [coin, amount]) => sum + Number(amount || 0) * Number(COIN_META[coin]?.usd || 0), 0
+    );
 
     c.innerHTML = `
       <div class="nova-dashboard page-enter">
@@ -600,7 +603,7 @@ async function renderDashboard() {
         </section>
 
         <section class="nova-dashboard-bottom">
-          <article class="nova-dashboard-panel"><div class="nova-panel-title"><div><span class="nova-section-kicker">ACCOUNT SNAPSHOT</span><h3>Your progress</h3></div><span class="nova-panel-title-icon"><i data-lucide="activity"></i></span></div><div class="nova-progress-row"><span>Account level</span><b>Level ${s.level || 1}</b></div><div class="nova-progress-track"><span style="width:${Math.min(100, Math.max(4, Number(s.level || 1) * 8))}%"></span></div><div class="nova-snapshot-grid"><div><b>${s.dailyStreak || state.profile.dailyStreak || 0}</b><small>Day streak</small></div><div><b>${otherBalances.length}</b><small>Other coin balances</small></div><div><b>${fmt(s.coinsUSD ? s.coinsUSD : 0, 4)}</b><small>Other assets · USD</small></div></div></article>
+          <article class="nova-dashboard-panel"><div class="nova-panel-title"><div><span class="nova-section-kicker">ACCOUNT SNAPSHOT</span><h3>Your progress</h3></div><span class="nova-panel-title-icon"><i data-lucide="activity"></i></span></div><div class="nova-progress-row"><span>Account level</span><b>Level ${s.level || 1}</b></div><div class="nova-progress-track"><span style="width:${Math.min(100, Math.max(4, Number(s.level || 1) * 8))}%"></span></div><div class="nova-snapshot-grid"><div><b>${s.dailyStreak || state.profile.dailyStreak || 0}</b><small>Day streak</small></div><div><b>${otherBalances.length}</b><small>Other coin balances</small></div><div><b>${fmtUSD(otherAssetsUSD)}</b><small>Other assets · USD</small></div></div></article>
           <article class="nova-dashboard-panel nova-help-panel"><span class="nova-help-orb"><i data-lucide="messages-square"></i></span><span class="nova-section-kicker">STAY CONNECTED</span><h3>Grow with the Coinix community.</h3><p>Get product updates, share feedback and follow platform announcements.</p><a href="https://t.me/CoinixCommunity" target="_blank" rel="noopener">Join community <i data-lucide="arrow-up-right"></i></a></article>
         </section>
       </div>
@@ -650,27 +653,48 @@ async function handleClaim() {
 }
 
 function renderDailyBonus() {
-  const p = state.profile;
+  const p = state.profile || {};
   const c = $('#pageContainer');
   if (!c) return;
   c.innerHTML = `
-    <div class="space-y-6 page-enter">
-      <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Daily Bonus</h1>
-      <div class="glass-card rounded-3xl p-8 text-center">
-        <div class="text-6xl font-black bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent mb-2">${p.dailyStreak || 0}</div>
-        <p class="text-zinc-500 mb-6">Day Streak · Best: ${p.highestStreak || 0}</p>
-        <button id="claimBonusBtn" class="btn-primary px-8 py-4 text-lg">Claim Daily Bonus</button>
-      </div>
+    <div class="nova-page page-enter">
+      <div class="nova-page-heading"><div><span class="nova-section-kicker">DAILY REWARDS</span><h1>Daily Bonus</h1><p>Build a steady habit and keep your reward streak going.</p></div><span class="nova-status-pill"><i data-lucide="calendar-check"></i> Daily check-in</span></div>
+      <section class="nova-daily-layout">
+        <div class="nova-daily-card">
+          <div class="nova-daily-art"><span class="nova-daily-orbit"></span><span class="nova-daily-gift"><i data-lucide="gift"></i></span><span class="nova-daily-spark spark-left"></span><span class="nova-daily-spark spark-right"></span></div>
+          <span class="nova-section-kicker">YOUR CURRENT STREAK</span>
+          <div class="nova-daily-count"><strong>${Number(p.dailyStreak || 0)}</strong><span>days</span></div>
+          <p>Come back each day to maintain your streak. Your best recorded streak is <b>${Number(p.highestStreak || 0)} days</b>.</p>
+          <button id="claimBonusBtn" class="btn-primary nova-daily-button"><i data-lucide="gift"></i> Claim daily bonus</button>
+          <small class="nova-daily-caption"><i data-lucide="info"></i> Eligibility is checked by the account reward service.</small>
+        </div>
+        <aside class="nova-daily-side">
+          <div class="nova-daily-side-icon"><i data-lucide="calendar-days"></i></div>
+          <span class="nova-section-kicker">MAKE IT A ROUTINE</span>
+          <h2>One visit at a time.</h2>
+          <p>Check in regularly, watch your streak grow and keep your rewards together in your Coinix account.</p>
+          <div class="nova-daily-side-row"><i data-lucide="check-circle-2"></i><span><b>Daily activity</b><small>Your account tracks eligible check-ins.</small></span></div>
+          <div class="nova-daily-side-row"><i data-lucide="trophy"></i><span><b>Personal best</b><small>Your highest streak stays visible here.</small></span></div>
+        </aside>
+      </section>
     </div>
   `;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   $('#claimBonusBtn')?.addEventListener('click', async () => {
-    try { 
-      const data = await apiCall('/api/daily-bonus', { method: 'POST' }); 
-      toast(`Day ${data.day} bonus: ${fmtUSD(data.usdValue)}`, 'success'); 
-      renderDailyBonus(); 
-    } catch (e) { toast(e.message, 'error'); }
+    const button = $('#claimBonusBtn');
+    if (button) button.disabled = true;
+    try {
+      const data = await apiCall('/api/daily-bonus', { method: 'POST' });
+      toast(`Day ${data.day} bonus: ${fmtUSD(data.usdValue)}`, 'success');
+      if (state.profile) state.profile.dailyStreak = data.day;
+      renderDailyBonus();
+    } catch (e) {
+      toast(e.message, 'error');
+      if (button) button.disabled = false;
+    }
   });
 }
+
 
 async function renderLeaderboard() {
   try {
@@ -708,7 +732,7 @@ async function renderPtc() {
   c.innerHTML = `
     <div class="space-y-6 page-enter">
       <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">PTC Ads</h1>
-      <p class="text-zinc-500">Click on ads and earn free CNX coins instantly.</p>
+      <p class="text-zinc-500">Review sponsored campaigns and follow the listed completion timer. Rewards are credited after successful completion.</p>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="glass-card rounded-2xl p-6 text-center">
           <div class="w-16 h-16 rounded-full bg-primary-500/20 mx-auto mb-4 flex items-center justify-center">📢</div>
@@ -777,8 +801,8 @@ function renderWithdraw() {
   c.innerHTML = `
     <div class="space-y-6 page-enter">
       <div>
-        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Withdraw</h1>
-        <p class="text-zinc-500 mt-1">Minimum $0.03 · Instant via FaucetPay</p>
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">Withdrawals</h1>
+        <p class="text-zinc-500 mt-1">Minimum $0.03 · Requests are processed through the configured payout workflow</p>
       </div>
       <div id="withdrawGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>

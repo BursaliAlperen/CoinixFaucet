@@ -204,7 +204,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 #pageContainer h1,#pageContainer h2,#pageContainer h3{font-family:Manrope,sans-serif}
 #pageContainer .text-zinc-900,#pageContainer .text-white{color:#27334e!important}
 #pageContainer .text-zinc-500,#pageContainer .text-zinc-400{color:#8590a4!important}
-#pageContainer .btn-primary{border-radius:11px!important;font-weight:850!important;box-shadow:0 8px 19px #6c56d523}
+#pageContainer .btn-primary{border-radius:11px!important;font-weight:850!important;box-shadow:0 8px 19px #6c56d523;color:#fff!important}#pageContainer .btn-primary *{color:#fff!important}#pageContainer .nova-claim-button{color:#fff!important}
 #pageContainer .btn-ghost{border:1px solid var(--nova-line)!important;border-radius:11px!important;background:#fff!important;color:#536079!important}
 #pageContainer input,#pageContainer select,#pageContainer textarea{border-radius:11px!important}
 #landingPage .stat-card{border:1px solid #e8eaf2!important;border-radius:13px!important;background:#ffffffc9!important;box-shadow:0 6px 20px #27345608!important}
@@ -232,3 +232,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 }
 @media(max-width:380px){.nova-earn-grid{grid-template-columns:1fr}.nova-earn-card{min-height:165px}.nova-hero-actions{grid-template-columns:1fr}.nova-hero-visual{min-height:360px}.nova-float-tag{transform:scale(.9)}}
 @media(prefers-reduced-motion:reduce){.nova-earn-card,.nova-dashboard-earn-card,.nova-btn-primary{transition:none!important}.nova-earn-card:hover,.nova-dashboard-earn-card:hover,.nova-btn-primary:hover{transform:none!important}}
+
+/* Daily bonus experience */
+.nova-daily-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.65fr);gap:15px}
+.nova-daily-card,.nova-daily-side{position:relative;overflow:hidden;padding:27px;border:1px solid var(--nova-line);border-radius:21px;background:#fff;box-shadow:var(--nova-soft-shadow)}
+.nova-daily-card{display:flex;flex-direction:column;align-items:center;text-align:center;background:linear-gradient(155deg,#fff 25%,#f6f3ff)}
+.nova-daily-art{position:relative;width:100%;height:126px;display:grid;place-items:center;margin-bottom:18px;overflow:hidden;border-radius:16px;background:radial-gradient(circle at center,#e5e0ff,#f6f4ff 62%,#e9f8f4)}
+.nova-daily-gift{z-index:1;width:67px;height:67px;display:grid;place-items:center;border-radius:21px;background:#fff;color:#735bd7;box-shadow:0 12px 30px #6c56d52b;transform:rotate(-7deg)}
+.nova-daily-gift svg{width:34px;height:34px}
+.nova-daily-orbit{position:absolute;width:125px;height:125px;border:1px solid #8878dc55;border-radius:50%;transform:scaleX(1.65) rotate(24deg)}
+.nova-daily-spark{position:absolute;width:8px;height:8px;border-radius:3px;background:#8f80e4;transform:rotate(45deg)}.nova-daily-spark.spark-left{left:31%;top:27%}.nova-daily-spark.spark-right{right:30%;bottom:26%;background:#4fb9a5}
+.nova-daily-count{display:flex;align-items:baseline;gap:8px;margin:5px 0}.nova-daily-count strong{color:#5545bd;font-family:Manrope,sans-serif;font-size:3.6rem;font-weight:900;letter-spacing:-.09em}.nova-daily-count span{color:#8a93a6;font-size:.8rem;font-weight:750}
+.nova-daily-card>p{max-width:440px;margin:0 0 19px;color:#8791a5;font-size:.78rem;line-height:1.65}.nova-daily-card>p b{color:#59647d}
+.nova-daily-button{min-width:220px;min-height:47px;display:flex;align-items:center;justify-content:center;gap:9px;border-radius:12px!important;background:linear-gradient(110deg,#7359dc,#5e49c6)!important}.nova-daily-button svg{width:17px}
+.nova-daily-caption{display:flex;align-items:center;gap:6px;margin-top:13px;color:#9aa2b2;font-size:.61rem}.nova-daily-caption svg{width:13px}
+.nova-daily-side{display:flex;flex-direction:column;justify-content:center;background:linear-gradient(145deg,#f0edff,#f2fbf8)}
+.nova-daily-side-icon{width:42px;height:42px;display:grid;place-items:center;margin-bottom:17px;border-radius:13px;background:#fff;color:#725bd2;box-shadow:var(--nova-soft-shadow)}.nova-daily-side-icon svg{width:21px}
+.nova-daily-side h2{margin:8px 0;color:#2b3650;font-family:Manrope,sans-serif;font-size:1.55rem;font-weight:850;letter-spacing:-.06em}.nova-daily-side>p{margin:0 0 22px;color:#8993a6;font-size:.78rem;line-height:1.7}
+.nova-daily-side-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid #e4e6ef}.nova-daily-side-row>svg{width:18px;color:#24a58d}.nova-daily-side-row span{display:flex;flex-direction:column;gap:3px}.nova-daily-side-row b{color:#4c5871;font-size:.72rem}.nova-daily-side-row small{color:#929bad;font-size:.62rem}
+#pageContainer .nova-daily-button:disabled{opacity:.65;cursor:wait}
+@media(max-width:767px){.nova-daily-layout{grid-template-columns:1fr}.nova-daily-card,.nova-daily-side{padding:18px}.nova-daily-count strong{font-size:3rem}}
