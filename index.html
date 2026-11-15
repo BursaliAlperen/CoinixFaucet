@@ -1568,6 +1568,7 @@ function renderFaucetCoins() {
   const container = document.getElementById('faucet-coins');
   container.innerHTML = COIN_ORDER.map(coinKey => {
     const coin = COINS[coinKey];
+    const faucetPaySupported = ['doge', 'dgb', 'feyorra'].includes(coinKey);
     const balance = userData?.balances?.[coinKey] || 0;
     const price = prices[coinKey]?.price || 0;
     const usdValue = balance * price;
@@ -1712,15 +1713,18 @@ function renderWithdrawCoins() {
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
           Min: ${minWithdraw.toFixed(coin.decimals)} ${coin.symbol} (~$0.03)
         </div>
-        <input type="email" id="withdraw-email-${coinKey}" placeholder="FaucetPay Email" class="input-field">
-        <input type="number" id="withdraw-amount-${coinKey}" placeholder="Amount" class="input-field" step="0.0001">
+        ${faucetPaySupported
+          ? '<div style="font-size:12px;color:var(--success);margin-bottom:10px;">✓ FaucetPay automatic payout enabled</div>'
+          : '<div style="font-size:12px;color:var(--danger);margin-bottom:10px;">FaucetPay does not currently support this coin.</div>'}
+        <input type="email" id="withdraw-email-${coinKey}" placeholder="FaucetPay Email" class="input-field" autocomplete="email" ${faucetPaySupported ? '' : 'disabled'}>
+        <input type="number" id="withdraw-amount-${coinKey}" placeholder="Amount" class="input-field" step="0.0001" ${faucetPaySupported ? '' : 'disabled'}>
         <div class="amount-presets">
           <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.25)">25%</div>
           <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.5)">50%</div>
           <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 0.75)">75%</div>
           <div class="amount-preset" onclick="setWithdrawAmount('${coinKey}', 1)">MAX</div>
         </div>
-        <button class="btn btn-primary" onclick="doWithdraw('${coinKey}')">Withdraw ${coin.symbol}</button>
+        <button class="btn btn-primary" onclick="doWithdraw('${coinKey}')" ${faucetPaySupported ? '' : 'disabled'}>Withdraw ${coin.symbol}</button>
       </div>
     `;
   }).join('');
