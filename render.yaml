@@ -21,9 +21,9 @@ services:
     sync: false
   - key: OFFERWALL_API_TOKEN
     sync: false
-  - key: GOOGLE_CLIENT_ID
+  - key: FIREBASE_WEB_API_KEY
     sync: false
-  - key: APPLE_CLIENT_ID
+  - key: FIREBASE_AUTH_DOMAIN
     sync: false
-  - key: APPLE_REDIRECT_URI
-    value: https://coinixfaucet.mine.bz
+  - key: FIREBASE_PROJECT_ID
+    sync: false

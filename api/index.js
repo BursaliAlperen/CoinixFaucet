@@ -81,7 +81,6 @@ const JWT_SECRET = process.env.JWT_SECRET || (() => {
   return crypto.randomBytes(32).toString('hex');
 })();
 const ADMIN_TELEGRAM_ID = process.env.ADMIN_TELEGRAM_ID || '';
-const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || JWT_SECRET;
 const OFFERWALL_APP_ID = process.env.OFFERWALL_APP_ID || ''; // Offerwall.me public API key
 const OFFERWALL_SECRET_KEY = process.env.OFFERWALL_SECRET_KEY || ''; // Private placement secret
 const OFFERWALL_API_TOKEN = process.env.OFFERWALL_API_TOKEN || ''; // Private API bearer token
@@ -131,11 +130,11 @@ function setupSecurity(app) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://telegram.org", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro", "https://adbits.online"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://telegram.org", "https://www.gstatic.com", "https://richinfo.co", "https://*.richinfo.co", "https://dgbmining.pro", "https://adbits.online"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://richinfo.co", "https://*.richinfo.co"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co"],
+        connectSrc: ["'self'", "https://*.googleapis.com", "https://identitytoolkit.googleapis.com", "https://securetoken.googleapis.com", "https://*.firebaseio.com", "https://api.coingecko.com", "https://offerwall.me", "https://offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co"],
         frameSrc: ["'self'", "https://offerwall.me", "https://*.offerwall.me", "https://offerwallapi.com", "https://*.offerwallapi.com", "https://richinfo.co", "https://*.richinfo.co", "https://adbits.online"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: []
@@ -234,20 +233,14 @@ function jwtAuth(req, res, next) {
 }
 
 function adminAuth(req, res, next) {
-  const key = req.headers['x-admin-key'];
-  if (!ADMIN_SECRET_KEY || key !== ADMIN_SECRET_KEY) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(403).json({ error: 'Admin token required' });
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    if (!payload.is_admin) return res.status(403).json({ error: 'Admin only' });
+    if (payload.is_admin !== true) return res.status(403).json({ error: 'Admin only' });
     req.user = payload;
     next();
-  } catch (e) {
-    return res.status(403).json({ error: 'Invalid admin token' });
-  }
+  } catch (e) { return res.status(403).json({ error: 'Invalid admin token' }); }
 }
 
 // ============================================
@@ -839,12 +832,11 @@ async function issueProviderSession(provider, profile, req, res) {
 
 function getAuthConfig(req, res) {
   res.set('Cache-Control', 'no-store');
-  res.json({
-    telegramBotUsername: BOT_USERNAME || null,
-    googleClientId: process.env.GOOGLE_CLIENT_ID || null,
-    appleClientId: process.env.APPLE_CLIENT_ID || null,
-    appleRedirectUri: process.env.APPLE_REDIRECT_URI || null
-  });
+  res.json({ telegramBotUsername: BOT_USERNAME || null, firebase: {
+    apiKey: process.env.FIREBASE_WEB_API_KEY || null,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN || null,
+    projectId: process.env.FIREBASE_PROJECT_ID || null
+  }});
 }
 
 async function authTelegramWidget(req, res) {
@@ -868,62 +860,17 @@ async function authTelegramWidget(req, res) {
   }, req, res);
 }
 
-async function authOAuth(req, res) {
-  const provider = String(req.body?.provider || '').toLowerCase();
+async function authFirebase(req, res) {
+  if (!firebaseInitialized || !admin.apps.length) return res.status(503).json({ error: 'Firebase Authentication is not configured on the server' });
   const idToken = String(req.body?.idToken || '');
-  if (!idToken) return res.status(400).json({ error: 'Missing identity token' });
+  if (!idToken) return res.status(400).json({ error: 'Missing Firebase identity token' });
   try {
-    if (provider === 'google') {
-      const clientId = process.env.GOOGLE_CLIENT_ID;
-      if (!clientId) return res.status(503).json({ error: 'Google sign-in is not configured yet' });
-      const decoded = jwt.decode(idToken, { complete: true });
-      const kid = decoded?.header?.kid;
-      if (!kid || decoded.header.alg !== 'RS256') return res.status(401).json({ error: 'Invalid Google identity token' });
-      const keysResponse = await fetch('https://www.googleapis.com/oauth2/v3/certs');
-      if (!keysResponse.ok) throw new Error('Google public keys unavailable');
-      const keySet = await keysResponse.json();
-      const jwk = (keySet.keys || []).find(key => key.kid === kid);
-      if (!jwk) return res.status(401).json({ error: 'Google signing key not found' });
-      const publicKey = crypto.createPublicKey({ key: jwk, format: 'jwk' });
-      const claims = jwt.verify(idToken, publicKey, {
-        algorithms: ['RS256'],
-        issuer: ['accounts.google.com', 'https://accounts.google.com'],
-        audience: clientId
-      });
-      if (claims.email_verified !== true || !claims.sub) {
-        return res.status(401).json({ error: 'Google identity could not be verified' });
-      }
-      return issueProviderSession('google', {
-        id: claims.sub, email: claims.email || null,
-        name: claims.name || claims.given_name || null,
-        photo_url: claims.picture || null
-      }, req, res);
-    }
-    if (provider === 'apple') {
-      const clientId = process.env.APPLE_CLIENT_ID;
-      if (!clientId) return res.status(503).json({ error: 'Apple sign-in is not configured yet' });
-      const decoded = jwt.decode(idToken, { complete: true });
-      const kid = decoded?.header?.kid;
-      if (!kid || decoded.header.alg !== 'RS256') return res.status(401).json({ error: 'Invalid Apple identity token' });
-      const keysResponse = await fetch('https://appleid.apple.com/auth/keys');
-      if (!keysResponse.ok) throw new Error('Apple public keys unavailable');
-      const keySet = await keysResponse.json();
-      const jwk = (keySet.keys || []).find(key => key.kid === kid);
-      if (!jwk) return res.status(401).json({ error: 'Apple signing key not found' });
-      const publicKey = crypto.createPublicKey({ key: jwk, format: 'jwk' });
-      const claims = jwt.verify(idToken, publicKey, {
-        algorithms: ['RS256'], issuer: 'https://appleid.apple.com', audience: clientId
-      });
-      if (!claims.sub) return res.status(401).json({ error: 'Invalid Apple account' });
-      return issueProviderSession('apple', {
-        id: claims.sub, email: claims.email || null,
-        name: req.body?.user?.name?.firstName || null
-      }, req, res);
-    }
-    return res.status(400).json({ error: 'Unsupported sign-in provider' });
+    const claims = await admin.auth().verifyIdToken(idToken, true);
+    if (!claims.uid || claims.firebase?.sign_in_provider !== 'google.com') return res.status(401).json({ error: 'Only Google accounts through Firebase are accepted' });
+    return issueProviderSession('firebase', { id: claims.uid, email: claims.email || null, name: claims.name || claims.email?.split('@')[0] || 'Coinix member', photo_url: claims.picture || null }, req, res);
   } catch (err) {
-    logger.warn('OAuth verification failed', { provider, error: err.message });
-    return res.status(401).json({ error: 'Identity verification failed' });
+    logger.warn('Firebase identity verification failed', { error: err.message });
+    return res.status(401).json({ error: 'Firebase identity verification failed' });
   }
 }
 
@@ -1917,7 +1864,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true, db: firebaseInitialize
 app.post('/api/auth', authLimiter, auth);
 app.get('/api/auth/config', getAuthConfig);
 app.post('/api/auth/telegram', authLimiter, authTelegramWidget);
-app.post('/api/auth/oauth', authLimiter, authOAuth);
+app.post('/api/auth/firebase', authLimiter, authFirebase);
 app.use('/api', generalLimiter);
 app.get('/api/dashboard/stats', jwtAuth, getDashboardStats);
 app.get('/api/me', jwtAuth, getMe);

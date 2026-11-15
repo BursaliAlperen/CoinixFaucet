@@ -25,7 +25,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" referrerpolicy="no-referrer">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script async src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
 <script src="https://richinfo.co/richpartners/telegram/js/tg-ob.js"></script>
 <script>
   if (window.TelegramAdsController) {
@@ -1348,7 +1347,6 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
 .auth-provider:hover {transform:translateY(-2px);filter:brightness(1.08)}
 .auth-provider i {font-size:18px}
 .telegram-provider {background:#229ed9;color:#fff;border-color:#229ed9}
-.apple-provider {background:#090b12;color:#fff;border-color:#343849}
 .google-signin-container {min-height:44px;display:flex;justify-content:center;margin:8px 0}
 .telegram-widget-container {display:flex;justify-content:center;margin:8px 0}
 .auth-gate-note {margin:12px 0 0}
@@ -1428,9 +1426,8 @@ button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid rgb
       <p class="auth-gate-subtitle">Your rewards account, one secure login away.</p>
       <button class="auth-provider telegram-provider" id="telegram-mini-login"><i class="fa-brands fa-telegram" aria-hidden="true"></i><span>Continue with Telegram</span></button>
       <div id="telegram-widget-container" class="telegram-widget-container"></div>
-      <div id="google-signin-container" class="google-signin-container"></div>
-      <button class="auth-provider apple-provider" id="apple-signin" type="button"><i class="fa-brands fa-apple" aria-hidden="true"></i><span>Continue with Apple</span></button>
-      <p class="auth-gate-note" id="auth-gate-note">Secure sign-in. Your balance is linked to your account.</p>
+      <div id="google-signin-container" class="google-signin-container"><button class="auth-provider google-provider" id="firebase-google-signin" type="button"><i class="fa-brands fa-google" aria-hidden="true"></i><span>Continue with Google</span></button></div>
+            <p class="auth-gate-note" id="auth-gate-note">Secure sign-in. Your balance is linked to your account.</p>
       <button class="btn-glow telegram-mini-only" id="btn-go-faucet"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Open Mini App</button>
     </div>
   </div>
@@ -1878,31 +1875,15 @@ async function setupAuthOptions() {
       container.appendChild(widget);
     }
   }
-  if (authConfig.googleClientId) {
-    const googleScript = document.createElement('script');
-    googleScript.src = 'https://accounts.google.com/gsi/client';
-    googleScript.async = true;
-    googleScript.defer = true;
-    googleScript.onload = () => {
-      if (!window.google?.accounts?.id) return;
-      google.accounts.id.initialize({ client_id: authConfig.googleClientId, callback: handleGoogleCredential, auto_select: false });
-      google.accounts.id.renderButton(document.getElementById('google-signin-container'), {
-        theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', width: 300
-      });
-    };
-    document.head.appendChild(googleScript);
-  } else {
-    const googleContainer = document.getElementById('google-signin-container');
-    if (googleContainer) googleContainer.innerHTML = '<button class="auth-provider google-provider" type="button" disabled><i class="fa-brands fa-google"></i><span>Google · setup required</span></button>';
-  }
-  const appleButton = document.getElementById('apple-signin');
-  if (appleButton) {
-    if (!authConfig.appleClientId) {
-      appleButton.disabled = true;
-      appleButton.title = 'Apple Developer configuration required';
-      appleButton.innerHTML = '<i class="fa-brands fa-apple" aria-hidden="true"></i><span>Apple · setup required</span>';
-      appleButton.style.opacity = '.55';
-    } else appleButton.addEventListener('click', startAppleSignIn);
+  const googleButton = document.getElementById('firebase-google-signin');
+  if (googleButton) {
+    googleButton.addEventListener('click', signInWithFirebaseGoogle);
+    if (!authConfig.firebase?.apiKey || !authConfig.firebase?.authDomain || !authConfig.firebase?.projectId) {
+      googleButton.disabled = true;
+      googleButton.title = 'Firebase Authentication configuration required';
+      googleButton.innerHTML = '<i class="fa-brands fa-google" aria-hidden="true"></i><span>Google · setup required</span>';
+      googleButton.style.opacity = '.55';
+    }
   }
 }
 
@@ -1915,30 +1896,33 @@ async function onTelegramAuth(profile) {
 }
 window.onTelegramAuth = onTelegramAuth;
 
-async function handleGoogleCredential(response) {
-  if (!response?.credential) { showToast('Google did not return an identity token.', 'error'); return; }
-  const result = await api('/api/auth/oauth', {
-    method: 'POST', body: JSON.stringify({ provider: 'google', idToken: response.credential })
+async function loadFirebaseAuthSdk() {
+  if (window.firebase?.auth) return;
+  const load = src => new Promise((resolve, reject) => {
+    const script = document.createElement('script'); script.src = src;
+    script.onload = resolve; script.onerror = reject; document.head.appendChild(script);
   });
-  if (result.error) { showToast(result.error, 'error'); return; }
-  setLoginToken(result);
+  await load('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+  await load('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js');
 }
-
-async function startAppleSignIn() {
+async function signInWithFirebaseGoogle() {
+  const button = document.getElementById('firebase-google-signin');
   try {
-    if (!window.AppleID?.auth) { showToast('Apple sign-in is still loading.', 'error'); return; }
-    AppleID.auth.init({
-      clientId: authConfig.appleClientId, scope: 'name email',
-      redirectURI: authConfig.appleRedirectUri || window.location.origin, usePopup: true
-    });
-    const response = await AppleID.auth.signIn();
-    const result = await api('/api/auth/oauth', {
-      method: 'POST',
-      body: JSON.stringify({ provider: 'apple', idToken: response.authorization?.id_token, user: response.user || null })
-    });
+    if (!authConfig.firebase?.apiKey || !authConfig.firebase?.authDomain || !authConfig.firebase?.projectId) { showToast('Firebase sign-in is not configured yet.', 'error'); return; }
+    button.disabled = true;
+    await loadFirebaseAuthSdk();
+    const app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(authConfig.firebase);
+    const provider = new window.firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const credential = await app.auth().signInWithPopup(provider);
+    const idToken = await credential.user.getIdToken(true);
+    const result = await api('/api/auth/firebase', { method: 'POST', body: JSON.stringify({ idToken }) });
     if (result.error) { showToast(result.error, 'error'); return; }
     setLoginToken(result);
-  } catch (error) { showToast('Apple sign-in was cancelled or failed.', 'error'); }
+  } catch (error) {
+    console.error('Firebase Google sign-in failed:', error);
+    showToast('Google sign-in failed. Please try again.', 'error');
+  } finally { if (button) button.disabled = false; }
 }
 
 function setLoginToken(result) {
