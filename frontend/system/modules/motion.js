@@ -1,1 +1,0 @@
-if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&'IntersectionObserver'in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('cx-in-view');io.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll('[data-cx-animate]').forEach(el=>io.observe(el));}

@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://coinixfaucet.mine.bz/sitemap.xml
-Disallow: /api/
-Disallow: /admin.html

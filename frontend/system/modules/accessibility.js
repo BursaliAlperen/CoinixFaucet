@@ -1,1 +1,0 @@
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;document.documentElement.dataset.motion=reduced?'reduced':'full';document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mobile-nav-panel.is-open').forEach(n=>n.classList.remove('is-open'))});
