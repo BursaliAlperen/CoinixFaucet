@@ -1,0 +1,2 @@
+/* CoinixFaucet progressive UI micro-interactions. */
+(()=>{'use strict';if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;document.addEventListener('click',e=>{const b=e.target.closest('button.cx-btn,button.btn-primary,button.wd-btn,button.auth-tab');if(!b||b.disabled)return;const r=b.getBoundingClientRect(),s=document.createElement('span');s.className='cx-ripple';s.style.left=(e.clientX-r.left)+'px';s.style.top=(e.clientY-r.top)+'px';b.appendChild(s);setTimeout(()=>s.remove(),600)},{passive:true})})();
