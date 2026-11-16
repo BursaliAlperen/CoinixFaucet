@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { registerCoinixMarket } from './market.js';
 
 dotenv.config();
 
@@ -83,6 +84,7 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: false, limit: '10kb' }));
 app.set('trust proxy', 1);
 
 // Static Files
@@ -1425,6 +1427,9 @@ app.delete('/api/admin/promo/:id', verifyAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error' });
   }
 });
+
+// Coinix Market routes: separate COINIX ledger, isolated from legacy CNX balances.
+registerCoinixMarket(app, { db, verifyToken, verifyAdmin });
 
 // ============================================
 // 🌐 SPA FALLBACK
