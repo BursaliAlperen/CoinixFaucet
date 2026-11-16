@@ -100,13 +100,17 @@ export function registerCoinixMarket(app, { db, verifyToken, verifyAdmin }) {
       const submissionRef = taskRef.collection('submissions').doc(req.params.userId);
       const userRef = db.collection('users').doc(req.params.userId);
       await db.runTransaction(async tx => {
-        const [taskSnap, submissionSnap, userSnap] = await Promise.all([tx.get(taskRef), tx.get(submissionRef), tx.get(userRef)]);
-        if (!taskSnap.exists || !submissionSnap.exists || !userSnap.exists) throw new Error('RECORD_NOT_FOUND');
+        const taskSnap = await tx.get(taskRef);
+        if (!taskSnap.exists) throw new Error('RECORD_NOT_FOUND');
+        const ownerRef = db.collection('users').doc(taskSnap.data().ownerId);
+        const [submissionSnap, userSnap, ownerSnap] = await Promise.all([tx.get(submissionRef), tx.get(userRef), tx.get(ownerRef)]);
+        if (!submissionSnap.exists || !userSnap.exists || !ownerSnap.exists) throw new Error('RECORD_NOT_FOUND');
         const submission = submissionSnap.data();
         if (submission.status !== 'pending') throw new Error('ALREADY_REVIEWED');
         if (decision === 'approve') {
           const reward = Number(submission.reward);
           tx.update(userRef, { coinixAvailable: FieldValue.increment(reward) });
+          tx.update(ownerRef, { coinixEscrowed: FieldValue.increment(-reward) });
           tx.update(taskRef, { completedCount: FieldValue.increment(1), remainingBudget: FieldValue.increment(-reward) });
           tx.update(submissionRef, { status: 'approved', reviewedAt: FieldValue.serverTimestamp() });
           tx.create(db.collection('coinix_ledger').doc(), { userId: req.params.userId, taskId: req.params.taskId, amount: reward, type: 'task_reward', createdAt: FieldValue.serverTimestamp() });
