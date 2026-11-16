@@ -1,40 +1,43 @@
-# Coinix Market MVP
+# Coinix Market — OfferwallAPI integration
 
-First release supports advertiser-funded Telegram tasks and a provider-neutral offerwall postback contract.
+Coinix Market is an OfferwallAPI-only inventory. It does not support user-created tasks or Telegram campaigns.
 
-## Important separation
-- Existing CNX faucet balances and withdrawals are unchanged.
-- COINIX is a separate internal ledger balance (\`users/{uid}.coinixAvailable\`) until a TON Jetton and audited withdrawal flow are implemented.
-- No daily bonus, airdrop, client-side reward credit, or automatic token minting is implemented.
+## Enabled inventory
+- Micro Tasks via /task-api/{API_KEY}/{USER_ID}/{USER_IP}
+- PTC via /ptc-api/{API_KEY}/{USER_ID}/{USER_IP}
 
-## Telegram task flow
-1. A signed-in task owner submits a Telegram URL, description, reward per completion, and participant cap.
-2. The backend reserves the full budget from the owner's available COINIX balance into escrow.
-3. Task enters pending review; an admin activates it after review.
-4. A user submits a Telegram username or proof. The submission remains pending.
-5. Admin approves or rejects. Approval credits the user's COINIX ledger once.
+No video, shortlink, survey, CPA offer, Telegram or self-created task categories are exposed in the Market UI.
 
-The MVP uses manual review. Telegram membership verification requires a configured Telegram bot with suitable access and is not assumed here.
+## Credentials
+Configure these deployment secrets:
+- OFFERWALLAPI_KEY
+- OFFERWALLAPI_BEARER_TOKEN
+- OFFERWALLAPI_SECRET
 
-## Offerwall callback
-POST JSON to \`/api/market/offerwall/postback\`:
-\`\`\`json
-{"provider":"provider-id","transactionId":"unique-provider-transaction","userId":"firebase-uid","reward":12.5,"status":"completed"}
-\`\`\`
-Header \`x-coinix-signature\` must be HMAC-SHA256 hex of the exact raw HTTP request body, using \`OFFERWALL_POSTBACK_SECRET\`. Provider-specific adapters must map the provider's macros and signature scheme to this contract. Check provider terms for crypto rewards before enabling it.
+Never expose them in frontend code or commit them to Git. Register the site in OfferwallAPI and set currency name to COINIX, an appropriate decimal precision, exchange rate and postback URL:
+https://YOUR_DOMAIN/api/market/offerwallapi/postback
 
-## Environment
-- \`OFFERWALL_POSTBACK_SECRET\`: long random secret stored only in deployment secrets.
-- Existing Firebase Admin configuration is required.
-- Never commit secrets or private keys.
+## Reward flow
+- Micro Task proof is submitted server-to-server using the provider task ticket. The task remains pending until OfferwallAPI approves it and sends the S2S postback.
+- PTC uses the provider-hosted URL returned by the PTC feed. Its timer and verification remain on OfferwallAPI.
+- Only signed ptc and microtask postbacks are credited.
+- status=1 credits; status=2 reverses the same reward as a chargeback.
+- Exact subId matching and globally unique transId idempotency are enforced.
+- Test callbacks with debug=1 are acknowledged but do not credit.
 
 ## API
-- \`GET /api/market/tasks?type=telegram|offerwall\`
-- \`POST /api/market/tasks\` (Firebase bearer token)
-- \`POST /api/market/tasks/:taskId/submit\` (Firebase bearer token)
-- \`POST /api/admin/market/tasks/:taskId/activate\` (existing admin key)
-- \`POST /api/admin/market/tasks/:taskId/submissions/:userId/decision\` (existing admin key; decision approve|reject)
-- \`POST /api/market/offerwall/postback\` (signed provider server callback)
+- GET /api/market/feed — authenticated combined PTC + Micro Tasks feed.
+- POST /api/market/microtasks/:taskId/submit — authenticated proof submission.
+- POST /api/market/offerwallapi/postback — OfferwallAPI form-encoded S2S callback.
 
-## Remaining before public launch
-Provider-specific integration and terms review, admin queue UI, owner funding/deposit flow, Telegram bot verification, automated tests, and security review. Task creation requires an already funded COINIX balance; no public top-up route is provided.
+## Balance model
+Rewards are credited to the separate users/{uid}.coinixAvailable internal ledger field. This is not a TON Jetton mint and does not prove a market price. Existing CNX faucet balances are not modified.
+
+## Before launch
+1. Add the three OfferwallAPI secrets to the hosting environment.
+2. Set the exact public postback URL in OfferwallAPI.
+3. Configure app currency as COINIX and deliberately select its reward exchange rate.
+4. Run the OfferwallAPI Integration Test panel and verify a debug=1 test does not change balances.
+5. Complete real PTC and Micro Task sandbox tests, including a chargeback and duplicate callback.
+6. Review OfferwallAPI terms, supported GEOs and crypto reward policy before enabling live traffic.
+7. Run security and staging tests before merging.
