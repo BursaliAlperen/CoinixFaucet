@@ -83,7 +83,8 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json({ limit: '10kb', verify: (req, res, buf) => { req.rawBody = Buffer.from(buf); } }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: false, limit: '10kb' }));
 app.set('trust proxy', 1);
 
 // Static Files
