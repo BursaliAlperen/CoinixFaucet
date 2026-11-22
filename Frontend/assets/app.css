@@ -393,3 +393,44 @@ i[data-svg-ready="1"]{display:inline-flex;align-items:center;justify-content:cen
 
 .home-referral-bonus,.help-card{display:flex;align-items:center;gap:12px;padding:14px}.bonus-symbol{width:42px;height:42px;flex:0 0 42px;border-radius:14px;background:#eaf4ff;color:#1678df;display:grid;place-items:center;font-size:21px}.bonus-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}.bonus-copy strong{font-size:13px;color:var(--tg-text)}.bonus-copy span{font-size:13px;font-weight:900;color:#1678df}.bonus-copy small{font-size:11px;color:var(--tg-text-sec)}.home-referral-bonus button,.help-card button{border:0;border-radius:10px;background:#edf4ff;color:#1678df;padding:9px 11px;font-size:11px;font-weight:800;white-space:nowrap}.help-card{justify-content:space-between}.help-card span{font-size:12px;color:var(--tg-text-sec);line-height:1.45}
 .provider-note{margin-top:12px;padding:12px 14px;border:1px solid #f1dfb8;border-radius:12px;background:#fff9ec;color:#8b641e;font-size:12px;line-height:1.5}
+/* ===== TEDDYGROW CUTE DESIGN SYSTEM ===== */
+:root{
+  --tg-blue:#b77bc3;--tg-dark-blue:#9862ad;--tg-bg:#fff8f3;--tg-card:#ffffff;
+  --tg-navy:#45364d;--tg-navy-light:#5c4965;--tg-text:#493c4d;--tg-text-sec:#918397;
+  --tg-accent:#69b99b;--tg-danger:#e97891;--tg-warning:#f2b85d;
+  --tg-gold:#eebd62;--tg-silver:#b6aebe;--tg-bronze:#c68a69;--tg-platinum:#a68bdd;
+  --grad-primary:linear-gradient(135deg,#f5b3cc 0%,#b89add 100%);
+  --grad-earn:linear-gradient(135deg,#83d4b5 0%,#5db99b 100%);
+  --grad-gold:linear-gradient(135deg,#f6d38b 0%,#e9ad59 100%);
+  --grad-purple:linear-gradient(135deg,#c5a8ed 0%,#9b80cf 100%);
+  --shadow-sm:0 3px 12px rgba(124,91,130,.07);
+  --shadow-md:0 7px 22px rgba(124,91,130,.10),0 2px 5px rgba(124,91,130,.04);
+  --shadow-blue:0 10px 28px rgba(188,133,194,.24);
+  --radius-sm:13px;--radius-md:17px;--radius-lg:22px;--radius-xl:27px;
+}
+html,body{background:var(--tg-bg);color:var(--tg-text);font-family:'Nunito',sans-serif}
+h1,h2,h3,.sec-title,.modal-head .t,.header .name,.btn-primary,.btn-secondary{font-family:'Fredoka','Nunito',sans-serif;font-weight:600;letter-spacing:.1px}
+#app{background:var(--tg-bg)}
+.header{background:rgba(255,255,255,.94);border-bottom:1px solid #f5e8ef;backdrop-filter:blur(14px)}
+.header .avatar{background:var(--grad-primary);border:2px solid #f6d9e6}
+.header .hbtn{background:#fff1f6;color:#a86eb6}
+#loader{background:radial-gradient(circle at 20% 15%,#ffe2ec 0,#f6c6dc 32%,#c9b1e8 100%);color:#5b4567}
+#loader .logo{font-family:'Fredoka',sans-serif;font-size:42px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;color:#674b75}
+#loader .logo span{font-size:12px;letter-spacing:2px;background:#fff9;padding:5px 9px;border-radius:999px}
+#loader .tag{color:#775b80;font-weight:800}
+.loader-mascot{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 5px 7px #9b6d8830)}
+.brand-kicker{font-size:10px;letter-spacing:3px;font-weight:900;color:#9b6b9e;margin-top:3px}
+.ld-coin{background:#fff9;border:2px solid #fff;box-shadow:0 8px 24px #9b6d8830}
+.balance-card{background:linear-gradient(135deg,#eeb2cf 0%,#b99ce2 100%);box-shadow:0 12px 28px rgba(179,128,194,.24)}
+.balance-card .vip-badge{background:#ffffff38;border-color:#ffffff55}
+.qa{border:1px solid #f6eaf0;box-shadow:0 4px 12px rgba(132,94,135,.07)}
+.qa .qa-icon{background:linear-gradient(135deg,#fff0f5,#f1e8ff)}
+.qa .qa-icon i{color:#a875b8}
+.card,.stat-box,.task-card,.modal-body{border:1px solid #f5e9ef;box-shadow:var(--shadow-md)}
+.btn-primary{background:linear-gradient(135deg,#eaa9c8,#ad8bd5);box-shadow:0 7px 16px rgba(179,128,194,.22);border-radius:16px}
+.btn-secondary{background:#fff0f6;color:#9862ad;border:1px solid #f3dce8;border-radius:16px}
+.nav-item.active,.bottom-nav .active{color:#a56eb6}
+.toast{border:1px solid #f5e4ec;border-radius:16px;box-shadow:var(--shadow-md)}
+input,select,textarea{border-radius:14px!important;border-color:#efdfeb!important}
+button:focus-visible,a:focus-visible{outline:3px solid #d8b9ec;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
