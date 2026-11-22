@@ -342,7 +342,7 @@ async function completeTask(id){
       const result=await apiRequest('/api/flyerhubs/check',{signature:t.signature});
       if(!result.completed){showToast('FlyerHubs görevi henüz tamamlanmadı: '+result.providerStatus,'warn');return;}
       showToast(result.duplicate?'Bu görev zaten ödüllendirildi.':'FlyerHubs görevi doğrulandı! +'+(result.xp?.gained||0)+' XP','success');
-    }else{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi.','success');}
+    }else{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi. +'+(arguments[0]?.xp?.gained||0)+' XP','success');}
   }
   catch(e){const message=e.message==='ALREADY_COMPLETED'?'Bu görev zaten tamamlandı.':e.message==='TASK_VERIFICATION_FAILED'?'Üyelik doğrulanamadı. Botun kanalda olduğundan emin olun.':'Görev ödülü verilemedi: '+e.message;showToast(message,'danger');}
 }
@@ -541,7 +541,7 @@ async function doCheckin(){
   const rewards=(appSettings.checkinRewards||[0.01,0.02,0.03,0.05,0.08,0.12,0.2]);
   const r=parseFloat(rewards[newStreak-1]||0.01);
   const uid=String(TGUser.id);
-  try{const result=await apiRequest('/api/economy',{action:'checkin'});const streak=Number(result.extra?.day||0);if(streak===7)fireConfetti();showToast('Yoklama ödülü işlendi. Seri: '+streak,'success');closeModal('checkinModal');}
+  try{const result=await apiRequest('/api/economy',{action:'checkin'});const streak=Number(result.extra?.day||0);if(streak===7)fireConfetti();showToast('Yoklama ödülü işlendi. Seri: '+streak+' · +'+(result.extra?.xp?.gained||10)+' XP','success');closeModal('checkinModal');}
   catch(e){showToast(e.message==='ALREADY_CLAIMED'?'Bugün zaten yoklama yaptınız.':'Yoklama başarısız: '+e.message,'danger');}
 }
 
