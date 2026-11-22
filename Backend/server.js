@@ -229,6 +229,7 @@ async function bootstrap(user, referralCode) {
         });
         if (refResult.committed) {
           await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id });
+          await rtdb.ref('users/' + validReferralCode + '/notifications').push({title:'New referral',body:user.name + ' joined using your invitation. Your referral reward was credited.',timestamp:Date.now(),type:'referral'});
           try { await sendTelegramMessage(validReferralCode, '🎉 Yeni referansın katıldı: ' + user.name + '. Bonusun hesabına eklendi.'); }
           catch (error) { console.warn('[referral-notification]', error.message); }
         }
@@ -454,6 +455,7 @@ async function handleAdminApi(user, url, body, res) {
     try{
       const sent=await sendTelegramMessage(ANNOUNCEMENT_CHANNEL_ID,text,extra);
       await ref.update({status:'published',channelMessageId:sent.message_id,publishedAt:Date.now()});
+      await rtdb.ref('notifications').push({title:'Promotion: '+title,body:message,timestamp:Date.now(),showBanner:true,type:'promotion',promotionId:ref.key});
       return send(res,200,{status:'ok',promotion:{id:ref.key,...promo,status:'published',channelMessageId:sent.message_id}});
     }catch(error){
       await ref.update({status:'publish_failed',publishError:String(error.message||'Telegram send failed').slice(0,200)});
