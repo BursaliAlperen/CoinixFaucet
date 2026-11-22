@@ -19,7 +19,11 @@ const required = [
   ['Monetag valued callback', "reward_event_type') !== 'valued'"],
   ['Monetag strict Telegram ID validation', "if (!/^\\d{1,20}$/.test(uid)"],
   ['Level multiplier function', "function rewardMultiplier(user)"],
-  ['Frontend multiplier display', "getRewardMultiplier(currentUser.level)"],
+  ['Fixed API task reward', 'const API_TASK_REWARD_USD=0.002'],
+  ['TON and GRAM payout whitelist', "['ton','gram'].includes(methodKey)"],
+  ['Admin withdrawal settlement', '/api/admin/withdrawal'],
+  ['Inline SVG icon system', 'icon-ton'],
+  ['Firebase web config endpoint', '/public-config/firebase'],
   ['Istanbul reward timezone', "Europe/Istanbul"],
   ['Server admin shortcut', 'adminOpenBtn'],
   ['Admin dashboard actions', "api('/api/admin/promo'"]
