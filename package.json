@@ -6,7 +6,7 @@
   "main": "Backend/server.js",
   "scripts": {
     "start": "node Backend/server.js",
-    "check": "node --check Backend/server.js"
+    "check": "node --check Backend/server.js && node --check Frontend/js/app.js"
   },
   "engines": {
     "node": ">=20"
