@@ -434,3 +434,5 @@ h1,h2,h3,.sec-title,.modal-head .t,.header .name,.btn-primary,.btn-secondary{fon
 input,select,textarea{border-radius:14px!important;border-color:#efdfeb!important}
 button:focus-visible,a:focus-visible{outline:3px solid #d8b9ec;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+.task-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}.task-actions .task-skip{background:#fff1f6;color:#a875b8;border:1px solid #f4dce9;padding:8px 11px;border-radius:12px;font-weight:800}.task-actions .task-start{padding:8px 12px;border-radius:12px}
