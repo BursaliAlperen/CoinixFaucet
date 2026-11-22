@@ -152,6 +152,7 @@ async function init(){
     });
 
     db.ref('tasks').on('value',snap=>{tasks=[];snap.forEach(c=>tasks.push({id:c.key,...c.val()}));renderTasks();});
+    apiRequest('/api/tasks/claims',{}).then(data=>{window._pendingTaskClaims={};(data.claims||[]).filter(c=>c.status==='pending').forEach(c=>window._pendingTaskClaims[c.taskId]=true);renderTasks();}).catch(()=>{});
     apiRequest('/api/flyerhubs/tasks',{}).then(data=>{flyerTasks=data.tasks||[];renderTasks();}).catch(e=>{if(e.message!=='FLYERHUBS_NOT_CONFIGURED')console.warn('FlyerHubs:',e.message);});
 
     db.ref('withdrawMethods').on('value',snap=>{
@@ -316,7 +317,7 @@ function renderTeam(){
 
 function renderTasks(){
   const f=currentTaskFilter,allTasks=[...tasks,...flyerTasks];
-  const filtered=allTasks.filter(t=>(t.source==='flyerhubs'||(t.active!==false&&['telegram','channel','group','link','manual'].includes(String(t.type||'').toLowerCase())))&&(f==='all'||String(t.type||'').toLowerCase()===f));
+  const now=Date.now(),filtered=allTasks.filter(t=>(t.source==='flyerhubs'||(t.active!==false&&['telegram','channel','group','link','manual'].includes(String(t.type||'').toLowerCase())&&(!Number(t.startAt||0)||Number(t.startAt)<=now)&&(!Number(t.endAt||0)||Number(t.endAt)>=now)))&&(f==='all'||String(t.type||'').toLowerCase()===f));
   if(!filtered.length){$('taskList').innerHTML='<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">Şu anda aktif görev yok</div></div>';return;}
   const done=currentUser?.completedTasks||{},counts=currentUser?.taskCompletionCounts||{};
   $('taskList').innerHTML='<div class="stagger">'+filtered.map(t=>{
