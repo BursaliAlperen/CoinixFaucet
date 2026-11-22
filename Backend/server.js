@@ -790,6 +790,7 @@ async function handleTelegramWebhook(req, res) {
   const callback=update.callback_query;
   if(callback?.from?.id){
     const uid=String(callback.from.id);
+    if(!initFirebase()){await sendTelegramMessage(uid,'Coinix şu anda veritabanı yapılandırmasını bekliyor. Lütfen biraz sonra tekrar dene.');return send(res,200,{ok:true});}
     if(callback.data==='check_required_channel'){
       const membership=await checkRequiredChannel(uid);
       try{await telegramCall('answerCallbackQuery',{callback_query_id:callback.id,text:membership.ok?'Üyelik doğrulandı.':'Henüz doğrulanamadı.',show_alert:!membership.ok});}catch{}
@@ -813,7 +814,7 @@ async function handleTelegramWebhook(req, res) {
   const text=message.text.trim();
   const command=text.split(/\s+/)[0].split('@')[0].toLowerCase();
   const name=[user.first_name,user.last_name].filter(Boolean).join(' ').slice(0,80)||'User';
-  const profile={id:uid,name,username:String(user.username||''),photoUrl:'',languageCode:String(user.language_code||'en')};
+  const profile={id:uid,name,username:String(user.username||''),photoUrl:'',languageCode:String(user.language_code||'tr')};
   try{
     if(command==='/botstop'||command==='/botstart'){
       if(!isAdmin(uid)){await sendTelegramMessage(uid,'Bu komut yalnızca yöneticiler içindir.');return send(res,200,{ok:true});}
@@ -859,10 +860,10 @@ async function handleTelegramWebhook(req, res) {
       if(!isAdmin(uid))await sendTelegramMessage(uid,'You are not authorized to use the admin panel.');
       else{
         const url=(WEBAPP_URL||PUBLIC_BASE_URL)+'/admin';
-        await sendTelegramMessage(uid,'🔐 Coinix Admin Panel',{reply_markup:{inline_keyboard:[[{text:'Open AAA Admin',web_app:{url}}]]}});
+        await sendTelegramMessage(uid,'🔐 Coinix Yönetim Paneli',{reply_markup:{inline_keyboard:[[{text:'Yönetim panelini aç',web_app:{url}}]]}});
       }
     }
-  }catch(error){console.error('[telegram-webhook]',error.message);}
+  }catch(error){console.error('[telegram-webhook]',error.message);if(error.message==='FIREBASE_NOT_CONFIGURED')try{await sendTelegramMessage(uid,'Coinix veritabanı bağlantısı henüz yapılandırılmadı. Lütfen daha sonra tekrar dene.');}catch{}}
   return send(res,200,{ok:true});
 }
 async function configureTelegramWebhook() {
