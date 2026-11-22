@@ -15,7 +15,7 @@ let db,fs;
 
 /* ============ STATE ============ */
 let TGUser = null, currentUser = null, appSettings = {}, withdrawMethods = [], selectedMethod = null;
-let tasks = [], flyerTasks = [], notifications = [], unreadCount = 0, currentTaskFilter='all', currentTxFilter='all';
+let tasks = [], flyerTasks = [], notifications = [], globalNotifications = [], userNotifications = [], unreadCount = 0, currentTaskFilter='all', currentTxFilter='all';
 let transactionsCache = [];
 let _dailyCardDone = false; // guard: run distributeDailyCard only once per session
 
@@ -25,6 +25,11 @@ function hap(t){try{window.Telegram.WebApp.HapticFeedback.impactOccurred(t||'lig
 function setAmt(f){const b=parseFloat(currentUser?.balance||0);$('withdrawAmount').value=(Math.floor(b*f*100)/100).toFixed(2);hap();}
 function renderExtras(){
   $('perAdEarn2').textContent=parseFloat(appSettings.perAdEarning||0.005).toFixed(4);$('spRw2').textContent=parseFloat(appSettings.sponsorReward||0.0025).toFixed(4);
+  const level=Math.max(1,Math.min(100,Number(currentUser.level||1))),xp=Math.max(0,Number(currentUser.xp||0)),xpNext=Number(currentUser.xpToNext||0);
+  if($('xpLevel'))$('xpLevel').textContent=level;
+  if($('xpText'))$('xpText').textContent=level>=100?'MAX LEVEL':xp+' / '+xpNext+' XP';
+  if($('xpFill'))$('xpFill').style.width=(level>=100?100:Math.min(100,xpNext?xp/xpNext*100:0))+'%';
+  if($('xpBonus'))$('xpBonus').textContent=level>=100?'2× Ads + Tasks':'Level 100: 2× Ads + Tasks';
   const e=parseFloat(currentUser.totalEarned||0),v=appSettings;
   const st=[['Bronze',0],['Silver',v.vipSilver||10],['Gold',v.vipGold||50],['Platinum',v.vipPlatinum||200]];
   let i=st.findIndex((x,k)=>k===st.length-1||e<st[k+1][1]);const c=st[i],n=st[i+1];
@@ -119,11 +124,17 @@ async function init(){
       renderAll();
     });
 
-    db.ref('notifications').orderByChild('timestamp').limitToLast(100).on('value',snap=>{
-      notifications=[];snap.forEach(c=>{const v=c.val();if(v)notifications.push({id:c.key,...v});});
-      notifications.reverse();
-      // Only update badge if user is loaded (currentUser might not be set yet on first load)
+    const refreshNotifications=()=>{
+      notifications=[...globalNotifications,...userNotifications].sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)).slice(0,120);
       updateNotifBadge();
+    };
+    db.ref('notifications').orderByChild('timestamp').limitToLast(100).on('value',snap=>{
+      globalNotifications=[];snap.forEach(c=>{const v=c.val();if(v)globalNotifications.push({id:c.key,...v});});
+      refreshNotifications();
+    });
+    db.ref('users/'+uid+'/notifications').orderByChild('timestamp').limitToLast(50).on('value',snap=>{
+      userNotifications=[];snap.forEach(c=>{const v=c.val();if(v)userNotifications.push({id:c.key,...v});});
+      refreshNotifications();
     });
 
     db.ref('tasks').on('value',snap=>{tasks=[];snap.forEach(c=>tasks.push({id:c.key,...c.val()}));renderTasks();});
@@ -246,7 +257,7 @@ function renderStreak(){
 
 function renderTeam(){
   const bot=appSettings.botUsername||'EarnBDBot';
-  const link=`https://t.me/${bot}?startapp=${currentUser.uid}`;
+  const link=`https://t.me/${bot}?start=ref_${currentUser.uid}`;
   $('refLink').value=link;
   $('tRefCount').textContent=currentUser.referralCount||0;
   $('tRefEarn').textContent=parseFloat(currentUser.referralEarned||0).toFixed(2);
