@@ -2,6 +2,7 @@
 
 - New users start at Level 1 with 0 XP.
 - Daily check-in: 10 XP by default, once per reward day.
+- Each verified new referral: 10 XP by default.
 - Verified Monetag ad: 10 XP by default, only when a valued server postback is received.
 - Completed standard task: 20 XP by default.
 - Completed FlyerHubs task: 20 XP by default.
