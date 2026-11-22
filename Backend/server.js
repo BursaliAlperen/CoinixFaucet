@@ -607,7 +607,7 @@ async function handleAdminApi(user, url, body, res) {
         const old=await rtdb.ref('tasks/'+id).once('value');if(!old.exists())return send(res,404,{status:'error',code:'TASK_NOT_FOUND'});existing=old.val()||{};
       }
       let fields;try{fields=cleanTaskInput({...existing,...body});}catch(error){return send(res,400,{status:'error',code:error.message});}
-      const status=String(body.status||existing.status||(action==='create'?'draft':'active'));
+      const status=String(body.status||existing.status||'active');
       if(!['draft','active','paused','completed'].includes(status))return send(res,400,{status:'error',code:'INVALID_TASK_STATUS'});
       const record={...existing,...fields,status,active:status==='active',totalParticipants:Number(existing.totalParticipants||0),
         createdAt:Number(existing.createdAt||Date.now()),updatedAt:Date.now(),createdBy:existing.createdBy||user.id,updatedBy:user.id};
