@@ -15,7 +15,7 @@ let db,fs;
 
 /* ============ STATE ============ */
 let TGUser = null, currentUser = null, appSettings = {}, withdrawMethods = [], selectedMethod = null;
-let tasks = [], notifications = [], unreadCount = 0, currentTaskFilter='all', currentTxFilter='all';
+let tasks = [], flyerTasks = [], notifications = [], unreadCount = 0, currentTaskFilter='all', currentTxFilter='all';
 let transactionsCache = [];
 let _dailyCardDone = false; // guard: run distributeDailyCard only once per session
 
@@ -102,6 +102,8 @@ async function init(){
     let refBy=params.get('ref');
     if(!refBy && window.Telegram?.WebApp?.initDataUnsafe?.start_param){refBy=window.Telegram.WebApp.initDataUnsafe.start_param;}
     const session=await apiRequest('/api/session',{referralCode:refBy||''});
+    window.COINIX_ADMIN = session.isAdmin === true;
+    const adminButton=$('adminOpenBtn');if(adminButton&&window.COINIX_ADMIN)adminButton.style.display='inline-flex';
     await firebase.auth().signInWithCustomToken(session.customToken);
     const uid=String(TGUser.id);
     const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
@@ -125,6 +127,7 @@ async function init(){
     });
 
     db.ref('tasks').on('value',snap=>{tasks=[];snap.forEach(c=>tasks.push({id:c.key,...c.val()}));renderTasks();});
+    apiRequest('/api/flyerhubs/tasks',{}).then(data=>{flyerTasks=data.tasks||[];renderTasks();}).catch(e=>{if(e.message!=='FLYERHUBS_NOT_CONFIGURED')console.warn('FlyerHubs:',e.message);});
 
     db.ref('withdrawMethods').on('value',snap=>{
       withdrawMethods=[];
@@ -277,7 +280,8 @@ function renderTeam(){
 
 function renderTasks(){
   const f=currentTaskFilter;
-  const filtered=tasks.filter(t=>t.active && (f==='all' || (t.type||'').toLowerCase()===f));
+  const allTasks=[...tasks,...flyerTasks];
+  const filtered=allTasks.filter(t=>t.active && (f==='all' || (t.type||'').toLowerCase()===f));
   if(filtered.length===0){
     $('taskList').innerHTML='<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">Görev yok</div></div>';
     return;
@@ -302,7 +306,7 @@ function renderTasks(){
 }
 
 function startTask(id){
-  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const t=[...tasks,...flyerTasks].find(x=>x.id===id);if(!t)return;
   const taskUrl=String(t.url||'');
   if(!/^https:\/\//i.test(taskUrl)){showToast('Görev bağlantısı geçersiz.','danger');return;}
   const tg=window.Telegram?.WebApp;
@@ -319,10 +323,16 @@ function startTask(id){
 }
 
 async function completeTask(id){
-  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const t=[...tasks,...flyerTasks].find(x=>x.id===id);if(!t)return;
   const uid=String(TGUser.id);
   const r=parseFloat(t.reward||0);
-  try{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi.','success');}
+  try{
+    if(t.source==='flyerhubs'){
+      const result=await apiRequest('/api/flyerhubs/check',{signature:t.signature});
+      if(!result.completed){showToast('FlyerHubs görevi henüz tamamlanmadı: '+result.providerStatus,'warn');return;}
+      showToast(result.duplicate?'Bu görev zaten ödüllendirildi.':'FlyerHubs görevi doğrulandı! +'+(result.xp?.gained||0)+' XP','success');
+    }else{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi.','success');}
+  }
   catch(e){const message=e.message==='ALREADY_COMPLETED'?'Bu görev zaten tamamlandı.':e.message==='TASK_VERIFICATION_FAILED'?'Üyelik doğrulanamadı. Botun kanalda olduğundan emin olun.':'Görev ödülü verilemedi: '+e.message;showToast(message,'danger');}
 }
 
@@ -452,8 +462,9 @@ function loadMonetagSDK(zoneId, cb){
   s.onerror=()=>{
     console.warn('Monetag SDK load failed');
     _sdkLoading=false;
-    _sdkCallbacks.forEach(()=>setTimeout(creditAdEarning,3000));
+    _sdkCallbacks.forEach(()=>showToast('Reklam sağlayıcısına bağlanılamadı.','danger'));
     _sdkCallbacks=[];
+    const btn=$('watchAdBtn');if(btn){btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';}
   };
   document.head.appendChild(s);
 }
@@ -464,59 +475,34 @@ function watchAd(){
   const lim=parseInt(appSettings.dailyLimit||10);
   const zoneId=String(appSettings.monetagZoneId||'11148173');
   if(todayAds>=lim){showToast('Günlük limit doldu','warn');return;}
-
   const btn=$('watchAdBtn');
-  btn.disabled=true;
-  btn.innerHTML='<i class="ph-duotone ph-spinner-gap"></i> Yükleniyor...';
-
-  loadMonetagSDK(zoneId, ()=>{
+  btn.disabled=true;btn.innerHTML='<i class="ph-duotone ph-spinner-gap"></i> Reklam yükleniyor...';
+  loadMonetagSDK(zoneId,()=>{
     const showFn=window['show_'+zoneId];
-    if(typeof showFn==='function'){
-      // Earn.html pattern: call showFn(), handle Promise
-      try{
-        const result=showFn();
-        if(result && typeof result.then==='function'){
-          result
-            .then(()=>creditAdEarning())
-            .catch(err=>{
-              console.warn('Ad dismissed/error:',err);
-              creditAdEarning(); // still credit on dismiss
-            });
-        } else {
-          // No Promise returned — timer fallback
-          window._adTimer=setTimeout(creditAdEarning,8000);
-        }
-      }catch(e){
-        console.warn('Ad show error:',e);
-        setTimeout(creditAdEarning,5000);
+    if(typeof showFn!=='function'){
+      showToast('Reklam şu anda hazır değil.','warn');
+      btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';return;
+    }
+    const ymid=String(TGUser.id)+'_'+(window.crypto?.randomUUID?.()||Date.now()+'_'+Math.random().toString(16).slice(2));
+    try{
+      const result=showFn({ymid});
+      if(!result||typeof result.then!=='function'){
+        showToast('Reklam başlatıldı. Ödül yalnızca sağlayıcı onayından sonra eklenir.','info');
+        btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';return;
       }
-    } else {
-      // SDK loaded but function not ready yet — retry once
-      setTimeout(()=>{
-        const fn=window['show_'+zoneId];
-        if(typeof fn==='function'){
-          const r=fn();
-          if(r&&typeof r.then==='function'){
-            r.then(()=>creditAdEarning()).catch(()=>creditAdEarning());
-          }else{setTimeout(creditAdEarning,8000);}
-        }else{
-          // Final fallback
-          setTimeout(creditAdEarning,5000);
-        }
-      },1500);
+      result.then(()=>showToast('İzlenme alındı. Ödül sağlayıcı onayı bekliyor.','info'))
+        .catch(err=>{console.warn('Monetag ad not verified:',err);showToast('Reklam tamamlanamadı veya doğrulanmadı.','warn');})
+        .finally(()=>{btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';});
+    }catch(error){
+      console.warn('Monetag show error:',error);
+      showToast('Reklam başlatılamadı.','danger');
+      btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';
     }
   });
 }
-
 async function creditAdEarning(){
-  clearTimeout(window._adTimer);
-  // Client-side ad SDK callbacks are not trusted as proof of a valid impression.
-  showToast('Reklam ödülü, sağlayıcı imzalı sunucu doğrulaması eklenene kadar kapalı.','warn');
-  renderAdSection();
-  const btn=$('watchAdBtn');
-  if(btn){btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';}
+  showToast('Ödül, Monetag sunucu bildirimi geldiğinde otomatik eklenecek.','info');
 }
-
 /* ============ TABS ============ */
 function switchTab(name){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
