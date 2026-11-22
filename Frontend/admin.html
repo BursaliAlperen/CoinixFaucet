@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Coinix Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/admin.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div class="shell">
+  <header class="top"><a href="/" class="brand">COINIX <span>CONTROL</span></a><div class="top-right"><span id="adminStatus" class="status">AUTHENTICATING</span><button id="refreshBtn" class="icon-btn">↻</button></div></header>
+  <main>
+    <section class="hero"><div><div class="eyebrow">CONTROL CENTER / V2</div><h1>Admin Dashboard</h1><p>Economy, promotions, bot messaging and platform health.</p></div><div class="hero-mark">C</div></section>
+    <div id="notice" class="notice" hidden></div>
+    <section class="stats" id="stats">
+      <article class="stat"><span>Total users</span><strong id="statUsers">—</strong><small>Registered accounts</small></article>
+      <article class="stat"><span>Total balance</span><strong id="statBalance">—</strong><small>Outstanding user balance</small></article>
+      <article class="stat"><span>Total earned</span><strong id="statEarned">—</strong><small>Lifetime credited rewards</small></article>
+      <article class="stat"><span>Level 100</span><strong id="statMax">—</strong><small>Max-level players</small></article>
+    </section>
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">CHANNEL AUTOMATION</div><h2>Create promotion</h2></div><span class="pill">AUTO PUBLISH</span></div>
+        <form id="promoForm">
+          <label>Promotion title<input name="title" maxlength="80" required placeholder="Campaign headline"></label>
+          <label>Message<textarea name="message" maxlength="1800" required rows="4" placeholder="Write the promotion details..."></textarea></label>
+          <div class="two"><label>Button text<input name="buttonText" maxlength="32" placeholder="Open offer"></label><label>Button URL<input name="buttonUrl" type="url" placeholder="https://..."></label></div>
+          <button class="primary" type="submit">Publish promotion to channel <span>↗</span></button>
+          <p class="hint">Saving a promotion automatically posts it to the configured Telegram announcement channel.</p>
+        </form>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">DIRECT TELEGRAM</div><h2>Bot messages</h2></div><span class="pill blue">/botmessages</span></div>
+        <form id="messageForm">
+          <label>Telegram user ID<input name="userId" inputmode="numeric" pattern="[0-9]+" required placeholder="123456789"></label>
+          <label>Message<textarea name="message" rows="5" maxlength="3000" required placeholder="Message to send from Coinix bot"></textarea></label>
+          <button class="secondary" type="submit">Send Telegram message <span>➤</span></button>
+          <p class="hint">The recipient must have started the bot before the bot can message them.</p>
+        </form>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">PROGRESSION CONTROL</div><h2>Economy & XP</h2></div><span class="pill purple">LEVEL 1—100</span></div>
+        <form id="settingsForm">
+          <div class="two"><label>Daily check-in XP<input name="dailyCheckinXp" type="number" min="0" max="100000" value="10"></label><label>Ad watch XP<input name="adWatchXp" type="number" min="0" max="100000" value="10"></label></div>
+          <div class="two"><label>Task completion XP<input name="taskXp" type="number" min="0" max="100000" value="20"></label><label>FlyerHubs task XP<input name="flyerhubsTaskXp" type="number" min="0" max="100000" value="20"></label></div>
+          <div class="two"><label>FlyerHubs task reward<input name="flyerhubsTaskReward" type="number" min="0" step="0.0001" value="0.01"></label><label>Ad reward<input name="perAdEarning" type="number" min="0" step="0.0001" value="0.005"></label></div>
+          <button class="secondary" type="submit">Save economy settings</button>
+          <p class="hint">Level 100 doubles verified ad and task rewards. XP is server-calculated.</p>
+        </form>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">OPERATIONS</div><h2>Pending withdrawals</h2></div><span class="pill amber" id="pendingCount">0 PENDING</span></div>
+        <div id="withdrawals" class="list"><div class="empty">Loading…</div></div>
+        <p class="hint">This queue is read-only until a real payout and approval workflow is configured.</p>
+      </article>
+    </section>
+    <section class="panel promo-history"><div class="panel-head"><div><div class="eyebrow">CAMPAIGN LOG</div><h2>Recent promotions</h2></div></div><div id="promotions" class="list"><div class="empty">Loading…</div></div></section>
+    <footer>COINIX FAUCET · ADMIN CONTROL · SECURE TELEGRAM SESSION</footer>
+  </main>
+</div>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>
