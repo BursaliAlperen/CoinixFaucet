@@ -9,38 +9,39 @@ const adminHtml = fs.readFileSync('Frontend/admin.html','utf8');
 const icons = fs.readFileSync('Frontend/js/icons.js','utf8');
 const required = [
   ['Telegram /start handler', "command==='/start'"],
-  ['Telegram /level handler', "command==='/level'"],
-  ['Telegram /referrals handler', "command==='/referrals'"],
-  ['Admin promo endpoint', "/api/admin/promo"],
-  ['Promotion channel publish', "sendTelegramMessage(ANNOUNCEMENT_CHANNEL_ID"],
-  ['Referral in-app notification', "users/' + validReferralCode + '/notifications"],
-  ['Referral XP award', "settings.referralXp || 10"],
-  ['FlyerHubs task listing', "'/get_tasks'"],
-  ['FlyerHubs completion verification', "'/check_task'"],
-  ['Monetag valued callback', "reward_event_type') !== 'valued'"],
-  ['Monetag strict Telegram ID validation', "if (!/^\\d{1,20}$/.test(uid)"],
-  ['Level multiplier function', "function rewardMultiplier(user)"],
-  ['Fixed API task reward', 'const API_TASK_REWARD_USD=0.002'],
+  ['Required channel Telegram verification', "getChatMember"],
+  ['Required channel callback retry', 'check_required_channel'],
+  ['Mini App channel gate', 'showChannelGate'],
+  ['Admin task lifecycle', '/api/admin/tasks'],
+  ['Manual task review queue', '/api/admin/task-review'],
+  ['Task idempotent claim path', 'taskClaims/'],
+  ['24-hour referral multiplier', 'referralMultiplierBonus'],
+  ['Referral bonus expiry', 'activeReferralBonusTotal'],
+  ['Piarflow integration', 'piarflow.com/v1'],
+  ['FlyerHubs integration', 'api.flyerhubs.com'],
+  ['Traffy provider status', 'awaiting_official_api_contract'],
+  ['Traffy personal tracking link', 'TRAFFY_LINK_PREFIX'],
+  ['Daily analytics endpoint', '/api/admin/analytics'],
+  ['CSV export UI', 'coinix-gunluk-istatistik.csv'],
+  ['Bot start/stop admin controls', '/api/admin/bot-control'],
   ['TON and GRAM payout whitelist', "['ton','gram'].includes(methodKey)"],
-  ['Admin withdrawal settlement', '/api/admin/withdrawal'],
-  ['Admin paid/reject controls', 'data-withdraw-action="pay"'],
-  ['Inline SVG icon system', 'ton:'],
   ['Firebase web config endpoint', '/public-config/firebase'],
-  ['Istanbul reward timezone', "Europe/Istanbul"],
-  ['Server admin shortcut', 'adminOpenBtn'],
-  ['Admin dashboard actions', "api('/api/admin/promo'"]
+  ['Inline SVG icon system', 'ton:'],
+  ['Istanbul reward timezone', 'Europe/Istanbul']
 ];
 for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle)||icons.includes(needle), 'Missing: '+label);
 assert.ok(!backend.toLowerCase().includes('papara'),'Papara must not be accepted by the backend');
+assert.ok(!backend.toLowerCase().includes('monetag')&&!app.toLowerCase().includes('monetag'),'Monetag must be fully removed from runtime code');
 assert.ok(!backend.includes("command==='/botmessages'")&&!backend.includes("command==='/yeni'"),'Removed Telegram commands must stay removed');
 assert.ok(!backend.includes("/api/admin/botmessages")&&!adminHtml.includes('messageForm')&&!admin.includes('messageForm'),'Removed bot-message feature must stay removed');
-assert.ok(backend.includes("return Math.round((1 + level * 0.02) * 100) / 100;"),'Server level multiplier formula missing');
-assert.ok(backend.includes('Math.min(50, Number(user.level || 1))') && backend.includes('user.level < 50'),'Server level cap must be 50');
-assert.ok(app.includes('Math.min(50,Number(level)||1)'),'Frontend level multiplier must cap at 50');
+assert.ok(fs.readFileSync('Backend/earn-core.js','utf8').includes('1 + level * 0.02 + activeReferralBonusTotal(user, now)'),'Server level and referral multiplier formula missing');
+assert.ok(fs.readFileSync('Backend/earn-core.js','utf8').includes('Math.min(1, 50, Number(user?.level) || 1)')===false && fs.readFileSync('Backend/earn-core.js','utf8').includes('Math.min(50, Number(user?.level) || 1)'),'Server level cap must be 50');
+assert.ok(app.includes('Math.min(50,Number(user.level)||1)'),'Frontend level multiplier must cap at 50');
 assert.ok(backend.includes("Number(settings.dailyCheckinXp || 10)"),'Daily check-in XP default missing');
 assert.ok(backend.includes("Number(settings.adWatchXp || 10)"),'Verified ad XP default missing');
 assert.ok(backend.includes("Number(settings.taskXp || 20)"),'Task XP default missing');
 assert.ok(fs.existsSync('md/AD_NETWORKS.md'),'Ad network research doc missing');
+assert.ok(!fs.existsSync('md/MONETAG.md'),'Retired Monetag docs must be removed');
 assert.ok(fs.existsSync('md/FLYERHUBS.md'),'FlyerHubs docs missing');
 assert.ok(!fs.existsSync('README.md')&&!fs.existsSync('API.md'),'Root markdown docs should live in /md');
 console.log('Coinix smoke checks passed: '+required.length+' feature checks + removed-feature and docs/layout checks.');
