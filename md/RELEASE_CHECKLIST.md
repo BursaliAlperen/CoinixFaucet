@@ -27,6 +27,6 @@
 - [ ] Add FLYERHUBS_KEY and test get_tasks/check_task with a test user.
 - [ ] Configure Monetag postback URL and MONETAG_POSTBACK_SECRET.
 - [ ] Test valued, non_valued, duplicate ymid and daily-limit cases.
-- [ ] Confirm XP progression and the 0.02× per-level multiplier (3.00× at Level 100).
+- [ ] Confirm XP progression and the 0.02× per-level multiplier (2.00× at Level 50).
 - [ ] Confirm promotion creation posts to the announcement channel.
 - [ ] Confirm pending withdrawals; do not promise automatic payout.
