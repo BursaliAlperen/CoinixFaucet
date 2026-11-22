@@ -24,7 +24,8 @@ function isTaskOpen(task, now = Date.now()) {
   if (limit > 0 && Number(task.totalParticipants || 0) >= limit) return false;
   return true;
 }
-function splitTaskPrice(amount) {\n  const grossPrice = Math.round(Number(amount) * 10000) / 10000;\n  if (!Number.isFinite(grossPrice) || grossPrice <= 0) throw new Error('INVALID_TASK_REWARD');\n  const reward = Math.round(grossPrice * 0.70 * 10000) / 10000;\n  const platformFee = Math.round((grossPrice - reward) * 10000) / 10000;\n  return { grossPrice, reward, platformFee };\n}\nfunction cleanTaskInput(body, now = Date.now()) {
+function splitTaskPrice(amount) {
+  const grossPrice = Math.round(Number(amount) * 10000) / 10000;\n  if (!Number.isFinite(grossPrice) || grossPrice <= 0) throw new Error('INVALID_TASK_REWARD');\n  const reward = Math.round(grossPrice * 0.70 * 10000) / 10000;\n  const platformFee = Math.round((grossPrice - reward) * 10000) / 10000;\n  return { grossPrice, reward, platformFee };\n}\nfunction cleanTaskInput(body, now = Date.now()) {
   const title = String(body.title || '').trim().slice(0, 100);
   const description = String(body.description || '').trim().slice(0, 1000);
   const type = String(body.type || '').toLowerCase();
@@ -44,7 +45,8 @@ function splitTaskPrice(amount) {\n  const grossPrice = Math.round(Number(amount
   if (!['telegram_membership','manual'].includes(verificationMethod)) throw new Error('INVALID_TASK_VERIFICATION');
   if (['channel','group'].includes(type) && verificationMethod !== 'telegram_membership') throw new Error('TELEGRAM_TASK_REQUIRES_MEMBERSHIP_CHECK');
   if (['link','manual'].includes(type) && verificationMethod !== 'manual') throw new Error('MANUAL_TASK_REQUIRES_MANUAL_REVIEW');
-  const price = splitTaskPrice(body.grossPrice ?? reward);\n  return { title, description, type, verificationMethod, url, chatId, ...price, startAt, endAt, totalLimit, perUserLimit };
+  const price = splitTaskPrice(body.grossPrice ?? reward);
+  return { title, description, type, verificationMethod, url, chatId, ...price, startAt, endAt, totalLimit, perUserLimit };
 }
 function isValidReferral(referrerId, inviteeId, alreadyClaimed = false) {
   const ref=String(referrerId||''),invitee=String(inviteeId||'');
