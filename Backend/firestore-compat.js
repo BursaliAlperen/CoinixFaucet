@@ -78,7 +78,7 @@ class Ref {
   push(value) {
     const key = crypto.randomBytes(12).toString('hex');
     const ref = this.child(key);
-    if (value !== undefined) ref.set(value);
+    if (value !== undefined) ref.set(value).catch(error => console.warn('[firestore-push]', error.message));
     return ref;
   }
   set(value) { return this.adapter.write(this.path, value); }
