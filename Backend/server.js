@@ -163,7 +163,10 @@ function applyXp(user, amount) {
   user.xpUpdatedAt = Date.now();
   return { level: user.level, xp: user.xp, xpToNext: user.xpToNext, gained: gain };
 }
-function rewardMultiplier(user) { return Number(user.level || 1) >= 100 ? 2 : 1; }
+function rewardMultiplier(user) {
+  const level = Math.max(1, Math.min(100, Number(user?.level) || 1));
+  return Math.round((1 + level * 0.02) * 100) / 100;
+}
 async function flyerCall(route, payload) {
   if (!FLYERHUBS_KEY) throw new Error('FLYERHUBS_NOT_CONFIGURED');
   const response = await fetch('https://api.flyerhubs.com' + route, {
@@ -472,13 +475,6 @@ async function handleAdminApi(user, url, body, res) {
     await rtdb.ref('settings').update(patch);
     return send(res,200,{status:'ok',settings:patch});
   }
-  if (url.pathname === '/api/admin/botmessages') {
-    const target=String(body.userId||'').trim();
-    const message=String(body.message||'').trim().slice(0,3000);
-    if(!/^[0-9]{1,20}$/.test(target)||!message)return send(res,400,{status:'error',code:'INVALID_MESSAGE'});
-    await sendTelegramMessage(target,message);
-    return send(res,200,{status:'ok'});
-  }
   return send(res,404,{status:'error',code:'NOT_FOUND'});
 }
 async function handleTelegramWebhook(req, res) {
@@ -506,14 +502,14 @@ async function handleTelegramWebhook(req, res) {
       const keyboard=url?{inline_keyboard:[[{text:'🚀 Open Coinix Faucet',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
       await sendTelegramMessage(uid,'Welcome to Coinix Faucet!\n\nEarn rewards, complete tasks and invite friends.' ,keyboard?{reply_markup:keyboard}:{});
     }else if(command==='/help'){
-      await sendTelegramMessage(uid,'Coinix Faucet commands:\\n/start — Open the app\\n/help — Help\\n/level — Your level and XP\\n/referrals — Your referral link and stats\\n/botmessages — Admin bot message tools\\n/yeni — Latest referrals (admins only)\\n/admin — Admin dashboard (admins only)');
+      await sendTelegramMessage(uid,'Coinix Faucet commands:\\n/start — Open the app\\n/help — Help\\n/level — Your level, XP and reward multiplier\\n/referrals — Your referral link and stats\\n/admin — Admin dashboard (admins only)');
     }else if(command==='/level'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
       const snap=await rtdb.ref('users/'+uid).once('value');
       if(!snap.exists())await sendTelegramMessage(uid,'Open /start first to create your Coinix profile.');
       else{
         const v=snap.val()||{},level=Math.max(1,Math.min(100,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
-        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/100</b>\\nXP: <b>'+(level>=100?'MAX':xp+' / '+next)+'</b>\\n'+(level>=100?'You unlocked 2× verified ad and task rewards.':'Complete verified ads, tasks and daily check-ins to earn XP.'),{parse_mode:'HTML'});
+        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/100</b>\\nXP: <b>'+(level>=100?'MAX':xp+' / '+next)+'</b>\\n'+(level>=100?'Your reward multiplier is '+rewardMultiplier(v).toFixed(2)+'× for eligible rewards.':'Complete verified ads, tasks and daily check-ins to earn XP.'),{parse_mode:'HTML'});
       }
     }else if(command==='/referrals'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
@@ -525,18 +521,6 @@ async function handleTelegramWebhook(req, res) {
       else{
         const url=(WEBAPP_URL||PUBLIC_BASE_URL)+'/admin';
         await sendTelegramMessage(uid,'🔐 Coinix Admin Panel',{reply_markup:{inline_keyboard:[[{text:'Open AAA Admin',web_app:{url}}]]}});
-      }
-    }else if(command==='/botmessages'){
-      if(!isAdmin(uid))await sendTelegramMessage(uid,'This command is restricted to administrators.');
-      else await sendTelegramMessage(uid,'📨 <b>Bot Messages</b>\n/start — Welcome + Mini App\n/yeni — Latest referral activity\n/admin — Admin dashboard\nPromotions created in the dashboard are automatically posted to the announcement channel.',{parse_mode:'HTML'});
-    }else if(command==='/yeni'){
-      if(!isAdmin(uid))await sendTelegramMessage(uid,'This command is restricted to administrators.');
-      else{
-        if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
-        const snap=await rtdb.ref('referralClaims').once('value');
-        const rows=[];snap.forEach(c=>rows.push({uid:c.key,...c.val()}));rows.sort((a,b)=>(b.at||0)-(a.at||0));
-        const body=rows.slice(0,10).map(v=>'• '+escapeHtml(v.uid)+' → '+escapeHtml(v.referrer||'?')+' · '+new Date(v.at||0).toLocaleString('en-US')).join('\n')||'No referrals yet.';
-        await sendTelegramMessage(uid,'🆕 <b>Latest referrals</b>\n'+body,{parse_mode:'HTML'});
       }
     }
   }catch(error){console.error('[telegram-webhook]',error.message);}
@@ -551,9 +535,7 @@ async function configureTelegramWebhook() {
       {command:'help',description:'Show help'},
       {command:'level',description:'Your level and XP'},
       {command:'referrals',description:'Your referral link and stats'},
-      {command:'admin',description:'Open admin panel'},
-      {command:'botmessages',description:'Admin bot message tools'},
-      {command:'yeni',description:'Latest referrals (admin)'}
+      {command:'admin',description:'Open admin panel'}
     ]});
     console.log('[telegram] webhook and commands configured');
   }catch(error){console.error('[telegram-config]',error.message);}
