@@ -44,7 +44,8 @@ function cleanTaskInput(body, now = Date.now()) {
   const totalLimit = Math.max(0, Math.min(10000000, Math.floor(Number(body.totalLimit || 0))));
   const perUserLimit = Math.max(1, Math.min(10, Math.floor(Number(body.perUserLimit || 1))));
   if (!title || !description || !['channel','group','link','manual'].includes(type)) throw new Error('INVALID_TASK_FIELDS');
-  if (!Number.isFinite(reward) || reward <= 0 || reward > 100000) throw new Error('INVALID_TASK_REWARD');\n  if (totalLimit < 1) throw new Error('TASK_LIMIT_REQUIRED');
+  if (!Number.isFinite(reward) || reward <= 0 || reward > 100000) throw new Error('INVALID_TASK_REWARD');
+  if (totalLimit < 1) throw new Error('TASK_LIMIT_REQUIRED');
   if (!Number.isFinite(startAt) || !Number.isFinite(endAt) || (endAt && endAt <= startAt)) throw new Error('INVALID_TASK_DATES');
   if (!url.startsWith('https://')) throw new Error('INVALID_TASK_URL');
   if (['channel','group'].includes(type) && !chatId && !/^https:\/\/t\.me\/[A-Za-z0-9_]{5,}/i.test(url)) throw new Error('TASK_CHAT_REQUIRED');
