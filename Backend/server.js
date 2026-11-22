@@ -361,7 +361,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
   });
   if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
   await claimsRef.child(actionId).update({status:'approved',reward:credited,approvedAt:Date.now(),autoVerified:true});
-  await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),claimId:actionId,provider:'coinix_task'});
+  await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),taskType:String(task.type||''),claimId:actionId,provider:'coinix_task'});
   return {user:userTx.snapshot.val(),reward:credited,pending:false,taskClaim:{id:actionId,status:'approved'}};
 }
 async function applyEconomyAction(uid, body) {
@@ -515,7 +515,7 @@ async function completeFlyerTask(uid, signature, settings) {
   });
   if (!tx.committed || failure) throw new Error(failure || 'FLYERHUBS_REWARD_FAILED');
   if (already) return { completed: true, duplicate: true, reward: 0, xp: null };
-  await logTransaction(uid, 'flyerhubs_task', credited, { signatureHash: taskKey, taskName: String(task.name || task.task || 'FlyerHubs task').slice(0, 100), xp });
+  await logTransaction(uid, 'flyerhubs_task', credited, { signatureHash: taskKey, taskName: String(task.name || task.task || 'FlyerHubs task').slice(0, 100), xp, provider:'flyerhubs' });
   await taskRef.remove();
   return { completed: true, duplicate: false, reward: credited, xp, multiplier };
 }
@@ -625,21 +625,28 @@ async function handleAdminApi(user, url, body, res) {
     });
     if(!userTx.committed||failure){await claimRef.update({status:'pending',reviewError:failure||'CREDIT_FAILED'});return send(res,503,{status:'error',code:failure||'TASK_REVIEW_CREDIT_FAILED'});}
     await claimRef.update({status:'approved',reward:credited,approvedAt:Date.now(),approvedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
-    await logTransaction(uid,'task',credited,{taskId,claimId,provider:'manual_task'});await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited});
+    await logTransaction(uid,'task',credited,{taskId,claimId,taskType:String(lock.snapshot.val()?.type||''),provider:'manual_task'});await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited});
     return send(res,200,{status:'ok',claim:{id:claimId,status:'approved',reward:credited}});
   }
   if (url.pathname === '/api/admin/analytics') {
+    const dayCount=Math.max(7,Math.min(30,Number(body.days||30)));
+    const provider=String(body.provider||'all'),taskType=String(body.taskType||'all'),userFilter=String(body.userId||'').trim();
     const [usersSnap,txSnap]=await Promise.all([rtdb.ref('users').once('value'),firestore.collection('transactions').orderBy('timestamp','desc').limit(4000).get()]);
-    const days=Array.from({length:30},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(29-i));return {key:dayKeyFor(d.getTime()),newUsers:0,activeUsers:0,referrals:0,taskCompletions:0,adRecords:0,rewardUsd:0,adCreditUsd:0};});
+    const days=Array.from({length:dayCount},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(dayCount-1-i));return {key:dayKeyFor(d.getTime()),newUsers:0,activeUsers:0,referrals:0,taskCompletions:0,adRecords:0,rewardUsd:0,adCreditUsd:0};});
     const byDay=new Map(days.map(x=>[x.key,x]));
-    usersSnap.forEach(child=>{const u=child.val()||{};const created=byDay.get(dayKeyFor(Number(u.createdAt||0)));if(created)created.newUsers++;const active=byDay.get(dayKeyFor(Number(u.lastActiveAt||0)));if(active)active.activeUsers++;});
-    txSnap.forEach(doc=>{const v=doc.data()||{},stamp=v.timestamp?.toDate?v.timestamp.toDate().getTime():Number(v.timestamp||0),day=byDay.get(dayKeyFor(stamp));if(!day)return;
-      if(v.type==='referral_bonus')day.referrals++;if(v.type==='task')day.taskCompletions++;
+    if(!userFilter)usersSnap.forEach(child=>{const u=child.val()||{};const created=byDay.get(dayKeyFor(Number(u.createdAt||0)));if(created)created.newUsers++;const active=byDay.get(dayKeyFor(Number(u.lastActiveAt||0)));if(active)active.activeUsers++;});
+    txSnap.forEach(doc=>{
+      const v=doc.data()||{};if(userFilter&&String(v.userId||'')!==userFilter)return;
+      if(provider!=='all'&&String(v.provider||'')!==provider)return;
+      if(taskType!=='all'&&String(v.taskType||'')!==taskType)return;
+      const stamp=v.timestamp?.toDate?v.timestamp.toDate().getTime():Number(v.timestamp||0),day=byDay.get(dayKeyFor(stamp));if(!day)return;
+      if(v.type==='referral_bonus')day.referrals++;
+      if(v.type==='task'||v.type==='flyerhubs_task')day.taskCompletions++;
       if(['ad','sponsor','flyerhubs_task','traffy'].includes(v.type)){day.adRecords++;day.adCreditUsd+=Number(v.amount||0);}
       if(Number(v.amount||0)>0)day.rewardUsd+=Number(v.amount||0);
     });
     const totals=days.reduce((a,d)=>{for(const k of ['newUsers','activeUsers','referrals','taskCompletions','adRecords','rewardUsd','adCreditUsd'])a[k]=(a[k]||0)+d[k];return a;},{});
-    return send(res,200,{status:'ok',days,totals});
+    return send(res,200,{status:'ok',days,totals,filters:{days:dayCount,provider,taskType,userId:userFilter}});
   }
   if (url.pathname === '/api/admin/overview') {
     const [usersSnap, withdrawalsSnap, promosSnap] = await Promise.all([
@@ -959,7 +966,7 @@ async function handleApi(req, res, url) {
           credited = true;
           return profile;
         });
-        if (tx.committed && credited) await logTransaction(user.id, 'sponsor', Number(data.reward || reward), { sponsorHash: key, xp: data.xp, multiplier: data.multiplier });
+        if (tx.committed && credited) await logTransaction(user.id, 'sponsor', Number(data.reward || reward), { sponsorHash: key, xp: data.xp, multiplier: data.multiplier, provider:'piarflow' });
         data.rewarded = Boolean(tx.committed && credited);
         data.reward = data.rewarded ? Number(data.reward || reward) : 0;
       }
