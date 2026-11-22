@@ -3,238 +3,205 @@ const tg=window.Telegram?.WebApp;
 if(tg){tg.ready();tg.expand();}
 const $=id=>document.getElementById(id);
 const initData=tg?.initData||'';
-function showNotice(message,error=false){const el=$('notice');el.textContent=String(message||'');el.className='notice'+(error?' error':'');el.hidden=false;}
-function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showNotice(message,error=false){
+  const el=$('notice');if(!el)return;
+  el.textContent=String(message||'');el.className='notice'+(error?' error':'');el.hidden=false;
+}
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmt(value){return Number(value||0).toLocaleString('tr-TR',{maximumFractionDigits:4});}
+function moneyLabel(value){return '$'+fmt(value);}
 async function api(path,payload={}){
-  if(!initData)throw new Error('Open this dashboard inside the Coinix Telegram bot.');
-  const res=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...payload,initData})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok||data.status==='error')throw new Error(data.code||data.message||('HTTP '+res.status));
+  if(!initData)throw new Error('Yönetim panelini Telegram botunun içinden aç.');
+  const response=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...payload,initData})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||data.status==='error')throw new Error(data.code||data.message||('HTTP '+response.status));
   return data;
 }
-function fmt(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:4});}
-function moneyLabel(value){return '
-  try{
-    const d=await api('/api/admin/overview');
-    $('adminStatus').textContent='ADMIN VERIFIED';
-    $('statUsers').textContent=fmt(d.stats.users);
-    $('statBalance').textContent='$'+fmt(d.stats.totalBalance);
-    $('statEarned').textContent='$'+fmt(d.stats.totalEarned);
-    $('statMax').textContent=fmt(d.stats.level50);$('statReferrals').textContent=fmt(d.stats.referrals);$('statActiveBonuses').textContent=fmt(d.stats.activeReferralBonuses);
-    $('pendingCount').textContent=fmt(d.stats.pendingWithdrawals)+' PENDING';
-    const settings=d.settings||{};
-    for(const [key,value] of Object.entries(settings)){
-      const field=$('settingsForm').elements.namedItem(key);
-      if(field&&value!==undefined)field.value=value;
-    }
-    const withdrawals=d.withdrawals||[];
-    $('withdrawals').innerHTML=withdrawals.length?withdrawals.map(w=>{
-      return '<div class="list-item withdrawal-item"><div><strong>'+
-        escapeHtml(w.name||w.userId)+' · $'+fmt(w.amount)+' · '+escapeHtml(String(w.method||'').toUpperCase())+
-        '</strong><small>'+escapeHtml(w.account||'')+'</small><small>'+
-        new Date(w.requestedAt||Date.now()).toLocaleString()+
-        '</small><div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(w.id)+'" data-currency="'+escapeHtml(String(w.method||'').toUpperCase())+'">Mark paid</button>'+
-        '<button type="button" class="reject-btn" data-withdraw-action="reject" data-id="'+escapeHtml(w.id)+'">Reject &amp; refund</button></div></div></div>';
-    }).join(''):'<div class="empty">No pending TON/GRAM withdrawals.</div>';
-    const promotions=d.promotions||[];
-    $('promotions').innerHTML=promotions.length?promotions.map(p=>
-      '<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+
-      escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>'
-    ).join(''):'<div class="empty">No promotions yet.</div>';
-    const panels=await Promise.allSettled([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl(),loadAudit()]);
-    if(panels.some(x=>x.status==='rejected'))showNotice('Bazı paneller yüklenemedi. Yenile düğmesini kullan.',true);else showNotice('Panel verileri güncellendi.');
-  }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
-}
-$('promoForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');btn.disabled=true;
-  try{
-    await api('/api/admin/promo',Object.fromEntries(new FormData(form).entries()));
-    showNotice('Promotion published to Telegram channel.');form.reset();await loadOverview();
-  }catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
-});
-$('settingsForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
-  const values=Object.fromEntries([...new FormData(form).entries()].map(([k,v])=>[k,Number(v)]));btn.disabled=true;
-  try{await api('/api/admin/settings',values);showNotice('Economy and XP settings saved.');}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
-});
-function openWithdrawalModal(id,action,currency){
-  $('withdrawActionId').value=id;
-  $('withdrawAction').value=action;
-  $('withdrawModalTitle').textContent=action==='pay'?'Complete '+currency+' payout':'Reject withdrawal';
-  $('withdrawModalSummary').textContent=action==='pay'?'Enter the actual amount sent and the confirmed blockchain transaction hash.':'The original USD balance will be returned to the user.';
-  $('payoutFields').hidden=action!=='pay';
-  $('rejectFields').hidden=action!=='reject';
-  $('confirmWithdrawAction').textContent=action==='pay'?'Mark as paid':'Reject & refund';
-  $('withdrawModal').hidden=false;
-}
-function closeWithdrawalModal(){$('withdrawModal').hidden=true;}
-$('withdrawals').addEventListener('click',e=>{
-  const btn=e.target.closest('[data-withdraw-action]');if(!btn)return;
-  openWithdrawalModal(btn.dataset.id,btn.dataset.withdrawAction,btn.dataset.currency||'TON');
-});
-$('closeWithdrawModal').addEventListener('click',closeWithdrawalModal);
-$('cancelWithdrawModal').addEventListener('click',closeWithdrawalModal);
-$('withdrawModal').addEventListener('click',e=>{if(e.target.id==='withdrawModal')closeWithdrawalModal();});
-$('withdrawActionForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const id=$('withdrawActionId').value,action=$('withdrawAction').value,btn=$('confirmWithdrawAction');
-  const payload={id,action};
-  if(action==='pay'){
-    payload.payoutAmount=Number($('payoutAmount').value);
-    payload.txHash=$('payoutTxHash').value.trim();
-    if(!Number.isFinite(payload.payoutAmount)||payload.payoutAmount<=0){showNotice('Enter a valid coin amount.',true);return;}
-    if(payload.txHash.length<20){showNotice('A valid transaction hash is required.',true);return;}
-  }else{payload.reason=$('payoutRejectReason').value.trim()||'Rejected by admin';}
-  btn.disabled=true;
-  try{
-    await api('/api/admin/withdrawal',payload);
-    showNotice(action==='pay'?'Withdrawal marked paid.':'Withdrawal rejected and USD balance refunded.');
-    closeWithdrawalModal();$('withdrawActionForm').reset();await loadOverview();
-  }catch(err){showNotice(err.message,true);}
-  finally{btn.disabled=false;}
-});
-$('taskForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button[type="submit"]'),v=Object.fromEntries(new FormData(form).entries());
-  v.reward=Number(v.reward);v.totalLimit=Number(v.totalLimit);v.perUserLimit=Number(v.perUserLimit);
-  v.startAt=v.startAt?new Date(v.startAt).toISOString():new Date().toISOString();v.endAt=v.endAt?new Date(v.endAt).toISOString():'';
-  btn.disabled=true;try{await api('/api/admin/tasks',{...v,action:'create'});form.reset();form.elements.namedItem('reward').value='0.002';form.elements.namedItem('perUserLimit').value='1';showNotice('Görev kaydedildi.');await loadTasks();}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
-});
-$('taskForm').elements.namedItem('type').addEventListener('change',e=>{$('taskForm').elements.namedItem('verificationMethod').value=['channel','group'].includes(e.target.value)?'telegram_membership':'manual';});
-$('taskAdminList').addEventListener('click',async e=>{const b=e.target.closest('[data-task-status]');if(!b)return;b.disabled=true;try{await api('/api/admin/tasks',{action:'status',id:b.dataset.id,status:b.dataset.taskStatus});await loadTasks();showNotice('Görev durumu güncellendi.');}catch(err){showNotice(err.message,true);}finally{b.disabled=false;}});
-$('taskClaims').addEventListener('click',async e=>{const b=e.target.closest('[data-claim-action]');if(!b)return;b.disabled=true;try{await api('/api/admin/task-review',{taskId:b.dataset.task,userId:b.dataset.user,claimId:b.dataset.claim,decision:b.dataset.claimAction});await loadClaims();showNotice('Görev kanıtı işlendi.');}catch(err){showNotice(err.message,true);}finally{b.disabled=false;}});
-$('refreshTasksBtn').addEventListener('click',async()=>{try{await Promise.all([loadTasks(),loadClaims()]);}catch(e){showNotice(e.message,true);}});
-$('analyticsApply').addEventListener('click',()=>loadAnalytics().catch(e=>showNotice(e.message,true)));
-$('analyticsCsv').addEventListener('click',exportAnalyticsCsv);
-$('refreshAuditBtn').addEventListener('click',()=>loadAudit().catch(e=>showNotice(e.message,true)));
-$('botStartBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:true});await loadBotControl();showNotice('Bot etkinleştirildi.');}catch(e){showNotice(e.message,true);}});
-$('botStopBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:false});await loadBotControl();showNotice('Bot duraklatıldı.');}catch(e){showNotice(e.message,true);}});
-
-$('refreshBtn').addEventListener('click',loadOverview);
-loadOverview();
-+fmt(value);}
-async function loadAudit(){
-  const d=await api('/api/admin/audit'),items=d.items||[];
-  $('auditList').innerHTML=items.length?items.map(x=>'<div class="list-item"><div><strong>'+escapeHtml(x.action)+'</strong><small>Yönetici: '+escapeHtml(x.actorId)+' · Hedef: '+escapeHtml(x.targetId||'—')+'</small></div><small>'+new Date(x.timestamp||Date.now()).toLocaleString('tr-TR')+'</small></div>').join(''):'<div class="empty">Henüz yönetici işlemi yok.</div>';
-}
 async function loadBotControl(){
-  const d=await api('/api/admin/bot-control',{action:'status'}),enabled=d.enabled===true;
+  const data=await api('/api/admin/bot-control',{action:'status'}),enabled=data.enabled===true;
   $('botControlStatus').textContent=enabled?'Etkin':'Duraklatıldı';
   $('botControlStatus').className='pill '+(enabled?'green':'amber');
 }
 async function loadTasks(){
-  const d=await api('/api/admin/tasks',{action:'list'}),items=d.tasks||[];
-  $('taskAdminList').innerHTML=items.length?items.map(t=>{
-    const status=t.status||(t.active?'active':'paused'),label={draft:'Taslak',active:'Aktif',paused:'Duraklatıldı',completed:'Tamamlandı'}[status]||status;
-    return '<div class="list-item task-admin-item"><div><strong>'+escapeHtml(t.title)+'</strong><small>'+escapeHtml(t.type)+' · '+moneyLabel(t.reward)+' · '+fmt(t.totalParticipants)+' katılım</small></div><div class="task-admin-actions"><span class="pill">'+label+'</span>'+
-      (status!=='active'?'<button class="secondary" data-task-status="active" data-id="'+escapeHtml(t.id)+'">Aktifleştir</button>':'<button class="secondary" data-task-status="paused" data-id="'+escapeHtml(t.id)+'">Duraklat</button>')+
-      (status!=='completed'?'<button class="secondary" data-task-status="completed" data-id="'+escapeHtml(t.id)+'">Bitir</button>':'')+'</div></div>';
+  const data=await api('/api/admin/tasks',{action:'list'}),items=data.tasks||[];
+  $('taskAdminList').innerHTML=items.length?items.map(task=>{
+    const status=task.status||(task.active?'active':'paused');
+    const label={draft:'Taslak',active:'Aktif',paused:'Duraklatıldı',completed:'Tamamlandı'}[status]||status;
+    const toggle=status==='active'
+      ?'<button class="secondary" data-task-status="paused" data-id="'+escapeHtml(task.id)+'">Duraklat</button>'
+      :'<button class="secondary" data-task-status="active" data-id="'+escapeHtml(task.id)+'">Aktifleştir</button>';
+    const finish=status==='completed'?'':'<button class="secondary" data-task-status="completed" data-id="'+escapeHtml(task.id)+'">Bitir</button>';
+    return '<div class="list-item task-admin-item"><div><strong>'+escapeHtml(task.title)+'</strong><small>'+escapeHtml(task.type)+' · '+moneyLabel(task.reward)+' · '+fmt(task.totalParticipants)+' katılım</small></div><div class="task-admin-actions"><span class="pill">'+label+'</span>'+toggle+finish+'</div></div>';
   }).join(''):'<div class="empty">Henüz görev oluşturulmadı.</div>';
 }
 async function loadClaims(){
-  const d=await api('/api/admin/task-claims'),items=d.claims||[];$('claimCount').textContent=items.length+' BEKLİYOR';
-  $('taskClaims').innerHTML=items.length?items.map(c=>'<div class="list-item"><div><strong>'+escapeHtml(c.title||c.taskId)+' · '+moneyLabel(c.reward)+'</strong><small>Kullanıcı: '+escapeHtml(c.userId)+' · '+new Date(c.createdAt||Date.now()).toLocaleString('tr-TR')+'</small><small>Kanıt: '+escapeHtml(c.proof||'—')+'</small></div><div class="task-admin-actions"><button class="pay-btn" data-claim-action="approve" data-task="'+escapeHtml(c.taskId)+'" data-user="'+escapeHtml(c.userId)+'" data-claim="'+escapeHtml(c.id)+'">Onayla</button><button class="reject-btn" data-claim-action="reject" data-task="'+escapeHtml(c.taskId)+'" data-user="'+escapeHtml(c.userId)+'" data-claim="'+escapeHtml(c.id)+'">Reddet</button></div></div>').join(''):'<div class="empty">Bekleyen kanıt yok.</div>';
+  const data=await api('/api/admin/task-claims'),items=data.claims||[];
+  $('claimCount').textContent=items.length+' BEKLİYOR';
+  $('taskClaims').innerHTML=items.length?items.map(claim=>
+    '<div class="list-item"><div><strong>'+escapeHtml(claim.title||claim.taskId)+' · '+moneyLabel(claim.reward)+'</strong>'+
+    '<small>Kullanıcı: '+escapeHtml(claim.userId)+' · '+new Date(claim.createdAt||Date.now()).toLocaleString('tr-TR')+'</small>'+
+    '<small>Kanıt: '+escapeHtml(claim.proof||'—')+'</small></div><div class="task-admin-actions">'+
+    '<button class="pay-btn" data-claim-action="approve" data-task="'+escapeHtml(claim.taskId)+'" data-user="'+escapeHtml(claim.userId)+'" data-claim="'+escapeHtml(claim.id)+'">Onayla</button>'+
+    '<button class="reject-btn" data-claim-action="reject" data-task="'+escapeHtml(claim.taskId)+'" data-user="'+escapeHtml(claim.userId)+'" data-claim="'+escapeHtml(claim.id)+'">Reddet</button></div></div>'
+  ).join(''):'<div class="empty">Bekleyen kanıt yok.</div>';
 }
 async function loadProviders(){
-  const d=await api('/api/admin/providers'),p=d.providers||{};
-  $('providerStatus').innerHTML=[['Piarflow',p.piarflow],['FlyerHubs',p.flyerhubs],['Traffy',p.traffy]].map(([name,v])=>'<div class="list-item"><strong>'+name+'</strong><span class="pill '+(v?.status==='configured'?'green':'amber')+'">'+escapeHtml(v?.status||'bilinmiyor')+'</span></div>').join('');
+  const data=await api('/api/admin/providers'),providers=data.providers||{};
+  $('providerStatus').innerHTML=[['Piarflow',providers.piarflow],['FlyerHubs',providers.flyerhubs],['Traffy',providers.traffy]].map(([name,value])=>
+    '<div class="list-item"><strong>'+name+'</strong><span class="pill '+(value?.status==='configured'?'green':'amber')+'">'+escapeHtml(value?.status||'bilinmiyor')+'</span></div>'
+  ).join('');
 }
 async function loadAnalytics(){
-  const filters={days:Number($('analyticsDays').value||30),provider:$('analyticsProvider').value,taskType:$('analyticsTaskType').value,userId:$('analyticsUserId').value.trim()};
-  const d=await api('/api/admin/analytics',filters),t=d.totals||{},days=d.days||[];
-  $('aNewUsers').textContent=fmt(t.newUsers);$('aActiveUsers').textContent=fmt(t.activeUsers);$('aReferrals').textContent=fmt(t.referrals);
-  $('aTasks').textContent=fmt(t.taskCompletions);$('aAds').textContent=fmt(t.adRecords);$('aRewards').textContent=moneyLabel(t.rewardUsd);
-  const max=Math.max(1,...days.map(x=>Number(x.rewardUsd||0)));
-  $('analyticsChart').innerHTML=days.map(x=>'<div class="chart-col" title="'+escapeHtml(x.key)+' · '+moneyLabel(x.rewardUsd)+'"><div class="chart-bar" style="height:'+Math.max(2,Number(x.rewardUsd||0)/max*100)+'%"></div><small>'+escapeHtml(x.key.slice(5))+'</small></div>').join('');
-  $('analyticsRows').innerHTML=days.slice().reverse().map(x=>'<tr><td>'+escapeHtml(x.key)+'</td><td>'+fmt(x.newUsers)+'</td><td>'+fmt(x.activeUsers)+'</td><td>'+fmt(x.referrals)+'</td><td>'+fmt(x.taskCompletions)+'</td><td>'+fmt(x.adRecords)+'</td><td>'+moneyLabel(x.rewardUsd)+'</td></tr>').join('');
+  const filters={
+    days:Number($('analyticsDays').value||30),
+    provider:$('analyticsProvider').value,
+    taskType:$('analyticsTaskType').value,
+    userId:$('analyticsUserId').value.trim()
+  };
+  const data=await api('/api/admin/analytics',filters),totals=data.totals||{},days=data.days||[];
+  $('aNewUsers').textContent=fmt(totals.newUsers);
+  $('aActiveUsers').textContent=fmt(totals.activeUsers);
+  $('aReferrals').textContent=fmt(totals.referrals);
+  $('aTasks').textContent=fmt(totals.taskCompletions);
+  $('aAds').textContent=fmt(totals.adRecords);
+  $('aRewards').textContent=moneyLabel(totals.rewardUsd);
+  const max=Math.max(1,...days.map(day=>Number(day.rewardUsd||0)));
+  $('analyticsChart').innerHTML=days.map(day=>
+    '<div class="chart-col" title="'+escapeHtml(day.key)+' · '+moneyLabel(day.rewardUsd)+'"><div class="chart-bar" style="height:'+Math.max(2,Number(day.rewardUsd||0)/max*100)+'%"></div><small>'+escapeHtml(day.key.slice(5))+'</small></div>'
+  ).join('');
+  $('analyticsRows').innerHTML=days.slice().reverse().map(day=>
+    '<tr><td>'+escapeHtml(day.key)+'</td><td>'+fmt(day.newUsers)+'</td><td>'+fmt(day.activeUsers)+'</td><td>'+fmt(day.referrals)+'</td><td>'+fmt(day.taskCompletions)+'</td><td>'+fmt(day.adRecords)+'</td><td>'+moneyLabel(day.rewardUsd)+'</td></tr>'
+  ).join('');
   window._analyticsExport=days;
 }
 function exportAnalyticsCsv(){
-  const rows=window._analyticsExport||[];if(!rows.length){showNotice('Önce istatistikleri yükle.',true);return;}
-  const keys=['key','newUsers','activeUsers','referrals','taskCompletions','adRecords','rewardUsd','adCreditUsd'];
-  const csv=[keys.join(','),...rows.map(r=>keys.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(','))].join('\n');
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='coinix-gunluk-istatistik.csv';a.click();URL.revokeObjectURL(url);
+  const rows=window._analyticsExport||[];
+  if(!rows.length){showNotice('Önce istatistikleri yükle.',true);return;}
+  const columns=['key','newUsers','activeUsers','referrals','taskCompletions','adRecords','rewardUsd','adCreditUsd'];
+  const csv=[columns.join(','),...rows.map(row=>columns.map(key=>'"'+String(row[key]??'').replace(/"/g,'""')+'"').join(','))].join(String.fromCharCode(10));
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),anchor=document.createElement('a');
+  anchor.href=url;anchor.download='coinix-gunluk-istatistik.csv';anchor.click();URL.revokeObjectURL(url);
+}
+async function loadAudit(){
+  const data=await api('/api/admin/audit'),items=data.items||[];
+  $('auditList').innerHTML=items.length?items.map(item=>
+    '<div class="list-item"><div><strong>'+escapeHtml(item.action)+'</strong><small>Yönetici: '+escapeHtml(item.actorId)+' · Hedef: '+escapeHtml(item.targetId||'—')+'</small></div><small>'+new Date(item.timestamp||Date.now()).toLocaleString('tr-TR')+'</small></div>'
+  ).join(''):'<div class="empty">Henüz yönetici işlemi yok.</div>';
 }
 async function loadOverview(){
   try{
-    const d=await api('/api/admin/overview');
-    $('adminStatus').textContent='ADMIN VERIFIED';
-    $('statUsers').textContent=fmt(d.stats.users);
-    $('statBalance').textContent='$'+fmt(d.stats.totalBalance);
-    $('statEarned').textContent='$'+fmt(d.stats.totalEarned);
-    $('statMax').textContent=fmt(d.stats.level50);
-    $('pendingCount').textContent=fmt(d.stats.pendingWithdrawals)+' PENDING';
-    const settings=d.settings||{};
+    const data=await api('/api/admin/overview');
+    $('adminStatus').textContent='YÖNETİCİ DOĞRULANDI';
+    $('statUsers').textContent=fmt(data.stats.users);
+    $('statBalance').textContent=moneyLabel(data.stats.totalBalance);
+    $('statEarned').textContent=moneyLabel(data.stats.totalEarned);
+    $('statMax').textContent=fmt(data.stats.level50);
+    $('statReferrals').textContent=fmt(data.stats.referrals);
+    $('statActiveBonuses').textContent=fmt(data.stats.activeReferralBonuses);
+    $('pendingCount').textContent=fmt(data.stats.pendingWithdrawals)+' BEKLİYOR';
+    const settings=data.settings||{};
     for(const [key,value] of Object.entries(settings)){
       const field=$('settingsForm').elements.namedItem(key);
       if(field&&value!==undefined)field.value=value;
     }
-    const withdrawals=d.withdrawals||[];
-    $('withdrawals').innerHTML=withdrawals.length?withdrawals.map(w=>{
-      return '<div class="list-item withdrawal-item"><div><strong>'+
-        escapeHtml(w.name||w.userId)+' · $'+fmt(w.amount)+' · '+escapeHtml(String(w.method||'').toUpperCase())+
-        '</strong><small>'+escapeHtml(w.account||'')+'</small><small>'+
-        new Date(w.requestedAt||Date.now()).toLocaleString()+
-        '</small><div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(w.id)+'" data-currency="'+escapeHtml(String(w.method||'').toUpperCase())+'">Mark paid</button>'+
-        '<button type="button" class="reject-btn" data-withdraw-action="reject" data-id="'+escapeHtml(w.id)+'">Reject &amp; refund</button></div></div></div>';
-    }).join(''):'<div class="empty">No pending TON/GRAM withdrawals.</div>';
-    const promotions=d.promotions||[];
-    $('promotions').innerHTML=promotions.length?promotions.map(p=>
-      '<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+
-      escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>'
-    ).join(''):'<div class="empty">No promotions yet.</div>';
-    showNotice('Dashboard data refreshed.');
-  }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
+    const withdrawals=data.withdrawals||[];
+    $('withdrawals').innerHTML=withdrawals.length?withdrawals.map(item=>
+      '<div class="list-item withdrawal-item"><div><strong>'+escapeHtml(item.name||item.userId)+' · '+moneyLabel(item.amount)+' · '+escapeHtml(String(item.method||'').toUpperCase())+'</strong>'+
+      '<small>'+escapeHtml(item.account||'')+'</small><small>'+new Date(item.requestedAt||Date.now()).toLocaleString('tr-TR')+'</small>'+
+      '<div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(item.id)+'" data-currency="'+escapeHtml(String(item.method||'').toUpperCase())+'">Ödendi olarak işaretle</button>'+
+      '<button type="button" class="reject-btn" data-withdraw-action="reject" data-id="'+escapeHtml(item.id)+'">Reddet ve iade et</button></div></div></div>'
+    ).join(''):'<div class="empty">Bekleyen TON / GRAM çekimi yok.</div>';
+    const promotions=data.promotions||[];
+    $('promotions').innerHTML=promotions.length?promotions.map(item=>
+      '<div class="list-item"><div><strong>'+escapeHtml(item.title)+'</strong><small>'+escapeHtml(item.message)+'</small></div><small>'+escapeHtml(item.status||'taslak')+'</small></div>'
+    ).join(''):'<div class="empty">Henüz duyuru yok.</div>';
+    const panels=await Promise.allSettled([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl(),loadAudit()]);
+    if(panels.some(result=>result.status==='rejected'))showNotice('Bazı paneller yüklenemedi. Yenile düğmesini kullan.',true);
+    else showNotice('Yönetim paneli güncellendi.');
+  }catch(error){
+    $('adminStatus').textContent='ERİŞİM YOK';showNotice(error.message,true);
+  }
 }
-$('promoForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');btn.disabled=true;
+$('promoForm').addEventListener('submit',async event=>{
+  event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;
   try{
-    await api('/api/admin/promo',Object.fromEntries(new FormData(form).entries()));
-    showNotice('Promotion published to Telegram channel.');form.reset();await loadOverview();
-  }catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
+    const values=Object.fromEntries(new FormData(form).entries());
+    await api('/api/admin/promo',values);showNotice('Duyuru Telegram kanalına gönderildi.');form.reset();await loadOverview();
+  }catch(error){showNotice(error.message,true);}finally{button.disabled=false;}
 });
-$('settingsForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
-  const values=Object.fromEntries([...new FormData(form).entries()].map(([k,v])=>[k,Number(v)]));btn.disabled=true;
-  try{await api('/api/admin/settings',values);showNotice('Economy and XP settings saved.');}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
+$('settingsForm').addEventListener('submit',async event=>{
+  event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;
+  const values=Object.fromEntries([...new FormData(form).entries()].map(([key,value])=>[key,Number(value)]));
+  try{await api('/api/admin/settings',values);showNotice('Ekonomi ve XP ayarları kaydedildi.');}
+  catch(error){showNotice(error.message,true);}finally{button.disabled=false;}
 });
-function openWithdrawalModal(id,action,currency){
-  $('withdrawActionId').value=id;
+$('withdrawals').addEventListener('click',event=>{
+  const button=event.target.closest('[data-withdraw-action]');if(!button)return;
+  const action=button.dataset.withdrawAction;
+  $('withdrawActionId').value=button.dataset.id;
   $('withdrawAction').value=action;
-  $('withdrawModalTitle').textContent=action==='pay'?'Complete '+currency+' payout':'Reject withdrawal';
-  $('withdrawModalSummary').textContent=action==='pay'?'Enter the actual amount sent and the confirmed blockchain transaction hash.':'The original USD balance will be returned to the user.';
-  $('payoutFields').hidden=action!=='pay';
-  $('rejectFields').hidden=action!=='reject';
-  $('confirmWithdrawAction').textContent=action==='pay'?'Mark as paid':'Reject & refund';
+  const currency=button.dataset.currency||'TON';
+  $('withdrawModalTitle').textContent=action==='pay'?currency+' ödemesini tamamla':'Çekim talebini reddet';
+  $('withdrawModalSummary').textContent=action==='pay'?'Gönderdiğin gerçek coin miktarını ve doğrulanmış işlem hash’ini gir.':'Talep reddedilecek ve USD bakiyesi kullanıcıya iade edilecek.';
+  $('payoutFields').hidden=action!=='pay';$('rejectFields').hidden=action!=='reject';
+  $('confirmWithdrawAction').textContent=action==='pay'?'Ödendi olarak işaretle':'Reddet ve iade et';
   $('withdrawModal').hidden=false;
-}
-function closeWithdrawalModal(){$('withdrawModal').hidden=true;}
-$('withdrawals').addEventListener('click',e=>{
-  const btn=e.target.closest('[data-withdraw-action]');if(!btn)return;
-  openWithdrawalModal(btn.dataset.id,btn.dataset.withdrawAction,btn.dataset.currency||'TON');
 });
+function closeWithdrawalModal(){$('withdrawModal').hidden=true;}
 $('closeWithdrawModal').addEventListener('click',closeWithdrawalModal);
 $('cancelWithdrawModal').addEventListener('click',closeWithdrawalModal);
-$('withdrawModal').addEventListener('click',e=>{if(e.target.id==='withdrawModal')closeWithdrawalModal();});
-$('withdrawActionForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const id=$('withdrawActionId').value,action=$('withdrawAction').value,btn=$('confirmWithdrawAction');
-  const payload={id,action};
+$('withdrawModal').addEventListener('click',event=>{if(event.target.id==='withdrawModal')closeWithdrawalModal();});
+$('withdrawActionForm').addEventListener('submit',async event=>{
+  event.preventDefault();const action=$('withdrawAction').value,button=$('confirmWithdrawAction');
+  const payload={id:$('withdrawActionId').value,action};
   if(action==='pay'){
-    payload.payoutAmount=Number($('payoutAmount').value);
-    payload.txHash=$('payoutTxHash').value.trim();
-    if(!Number.isFinite(payload.payoutAmount)||payload.payoutAmount<=0){showNotice('Enter a valid coin amount.',true);return;}
-    if(payload.txHash.length<20){showNotice('A valid transaction hash is required.',true);return;}
-  }else{payload.reason=$('payoutRejectReason').value.trim()||'Rejected by admin';}
-  btn.disabled=true;
+    payload.payoutAmount=Number($('payoutAmount').value);payload.txHash=$('payoutTxHash').value.trim();
+    if(!Number.isFinite(payload.payoutAmount)||payload.payoutAmount<=0){showNotice('Geçerli coin miktarı gir.',true);return;}
+    if(payload.txHash.length<20){showNotice('Geçerli işlem hash’i gerekli.',true);return;}
+  }else payload.reason=$('payoutRejectReason').value.trim()||'Yönetici tarafından reddedildi';
+  button.disabled=true;
   try{
     await api('/api/admin/withdrawal',payload);
-    showNotice(action==='pay'?'Withdrawal marked paid.':'Withdrawal rejected and USD balance refunded.');
+    showNotice(action==='pay'?'Çekim ödendi olarak kaydedildi.':'Çekim reddedildi ve bakiye iade edildi.');
     closeWithdrawalModal();$('withdrawActionForm').reset();await loadOverview();
-  }catch(err){showNotice(err.message,true);}
-  finally{btn.disabled=false;}
+  }catch(error){showNotice(error.message,true);}finally{button.disabled=false;}
 });
+$('taskForm').addEventListener('submit',async event=>{
+  event.preventDefault();const form=event.currentTarget,button=form.querySelector('button[type="submit"]');
+  const values=Object.fromEntries(new FormData(form).entries());
+  values.reward=Number(values.reward);values.totalLimit=Number(values.totalLimit);values.perUserLimit=Number(values.perUserLimit);
+  values.startAt=values.startAt?new Date(values.startAt).toISOString():new Date().toISOString();
+  values.endAt=values.endAt?new Date(values.endAt).toISOString():'';
+  button.disabled=true;
+  try{
+    await api('/api/admin/tasks',{...values,action:'create'});
+    form.reset();form.elements.namedItem('reward').value='0.002';form.elements.namedItem('perUserLimit').value='1';
+    showNotice('Görev oluşturuldu.');await loadTasks();
+  }catch(error){showNotice(error.message,true);}finally{button.disabled=false;}
+});
+$('taskForm').elements.namedItem('type').addEventListener('change',event=>{
+  $('taskForm').elements.namedItem('verificationMethod').value=['channel','group'].includes(event.target.value)?'telegram_membership':'manual';
+});
+$('taskAdminList').addEventListener('click',async event=>{
+  const button=event.target.closest('[data-task-status]');if(!button)return;button.disabled=true;
+  try{await api('/api/admin/tasks',{action:'status',id:button.dataset.id,status:button.dataset.taskStatus});await loadTasks();showNotice('Görev durumu güncellendi.');}
+  catch(error){showNotice(error.message,true);}finally{button.disabled=false;}
+});
+$('taskClaims').addEventListener('click',async event=>{
+  const button=event.target.closest('[data-claim-action]');if(!button)return;button.disabled=true;
+  try{
+    await api('/api/admin/task-review',{taskId:button.dataset.task,userId:button.dataset.user,claimId:button.dataset.claim,decision:button.dataset.claimAction});
+    await Promise.all([loadClaims(),loadAudit()]);showNotice('Görev kanıtı işlendi.');
+  }catch(error){showNotice(error.message,true);}finally{button.disabled=false;}
+});
+$('refreshTasksBtn').addEventListener('click',async()=>{try{await Promise.all([loadTasks(),loadClaims()]);}catch(error){showNotice(error.message,true);}});
+$('analyticsApply').addEventListener('click',()=>loadAnalytics().catch(error=>showNotice(error.message,true)));
+$('analyticsCsv').addEventListener('click',exportAnalyticsCsv);
+$('refreshAuditBtn').addEventListener('click',()=>loadAudit().catch(error=>showNotice(error.message,true)));
+$('botStartBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:true});await loadBotControl();showNotice('Bot etkinleştirildi.');}catch(error){showNotice(error.message,true);}});
+$('botStopBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:false});await loadBotControl();showNotice('Bot duraklatıldı.');}catch(error){showNotice(error.message,true);}});
 $('refreshBtn').addEventListener('click',loadOverview);
 loadOverview();
