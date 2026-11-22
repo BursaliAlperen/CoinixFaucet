@@ -1,10 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /transactions/{transactionId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create, update, delete: if false;
+    // All app data is accessed through the authenticated Node.js backend.
+    // Firebase Admin SDK bypasses these rules; clients cannot read or write balances.
+    match /{document=**} {
+      allow read, write: if false;
     }
-    match /{document=**} { allow read, write: if false; }
   }
 }
