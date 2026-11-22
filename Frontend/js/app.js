@@ -573,24 +573,28 @@ async function doSpin(){
   if((currentUser.spinCards||0)<1){showToast('Biletiniz yok — Mağazadan satın alın','warn');return;}
   const btn=$('spinBtn');btn.disabled=true;
   btn.innerHTML='<i class="ph-duotone ph-spinner-gap"></i> Dönüyor...';
+  let result;
+  try{
+    result=await apiRequest('/api/economy',{action:'spin'});
+  }catch(e){
+    showToast(e.message==='NO_SPIN_CARDS'?'Çark biletiniz yok.':'Çark işlemi başarısız: '+e.message,'danger');
+    btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-arrow-clockwise"></i> Çevir';
+    return;
+  }
   const rewards=appSettings.spinRewards||[0.01,0.05,0.02,0.1,0.01,0.5,0.03,1];
   const seg=rewards.length;
-  const winIdx=Math.floor(Math.random()*seg);
+  const winIdx=Number(result.extra?.rewardIndex||0)%seg;
+  const prize=Number(result.reward||0);
   const targetRot=(2*Math.PI*5)+(2*Math.PI-(winIdx*(2*Math.PI/seg))-Math.PI/seg);
   const dur=4200;const start=performance.now();
-  async function step(t){
+  function step(t){
     const p=Math.min(1,(t-start)/dur);
     const eased=1-Math.pow(1-p,3);
     drawWheel(eased*targetRot);
     if(p<1){requestAnimationFrame(step);}
     else{
-      try{
-        const result=await apiRequest('/api/economy',{action:'spin'});
-        const prize=Number(result.reward||0);
-        fireConfetti();showToast('Kazandınız: $'+prize.toFixed(4),'success');
-      }catch(e){showToast(e.message==='NO_SPIN_CARDS'?'Çark biletiniz yok.':'Çark işlemi başarısız: '+e.message,'danger');}
-      finally{btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-arrow-clockwise"></i> Çevir';}
-
+      fireConfetti();showToast('Kazandınız: $'+prize.toFixed(4),'success');
+      btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-arrow-clockwise"></i> Çevir';
     }
   }
   requestAnimationFrame(step);
