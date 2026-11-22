@@ -48,7 +48,7 @@ function cleanTaskInput(body, now = Date.now()) {
 }
 function isValidReferral(referrerId, inviteeId, alreadyClaimed = false) {
   const ref=String(referrerId||''),invitee=String(inviteeId||'');
-  return !alreadyClaimed && /^\\d{1,20}$/.test(ref) && /^\\d{1,20}$/.test(invitee) && ref!==invitee;
+  return !alreadyClaimed && /^\d{1,20}$/.test(ref) && /^\d{1,20}$/.test(invitee) && ref!==invitee;
 }
 class FixedWindowLimiter {
   constructor(limit=300,windowMs=60000){this.limit=limit;this.windowMs=windowMs;this.startedAt=0;this.count=0;}
