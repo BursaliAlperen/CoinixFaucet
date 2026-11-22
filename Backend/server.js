@@ -244,6 +244,22 @@ async function flyerCall(route, payload) {
   if (!response.ok || data.error) throw new Error('FLYERHUBS_UPSTREAM_ERROR');
   return data;
 }
+async function recordPlatformFee({taskId,userId,claimId,grossPrice,workerReward,platformFee}) {
+  const feeId=crypto.createHash('sha256').update(String(taskId)+'|'+String(userId)+'|'+String(claimId)).digest('hex');
+  const feeRef=firestore.collection('platformFees').doc(feeId);
+  const walletRef=firestore.collection('systemWallet').doc('treasury');
+  const fee=money(platformFee);
+  if(fee<=0)return false;
+  return firestore.runTransaction(async tx=>{
+    const feeSnap=await tx.get(feeRef);
+    if(feeSnap.exists)return false;
+    const walletSnap=await tx.get(walletRef);
+    const wallet=walletSnap.exists?walletSnap.data()||{}:{};
+    tx.create(feeRef,{taskId:String(taskId),userId:String(userId),claimId:String(claimId),grossPrice:money(grossPrice),workerReward:money(workerReward),platformFee:fee,createdAt:admin.firestore.FieldValue.serverTimestamp()});
+    tx.set(walletRef,{balance:money(Number(wallet.balance||0)+fee),totalRevenue:money(Number(wallet.totalRevenue||0)+fee),updatedAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});
+    return true;
+  });
+}
 async function logTransaction(uid, type, amount, extra) {
   await firestore.collection('transactions').add({
     userId: uid, type, amount: Number(amount || 0),
@@ -382,7 +398,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
   if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});await taskRef.child('totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
   await claimsRef.child(actionId).update({status:'approved',reward:credited,approvedAt:Date.now(),autoVerified:true});
   await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),taskType:String(task.type||''),claimId:actionId,provider:'teddygrow_task'});
-  if(Number(task.platformFee||0)>0){const feeId=crypto.createHash('sha256').update(taskId+'|'+uid+'|'+actionId).digest('hex');await firestore.collection('platformFees').doc(feeId).set({taskId,userId:uid,claimId:actionId,grossPrice:Number(task.grossPrice||0),workerReward:credited,platformFee:Number(task.platformFee||0),createdAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});}
+  if(Number(task.platformFee||0)>0)await recordPlatformFee({taskId,userId:uid,claimId:actionId,grossPrice:Number(task.grossPrice||0),workerReward:credited,platformFee:Number(task.platformFee||0)});
   return {user:userTx.snapshot.val(),reward:credited,pending:false,taskClaim:{id:actionId,status:'approved'}};
 }
 async function applyEconomyAction(uid, body) {
@@ -661,7 +677,7 @@ async function handleAdminApi(user, url, body, res) {
     });
     if(!userTx.committed||failure){await claimRef.update({status:'pending',reviewError:failure||'CREDIT_FAILED'});return send(res,503,{status:'error',code:failure||'TASK_REVIEW_CREDIT_FAILED'});}
     await claimRef.update({status:'approved',reward:credited,approvedAt:Date.now(),approvedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
-    if(Number(lock.snapshot.val()?.platformFee||0)>0){const taskData=lock.snapshot.val()||{},feeId=crypto.createHash('sha256').update(taskId+'|'+uid+'|'+claimId).digest('hex');await firestore.collection('platformFees').doc(feeId).set({taskId,userId:uid,claimId,grossPrice:Number(taskData.grossPrice||0),workerReward:credited,platformFee:Number(taskData.platformFee||0),createdAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});}
+    if(Number(lock.snapshot.val()?.platformFee||0)>0){const taskData=lock.snapshot.val()||{};await recordPlatformFee({taskId,userId:uid,claimId,grossPrice:Number(taskData.grossPrice||0),workerReward:credited,platformFee:Number(taskData.platformFee||0)});}
     if(!alreadyProcessed)await logTransaction(uid,'task',credited,{taskId,claimId,taskType:String(lock.snapshot.val()?.type||''),provider:'manual_task'});
     await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited,recovered:alreadyProcessed});
     return send(res,200,{status:'ok',claim:{id:claimId,status:'approved',reward:credited,recovered:alreadyProcessed}});
