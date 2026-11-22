@@ -271,8 +271,8 @@ async function applyEconomyAction(uid, body) {
   const taskId = String(body.taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
   const taskSnapshot = action === 'task' && taskId ? await rtdb.ref('tasks/' + taskId).once('value') : null;
   const taskRecord = taskSnapshot && taskSnapshot.exists() ? taskSnapshot.val() : null;
-  const methodKey = String(body.method || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
-  const methodSnapshot = action === 'withdraw' && methodKey ? await rtdb.ref('withdrawMethods/' + methodKey).once('value') : null;
+  const methodKey = String(body.method || '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase().slice(0, 80);
+  const methodSnapshot = action === 'withdraw' && ['ton','gram'].includes(methodKey) ? await rtdb.ref('withdrawMethods/' + methodKey).once('value') : null;
   const methodRecord = methodSnapshot && methodSnapshot.exists() ? methodSnapshot.val() : null;
   if (action === 'task' && !(await verifyTelegramTask(uid, taskRecord))) throw new Error('TASK_VERIFICATION_FAILED');
   let credited = 0;
@@ -342,14 +342,14 @@ async function applyEconomyAction(uid, body) {
       const amount = money(body.amount);
       const account = String(body.account || '').trim().slice(0, 300);
       const method = methodRecord;
-      if (!methodKey || !account || !method || method.active === false) { failure = 'INVALID_WITHDRAW_METHOD'; return; }
-      if (amount < Number(method.minWithdraw || 5) || (Number(method.maxWithdraw || 0) > 0 && amount > Number(method.maxWithdraw)) || amount > balance) {
+      if (!['ton','gram'].includes(methodKey) || !account || (!/^(EQ|UQ)[A-Za-z0-9_-]{46}$/.test(account) && !/^0:[a-fA-F0-9]{64}$/.test(account)) || !method || method.active === false) { failure = 'INVALID_WITHDRAW_METHOD'; return; }
+      if (amount < Number(method.minWithdraw || 0.05) || (Number(method.maxWithdraw || 0) > 0 && amount > Number(method.maxWithdraw)) || amount > balance) {
         failure = amount > balance ? 'INSUFFICIENT_BALANCE' : 'WITHDRAW_LIMIT';
         return;
       }
       user.balance = money(balance - amount);
       user.totalWithdrawn = money(Number(user.totalWithdrawn || 0) + amount);
-      extra = { amount, method: methodKey, methodName: String(method.name || methodKey), account };
+      extra = { amount, currency: methodKey.toUpperCase(), method: methodKey, methodName: methodKey.toUpperCase(), account, payoutStatus: 'manual_review' };
       credited = -amount;
     } else {
       failure = 'ACTION_NOT_ALLOWED';
@@ -488,6 +488,50 @@ async function handleAdminApi(user, url, body, res) {
       await ref.update({status:'publish_failed',publishError:String(error.message||'Telegram send failed').slice(0,200)});
       return send(res,502,{status:'error',code:'CHANNEL_PUBLISH_FAILED',promotionId:ref.key});
     }
+  }
+  if (url.pathname === '/api/admin/withdrawal') {
+    const id=String(body.id||'').trim().slice(0,120);
+    const action=String(body.action||'');
+    if(!id||!['pay','reject'].includes(action))return send(res,400,{status:'error',code:'INVALID_WITHDRAWAL_ACTION'});
+    const ref=rtdb.ref('withdrawals/'+id);
+    const snap=await ref.once('value');
+    if(!snap.exists())return send(res,404,{status:'error',code:'WITHDRAWAL_NOT_FOUND'});
+    const withdrawal=snap.val()||{};
+    if(withdrawal.status!=='pending')return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
+    if(!['ton','gram'].includes(String(withdrawal.method||'').toLowerCase()))return send(res,400,{status:'error',code:'UNSUPPORTED_PAYOUT_CURRENCY'});
+    if(action==='pay'){
+      const txHash=String(body.txHash||'').trim().slice(0,160);
+      const payoutAmount=Number(body.payoutAmount);
+      if(txHash.length<20||!Number.isFinite(payoutAmount)||payoutAmount<=0)return send(res,400,{status:'error',code:'TX_HASH_AND_PAYOUT_AMOUNT_REQUIRED'});
+      let changed=false;
+      const result=await ref.transaction(w=>{if(!w||w.status!=='pending')return;changed=true;w.status='paid';w.txHash=txHash;w.payoutAmount=payoutAmount;w.paidAt=Date.now();w.paidBy=user.id;return w;});
+      if(!result.committed||!changed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
+      try{await rtdb.ref('users/'+String(withdrawal.userId)+'/notifications').push({title:'Withdrawal paid',body:'Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(String(withdrawal.userId),'✅ Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.\\nAmount: '+payoutAmount+'\\nTransaction: '+txHash);}catch(error){console.warn('[withdrawal-notification]',error.message);}
+      return send(res,200,{status:'ok',withdrawal:{id,status:'paid',txHash,payoutAmount}});
+    }
+    const uid=String(withdrawal.userId||'');
+    const amount=Number(withdrawal.amount||0);
+    if(!/^\\d{1,20}$/.test(uid)||!Number.isFinite(amount)||amount<=0)return send(res,400,{status:'error',code:'INVALID_WITHDRAWAL_RECORD'});
+    const userRef=rtdb.ref('users/'+uid);
+    let refunded=false;
+    const refund=await userRef.transaction(profile=>{
+      if(!profile||profile.banned)return;
+      profile.withdrawalRefunds=profile.withdrawalRefunds||{};
+      if(profile.withdrawalRefunds[id])return profile;
+      profile.balance=money(Number(profile.balance||0)+amount);
+      profile.totalWithdrawn=Math.max(0,money(Number(profile.totalWithdrawn||0)-amount));
+      profile.withdrawalRefunds[id]=Date.now();
+      const keys=Object.keys(profile.withdrawalRefunds);
+      if(keys.length>200)for(const key of keys.slice(0,keys.length-200))delete profile.withdrawalRefunds[key];
+      refunded=true;
+      return profile;
+    });
+    if(!refund.committed)return send(res,503,{status:'error',code:'WITHDRAWAL_REFUND_FAILED'});
+    const result=await ref.transaction(w=>{if(!w||w.status!=='pending')return;w.status='rejected';w.rejectedAt=Date.now();w.rejectedBy=user.id;w.rejectionReason=String(body.reason||'Rejected by admin').slice(0,200);return w;});
+    if(!result.committed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
+    if(refunded)try{await logTransaction(uid,'withdraw_refund',amount,{withdrawalId:id,currency:String(withdrawal.method).toUpperCase()});}catch(error){console.warn('[withdrawal-refund-log]',error.message);}
+    try{await rtdb.ref('users/'+uid+'/notifications').push({title:'Withdrawal rejected',body:'Your withdrawal was rejected and the balance was returned.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(uid,'Your withdrawal was rejected. The balance has been returned to your account.');}catch(error){console.warn('[withdrawal-notification]',error.message);}
+    return send(res,200,{status:'ok',withdrawal:{id,status:'rejected',refunded:true}});
   }
   if (url.pathname === '/api/admin/settings') {
     const allowed=['flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','referralXp','dailyLimit'];
