@@ -217,11 +217,6 @@ function renderAll(){
   countUp($('balance'),newBal);
   // Also update wallet tab balance immediately (no animation needed there)
   if($('wBalance'))$('wBalance').textContent=newBal.toFixed(4);
-  const today=getBDDate();
-  const todayAds=currentUser.lastAdDate===today?(currentUser.todayAds||0):0;
-  const lim=parseInt(appSettings.dailyLimit||10);
-  $('todayAds').textContent=todayAds;
-  $('dailyLimit').textContent=lim;
   $('totalEarned').textContent=newEarned.toFixed(2);
   $('refCount').textContent=currentUser.referralCount||0;
 
@@ -231,8 +226,7 @@ function renderAll(){
   badge.querySelector('i').style.color=vip.color;
   $('vipLabel').textContent=vip.label;
 
-  $('perAdEarn').textContent=API_TASK_REWARD_USD.toFixed(3);
-  renderAdSection();
+  if($('perAdEarn'))$('perAdEarn').textContent='API bekleniyor';
   renderStreak();
   renderTeam();
   renderLeaderboard();
