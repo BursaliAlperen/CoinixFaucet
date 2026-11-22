@@ -568,6 +568,8 @@ async function handleMonetagPostback(req, res, url) {
   const tx = await userRef.transaction(user => {
     failure = ''; credited = 0; xp = null;
     if (!user || user.banned) { failure = 'USER_NOT_FOUND'; return; }
+    user.processedAds = user.processedAds || {};
+    if (user.processedAds[eventId]) { duplicate = true; return user; }
     const count = user.lastAdDate === today ? Number(user.todayAds || 0) : 0;
     const limit = Math.max(1, Number(settings.dailyLimit || 10));
     if (count >= limit) { failure = 'DAILY_LIMIT'; return; }
@@ -577,6 +579,9 @@ async function handleMonetagPostback(req, res, url) {
     user.totalEarned = money(Number(user.totalEarned || 0) + credited);
     user.lastAdDate = today;
     user.todayAds = count + 1;
+    user.processedAds[eventId] = Date.now();
+    const adKeys = Object.keys(user.processedAds);
+    if (adKeys.length > 200) for (const key of adKeys.slice(0, adKeys.length - 200)) delete user.processedAds[key];
     xp = applyXp(user, Number(settings.adWatchXp || 10));
     return user;
   });
@@ -584,8 +589,13 @@ async function handleMonetagPostback(req, res, url) {
     await eventRef.remove();
     return send(res, failure === 'DAILY_LIMIT' ? 200 : 503, { ok: failure === 'DAILY_LIMIT', ignored: failure === 'DAILY_LIMIT', error: failure || 'CREDIT_FAILED' });
   }
+  if (duplicate) {
+    await eventRef.update({status:'credited',creditedAt:Date.now(),recovered:true});
+    return send(res,200,{ok:true,duplicate:true});
+  }
   await eventRef.update({ status: 'credited', creditedAt: Date.now(), reward: credited });
-  await logTransaction(uid, 'ad', credited, { ymid, xp, multiplier: rewardMultiplier(tx.snapshot.val()) });
+  try { await logTransaction(uid, 'ad', credited, { ymid, xp, multiplier: rewardMultiplier(tx.snapshot.val()) }); }
+  catch(error) { console.error('[monetag-log]',error.message); }
   return send(res, 200, { ok: true, reward: credited });
 }
 async function handleApi(req, res, url) {
