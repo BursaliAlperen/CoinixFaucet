@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const backend = fs.readFileSync('Backend/server.js','utf8');
+const core = fs.readFileSync('Backend/earn-core.js','utf8');
 const app = fs.readFileSync('Frontend/js/app.js','utf8');
 const admin = fs.readFileSync('Frontend/js/admin.js','utf8');
 const html = fs.readFileSync('Frontend/index.html','utf8');
@@ -25,11 +26,14 @@ const required = [
   ['CSV export UI', 'teddygrow-daily-statistics.csv'],
   ['Bot start/stop admin controls', '/api/admin/bot-control'],
   ['TON and GRAM payout whitelist', "['ton','gram'].includes(methodKey)"],
-  ['Firestore-only authenticated data API', '/api/live'],\n  ['Firestore compatibility store', 'new FirestoreCompat(firestore)'],\n  ['70/30 task budget fields', 'platformBudget'],\n  ['Telegram microtask commands', "command==='/campaign'"],
+  ['Firestore-only authenticated data API', '/api/live'],
+  ['Firestore compatibility store', 'new FirestoreCompat(firestore)'],
+  ['70/30 task budget fields', 'platformBudget'],
+  ['Telegram microtask commands', "command==='/campaign'"],
   ['Inline SVG icon system', 'ton:'],
   ['Istanbul reward timezone', 'Europe/Istanbul']
 ];
-for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle)||icons.includes(needle), 'Missing: '+label);
+for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle)||icons.includes(needle)||core.includes(needle), 'Missing: '+label);
 assert.ok(!backend.toLowerCase().includes('papara'),'Papara must not be accepted by the backend');
 assert.ok(!html.toLowerCase().includes('w2e ads')&&!app.toLowerCase().includes('w2e ads'),'W2E Ads must be removed from the product');
 assert.ok(!html.toLowerCase().includes('ad balance')&&!app.toLowerCase().includes('ad balance'),'Ad Balance must not appear in the user interface');
