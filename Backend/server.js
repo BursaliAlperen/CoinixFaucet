@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const admin = require('firebase-admin');
+const { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen, cleanTaskInput } = require('./earn-core');
 
 const PORT = Number(process.env.PORT || 3000);
 const APP_ORIGIN = (process.env.APP_ORIGIN || '').replace(/\/$/, '');
@@ -19,7 +20,9 @@ const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/,
 const WEBAPP_URL = String(process.env.WEBAPP_URL || '').replace(/\/$/, '');
 const BOT_USERNAME = process.env.BOT_USERNAME || '';
 const FLYERHUBS_KEY = process.env.FLYERHUBS_KEY || '';
-const MONETAG_POSTBACK_SECRET = process.env.MONETAG_POSTBACK_SECRET || '';
+const REQUIRED_CHANNEL_ID = process.env.REQUIRED_CHANNEL_ID || '';
+const REQUIRED_CHANNEL_URL = process.env.REQUIRED_CHANNEL_URL || '';
+const TRAFFY_LINK_PREFIX = process.env.TRAFFY_LINK_PREFIX || '';
 const API_AD_REWARD_USD = 0.002;
 const FIREBASE_PUBLIC_CONFIG = {
   apiKey: process.env.FIREBASE_WEB_API_KEY || '',
@@ -198,9 +201,36 @@ function applyXp(user, amount) {
   user.xpUpdatedAt = Date.now();
   return { level: user.level, xp: user.xp, xpToNext: user.xpToNext, gained: gain };
 }
-function rewardMultiplier(user) {
-  const level = Math.max(1, Math.min(50, Number(user?.level) || 1));
-  return Math.round((1 + level * 0.02) * 100) / 100;
+async function auditAdmin(actorId, action, targetId, details = {}) {
+  return rtdb.ref('adminAudit').push({actorId:String(actorId),action:String(action).slice(0,80),targetId:String(targetId||'').slice(0,120),details,timestamp:Date.now()}).catch(()=>console.warn('[admin-audit] write_failed'));
+}
+async function notifyAdmins(message) {
+  for (const adminId of ADMIN_IDS) { try { await sendTelegramMessage(adminId,message); } catch { console.warn('[admin-notify] delivery_failed'); } }
+}
+async function checkRequiredChannel(uid) {
+  if (!REQUIRED_CHANNEL_ID || !REQUIRED_CHANNEL_URL) return {ok:false,reason:'CHANNEL_NOT_CONFIGURED'};
+  try {
+    const member=await telegramCall('getChatMember',{chat_id:REQUIRED_CHANNEL_ID,user_id:Number(uid)});
+    const joined=isTelegramMember(member);
+    console.info('[channel-membership]',joined?'member':'not_member');
+    return {ok:joined,reason:joined?'MEMBER':'NOT_MEMBER',status:String(member?.status||'')};
+  } catch(error) {
+    const raw=String(error.message||'');
+    const reason=/not enough rights|administrator/i.test(raw)?'BOT_NOT_ADMIN':/chat not found|channel_invalid/i.test(raw)?'CHANNEL_NOT_FOUND':'TELEGRAM_API_UNAVAILABLE';
+    console.warn('[channel-membership]',reason);return {ok:false,reason};
+  }
+}
+function membershipKeyboard() {
+  const rows=[];if(REQUIRED_CHANNEL_URL)rows.push([{text:'📢 Kanala katıl',url:REQUIRED_CHANNEL_URL}]);
+  rows.push([{text:'✅ Üyeliğimi kontrol et',callback_data:'check_required_channel'}]);return {inline_keyboard:rows};
+}
+async function sendMembershipGate(uid,reason='NOT_MEMBER') {
+  const messages={NOT_MEMBER:'Görevleri ve kazanç özelliklerini açmak için önce duyuru kanalımıza katılmalısın.',CHANNEL_NOT_CONFIGURED:'Zorunlu kanal henüz yapılandırılmadı. Yöneticiler bilgilendirildi.',BOT_NOT_ADMIN:'Kanal üyeliği doğrulanamıyor. Botun kanalda yönetici olması gerekiyor.',CHANNEL_NOT_FOUND:'Zorunlu kanal bulunamadı. Yönetici ayarları kontrol etmeli.',TELEGRAM_API_UNAVAILABLE:'Telegram üyelik kontrolü şu anda yanıt vermiyor. Tekrar dene.'};
+  await sendTelegramMessage(uid,messages[reason]||messages.NOT_MEMBER,{reply_markup:membershipKeyboard()});
+}
+async function savePendingReferral(uid,code) {
+  code=String(code||'');if(!/^\\d{1,20}$/.test(code)||code===String(uid))return;
+  await rtdb.ref('pendingReferrals/'+uid).transaction(v=>v||{referrer:code,createdAt:Date.now()});
 }
 async function flyerCall(route, payload) {
   if (!FLYERHUBS_KEY) throw new Error('FLYERHUBS_NOT_CONFIGURED');
@@ -255,34 +285,25 @@ async function bootstrap(user, referralCode) {
   });
   if (!result.committed || !result.snapshot.exists()) throw new Error('USER_BOOTSTRAP_FAILED');
   if (created && validReferralCode) {
-    const referralMarker = rtdb.ref('referralClaims/' + user.id);
-    let claimedNow = false;
-    const claim = await referralMarker.transaction(v => {
-      if (v) { claimedNow = false; return v; }
-      claimedNow = true;
-      return { referrer: validReferralCode, at: Date.now() };
-    });
-    if (claim.committed && claimedNow && claim.snapshot.val() && claim.snapshot.val().referrer === validReferralCode) {
-      const settings = await getSettings();
-      const bonus = money(settings.referralBonus == null ? 0.1 : settings.referralBonus);
-      if (bonus > 0) {
-        const ref = rtdb.ref('users/' + validReferralCode);
-        const refResult = await ref.transaction(u => {
-          if (!u || u.banned) return;
-          u.referralCount = Number(u.referralCount || 0) + 1;
-          u.referralEarned = money(Number(u.referralEarned || 0) + bonus);
-          u.balance = money(Number(u.balance || 0) + bonus);
-          u.totalEarned = money(Number(u.totalEarned || 0) + bonus);
-          const referralXp = applyXp(u, Number(settings.referralXp || 10));
-          u.lastReferralXpAt = Date.now();
-          return u;
-        });
-        if (refResult.committed) {
-          await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id, xp: Number(settings.referralXp || 10) });
-          await rtdb.ref('users/' + validReferralCode + '/notifications').push({title:'New referral',body:user.name + ' joined using your invitation. Your reward and ' + Number(settings.referralXp || 10) + ' XP were credited.',timestamp:Date.now(),type:'referral'});
-          try { await sendTelegramMessage(validReferralCode, '🎉 Yeni referansın katıldı: ' + user.name + '. Bonusun ve ' + Number(settings.referralXp || 10) + ' XP hesabına eklendi.'); }
-          catch (error) { console.warn('[referral-notification]', error.message); }
-        }
+    const marker=rtdb.ref('referralClaims/'+user.id);let claimedNow=false;
+    const claim=await marker.transaction(v=>{if(v)return v;claimedNow=true;return {referrer:validReferralCode,at:Date.now(),status:'claimed'};});
+    if(claim.committed&&claimedNow&&claim.snapshot.val()?.referrer===validReferralCode){
+      const settings=await getSettings();
+      const multiplierBonus=Math.max(0,Math.min(0.25,Number(settings.referralMultiplierBonus??0.02)));
+      const durationMs=Math.max(1,Math.min(168,Number(settings.referralBonusDurationHours??24)))*3600000;
+      const startsAt=Date.now(),endsAt=startsAt+durationMs;let granted=false;
+      const refResult=await rtdb.ref('users/'+validReferralCode).transaction(u=>{
+        granted=false;if(!u||u.banned)return;
+        u.referralBonuses=u.referralBonuses||{};if(u.referralBonuses[user.id])return u;
+        u.referralCount=Number(u.referralCount||0)+1;
+        u.referralBonuses[user.id]={source:'referral:'+user.id,referredUserId:user.id,multiplierBonus,startsAt,endsAt,status:'active'};
+        applyXp(u,Number(settings.referralXp||10));granted=true;return u;
+      });
+      if(refResult.committed&&granted){
+        await marker.update({status:'bonus_granted',startsAt,endsAt,multiplierBonus});
+        await logTransaction(validReferralCode,'referral_bonus',0,{referredUserId:user.id,multiplierBonus,startsAt,endsAt});
+        await rtdb.ref('users/'+validReferralCode+'/notifications').push({title:'Yeni davet bonusu',body:'Kazanç çarpanına +'+multiplierBonus.toFixed(2)+'x 24 saat boyunca eklendi.',timestamp:Date.now(),type:'referral'});
+        try{await sendTelegramMessage(validReferralCode,'🎉 Yeni davetin katıldı! Kazanç çarpanına +'+multiplierBonus.toFixed(2)+'x 24 saat boyunca eklendi.');}catch{console.warn('[referral-notification] delivery_failed');}
       }
     }
   }
