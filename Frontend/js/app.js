@@ -94,6 +94,20 @@ async function apiRequest(path,payload={}) {
   return data;
 }
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showChannelGate(error){
+  const gate=$('channelGate');if(!gate)return;
+  $('loader').style.display='none';$('app').style.display='none';gate.hidden=false;
+  const code=error.code||'NOT_MEMBER';
+  const messages={NOT_MEMBER:'Devam etmek için duyuru kanalımıza katıl. Katıldıktan sonra üyeliğini yeniden kontrol et.',CHANNEL_NOT_CONFIGURED:'Zorunlu kanal ayarı henüz yapılmadı. Yönetici yapılandırması gerekiyor.',BOT_NOT_ADMIN:'Botun kanalda yönetici yetkisi bulunmuyor. Yöneticiye bildirildi.',CHANNEL_NOT_FOUND:'Kanal bulunamadı. Lütfen daha sonra tekrar dene.',TELEGRAM_API_UNAVAILABLE:'Telegram şu anda üyeliğini doğrulayamıyor. Biraz sonra tekrar dene.'};
+  $('channelGateMessage').textContent=messages[code]||messages.NOT_MEMBER;
+  const link=$('channelJoinLink');link.href=error.channelUrl||'#';link.hidden=!error.channelUrl;
+  $('channelCheckBtn').onclick=async()=>{
+    const btn=$('channelCheckBtn');btn.disabled=true;$('channelGateStatus').textContent='Üyelik kontrol ediliyor…';
+    try{await apiRequest('/api/channel/check',{});$('channelGateStatus').textContent='Üyelik doğrulandı. Uygulama açılıyor…';window.location.reload();}
+    catch(err){$('channelGateStatus').textContent=messages[err.code]||'Üyelik henüz doğrulanamadı. Kanala katılıp tekrar dene.';if(err.channelUrl)link.href=err.channelUrl;}
+    finally{btn.disabled=false;}
+  };
+}
 
 /* ============ INIT ============ */
 async function init(){
@@ -110,6 +124,7 @@ async function init(){
     const adminButton=$('adminOpenBtn');if(adminButton&&window.COINIX_ADMIN)adminButton.style.display='inline-flex';
     await firebase.auth().signInWithCustomToken(session.customToken);
     const uid=String(TGUser.id);
+    window.setInterval(renderReferralBonusCountdown,1000);
     const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
     appSettings=sSnap.val()||{};
     if(appSettings.maintenance){$('maint').style.display='flex';$('loader').style.display='none';return;}
@@ -256,13 +271,22 @@ function renderStreak(){
   $('checkinStreak').innerHTML=html;
 }
 
+function renderReferralBonusCountdown(){
+  if(!currentUser||!$('tRefBonus'))return;
+  const now=Date.now(),bonuses=Object.values(currentUser.referralBonuses||{}).filter(b=>b&&Number(b.startsAt||0)<=now&&Number(b.endsAt||0)>now);
+  const total=bonuses.reduce((sum,b)=>sum+Math.max(0,Math.min(.25,Number(b.multiplierBonus||0))),0);
+  $('tRefBonus').textContent='+'+total.toFixed(2)+'x';
+  const endsAt=bonuses.reduce((max,b)=>Math.max(max,Number(b.endsAt||0)),0);
+  if(!endsAt){$('tRefCountdown').textContent='Aktif bonus yok';return;}
+  const seconds=Math.max(0,Math.floor((endsAt-now)/1000)),hours=Math.floor(seconds/3600),minutes=Math.floor((seconds%3600)/60),secs=seconds%60;
+  $('tRefCountdown').textContent=hours+'s '+minutes+'d '+secs+'sn';
+}
 function renderTeam(){
   const bot=window.COINIX_BOT_USERNAME||appSettings.botUsername||'EarnBDBot';
   const link=`https://t.me/${bot}?start=ref_${currentUser.uid}`;
   $('refLink').value=link;
   $('tRefCount').textContent=currentUser.referralCount||0;
-  $('tRefEarn').textContent=parseFloat(currentUser.referralEarned||0).toFixed(2);
-  $('tRefBonus').textContent=parseFloat(appSettings.referralBonus||0.1).toFixed(2);
+  renderReferralBonusCountdown();
   const tier=getTier(currentUser.referralCount||0);
   $('tierName').textContent=tier.name;
   document.querySelectorAll('.tier-item').forEach(el=>{el.classList.toggle('current',el.dataset.t===tier.name);});
@@ -285,7 +309,7 @@ function renderTeam(){
       <div class="tx-row">
         <div class="ic blue" style="font-weight:700;font-size:16px">${(u.name||'U').charAt(0)}</div>
         <div class="info"><div class="t">${escapeHtml(u.name||'User')}</div><div class="d">${new Date(u.createdAt||Date.now()).toLocaleDateString('tr-TR')}</div></div>
-        <div class="am in" style="font-size:12px">+$${parseFloat(appSettings.referralBonus||0.1).toFixed(2)}</div>
+        <div class="am in" style="font-size:12px">Davet edildi</div>
       </div>`).join('');
   });
 }
