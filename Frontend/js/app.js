@@ -305,25 +305,38 @@ async function refreshTaskClaims(){
   }catch{}
 }
 function renderTasks(){
-  const f=currentTaskFilter,allTasks=[...tasks,...flyerTasks];
-  const now=Date.now();
+  const filter=currentTaskFilter,allTasks=[...tasks,...flyerTasks],now=Date.now();
   const filtered=allTasks.filter(t=>{
     const type=String(t.type||'').toLowerCase();
     const available=t.source==='flyerhubs'?t.active!==false:
       t.active!==false&&['telegram','channel','group','link','manual'].includes(type)&&
       (!Number(t.startAt||0)||Number(t.startAt)<=now)&&(!Number(t.endAt||0)||Number(t.endAt)>=now);
-    return available&&(f==='all'||type===f);
+    return available&&(filter==='all'||type===filter);
   });
-  if(!filtered.length){$('taskList').innerHTML='<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">Şu anda aktif görev yok</div></div>';return;}
+  if(!filtered.length){
+    $('taskList').innerHTML='<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">Şu anda aktif görev yok</div></div>';
+    return;
+  }
   const done=currentUser?.completedTasks||{},counts=currentUser?.taskCompletionCounts||{};
-  $('taskList').innerHTML='<div class="stagger">'+filtered.map(t=>{
-    const type=String(t.type||'telegram').toLowerCase(),icons={channel:'users',group:'users-three',telegram:'telegram-logo',link:'link',manual:'clipboard-text'};
-    const ico=icons[type]||'link',completed=Number(counts[t.id]||0),limit=Math.max(1,Number(t.perUserLimit||1));
-    const isDone=Boolean(done[t.id])||completed>=limit,isPending=Boolean(window._pendingTaskClaims?.[t.id]);
+  const cards=filtered.map(t=>{
+    const type=String(t.type||'telegram').toLowerCase();
+    const icons={channel:'users',group:'users-three',telegram:'telegram-logo',link:'link',manual:'clipboard-text'};
+    const icon=icons[type]||'link',completed=Number(counts[t.id]||0),limit=Math.max(1,Number(t.perUserLimit||1));
+    const isDone=Boolean(done[t.id])||completed>=limit;
+    const isPending=Boolean(window._pendingTaskClaims?.[t.id]);
     const reward=t.source==='flyerhubs'?API_TASK_REWARD_USD:Number(t.reward||0);
-    const status=isDone?'Tamamlandı':isPending?'İncelemede':type==='link'||type==='manual'?'Kanıt gerekli':'Üyelik doğrulaması';
-    return '<div class="card" style="margin-top:8px"><div class="task-row"><div class="icon"><i class="ph-duotone ph-'+ico+'"></i></div><div class="info"><div class="t">'+escapeHtml(t.title||'Görev')+'</div><div class="m">'+escapeHtml(t.description||status)+' · +
-
+    const status=isDone?'Tamamlandı':isPending?'İncelemede':(['link','manual'].includes(type)?'Kanıt gerekli':'Üyelik doğrulaması');
+    const action=isDone?'<button class="act done" disabled>Tamamlandı</button>':
+      isPending?'<button class="act done" disabled>İncelemede</button>':
+      '<button class="act task-start" data-id="'+escapeHtml(t.id)+'">Başla</button>';
+    return '<div class="card" style="margin-top:8px"><div class="task-row">'+
+      '<div class="icon"><i class="ph-duotone ph-'+icon+'"></i></div>'+
+      '<div class="info"><div class="t">'+escapeHtml(t.title||'Görev')+'</div>'+
+      '<div class="m">'+escapeHtml(t.description||status)+' · +$'+reward.toFixed(3)+'</div>'+
+      '<div class="m">'+status+'</div></div>'+action+'</div></div>';
+  });
+  $('taskList').innerHTML='<div class="stagger">'+cards.join('')+'</div>';
+}
 function startTask(id){
   const t=[...tasks,...flyerTasks].find(x=>x.id===id);if(!t)return;
   const taskUrl=String(t.url||'');
