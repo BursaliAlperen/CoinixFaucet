@@ -359,6 +359,36 @@ async function applyEconomyAction(uid, body) {
   }
   return { user: updatedUser, reward: action === 'spin' ? credited : undefined, extra };
 }
+async function completeFlyerTask(uid, signature, settings) {
+  const taskKey = crypto.createHash('sha256').update(String(signature)).digest('hex');
+  const taskRef = rtdb.ref('users/' + uid + '/flyerhubsTasks/' + taskKey);
+  const taskSnap = await taskRef.once('value');
+  if (!taskSnap.exists()) throw new Error('FLYERHUBS_TASK_NOT_FOUND');
+  const task = taskSnap.val() || {};
+  const checked = await flyerCall('/check_task', { signature: String(signature) });
+  if (checked.result !== 'complete') return { completed: false, providerStatus: checked.result || 'unknown' };
+  const userRef = rtdb.ref('users/' + uid);
+  const reward = money(settings.flyerhubsTaskReward == null ? 0.01 : settings.flyerhubsTaskReward);
+  let failure = '', already = false, credited = 0, xp = null;
+  const tx = await userRef.transaction(user => {
+    failure = ''; already = false; credited = 0; xp = null;
+    if (!user || user.banned) { failure = 'ACCOUNT_UNAVAILABLE'; return; }
+    user.completedTasks = user.completedTasks || {};
+    const id = 'fh_' + taskKey;
+    if (user.completedTasks[id]) { already = true; return user; }
+    credited = money(reward * rewardMultiplier(user));
+    user.balance = money(Number(user.balance || 0) + credited);
+    user.totalEarned = money(Number(user.totalEarned || 0) + credited);
+    user.completedTasks[id] = Date.now();
+    xp = applyXp(user, Number(settings.flyerhubsTaskXp || settings.taskXp || 20));
+    return user;
+  });
+  if (!tx.committed || failure) throw new Error(failure || 'FLYERHUBS_REWARD_FAILED');
+  if (already) return { completed: true, duplicate: true, reward: 0, xp: null };
+  await logTransaction(uid, 'flyerhubs_task', credited, { signatureHash: taskKey, taskName: String(task.name || task.task || 'FlyerHubs task').slice(0, 100), xp });
+  await taskRef.remove();
+  return { completed: true, duplicate: false, reward: credited, xp, multiplier: rewardMultiplier(tx.snapshot.val()) };
+}
 async function verifyTelegramTask(uid, task) {
   if (!BOT_TOKEN || !task || task.active === false) return false;
   const type = String(task.type || '').toLowerCase();
@@ -412,6 +442,28 @@ async function handleApi(req, res, url) {
     }
     if (url.pathname === '/api/economy') {
       const result = await applyEconomyAction(user.id, body);
+      return send(res, 200, { status: 'ok', ...result });
+    }
+    if (url.pathname === '/api/flyerhubs/tasks') {
+      const language = String(user.languageCode || 'en').slice(0, 8);
+      const data = await flyerCall('/get_tasks', { user_id: Number(user.id), language_code: language, limit: 10 });
+      const items = Array.isArray(data.result) ? data.result : [];
+      const taskMap = {};
+      const rewardValue = Number((await getSettings()).flyerhubsTaskReward ?? 0.01);\n      const tasks = items.map(item => {
+        const signature = String(item.signature || '');
+        if (!signature) return null;
+        const id = crypto.createHash('sha256').update(signature).digest('hex');
+        taskMap[id] = { signature, name: String(item.name || item.task || 'FlyerHubs task').slice(0, 100), task: String(item.task || ''), links: Array.isArray(item.links) ? item.links.slice(0, 3) : [], price: item.price };
+        return { id, source: 'flyerhubs', title: taskMap[id].name, type: 'telegram', url: taskMap[id].links[0] || '', reward: rewardValue, active: true };
+      }).filter(Boolean);
+      if (Object.keys(taskMap).length) await rtdb.ref('users/' + user.id + '/flyerhubsTasks').update(taskMap);
+      return send(res, 200, { status: 'ok', tasks });
+    }
+    if (url.pathname === '/api/flyerhubs/check') {
+      const signature = String(body.signature || '');
+      if (!signature || signature.length > 300) return send(res, 400, { status: 'error', message: 'Invalid task signature' });
+      const settings = await getSettings();
+      const result = await completeFlyerTask(user.id, signature, settings);
       return send(res, 200, { status: 'ok', ...result });
     }
     if (url.pathname === '/api/leaderboard') {
@@ -477,7 +529,7 @@ async function handleApi(req, res, url) {
     }
     return send(res, 404, { status: 'error', message: 'Not found' });
   } catch (error) {
-    const known = new Set(['ACCOUNT_UNAVAILABLE','ALREADY_CLAIMED','ALREADY_COMPLETED','NO_SPIN_CARDS','SPIN_NOT_CONFIGURED','INVALID_CARD_PACK','INSUFFICIENT_BALANCE','WITHDRAW_LIMIT','INVALID_WITHDRAW_METHOD','WITHDRAW_SAVE_FAILED','TASK_UNAVAILABLE','TASK_VERIFICATION_FAILED','ACTION_NOT_ALLOWED','INVALID_AMOUNT']);
+    const known = new Set(['ACCOUNT_UNAVAILABLE','ALREADY_CLAIMED','ALREADY_COMPLETED','NO_SPIN_CARDS','SPIN_NOT_CONFIGURED','INVALID_CARD_PACK','INSUFFICIENT_BALANCE','WITHDRAW_LIMIT','INVALID_WITHDRAW_METHOD','WITHDRAW_SAVE_FAILED','TASK_UNAVAILABLE','TASK_VERIFICATION_FAILED','FLYERHUBS_TASK_NOT_FOUND','FLYERHUBS_REWARD_FAILED','FLYERHUBS_UPSTREAM_ERROR','FLYERHUBS_NOT_CONFIGURED','ACTION_NOT_ALLOWED','INVALID_AMOUNT']);
     const status = known.has(error.message) ? 400 : error.message === 'SPONSOR_API_NOT_CONFIGURED' ? 503 : 502;
     return send(res, status, { status: 'error', code: error.message, message: known.has(error.message) ? error.message : 'Request could not be completed' });
   }
