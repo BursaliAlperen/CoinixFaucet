@@ -130,7 +130,7 @@ async function getSettings() {
 }
 async function bootstrap(user, referralCode) {
   let validReferralCode = '';
-  if (referralCode && referralCode !== user.id && /^\\d{1,20}$/.test(String(referralCode))) {
+  if (referralCode && referralCode !== user.id && /^\d{1,20}$/.test(String(referralCode))) {
     const referrer = await rtdb.ref('users/' + String(referralCode)).once('value');
     if (referrer.exists() && !referrer.val()?.banned) validReferralCode = String(referralCode);
   }
