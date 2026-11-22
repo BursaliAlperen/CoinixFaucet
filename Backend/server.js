@@ -16,7 +16,7 @@ const ADMIN_IDS = new Set(String(process.env.ADMIN_IDS || '').split(',').map(v =
 const ANNOUNCEMENT_CHANNEL_ID = process.env.ANNOUNCEMENT_CHANNEL_ID || '';
 const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || '';
 const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
-const WEBAPP_URL = process.env.WEBAPP_URL || '';
+const WEBAPP_URL = String(process.env.WEBAPP_URL || '').replace(/\/$/, '');
 const BOT_USERNAME = process.env.BOT_USERNAME || '';
 const FLYERHUBS_KEY = process.env.FLYERHUBS_KEY || '';
 const MONETAG_POSTBACK_SECRET = process.env.MONETAG_POSTBACK_SECRET || '';
