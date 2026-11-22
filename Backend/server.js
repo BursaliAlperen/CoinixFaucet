@@ -423,6 +423,121 @@ async function callPiarflow(route, payload) {
   if (!response.ok) throw new Error('SPONSOR_UPSTREAM_ERROR');
   return data;
 }
+async function handleAdminApi(user, url, body, res) {
+  if (!isAdmin(user.id)) return send(res, 403, { status:'error', code:'ADMIN_REQUIRED' });
+  if (url.pathname === '/api/admin/overview') {
+    const [usersSnap, withdrawalsSnap, promosSnap] = await Promise.all([
+      rtdb.ref('users').once('value'), rtdb.ref('withdrawals').orderByChild('status').equalTo('pending').limitToLast(100).once('value'),
+      rtdb.ref('promotions').limitToLast(20).once('value')
+    ]);
+    let users = 0, totalBalance = 0, totalEarned = 0, level100 = 0;
+    usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); if(Number(v.level||1)>=100)level100++; });
+    const withdrawals=[]; withdrawalsSnap.forEach(child=>withdrawals.push({id:child.key,...child.val()}));
+    const promotions=[];promosSnap.forEach(child=>promotions.push({id:child.key,...child.val()}));
+    promotions.reverse();
+    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level100,pendingWithdrawals:withdrawals.length},withdrawals,promotions});
+  }
+  if (url.pathname === '/api/admin/promo') {
+    if (!ANNOUNCEMENT_CHANNEL_ID) return send(res, 503, {status:'error',code:'ANNOUNCEMENT_CHANNEL_NOT_CONFIGURED'});
+    const title=String(body.title||'').trim().slice(0,80);
+    const message=String(body.message||'').trim().slice(0,1800);
+    const buttonText=String(body.buttonText||'').trim().slice(0,32);
+    const buttonUrl=String(body.buttonUrl||'').trim();
+    if(!title||!message) return send(res,400,{status:'error',code:'PROMO_FIELDS_REQUIRED'});
+    if(buttonUrl&&!/^https:\/\//i.test(buttonUrl))return send(res,400,{status:'error',code:'INVALID_PROMO_URL'});
+    const ref=rtdb.ref('promotions').push();
+    const promo={title,message,buttonText,buttonUrl,status:'publishing',createdAt:Date.now(),createdBy:user.id};
+    await ref.set(promo);
+    const text='📢 <b>'+escapeHtml(title)+'</b>\n\n'+escapeHtml(message);
+    const extra={parse_mode:'HTML',disable_web_page_preview:true};
+    if(buttonUrl)extra.reply_markup={inline_keyboard:[[{text:buttonText||'Open',url:buttonUrl}]]};
+    try{
+      const sent=await sendTelegramMessage(ANNOUNCEMENT_CHANNEL_ID,text,extra);
+      await ref.update({status:'published',channelMessageId:sent.message_id,publishedAt:Date.now()});
+      return send(res,200,{status:'ok',promotion:{id:ref.key,...promo,status:'published',channelMessageId:sent.message_id}});
+    }catch(error){
+      await ref.update({status:'publish_failed',publishError:String(error.message||'Telegram send failed').slice(0,200)});
+      return send(res,502,{status:'error',code:'CHANNEL_PUBLISH_FAILED',promotionId:ref.key});
+    }
+  }
+  if (url.pathname === '/api/admin/settings') {
+    const allowed=['flyerhubsTaskReward','flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','perAdEarning','dailyLimit'];
+    const patch={};
+    for(const key of allowed) if(body[key]!==undefined){const value=Number(body[key]);if(!Number.isFinite(value)||value<0||value>100000)return send(res,400,{status:'error',code:'INVALID_SETTING_'+key});patch[key]=value;}
+    if(!Object.keys(patch).length)return send(res,400,{status:'error',code:'NO_SETTINGS'});
+    await rtdb.ref('settings').update(patch);
+    return send(res,200,{status:'ok',settings:patch});
+  }
+  if (url.pathname === '/api/admin/botmessages') {
+    const target=String(body.userId||'').trim();
+    const message=String(body.message||'').trim().slice(0,3000);
+    if(!/^[0-9]{1,20}$/.test(target)||!message)return send(res,400,{status:'error',code:'INVALID_MESSAGE'});
+    await sendTelegramMessage(target,message);
+    return send(res,200,{status:'ok'});
+  }
+  return send(res,404,{status:'error',code:'NOT_FOUND'});
+}
+async function handleTelegramWebhook(req, res) {
+  if(!BOT_WEBHOOK_SECRET)return send(res,503,{ok:false});
+  const supplied=String(req.headers['x-telegram-bot-api-secret-token']||'');
+  const expected=Buffer.from(BOT_WEBHOOK_SECRET), actual=Buffer.from(supplied);
+  if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected))return send(res,403,{ok:false});
+  let update;
+  try{update=await readBody(req);}catch{return send(res,400,{ok:false});}
+  const message=update.message;
+  if(!message?.from?.id||typeof message.text!=='string')return send(res,200,{ok:true});
+  const user=message.from;
+  const uid=String(user.id);
+  const text=message.text.trim();
+  const command=text.split(/\s+/)[0].split('@')[0].toLowerCase();
+  const name=[user.first_name,user.last_name].filter(Boolean).join(' ').slice(0,80)||'User';
+  const profile={id:uid,name,username:String(user.username||''),photoUrl:'',languageCode:String(user.language_code||'en')};
+  try{
+    if(command==='/start'){
+      if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
+      const payload=text.split(/\s+/)[1]||'';
+      const referral=payload.startsWith('ref_')?payload.slice(4).replace(/\D/g,'').slice(0,20):payload.replace(/\D/g,'').slice(0,20);
+      await bootstrap(profile,referral);
+      const url=WEBAPP_URL||PUBLIC_BASE_URL;
+      const keyboard=url?{inline_keyboard:[[{text:'🚀 Open Coinix Faucet',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
+      await sendTelegramMessage(uid,'Welcome to Coinix Faucet!\n\nEarn rewards, complete tasks and invite friends.' ,keyboard?{reply_markup:keyboard}:{});
+    }else if(command==='/help'){
+      await sendTelegramMessage(uid,'Coinix Faucet commands:\n/start — Open the app\n/help — Help\n/botmessages — Admin message tools (admins only)\n/yeni — Latest referrals (admins only)\n/admin — Admin dashboard (admins only)');
+    }else if(command==='/admin'){
+      if(!isAdmin(uid))await sendTelegramMessage(uid,'You are not authorized to use the admin panel.');
+      else{
+        const url=(WEBAPP_URL||PUBLIC_BASE_URL)+'/admin';
+        await sendTelegramMessage(uid,'🔐 Coinix Admin Panel',{reply_markup:{inline_keyboard:[[{text:'Open AAA Admin',web_app:{url}}]]}});
+      }
+    }else if(command==='/botmessages'){
+      if(!isAdmin(uid))await sendTelegramMessage(uid,'This command is restricted to administrators.');
+      else await sendTelegramMessage(uid,'📨 <b>Bot Messages</b>\n/start — Welcome + Mini App\n/yeni — Latest referral activity\n/admin — Admin dashboard\nPromotions created in the dashboard are automatically posted to the announcement channel.',{parse_mode:'HTML'});
+    }else if(command==='/yeni'){
+      if(!isAdmin(uid))await sendTelegramMessage(uid,'This command is restricted to administrators.');
+      else{
+        const snap=await rtdb.ref('referralClaims').once('value');
+        const rows=[];snap.forEach(c=>rows.push({uid:c.key,...c.val()}));rows.sort((a,b)=>(b.at||0)-(a.at||0));
+        const body=rows.slice(0,10).map(v=>'• '+escapeHtml(v.uid)+' → '+escapeHtml(v.referrer||'?')+' · '+new Date(v.at||0).toLocaleString('en-US')).join('\n')||'No referrals yet.';
+        await sendTelegramMessage(uid,'🆕 <b>Latest referrals</b>\n'+body,{parse_mode:'HTML'});
+      }
+    }
+  }catch(error){console.error('[telegram-webhook]',error.message);}
+  return send(res,200,{ok:true});
+}
+async function configureTelegramWebhook() {
+  if(!BOT_TOKEN||!BOT_WEBHOOK_SECRET||!PUBLIC_BASE_URL)return;
+  try{
+    await telegramCall('setWebhook',{url:PUBLIC_BASE_URL+'/telegram/webhook',secret_token:BOT_WEBHOOK_SECRET,allowed_updates:['message','callback_query'],drop_pending_updates:false});
+    await telegramCall('setMyCommands',{commands:[
+      {command:'start',description:'Open Coinix Faucet'},
+      {command:'help',description:'Show help'},
+      {command:'admin',description:'Open admin panel'},
+      {command:'botmessages',description:'Admin bot message tools'},
+      {command:'yeni',description:'Latest referrals (admin)'}
+    ]});
+    console.log('[telegram] webhook and commands configured');
+  }catch(error){console.error('[telegram-config]',error.message);}
+}
 async function handleMonetagPostback(req, res, url) {
   if (!MONETAG_POSTBACK_SECRET) return send(res, 503, { error: 'MONETAG_NOT_CONFIGURED' });
   const secret = String(url.searchParams.get('secret') || '');
@@ -492,6 +607,10 @@ async function handleApi(req, res, url) {
     if (url.pathname === '/api/economy') {
       const result = await applyEconomyAction(user.id, body);
       return send(res, 200, { status: 'ok', ...result });
+    }
+    if (url.pathname.startsWith('/api/admin/')) {
+      if (!isAdmin(user.id)) return send(res,403,{status:'error',code:'ADMIN_REQUIRED'});
+      return handleAdminApi(user,url,body,res);
     }
     if (url.pathname === '/api/flyerhubs/tasks') {
       const language = String(user.languageCode || 'en').slice(0, 8);
@@ -587,7 +706,7 @@ async function handleApi(req, res, url) {
 function serveFrontend(req, res, url) {
   let pathname;
   try { pathname = decodeURIComponent(url.pathname); } catch { return send(res, 400, { error: 'Bad path' }); }
-  const requested = pathname === '/' ? '/index.html' : pathname;
+  const requested = pathname === '/' ? '/index.html' : pathname === '/admin' ? '/admin.html' : pathname;
   const file = path.resolve(FRONTEND_DIR, '.' + requested);
   if (!file.startsWith(FRONTEND_DIR + path.sep)) return send(res, 403, { error: 'Forbidden' });
   fs.stat(file, (error, stat) => {
@@ -604,6 +723,7 @@ function serveFrontend(req, res, url) {
 }
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  if (req.method === 'POST' && url.pathname === '/telegram/webhook') return handleTelegramWebhook(req,res);
   if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url);
   if (req.method === 'GET' && url.pathname === '/health') {
     return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY) });
@@ -612,4 +732,4 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
   return send(res, 405, { error: 'Method not allowed' });
 });
-server.listen(PORT, '0.0.0.0', () => console.log('CoinixFaucet listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => { console.log('CoinixFaucet listening on ' + PORT); configureTelegramWebhook(); });
