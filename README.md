@@ -8,7 +8,7 @@ Node.js 20+ backend and mobile-first Telegram Mini App frontend.
 - `Frontend/assets/app.css` — application styles.
 - `Frontend/js/app.js` — client UI and Firebase read subscriptions.
 - `firebase.database.rules.json` / `firestore.rules` — deny-by-default client security rules.
-- `firebase.indexes.json` — query indexes for leaderboard, referrals, and transaction history.
+- `firestore.indexes.json` — query indexes for leaderboard, referrals, and transaction history.
 
 ## Render settings
 - Runtime: Node
