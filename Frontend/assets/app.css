@@ -381,3 +381,10 @@ body::before{content:'';position:fixed;inset:-20%;z-index:0;pointer-events:none;
 .xp-track i{display:block;height:100%;background:linear-gradient(90deg,#a7f3d0,#fef08a);border-radius:20px;transition:width .35s ease}
 .xp-foot{display:flex;justify-content:space-between;gap:8px;font-size:10px;opacity:.8}
 .xp-foot b{white-space:nowrap}
+
+/* AAA inline SVG icon system */
+.svg-icon{display:inline-block;width:1.2em;height:1.2em;vertical-align:-.22em;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+i[data-svg-ready="1"]{display:inline-flex;align-items:center;justify-content:center;font-style:normal}
+.method-card{border:1px solid var(--tg-border,#e5eaf1);background:#fff;border-radius:14px;padding:13px;display:flex;align-items:center;gap:10px;cursor:pointer;font:inherit;font-weight:800;color:inherit}
+.method-card.selected{border-color:var(--tg-blue);box-shadow:0 0 0 2px #2aabee22}
+.method-card .svg-icon{width:25px;height:25px}
