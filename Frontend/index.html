@@ -26,6 +26,16 @@
   <p>Lütfen biraz sonra tekrar deneyin. Sabrınız için teşekkürler.</p>
 </div>
 
+<div id="channelGate" class="channel-gate" hidden>
+  <div class="channel-gate-card">
+    <div class="channel-gate-icon"><i class="ph-duotone ph-lock-key"></i></div>
+    <h2>Önce kanalımıza katıl</h2>
+    <p id="channelGateMessage">Coinix görevlerini ve kazanç özelliklerini kullanmak için duyuru kanalımıza katılmalısın.</p>
+    <a id="channelJoinLink" class="btn-primary" href="#" target="_blank" rel="noopener">Kanala katıl</a>
+    <button id="channelCheckBtn" class="btn-secondary" type="button">Üyeliğimi kontrol et</button>
+    <p class="channel-gate-note" id="channelGateStatus">Katıldıktan sonra tekrar kontrol et.</p>
+  </div>
+</div>
 <div id="app">
   <!-- Header -->
   <div class="header">
@@ -62,7 +72,7 @@
       <div class="amount num">$<span id="balance">0.0000</span></div>
       <div class="bal-sub">
         <i class="ph-duotone ph-television"></i>
-        <span>Bugünkü reklam: <span class="num" id="todayAds">0</span>/<span class="num" id="dailyLimit">10</span></span>
+        <span>Bugünkü Traffy bağlantısı: <span class="num" id="todayAds">0</span>/<span class="num" id="dailyLimit">10</span></span>
       </div>
     </div>
 
@@ -120,7 +130,7 @@
 
     <div class="sec-title"><i class="ph-duotone ph-lightning"></i> Kazanma Yolları</div>
     <div class="earn-grid">
-      <button class="earn-opt" onclick="goTask('ads')"><i class="ph-duotone ph-television"></i>Reklam<small>+$<span id="perAdEarn2">0</span></small></button>
+      <button class="earn-opt" onclick="goTask('ads')"><i class="ph-duotone ph-television"></i>Traffy<small><span id="perAdEarn2">API bekleniyor</span></small></button>
       <button class="earn-opt sp" onclick="goTask('sponsor')"><i class="ph-duotone ph-megaphone"></i>Sponsorlu<small>+$<span id="spRw2">0</span></small></button>
       <button class="earn-opt" onclick="goTask('std')"><i class="ph-duotone ph-list-checks"></i>Görevler<small>Ödüllü</small></button>
     </div>
@@ -128,7 +138,7 @@
     <div class="sec-title"><i class="ph-duotone ph-question"></i> Nasıl Çalışır?</div>
     <div class="card how">
       <div class="st"><div class="n">1</div>Her gün yoklama yapın ve seri bonusu kazanın</div>
-      <div class="st"><div class="n">2</div>Reklam izleyin, görevleri tamamlayın, çarkı çevirin</div>
+      <div class="st"><div class="n">2</div>Traffy bağlantılarını ziyaret edin, görevleri tamamlayın, çarkı çevirin</div>
       <div class="st"><div class="n">3</div>Arkadaşlarınızı davet edin, seviye atlayın ve çekim yapın</div>
     </div>
     <div class="sec-title"><i class="ph-duotone ph-storefront"></i> Hızlı İşlemler</div>
@@ -211,7 +221,7 @@
   <!-- TASKS -->
   <div class="tab-panel" id="tab-tasks">
     <div class="seg" id="taskSeg">
-      <button data-v="ads" onclick="setTaskView('ads')"><i class="ph-duotone ph-television"></i>Reklam<b id="segAds">0/0</b></button>
+      <button data-v="ads" onclick="setTaskView('ads')"><i class="ph-duotone ph-television"></i>Traffy<b id="segAds">0/0</b></button>
       <button class="on" data-v="sponsor" onclick="setTaskView('sponsor')"><i class="ph-duotone ph-megaphone"></i>Sponsorlu<b id="segSp">0</b></button>
       <button data-v="std" onclick="setTaskView('std')"><i class="ph-duotone ph-list-checks"></i>Görevler<b>&nbsp;</b></button>
     </div>
