@@ -4,11 +4,9 @@ The backend registers these commands with Telegram when BOT_TOKEN, BOT_WEBHOOK_S
 
 - /start — welcome message and Mini App launch button; accepts referral payloads such as `/start ref_123456789`.
 - /help — command help.
-- /level — current level, XP progress and Level 100 reward unlock.
+- /level — current level, XP progress and reward multiplier.
 - /referrals — referral count, earned amount and personal invite link.
-- /admin — admin-only launch button for `/admin`.
-- /botmessages — admin-only message tools summary.
-- /yeni — admin-only latest referral activity.
+- /admin — admin-only launch button for the admin dashboard.
 
 ## Referral flow
 1. The app shares `https://t.me/BOT_USERNAME?start=ref_TELEGRAM_ID`.
