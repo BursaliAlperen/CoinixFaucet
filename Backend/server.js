@@ -12,6 +12,14 @@ const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const PIARFLOW_API_KEY = process.env.PIARFLOW_API_KEY || '';
 const FIREBASE_DATABASE_URL = process.env.FIREBASE_DATABASE_URL || '';
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT || '';
+const ADMIN_IDS = new Set(String(process.env.ADMIN_IDS || '').split(',').map(v => v.trim()).filter(v => /^\\d+$/.test(v)));
+const ANNOUNCEMENT_CHANNEL_ID = process.env.ANNOUNCEMENT_CHANNEL_ID || '';
+const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || '';
+const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').replace(/\\/$/, '');
+const WEBAPP_URL = process.env.WEBAPP_URL || '';
+const BOT_USERNAME = process.env.BOT_USERNAME || '';
+const FLYERHUBS_KEY = process.env.FLYERHUBS_KEY || '';
+const MONETAG_POSTBACK_SECRET = process.env.MONETAG_POSTBACK_SECRET || '';
 const MAX_BODY = 24 * 1024;
 const rate = new Map();
 let firebaseReady = false;
@@ -141,7 +149,8 @@ async function bootstrap(user, referralCode) {
     created = true;
     return {
       uid: user.id, name: user.name, username: user.username, photoUrl: user.photoUrl,
-      balance: 0, totalEarned: 0, totalWithdrawn: 0, referralEarned: 0, referralCount: 0,
+            balance: 0, totalEarned: 0, totalWithdrawn: 0, referralEarned: 0, referralCount: 0,
+      xp: 0, level: 1, xpToNext: xpForNextLevel(1),
       referredBy: validReferralCode || null,
       todayAds: 0, lastAdDate: '', checkInStreak: 0, lastCheckIn: '',
       lastCardDate: '', spinCards: 0, completedTasks: {}, sponsorDone: {}, banned: false,
@@ -170,7 +179,11 @@ async function bootstrap(user, referralCode) {
           u.totalEarned = money(Number(u.totalEarned || 0) + bonus);
           return u;
         });
-        if (refResult.committed) await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id });
+        if (refResult.committed) {
+          await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id });
+          try { await sendTelegramMessage(validReferralCode, '🎉 Yeni referansın katıldı: ' + user.name + '. Bonusun hesabına eklendi.'); }
+          catch (error) { console.warn('[referral-notification]', error.message); }
+        }
       }
     }
   }
