@@ -293,7 +293,7 @@ function renderTeam(){
 function renderTasks(){
   const f=currentTaskFilter;
   const allTasks=[...tasks,...flyerTasks];
-  const filtered=allTasks.filter(t=>t.active && (f==='all' || (t.type||'').toLowerCase()===f));
+  const filtered=allTasks.filter(t=>t.active && (t.source==='flyerhubs'||['telegram','channel','group'].includes((t.type||'').toLowerCase())) && (f==='all' || (t.type||'').toLowerCase()===f));
   if(filtered.length===0){
     $('taskList').innerHTML='<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">Görev yok</div></div>';
     return;
