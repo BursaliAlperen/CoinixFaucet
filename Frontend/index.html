@@ -123,6 +123,7 @@
 
     <div class="card lvl-card"><div class="lvl-top"><span>Seviye İlerlemesi</span><b id="lvlNext">--</b></div><div class="progress-bar"><div class="fill" id="lvlFill" style="width:0%"></div></div><div class="lvl-hint" id="lvlHint"></div></div>
     <div class="card today-card"><div class="stat-box" style="box-shadow:none;padding:0"><div class="ic"><i class="ph-duotone ph-sun"></i></div><div><div class="lbl">Bugünkü Kazanç</div><div class="val num">$<span id="todayEarn">0.00</span></div></div></div></div>
+    <div class="card home-referral-bonus"><div class="bonus-symbol"><i class="ph-duotone ph-gift"></i></div><div class="bonus-copy"><strong>24 saatlik davet bonusu</strong><span id="homeRefBonus">+0.00x aktif çarpan</span><small id="homeRefCountdown">Aktif bonus yok</small></div><button type="button" onclick="switchTab('team')">Davetler</button></div>
     <div class="sec-title"><i class="ph-duotone ph-calendar-dots"></i> Günlük Yoklama Serisi</div>
     <div class="card">
       <div class="streak" id="streakRow"></div>
@@ -141,6 +142,8 @@
       <div class="st"><div class="n">2</div>Traffy bağlantılarını ziyaret edin, görevleri tamamlayın, çarkı çevirin</div>
       <div class="st"><div class="n">3</div>Arkadaşlarınızı davet edin, seviye atlayın ve çekim yapın</div>
     </div>
+    <div class="sec-title"><i class="ph-duotone ph-question"></i> Yardım</div>
+    <div class="card help-card"><span>Sorun mu yaşıyorsun? Bot sohbetinden yardım komutlarını aç.</span><button type="button" onclick="openHelp()">Yardım ve destek</button></div>
     <div class="sec-title"><i class="ph-duotone ph-storefront"></i> Hızlı İşlemler</div>
     <div class="card" style="display:flex;gap:8px">
       <button class="btn-primary" onclick="openMarket()">
