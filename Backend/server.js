@@ -460,7 +460,7 @@ async function handleAdminApi(user, url, body, res) {
     ]);
     let users = 0, totalBalance = 0, totalEarned = 0, level50 = 0;
     usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); if(Number(v.level||1)>=50)level50++; });
-    const withdrawals=[]; withdrawalsSnap.forEach(child=>withdrawals.push({id:child.key,...child.val()}));
+    const withdrawals=[]; withdrawalsSnap.forEach(child=>{const w=child.val()||{};if(['ton','gram'].includes(String(w.method||'').toLowerCase()))withdrawals.push({id:child.key,...w});});
     const promotions=[];promosSnap.forEach(child=>promotions.push({id:child.key,...child.val()}));
     promotions.reverse();
     return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level50,pendingWithdrawals:withdrawals.length},withdrawals,promotions,settings:await getSettings()});
