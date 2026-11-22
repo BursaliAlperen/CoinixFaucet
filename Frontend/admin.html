@@ -32,15 +32,7 @@
           <p class="hint">Saving a promotion automatically posts it to the configured Telegram announcement channel.</p>
         </form>
       </article>
-      <article class="panel">
-        <div class="panel-head"><div><div class="eyebrow">DIRECT TELEGRAM</div><h2>Bot messages</h2></div><span class="pill blue">/botmessages</span></div>
-        <form id="messageForm">
-          <label>Telegram user ID<input name="userId" inputmode="numeric" pattern="[0-9]+" required placeholder="123456789"></label>
-          <label>Message<textarea name="message" rows="5" maxlength="3000" required placeholder="Message to send from Coinix bot"></textarea></label>
-          <button class="secondary" type="submit">Send Telegram message <span>➤</span></button>
-          <p class="hint">The recipient must have started the bot before the bot can message them.</p>
-        </form>
-      </article>
+      
       <article class="panel">
         <div class="panel-head"><div><div class="eyebrow">PROGRESSION CONTROL</div><h2>Economy & XP</h2></div><span class="pill purple">LEVEL 1—100</span></div>
         <form id="settingsForm">
@@ -48,7 +40,7 @@
           <div class="two"><label>FlyerHubs task XP<input name="flyerhubsTaskXp" type="number" min="0" max="100000" value="20"></label></div>
           <div class="two"><label>FlyerHubs task reward<input name="flyerhubsTaskReward" type="number" min="0" step="0.0001" value="0.01"></label><label>Ad reward<input name="perAdEarning" type="number" min="0" step="0.0001" value="0.005"></label></div>
           <button class="secondary" type="submit">Save economy settings</button>
-          <p class="hint">Level 100 doubles verified ad and task rewards. XP is server-calculated.</p>
+          <p class="hint">Each level adds 0.02×. Level 1 starts at 1.02× and Level 100 reaches 3.00×. XP and rewards are calculated on the server.</p>
         </form>
       </article>
       <article class="panel">
