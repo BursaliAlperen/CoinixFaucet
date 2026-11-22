@@ -21,15 +21,15 @@ let _dailyCardDone = false; // guard: run distributeDailyCard only once per sess
 
 /* ============ UTILS ============ */
 const $=id=>document.getElementById(id);
-function getRewardMultiplier(level){const n=Math.max(1,Math.min(100,Number(level)||1));return Math.round((1+n*0.02)*100)/100;}
+function getRewardMultiplier(level){const n=Math.max(1,Math.min(50,Number(level)||1));return Math.round((1+n*0.02)*100)/100;}
 function hap(t){try{window.Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}catch(e){}}
 function setAmt(f){const b=parseFloat(currentUser?.balance||0);$('withdrawAmount').value=(Math.floor(b*f*100)/100).toFixed(2);hap();}
 function renderExtras(){
   $('perAdEarn2').textContent=(parseFloat(appSettings.perAdEarning||0.005)*getRewardMultiplier(currentUser.level)).toFixed(4);$('spRw2').textContent=(parseFloat(appSettings.sponsorReward||0.0025)*getRewardMultiplier(currentUser.level)).toFixed(4);
-  const level=Math.max(1,Math.min(100,Number(currentUser.level||1))),xp=Math.max(0,Number(currentUser.xp||0)),xpNext=Number(currentUser.xpToNext||0);
+  const level=Math.max(1,Math.min(50,Number(currentUser.level||1))),xp=Math.max(0,Number(currentUser.xp||0)),xpNext=Number(currentUser.xpToNext||0);
   if($('xpLevel'))$('xpLevel').textContent=level;
-  if($('xpText'))$('xpText').textContent=level>=100?'MAX LEVEL':xp+' / '+xpNext+' XP';
-  if($('xpFill'))$('xpFill').style.width=(level>=100?100:Math.min(100,xpNext?xp/xpNext*100:0))+'%';
+  if($('xpText'))$('xpText').textContent=level>=50?'MAX LEVEL':xp+' / '+xpNext+' XP';
+  if($('xpFill'))$('xpFill').style.width=(level>=50?100:Math.min(100,xpNext?xp/xpNext*100:0))+'%';
   if($('xpBonus'))$('xpBonus').textContent='Reward multiplier: '+getRewardMultiplier(level).toFixed(2)+'×';
   const e=parseFloat(currentUser.totalEarned||0),v=appSettings;
   const st=[['Bronze',0],['Silver',v.vipSilver||10],['Gold',v.vipGold||50],['Platinum',v.vipPlatinum||200]];
