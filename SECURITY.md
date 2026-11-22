@@ -8,6 +8,7 @@
 ## Economy integrity
 - Browser code does not write balances, transactions, withdrawals, referral rewards, check-in rewards, task rewards, or spin rewards directly to Firebase.
 - Rewards, card prices, task definitions, and withdrawal methods are loaded by the backend from Firebase.
+- Standard task rewards are currently limited to Telegram channel/group membership checks through the Telegram Bot API. The bot must have sufficient access to the target chat; unsupported task types remain uncredited until a real server-side verifier is added.
 - Economy mutations use Realtime Database transactions and idempotency keys.
 - Withdrawal requests debit the balance on the server and are stored as pending. If writing the request fails, the debit is rolled back.
 - Sponsor rewards are credited only after the PiarFlow check reports a subscribed state.
