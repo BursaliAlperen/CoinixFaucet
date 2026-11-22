@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/duotone/style.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css'">
 <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
@@ -281,23 +280,22 @@
         Para Çek
       </div>
       <div class="input-grp">
-        <label>Ödeme Yöntemi</label>
+        <label>Kripto ödeme ağı</label>
         <div class="method-grid" id="methodGrid"></div>
       </div>
       <div class="input-grp">
-        <label id="withdrawAccountLabel">Hesap Numarası</label>
-        <input id="withdrawAccount" placeholder="01XXXXXXXXX">
+        <label id="withdrawAccountLabel">TON / GRAM cüzdan adresi</label>
+        <input id="withdrawAccount" autocomplete="off" spellcheck="false" placeholder="TON cüzdan adresinizi girin">
+        <div class="hint">Yalnızca TON veya GRAM (TON ağı) adresleri kabul edilir. İşlem onayından önce adresinizi kontrol edin.</div>
       </div>
       <div class="input-grp">
-        <label>Tutar ($)</label>
-        <input type="number" id="withdrawAmount" step="0.01" placeholder="0.00">
+        <label>Çekim tutarı (USD bakiye)</label>
+        <input type="number" id="withdrawAmount" step="0.0001" min="0" placeholder="0.0000">
         <div class="chips"><button type="button" onclick="setAmt(.25)">%25</button><button type="button" onclick="setAmt(.5)">%50</button><button type="button" onclick="setAmt(.75)">%75</button><button type="button" onclick="setAmt(1)">Tümü</button></div>
-        <div class="hint" id="withdrawMinLabel">
-          <i class="ph-duotone ph-info"></i> En az $5
-        </div>
+        <div class="hint" id="withdrawMinLabel">Minimum çekim, seçilen ağın ayarına göre gösterilir.</div>
       </div>
       <button class="btn-primary" id="submitWithdrawBtn" onclick="submitWithdraw()">
-        <i class="ph-duotone ph-paper-plane-tilt"></i> Çekim Talebi Gönder
+        Çekim Talebi Gönder
       </button>
     </div>
 
@@ -389,6 +387,7 @@
 
 <div class="toast-wrap" id="toastWrap"></div>
 
+<script src="/js/icons.js" defer></script>
 <script src="/js/app.js" defer></script>
 </body>
 </html>
