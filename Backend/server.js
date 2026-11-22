@@ -851,8 +851,8 @@ async function handleTelegramWebhook(req, res) {
       }
       await bootstrap(profile,referral);await rtdb.ref('pendingReferrals/'+uid).remove();
       const url=WEBAPP_URL||PUBLIC_BASE_URL;
-      const keyboard=url?{inline_keyboard:[[{text:'🚀 Open Coinix Faucet',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
-      await sendTelegramMessage(uid,'Welcome to Coinix Faucet!\n\nEarn rewards, complete tasks and invite friends.' ,keyboard?{reply_markup:keyboard}:{});
+      const keyboard=url?{inline_keyboard:[[{text:'🚀 Coinix’i aç',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
+      await sendTelegramMessage(uid,'Coinix’e hoş geldin!\n\nGörevleri tamamla, arkadaşlarını davet et ve kazancını TON veya GRAM olarak çek.',keyboard?{reply_markup:keyboard}:{});
     }else if(command==='/help'){
       await sendTelegramMessage(uid,'Coinix komutları:\n/start — Uygulamayı aç\n/help — Yardım\n/level — Seviye ve XP\n/referrals — Davet bağlantın ve bonusun\n/admin — Yönetim paneli (yalnızca yönetici)');
     }else if(command==='/level'||command==='/referrals'){
@@ -861,7 +861,7 @@ async function handleTelegramWebhook(req, res) {
       if(!membership.ok){await sendMembershipGate(uid,membership.reason);return send(res,200,{ok:true});}
       if(command==='/level'){
       const snap=await rtdb.ref('users/'+uid).once('value');
-      if(!snap.exists())await sendTelegramMessage(uid,'Open /start first to create your Coinix profile.');
+      if(!snap.exists())await sendTelegramMessage(uid,'Önce /start komutuyla Coinix profilini oluştur.');
       else{
         const v=snap.val()||{},level=Math.max(1,Math.min(50,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
         await sendTelegramMessage(uid,'🏅 <b>Coinix Seviyen</b>\nSeviye: <b>'+level+'/50</b>\nXP: <b>'+(level>=50?'MAKS':xp+' / '+next)+'</b>\nKazanç çarpanı: <b>'+rewardMultiplier(v).toFixed(2)+'x</b>',{parse_mode:'HTML'});
@@ -870,8 +870,8 @@ async function handleTelegramWebhook(req, res) {
       const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
       const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Open the Referrals tab in Coinix to copy your invite link.';
       const bonus=activeReferralBonusTotal(v);await sendTelegramMessage(uid,'👥 <b>Davetlerin</b>\nDavet sayısı: <b>'+Number(v.referralCount||0)+'</b>\nAktif ek çarpan: <b>+'+bonus.toFixed(2)+'x</b>\nBonus süresi: <b>24 saat</b>\n\n'+escapeHtml(link),{parse_mode:'HTML'});
-    }else if(command==='/admin'){
-      if(!isAdmin(uid))await sendTelegramMessage(uid,'You are not authorized to use the admin panel.');
+      }\n    }else if(command==='/admin'){
+      if(!isAdmin(uid))await sendTelegramMessage(uid,'Yönetim panelini kullanma yetkin yok.');
       else{
         const url=(WEBAPP_URL||PUBLIC_BASE_URL)+'/admin';
         await sendTelegramMessage(uid,'🔐 Coinix Yönetim Paneli',{reply_markup:{inline_keyboard:[[{text:'Yönetim panelini aç',web_app:{url}}]]}});
