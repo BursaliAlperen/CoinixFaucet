@@ -207,7 +207,17 @@ async function getSettings() {
   const snap = await rtdb.ref('settings').once('value');
   return snap.val() || {};
 }
+async function ensurePayoutMethods() {
+  const defaults={
+    ton:{name:'TON',active:true,minWithdraw:0.05,maxWithdraw:0,accountLabel:'TON wallet address',accountPlaceholder:'EQ... or UQ...'},
+    gram:{name:'GRAM',active:true,minWithdraw:0.05,maxWithdraw:0,accountLabel:'GRAM wallet address (TON network)',accountPlaceholder:'EQ... or UQ...'}
+  };
+  for(const [key,value] of Object.entries(defaults)){
+    await rtdb.ref('withdrawMethods/'+key).transaction(current=>current||value);
+  }
+}
 async function bootstrap(user, referralCode) {
+  await ensurePayoutMethods();
   let validReferralCode = '';
   if (referralCode && referralCode !== user.id && /^\d{1,20}$/.test(String(referralCode))) {
     const referrer = await rtdb.ref('users/' + String(referralCode)).once('value');
@@ -822,7 +832,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/telegram/webhook') return handleTelegramWebhook(req,res);
   if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url).catch(error => { console.error('[monetag-postback]',error.message); return send(res,503,{error:'POSTBACK_RETRY'}); });
   if (req.method === 'GET' && url.pathname === '/health') {
-    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
+    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), firebaseDatabaseUrlConfigured: Boolean(FIREBASE_DATABASE_URL), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyKeyConfigured: Boolean(process.env.TRAFFY_API_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
   }
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
