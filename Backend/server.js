@@ -423,6 +423,54 @@ async function callPiarflow(route, payload) {
   if (!response.ok) throw new Error('SPONSOR_UPSTREAM_ERROR');
   return data;
 }
+async function handleMonetagPostback(req, res, url) {
+  if (!MONETAG_POSTBACK_SECRET) return send(res, 503, { error: 'MONETAG_NOT_CONFIGURED' });
+  const secret = String(url.searchParams.get('secret') || '');
+  const expected = Buffer.from(MONETAG_POSTBACK_SECRET);
+  const supplied = Buffer.from(secret);
+  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return send(res, 403, { error: 'FORBIDDEN' });
+  if (url.searchParams.get('event_type') !== 'impression' || url.searchParams.get('reward_event_type') !== 'valued') return send(res, 200, { ok: true, ignored: true });
+  const uid = String(url.searchParams.get('telegram_id') || '');
+  const ymid = String(url.searchParams.get('ymid') || '');
+  if (!/^\\d{1,20}$/.test(uid) || !ymid || ymid.length > 160 || !ymid.startsWith(uid + '_')) return send(res, 400, { error: 'INVALID_EVENT' });
+  const eventId = crypto.createHash('sha256').update(ymid).digest('hex');
+  if (!initFirebase()) return send(res, 503, { error: 'FIREBASE_NOT_READY' });
+  const userRef = rtdb.ref('users/' + uid);
+  const snap = await userRef.once('value');
+  if (!snap.exists() || snap.val()?.banned) return send(res, 404, { error: 'USER_NOT_FOUND' });
+  const settings = await getSettings();
+  const today = dayKey();
+  let failure = '', duplicate = false, credited = 0, xp = null;
+  const eventRef = rtdb.ref('monetagEvents/' + eventId);
+  const eventTx = await eventRef.transaction(v => {
+    if (v) { duplicate = true; return v; }
+    return { uid, ymid, createdAt: Date.now(), status: 'processing' };
+  });
+  if (!eventTx.committed) return send(res, 503, { error: 'EVENT_LOCK_FAILED' });
+  if (duplicate) return send(res, 200, { ok: true, duplicate: true });
+  const tx = await userRef.transaction(user => {
+    failure = ''; credited = 0; xp = null;
+    if (!user || user.banned) { failure = 'USER_NOT_FOUND'; return; }
+    const count = user.lastAdDate === today ? Number(user.todayAds || 0) : 0;
+    const limit = Math.max(1, Number(settings.dailyLimit || 10));
+    if (count >= limit) { failure = 'DAILY_LIMIT'; return; }
+    const baseReward = money(settings.perAdEarning == null ? 0.005 : settings.perAdEarning);
+    credited = money(baseReward * rewardMultiplier(user));
+    user.balance = money(Number(user.balance || 0) + credited);
+    user.totalEarned = money(Number(user.totalEarned || 0) + credited);
+    user.lastAdDate = today;
+    user.todayAds = count + 1;
+    xp = applyXp(user, Number(settings.adWatchXp || 10));
+    return user;
+  });
+  if (!tx.committed || failure) {
+    await eventRef.remove();
+    return send(res, failure === 'DAILY_LIMIT' ? 200 : 503, { ok: failure === 'DAILY_LIMIT', ignored: failure === 'DAILY_LIMIT', error: failure || 'CREDIT_FAILED' });
+  }
+  await eventRef.update({ status: 'credited', creditedAt: Date.now(), reward: credited });
+  await logTransaction(uid, 'ad', credited, { ymid, xp, multiplier: rewardMultiplier(tx.snapshot.val()) });
+  return send(res, 200, { ok: true, reward: credited });
+}
 async function handleApi(req, res, url) {
   if (!allowedOrigin(req)) return send(res, 403, { status: 'error', message: 'Origin rejected' });
   if (req.method !== 'POST') return send(res, 405, { status: 'error', message: 'Method not allowed' });
@@ -556,6 +604,7 @@ function serveFrontend(req, res, url) {
 }
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url);
   if (req.method === 'GET' && url.pathname === '/health') {
     return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY) });
   }
