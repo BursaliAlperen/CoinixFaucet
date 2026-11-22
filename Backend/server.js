@@ -392,7 +392,9 @@ async function handleApi(req, res, url) {
       const data = await callPiarflow('/sponsors/check', { user_id: Number(user.id), links });
       const matched = (data.sponsors || []).find(item => item.link === links[0]);
       if (matched && matched.status === 'subscribed') {
-        const key = crypto.createHash('sha256').update(links[0]).digest('hex');
+        let sponsorHash = 5381;
+        for (let i = 0; i < links[0].length; i++) sponsorHash = ((sponsorHash << 5) + sponsorHash + links[0].charCodeAt(i)) >>> 0;
+        const key = 'sp' + sponsorHash.toString(36);
         const reward = money((await getSettings()).sponsorReward == null ? 0.0025 : (await getSettings()).sponsorReward);
         let credited = false;
         const tx = await rtdb.ref('users/' + user.id).transaction(profile => {
