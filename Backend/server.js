@@ -344,7 +344,9 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     if(!isTaskOpen(current))return;
     const next=Number(current.totalParticipants||0)+1;
     if(Number(current.totalLimit||0)>0&&next>Number(current.totalLimit))return;
-    current.totalParticipants=next;reserved=true;return current;
+    current.totalParticipants=next;
+    if(Number(current.totalLimit||0)>0&&next>=Number(current.totalLimit)){current.status='completed';current.active=false;current.completionReason='limit_reached';}
+    reserved=true;return current;
   });
   if(!slot.committed||!reserved)throw new Error('TASK_LIMIT_REACHED');
   const claimsRef=rtdb.ref('taskClaims/'+taskId+'/'+uid);let duplicate=false,perUserLimit=false,created=false;
@@ -640,7 +642,11 @@ async function handleAdminApi(user, url, body, res) {
     if(!lock.committed||!locked)return send(res,409,{status:'error',code:'CLAIM_ALREADY_REVIEWED'});
     if(decision==='reject'){
       await claimRef.update({status:'rejected',rejectedAt:Date.now(),reviewedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
-      await rtdb.ref('tasks/'+taskId+'/totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));
+      await rtdb.ref('tasks/'+taskId).transaction(task=>{
+        if(!task)return;task.totalParticipants=Math.max(0,Number(task.totalParticipants||0)-1);
+        if(task.status==='completed'&&task.completionReason==='limit_reached'&&(!Number(task.totalLimit||0)||task.totalParticipants<Number(task.totalLimit))){task.status='active';task.active=true;delete task.completionReason;}
+        return task;
+      });
       await auditAdmin(user.id,'task_claim_reject',claimId,{taskId,uid});return send(res,200,{status:'ok',claim:{id:claimId,status:'rejected'}});
     }
     const settings=await getSettings();let credited=0,failure='',alreadyProcessed=false;
