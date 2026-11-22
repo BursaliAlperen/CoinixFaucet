@@ -599,6 +599,25 @@ async function handleTelegramWebhook(req, res) {
   if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected))return send(res,403,{ok:false});
   let update;
   try{update=await readBody(req);}catch{return send(res,400,{ok:false});}
+  const callback=update.callback_query;
+  if(callback?.from?.id){
+    const uid=String(callback.from.id);
+    if(callback.data==='check_required_channel'){
+      const membership=await checkRequiredChannel(uid);
+      try{await telegramCall('answerCallbackQuery',{callback_query_id:callback.id,text:membership.ok?'Üyelik doğrulandı.':'Henüz doğrulanamadı.',show_alert:!membership.ok});}catch{}
+      if(membership.ok){
+        const pending=await rtdb.ref('pendingReferrals/'+uid).once('value');
+        const profile={id:uid,name:[callback.from.first_name,callback.from.last_name].filter(Boolean).join(' ')||'User',username:String(callback.from.username||''),photoUrl:'',languageCode:String(callback.from.language_code||'tr')};
+        await bootstrap(profile,pending.val()?.referrer||'');await rtdb.ref('pendingReferrals/'+uid).remove();
+        const appUrl=WEBAPP_URL||PUBLIC_BASE_URL;
+        await sendTelegramMessage(uid,'Üyeliğin doğrulandı. Coinix’e hoş geldin!',{reply_markup:{inline_keyboard:[[{text:'Coinix’i aç',web_app:{url:appUrl}}]]}});
+      }else{
+        if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('Coinix kanal kontrolü başarısız: '+membership.reason+'. REQUIRED_CHANNEL_ID / REQUIRED_CHANNEL_URL ve bot yönetici yetkisini kontrol edin.');
+        await sendMembershipGate(uid,membership.reason);
+      }
+    }
+    return send(res,200,{ok:true});
+  }
   const message=update.message;
   if(!message?.from?.id||typeof message.text!=='string')return send(res,200,{ok:true});
   const user=message.from;
@@ -608,26 +627,43 @@ async function handleTelegramWebhook(req, res) {
   const name=[user.first_name,user.last_name].filter(Boolean).join(' ').slice(0,80)||'User';
   const profile={id:uid,name,username:String(user.username||''),photoUrl:'',languageCode:String(user.language_code||'en')};
   try{
-    if(command==='/start'){
+    if(command==='/botstop'||command==='/botstart'){
+      if(!isAdmin(uid)){await sendTelegramMessage(uid,'Bu komut yalnızca yöneticiler içindir.');return send(res,200,{ok:true});}
+      const enabled=command==='/botstart';
+      await rtdb.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:uid});
+      await auditAdmin(uid,enabled?'bot_start':'bot_stop','botControl',{enabled});
+      await sendTelegramMessage(uid,enabled?'Bot yeniden etkinleştirildi.':'Bot kullanıcı işlemlerine kapatıldı.');
+    }else if(command==='/start'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
+      const control=await rtdb.ref('botControl/enabled').once('value');
+      if(control.exists()&&control.val()===false){await sendTelegramMessage(uid,'Bot şu anda bakımda. Lütfen daha sonra tekrar dene.');return send(res,200,{ok:true});}
       const payload=text.split(/\s+/)[1]||'';
       const referral=payload.startsWith('ref_')?payload.slice(4).replace(/\D/g,'').slice(0,20):payload.replace(/\D/g,'').slice(0,20);
-      await bootstrap(profile,referral);
+      await savePendingReferral(uid,referral);
+      const membership=await checkRequiredChannel(uid);
+      if(!membership.ok){
+        await sendMembershipGate(uid,membership.reason);
+        if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('Coinix zorunlu kanal kontrolü başarısız: '+membership.reason+'. Kanal ayarını ve bot yönetici yetkisini kontrol edin.');
+        return send(res,200,{ok:true});
+      }
+      await bootstrap(profile,referral);await rtdb.ref('pendingReferrals/'+uid).remove();
       const url=WEBAPP_URL||PUBLIC_BASE_URL;
       const keyboard=url?{inline_keyboard:[[{text:'🚀 Open Coinix Faucet',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
       await sendTelegramMessage(uid,'Welcome to Coinix Faucet!\n\nEarn rewards, complete tasks and invite friends.' ,keyboard?{reply_markup:keyboard}:{});
     }else if(command==='/help'){
       await sendTelegramMessage(uid,'Coinix Faucet commands:\\n/start — Open the app\\n/help — Help\\n/level — Your level, XP and reward multiplier\\n/referrals — Your referral link and stats\\n/admin — Admin dashboard (admins only)');
-    }else if(command==='/level'){
+    }else if(command==='/level'||command==='/referrals'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
+      const membership=await checkRequiredChannel(uid);
+      if(!membership.ok){await sendMembershipGate(uid,membership.reason);return send(res,200,{ok:true});}
+      if(command==='/level'){
       const snap=await rtdb.ref('users/'+uid).once('value');
       if(!snap.exists())await sendTelegramMessage(uid,'Open /start first to create your Coinix profile.');
       else{
         const v=snap.val()||{},level=Math.max(1,Math.min(50,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
         await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/50</b>\\nXP: <b>'+(level>=50?'MAX':xp+' / '+next)+'</b>\\nReward multiplier: <b>'+rewardMultiplier(v).toFixed(2)+'×</b>',{parse_mode:'HTML'});
       }
-    }else if(command==='/referrals'){
-      if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
+      }else if(command==='/referrals'){
       const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
       const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Open the Referrals tab in Coinix to copy your invite link.';
       await sendTelegramMessage(uid,'👥 <b>Your referrals</b>\\nInvited: <b>'+Number(v.referralCount||0)+'</b>\\nEarned: <b>'+Number(v.referralEarned||0).toFixed(4)+'</b>\\n\\n'+escapeHtml(link),{parse_mode:'HTML'});
@@ -646,7 +682,7 @@ async function configureTelegramWebhook() {
   try{
     await telegramCall('setWebhook',{url:PUBLIC_BASE_URL+'/telegram/webhook',secret_token:BOT_WEBHOOK_SECRET,allowed_updates:['message','callback_query'],drop_pending_updates:false});
     await telegramCall('setMyCommands',{commands:[
-      {command:'start',description:'Open Coinix Faucet'},
+      {command:'start',description:'Coinix’i aç'},\n      {command:'botstart',description:'Botu etkinleştir (yönetici)'},\n      {command:'botstop',description:'Botu duraklat (yönetici)'},
       {command:'help',description:'Show help'},
       {command:'level',description:'Your level and XP'},
       {command:'referrals',description:'Your referral link and stats'},
@@ -654,70 +690,6 @@ async function configureTelegramWebhook() {
     ]});
     console.log('[telegram] webhook and commands configured');
   }catch(error){console.error('[telegram-config]',error.message);}
-}
-async function handleMonetagPostback(req, res, url) {
-  if (!MONETAG_POSTBACK_SECRET) return send(res, 503, { error: 'MONETAG_NOT_CONFIGURED' });
-  if (process.env.MONETAG_ZONE_ID && url.searchParams.get('zone_id') !== process.env.MONETAG_ZONE_ID) return send(res,403,{error:'INVALID_ZONE'});
-  const secret = String(url.searchParams.get('secret') || '');
-  const expected = Buffer.from(MONETAG_POSTBACK_SECRET);
-  const supplied = Buffer.from(secret);
-  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return send(res, 403, { error: 'FORBIDDEN' });
-  if (url.searchParams.get('event_type') !== 'impression' || url.searchParams.get('reward_event_type') !== 'valued') return send(res, 200, { ok: true, ignored: true });
-  const uid = String(url.searchParams.get('telegram_id') || '');
-  const ymid = String(url.searchParams.get('ymid') || '');
-  if (!/^\d{1,20}$/.test(uid) || !ymid || ymid.length > 160 || !ymid.startsWith(uid + '_')) return send(res, 400, { error: 'INVALID_EVENT' });
-  const eventId = crypto.createHash('sha256').update(ymid).digest('hex');
-  if (!initFirebase()) return send(res, 503, { error: 'FIREBASE_NOT_READY' });
-  const userRef = rtdb.ref('users/' + uid);
-  const snap = await userRef.once('value');
-  if (!snap.exists() || snap.val()?.banned) return send(res, 404, { error: 'USER_NOT_FOUND' });
-  const settings = await getSettings();
-  const today = dayKey();
-  let failure = '', duplicate = false, credited = 0, xp = null;
-  const eventRef = rtdb.ref('monetagEvents/' + eventId);
-  let eventBusy = false;
-  const eventTx = await eventRef.transaction(v => {
-    duplicate = false; eventBusy = false;
-    if (v?.status === 'credited') { duplicate = true; return v; }
-    if (v?.status === 'processing' && Date.now() - Number(v.createdAt || 0) < 60000) { eventBusy = true; return v; }
-    return { uid, ymid, createdAt: Date.now(), status: 'processing' };
-  });
-  if (!eventTx.committed) return send(res, 503, { error: 'EVENT_LOCK_FAILED' });
-  if (duplicate) return send(res, 200, { ok: true, duplicate: true });
-  if (eventBusy) return send(res, 503, { error: 'EVENT_IN_PROGRESS' });
-  duplicate = false;
-  const tx = await userRef.transaction(user => {
-    failure = ''; credited = 0; xp = null;
-    if (!user || user.banned) { failure = 'USER_NOT_FOUND'; return; }
-    user.processedAds = user.processedAds || {};
-    if (user.processedAds[eventId]) { duplicate = true; return user; }
-    const count = user.lastAdDate === today ? Number(user.todayAds || 0) : 0;
-    const limit = Math.max(1, Number(settings.dailyLimit || 10));
-    if (count >= limit) { failure = 'DAILY_LIMIT'; return; }
-    const baseReward = API_AD_REWARD_USD;
-    credited = baseReward;
-    user.balance = money(Number(user.balance || 0) + credited);
-    user.totalEarned = money(Number(user.totalEarned || 0) + credited);
-    user.lastAdDate = today;
-    user.todayAds = count + 1;
-    user.processedAds[eventId] = Date.now();
-    const adKeys = Object.keys(user.processedAds);
-    if (adKeys.length > 200) for (const key of adKeys.slice(0, adKeys.length - 200)) delete user.processedAds[key];
-    xp = applyXp(user, Number(settings.adWatchXp || 10));
-    return user;
-  });
-  if (!tx.committed || failure) {
-    await eventRef.remove();
-    return send(res, failure === 'DAILY_LIMIT' ? 200 : 503, { ok: failure === 'DAILY_LIMIT', ignored: failure === 'DAILY_LIMIT', error: failure || 'CREDIT_FAILED' });
-  }
-  if (duplicate) {
-    await eventRef.update({status:'credited',creditedAt:Date.now(),recovered:true});
-    return send(res,200,{ok:true,duplicate:true});
-  }
-  await eventRef.update({ status: 'credited', creditedAt: Date.now(), reward: credited });
-  try { await logTransaction(uid, 'ad', credited, { ymid, xp, multiplier: rewardMultiplier(tx.snapshot.val()) }); }
-  catch(error) { console.error('[monetag-log]',error.message); }
-  return send(res, 200, { ok: true, reward: credited });
 }
 async function handleApi(req, res, url) {
   if (!allowedOrigin(req)) return send(res, 403, { status: 'error', message: 'Origin rejected' });
@@ -730,12 +702,20 @@ async function handleApi(req, res, url) {
   if (limited(user.id)) return send(res, 429, { status: 'error', message: 'Rate limit exceeded' });
   if (!initFirebase()) return send(res, 503, { status: 'error', message: 'Firebase Admin is not configured' });
   try {
+    if (url.pathname === '/api/channel/check') {
+      const membership=await checkRequiredChannel(user.id);
+      if(!membership.ok)return send(res,403,{status:'error',code:membership.reason,channelUrl:REQUIRED_CHANNEL_URL});
+      return send(res,200,{status:'ok',membership:true});
+    }
     if (url.pathname === '/api/session') {
+      const membership=await checkRequiredChannel(user.id);
+      if(!membership.ok)return send(res,403,{status:'error',code:membership.reason,channelUrl:REQUIRED_CHANNEL_URL});
       const referralCode = String(body.referralCode || '').replace(/\D/g, '').slice(0, 20);
       const profile = await bootstrap(user, referralCode);
+      await rtdb.ref('users/'+user.id+'/lastActiveAt').set(Date.now());
       if (profile.banned) return send(res, 403, { status: 'error', message: 'Account unavailable' });
       const customToken = await admin.auth().createCustomToken(user.id);
-      return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME, monetagZoneId: process.env.MONETAG_ZONE_ID || '' });
+      return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME, referralBonusMultiplier: Number((await getSettings()).referralMultiplierBonus ?? 0.02), referralBonusDurationHours: Number((await getSettings()).referralBonusDurationHours ?? 24), traffyLink: TRAFFY_LINK_PREFIX ? 'https://t.me/Traffy_robot?startapp=l_'+TRAFFY_LINK_PREFIX+'_'+user.id : '' });
     }
     if (url.pathname === '/api/economy') {
       const result = await applyEconomyAction(user.id, body);
@@ -866,7 +846,6 @@ function serveFrontend(req, res, url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'POST' && url.pathname === '/telegram/webhook') return handleTelegramWebhook(req,res);
-  if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url).catch(error => { console.error('[monetag-postback]',error.message); return send(res,503,{error:'POSTBACK_RETRY'}); });
   if (req.method === 'GET' && url.pathname === '/public-config/firebase') {
     const required=['apiKey','authDomain','databaseURL','projectId','appId'];
     const missing=required.filter(key=>!FIREBASE_PUBLIC_CONFIG[key]);
@@ -875,7 +854,7 @@ const server = http.createServer(async (req, res) => {
     return send(res,200,FIREBASE_PUBLIC_CONFIG);
   }
   if (req.method === 'GET' && url.pathname === '/health') {
-    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), firebaseDatabaseUrlConfigured: Boolean(FIREBASE_DATABASE_URL), firebaseWebConfigConfigured: Boolean(FIREBASE_PUBLIC_CONFIG.apiKey && FIREBASE_PUBLIC_CONFIG.authDomain && FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.appId), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyKeyConfigured: Boolean(process.env.TRAFFY_API_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
+    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), firebaseDatabaseUrlConfigured: Boolean(FIREBASE_DATABASE_URL), firebaseWebConfigConfigured: Boolean(FIREBASE_PUBLIC_CONFIG.apiKey && FIREBASE_PUBLIC_CONFIG.authDomain && FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.appId), telegramConfigured: Boolean(BOT_TOKEN), requiredChannelConfigured: Boolean(REQUIRED_CHANNEL_ID && REQUIRED_CHANNEL_URL), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyConfigured: Boolean(process.env.TRAFFY_API_KEY), traffyApiEnabled: false, adminConfigured: ADMIN_IDS.size > 0 });
   }
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
