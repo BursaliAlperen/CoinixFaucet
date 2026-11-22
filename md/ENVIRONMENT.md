@@ -1,30 +1,34 @@
-# Environment variables
+# Ortam değişkenleri ve dağıtım
 
-Set these in Render > Service > Environment. Do not commit real values.
+Railway → CoinixFaucet → Variables bölümünde ayarlayın. Gerçek anahtarları GitHub'a eklemeyin.
 
-| Variable | Purpose |
+| Değişken | Açıklama |
 |---|---|
-| BOT_TOKEN | Telegram bot token |
-| BOT_USERNAME | Bot username without @ |
-| ADMIN_IDS | Comma-separated numeric Telegram admin IDs |
-| ANNOUNCEMENT_CHANNEL_ID | Channel @username or numeric -100... ID |
-| BOT_WEBHOOK_SECRET | Random secret for Telegram webhook verification |
-| PUBLIC_BASE_URL | Exact public HTTPS Render service origin |
-| WEBAPP_URL | HTTPS URL configured as Telegram Mini App |
-| APP_ORIGIN | Exact public HTTPS origin; no trailing slash |
-| FIREBASE_SERVICE_ACCOUNT | Firebase service account JSON or base64 JSON |
-| FIREBASE_DATABASE_URL | Exact Realtime Database URL from the same Firebase project |
-| PIARFLOW_API_KEY | Optional PiarFlow server key |
-| FLYERHUBS_KEY | FlyerHubs bot key for task integration |
-| MONETAG_POSTBACK_SECRET | Secret query parameter used in Monetag postback URL |
-| MONETAG_ZONE_ID | Optional zone allowlist/reference for Monetag |
-| REWARD_TIMEZONE | Defaults to Europe/Istanbul |
-| PORT | Supplied by Render |
+| BOT_TOKEN | BotFather bot tokeni (gizli) |
+| BOT_USERNAME | @ olmadan bot adı |
+| ADMIN_IDS | Virgülle ayrılmış Telegram yönetici ID'leri |
+| BOT_WEBHOOK_SECRET | Telegram webhook doğrulama sırrı |
+| PUBLIC_BASE_URL / WEBAPP_URL / APP_ORIGIN | Railway HTTPS adresleri |
+| REQUIRED_CHANNEL_ID | Zorunlu kanalın @kullanıcı adı veya -100... ID'si |
+| REQUIRED_CHANNEL_URL | Kullanıcının katılacağı HTTPS/T.me bağlantısı |
+| FIREBASE_SERVICE_ACCOUNT | Firebase servis hesabı JSON'u (gizli) |
+| FIREBASE_DATABASE_URL | Aynı Firebase projesinin RTDB URL'si |
+| FIREBASE_WEB_API_KEY / AUTH_DOMAIN / PROJECT_ID / APP_ID | Aynı projedeki Firebase Web App ayarları |
+| PIARFLOW_API_KEY | Piarflow gizli API anahtarı |
+| FLYERHUBS_KEY | FlyerHubs gizli API anahtarı |
+| TRAFFY_API_KEY | Yenilenmiş Traffy gizli API anahtarı; istemci tarafından kullanılmaz |
+| TRAFFY_LINK_PREFIX | Traffy kişisel linkindeki l_ öncesi prefix |
+| REWARD_TIMEZONE | Varsayılan Europe/Istanbul |
+| TELEGRAM_INIT_DATA_MAX_AGE_SECONDS | Mini App initData geçerlilik süresi; varsayılan 86400 |
 
-Required Render commands:
-- Build: `npm install`
-- Start: `npm start`
-- Health path: `/health`
-- Node: 20+
+## Çalıştırma
+- Build: npm install
+- Start: npm start
+- Health: /health
+- Node.js: 20+
 
-The Firebase client config already in Frontend/js/app.js identifies the public Firebase project. FIREBASE_SERVICE_ACCOUNT and FIREBASE_DATABASE_URL must belong to that same project. Never copy a service account into frontend JavaScript.
+Zorunlu kanal kontrolünün çalışması için botu hedef kanala yönetici ekleyin. Telegram getChatMember ile diğer kullanıcıların üyeliğini güvenilir biçimde kontrol edebilmek için botun kanalda yönetici olması gerekir.
+
+Firebase Admin servis hesabı, RTDB URL ve Web App ayarlarının tamamı aynı Firebase projesine ait olmalıdır. Eksik Firebase değişkenleri Railway'de doldurulmalıdır.
+
+Traffy API sözleşmesi doğrulanana kadar sağlayıcı durumu awaiting_official_api_contract görünür ve bakiye kredisi yapılmaz.
