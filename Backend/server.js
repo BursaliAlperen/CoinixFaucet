@@ -559,12 +559,17 @@ async function handleMonetagPostback(req, res, url) {
   const today = dayKey();
   let failure = '', duplicate = false, credited = 0, xp = null;
   const eventRef = rtdb.ref('monetagEvents/' + eventId);
+  let eventBusy = false;
   const eventTx = await eventRef.transaction(v => {
-    if (v) { duplicate = true; return v; }
+    duplicate = false; eventBusy = false;
+    if (v?.status === 'credited') { duplicate = true; return v; }
+    if (v?.status === 'processing' && Date.now() - Number(v.createdAt || 0) < 60000) { eventBusy = true; return v; }
     return { uid, ymid, createdAt: Date.now(), status: 'processing' };
   });
   if (!eventTx.committed) return send(res, 503, { error: 'EVENT_LOCK_FAILED' });
   if (duplicate) return send(res, 200, { ok: true, duplicate: true });
+  if (eventBusy) return send(res, 503, { error: 'EVENT_IN_PROGRESS' });
+  duplicate = false;
   const tx = await userRef.transaction(user => {
     failure = ''; credited = 0; xp = null;
     if (!user || user.banned) { failure = 'USER_NOT_FOUND'; return; }
