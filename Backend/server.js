@@ -126,6 +126,53 @@ function money(value) {
   return Math.round(n * 10000) / 10000;
 }
 function randomId() { return crypto.randomBytes(16).toString('hex'); }
+function isAdmin(uid) { return ADMIN_IDS.has(String(uid)); }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+async function telegramCall(method, payload) {
+  if (!BOT_TOKEN) throw new Error('BOT_NOT_CONFIGURED');
+  const response = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/' + method, {
+    method: 'POST', headers: {'content-type':'application/json'},
+    body: JSON.stringify(payload), signal: AbortSignal.timeout(12000)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.ok) throw new Error(data.description || 'TELEGRAM_API_ERROR');
+  return data.result;
+}
+async function sendTelegramMessage(chatId, text, extra = {}) {
+  return telegramCall('sendMessage', {chat_id: chatId, text, ...extra});
+}
+function xpForNextLevel(level) {
+  const n = Math.max(1, Math.min(99, Number(level) || 1));
+  return Math.floor(50 + n * 10 + n * n * 0.5);
+}
+function applyXp(user, amount) {
+  const gain = Math.max(0, Math.floor(Number(amount) || 0));
+  user.xp = Math.max(0, Number(user.xp || 0)) + gain;
+  user.level = Math.max(1, Math.min(100, Number(user.level || 1)));
+  let required = xpForNextLevel(user.level);
+  while (user.level < 100 && user.xp >= required) {
+    user.xp -= required;
+    user.level += 1;
+    required = xpForNextLevel(user.level);
+  }
+  if (user.level >= 100) { user.level = 100; user.xp = Math.min(user.xp, required - 1); }
+  user.xpToNext = user.level >= 100 ? 0 : required;
+  user.xpUpdatedAt = Date.now();
+  return { level: user.level, xp: user.xp, xpToNext: user.xpToNext, gained: gain };
+}
+function rewardMultiplier(user) { return Number(user.level || 1) >= 100 ? 2 : 1; }
+async function flyerCall(route, payload) {
+  if (!FLYERHUBS_KEY) throw new Error('FLYERHUBS_NOT_CONFIGURED');
+  const response = await fetch('https://api.flyerhubs.com' + route, {
+    method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({key:FLYERHUBS_KEY,...payload}),
+    signal:AbortSignal.timeout(12000)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.error) throw new Error('FLYERHUBS_UPSTREAM_ERROR');
+  return data;
+}
 async function logTransaction(uid, type, amount, extra) {
   await firestore.collection('transactions').add({
     userId: uid, type, amount: Number(amount || 0),
