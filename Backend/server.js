@@ -532,6 +532,7 @@ async function handleTelegramWebhook(req, res) {
     }else if(command==='/yeni'){
       if(!isAdmin(uid))await sendTelegramMessage(uid,'This command is restricted to administrators.');
       else{
+        if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
         const snap=await rtdb.ref('referralClaims').once('value');
         const rows=[];snap.forEach(c=>rows.push({uid:c.key,...c.val()}));rows.sort((a,b)=>(b.at||0)-(a.at||0));
         const body=rows.slice(0,10).map(v=>'• '+escapeHtml(v.uid)+' → '+escapeHtml(v.referrer||'?')+' · '+new Date(v.at||0).toLocaleString('en-US')).join('\n')||'No referrals yet.';
