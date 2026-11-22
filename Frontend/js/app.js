@@ -404,7 +404,7 @@ function renderMethods(){
   const allowed=withdrawMethods.filter(m=>{
     const key=String(m.key||'').toLowerCase();
     const name=String(m.name||'').toLowerCase();
-    return ['ton','gram'].includes(key)||/^(ton|gram)( network| token)?$/.test(name);
+    return ['ton','gram'].includes(key);
   });
   withdrawMethods=allowed;
   if(!allowed.length){
@@ -443,14 +443,14 @@ function renderTransactions(){
     $('txList').innerHTML='<div class="empty"><i class="ph-duotone ph-receipt"></i><div class="et">İşlem yok</div></div>';
     return;
   }
-  const labelMap={ad:'Reklam',sponsor:'Sponsor',task:'Görev',spin:'Çark',checkin:'Yoklama',referral:'Davet',withdraw:'Çekim',purchase:'Satın alma'};
+  const labelMap={ad:'Reklam',sponsor:'Sponsor',task:'Görev',spin:'Çark',checkin:'Yoklama',referral:'Davet',withdraw:'Çekim',withdraw_refund:'Çekim iadesi',purchase:'Satın alma'};
   $('txList').innerHTML=all.slice(0,30).map(t=>{
     const isOut=t._w||t.type==='withdraw';
     const label=labelMap[t.type]||t.type;
     const ic=isOut?'arrow-up-right':'arrow-down-left';
     const cls=isOut?'out':'in';
     const sign=isOut?'-':'+';
-    const status=t._w?` <span class="badge ${t.status}">${({pending:'Beklemede',approved:'Onaylandı',rejected:'Reddedildi'})[t.status]||t.status}</span>`:'';
+    const status=t._w?` <span class="badge ${t.status}">${({pending:'Beklemede',approved:'Onaylandı',paid:'Ödendi',rejected:'Reddedildi',refund_failed:'İade hatası'})[t.status]||t.status}</span>`:'';
     return `<div class="tx-row"><div class="ic ${cls}"><i class="ph-duotone ph-${ic}"></i></div>
       <div class="info"><div class="t">${label}${status}</div><div class="d">${new Date(t._ts).toLocaleString('tr-TR')}</div></div>
       <div class="am ${cls}">${sign}$${parseFloat(t.amount||0).toFixed(2)}</div></div>`;
