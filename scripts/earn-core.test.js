@@ -9,7 +9,7 @@ const u={level:10,referralBonuses:{
 }};
 assert.equal(activeReferralBonusTotal(u,now),0.02);
 assert.equal(rewardMultiplier(u,now),1.22);
-assert.equal(activeReferralBonusTotal(u,now+11000),0);
+assert.equal(activeReferralBonusTotal(u,now+11000),0.02);\nassert.equal(activeReferralBonusTotal(u,now+21000),0);
 assert.equal(rewardMultiplier({level:50},now),2);
 assert.equal(isTelegramMember({status:'member'}),true);
 assert.equal(isTelegramMember({status:'left'}),false);
