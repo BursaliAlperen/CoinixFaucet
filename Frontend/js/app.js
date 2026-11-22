@@ -2,7 +2,7 @@
 /* ============ FIREBASE CONFIG ============ */
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 let firebaseConfig = null;
-let db,fs;
+let db=null;\nclass LiveSnapshot{constructor(key,value){this.key=key;this.value=value??null;}val(){return this.value;}exists(){return this.value!==null&&this.value!==undefined;}forEach(fn){if(!this.value||typeof this.value!=='object')return false;for(const [key,value] of Object.entries(this.value)){if(fn(new LiveSnapshot(key,value))===true)return true;}return false;}}\nclass LiveRef{constructor(path,filters={}){this.path=path;this.filters=filters;this.key=path.split('/').pop();}orderByChild(child){return new LiveRef(this.path,{...this.filters,child});}equalTo(equal){return new LiveRef(this.path,{...this.filters,equal});}limitToLast(limit){return new LiveRef(this.path,{...this.filters,limit});}async once(){const data=await apiRequest('/api/live',{path:this.path});let value=data.value;if(value&&typeof value==='object'&&this.filters.child){let entries=Object.entries(value).filter(([,v])=>this.filters.equal===undefined||String(v?.[this.filters.child])===String(this.filters.equal));entries.sort((x,y)=>Number(x[1]?.[this.filters.child]||0)-Number(y[1]?.[this.filters.child]||0));if(this.filters.limit)entries=entries.slice(-this.filters.limit);value=Object.fromEntries(entries);}return new LiveSnapshot(this.key,value);}on(event,callback){let active=true,last='';const poll=async()=>{try{const snap=await this.once();const signature=JSON.stringify(snap.val());if(active&&signature!==last){last=signature;callback(snap);}}catch(error){console.warn('Live data refresh:',error.message);}};poll();const timer=setInterval(poll,12000);return()=>{active=false;clearInterval(timer);};}}
 
 /* ============ STATE ============ */
 let TGUser = null, currentUser = null, appSettings = {}, withdrawMethods = [], selectedMethod = null;
@@ -113,7 +113,7 @@ function showChannelGate(error){
 async function init(){
   try{
     const tg=window.Telegram?.WebApp;
-    if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#ffffff');tg.setBackgroundColor('#F0F4F8');}catch(e){}TGUser=tg.initDataUnsafe?.user;}
+    if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#fff8f3');tg.setBackgroundColor('#fff8f3');}catch(e){}TGUser=tg.initDataUnsafe?.user;}
     if(!TGUser)throw new Error('Bu uygulama Telegram Mini App üzerinden açılmalıdır.');
     const params=new URLSearchParams(window.location.search);
     let refBy=params.get('ref');
@@ -122,7 +122,7 @@ async function init(){
     window.COINIX_ADMIN = session.isAdmin === true;
     window.COINIX_BOT_USERNAME = session.botUsername || '';window.COINIX_TRAFFY_LINK=session.traffyLink||'';
     const adminButton=$('adminOpenBtn');if(adminButton&&window.COINIX_ADMIN)adminButton.style.display='inline-flex';
-    await firebase.auth().signInWithCustomToken(session.customToken);
+    db={ref:path=>new LiveRef(path)};
     const uid=String(TGUser.id);
     window.setInterval(renderReferralBonusCountdown,1000);
     const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
@@ -162,10 +162,8 @@ async function init(){
       renderMethods();
     });
 
-    fs.collection('transactions').where('userId','==',uid).orderBy('timestamp','desc').limit(50).onSnapshot(snap=>{
-      transactionsCache=[];snap.forEach(d=>transactionsCache.push({id:d.id,...d.data()}));
-      renderTransactions();
-    },()=>{});
+    const refreshTransactions=async()=>{try{const data=await apiRequest('/api/transactions');transactionsCache=data.items||[];renderTransactions();renderExtras();}catch(error){console.warn('Transactions refresh:',error.message);}};
+    refreshTransactions();window.setInterval(refreshTransactions,15000);
 
     db.ref('withdrawals').orderByChild('userId').equalTo(uid).limitToLast(20).on('value',snap=>{
       const arr=[];snap.forEach(c=>arr.push({id:c.key,_w:true,...c.val()}));
@@ -693,32 +691,17 @@ for(let i=0;i<38;i++)P.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random
 (function f(){x.clearRect(0,0,W,H);P.forEach(p=>{p.y-=p.v;p.a+=.02;p.x+=Math.sin(p.a)*.3;if(p.y<-10){p.y=H+10;p.x=Math.random()*W}
 x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fillStyle=p.g?'rgba(255,193,7,.55)':'rgba(56,189,248,.35)';x.shadowBlur=12;x.shadowColor=x.fillStyle;x.fill()});requestAnimationFrame(f)})();})();
 
-/* ===== FIREBASE YÜKLEYİCİ (gstatic engelliyse jsDelivr'e düşer) ===== */
+/* ===== FIRESTORE DATA VIA AUTHENTICATED BACKEND ===== */
 function loadScript(src){return new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=no;document.head.appendChild(e);});}
-async function loadFirebase(){
-  const mods=[['app',()=>window.firebase],['auth',()=>window.firebase&&firebase.auth],['database',()=>window.firebase&&firebase.database],['firestore',()=>window.firebase&&firebase.firestore]];
-  const bases=['https://www.gstatic.com/firebasejs/9.23.0/','https://cdn.jsdelivr.net/npm/firebase@9.23.0/'];
-  for(const[n,has]of mods){
-    for(const b of bases){if(has())break;try{await loadScript(`${b}firebase-${n}-compat.js`);}catch(e){}}
-    if(!has())return false;
-  }
-  return true;
-}
-function failScreen(m){const l=$('loader');l.style.display='flex';l.innerHTML=`<div style="padding:30px;text-align:center"><div style="font-size:44px">📡</div><h2 style="margin:10px 0">Yüklenemedi</h2><p style="opacity:.85;margin-bottom:16px">${m}</p><button onclick="location.reload()" style="background:#fff;color:#1A73E8;padding:12px 22px;border-radius:12px;font-weight:700">Yenile</button></div>`;}
 const withTO=(p,ms,fb)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(fb),ms))]);
 async function boot(){
-  const wd=setTimeout(()=>{if($('loader').style.display!=='none')failScreen('Sunucuya ulaşılamıyor. İnternet/VPN ve Firebase kurallarını kontrol edin.')},20000);
+  const wd=setTimeout(()=>{if($('loader').style.display!=='none')failScreen('Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin.')},20000);
   await withTO(loadScript('https://telegram.org/js/telegram-web-app.js').catch(()=>{}),3500);
-  if(!(await withTO(loadFirebase(),12000,false))){clearTimeout(wd);failScreen('Firebase yüklenemedi. İnternet/VPN bağlantınızı kontrol edin.');return;}
-  try{
-    const configResponse=await fetch('/public-config/firebase',{cache:'no-store'});
-    const configData=await configResponse.json().catch(()=>({}));
-    if(!configResponse.ok)throw new Error(configData.code||'FIREBASE_WEB_CONFIG_MISSING');
-    firebaseConfig=configData;
-  }catch(error){clearTimeout(wd);failScreen('Firebase web yapılandırması eksik: '+escapeHtml(error.message));return;}
-  firebase.initializeApp(firebaseConfig);db=firebase.database();fs=firebase.firestore();init();
+  db={ref:path=>new LiveRef(path)};
+  await init();
+  clearTimeout(wd);
 }
-
+function failScreen(m){const l=$('loader');l.style.display='flex';l.innerHTML=`<div style="padding:30px;text-align:center"><div style="font-size:44px">🧸</div><h2 style="margin:10px 0">Bir dakika!</h2><p style="opacity:.85;margin-bottom:16px">${m}</p><button onclick="location.reload()" style="background:#fff;color:#9862ad;padding:12px 22px;border-radius:12px;font-weight:800">Yenile</button></div>;}
 /* ===== SPONSORLU GÖREVLER (PiarFlow) — API anahtarı sunucuda (proxy) durur ===== */
 const SPONSOR_API_URL='/api'; // veya Firebase: settings/sponsorApiUrl
 let sponsors=[],_spT=0;
