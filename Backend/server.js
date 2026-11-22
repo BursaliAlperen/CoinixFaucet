@@ -224,7 +224,7 @@ async function checkRequiredChannel(uid) {
         previous=String(current?.status||'');changed=previous!==status;
         return {status,joined,checkedAt:Date.now()};
       });
-      if(changed&&previous)await rtdb.ref('channelMembershipEvents').push({userId:String(uid),from:previous,to:status,joined,timestamp:Date.now()});
+      if(changed)await rtdb.ref('channelMembershipEvents').push({userId:String(uid),from:previous,to:status,joined,timestamp:Date.now()});
     }
     return {ok:joined,reason:joined?'MEMBER':'NOT_MEMBER',status};
   } catch(error) {
