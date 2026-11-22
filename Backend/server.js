@@ -544,6 +544,7 @@ async function configureTelegramWebhook() {
 }
 async function handleMonetagPostback(req, res, url) {
   if (!MONETAG_POSTBACK_SECRET) return send(res, 503, { error: 'MONETAG_NOT_CONFIGURED' });
+  if (process.env.MONETAG_ZONE_ID && url.searchParams.get('zone_id') !== process.env.MONETAG_ZONE_ID) return send(res,403,{error:'INVALID_ZONE'});
   const secret = String(url.searchParams.get('secret') || '');
   const expected = Buffer.from(MONETAG_POSTBACK_SECRET);
   const supplied = Buffer.from(secret);
@@ -629,7 +630,7 @@ async function handleApi(req, res, url) {
     }
     if (url.pathname.startsWith('/api/admin/')) {
       if (!isAdmin(user.id)) return send(res,403,{status:'error',code:'ADMIN_REQUIRED'});
-      return handleAdminApi(user,url,body,res);
+      return await handleAdminApi(user,url,body,res);
     }
     if (url.pathname === '/api/flyerhubs/tasks') {
       const language = String(user.languageCode || 'en').slice(0, 8);
@@ -743,7 +744,7 @@ function serveFrontend(req, res, url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'POST' && url.pathname === '/telegram/webhook') return handleTelegramWebhook(req,res);
-  if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url);
+  if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url).catch(error => { console.error('[monetag-postback]',error.message); return send(res,503,{error:'POSTBACK_RETRY'}); });
   if (req.method === 'GET' && url.pathname === '/health') {
     return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
   }
