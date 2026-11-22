@@ -1,13 +1,13 @@
 {
-  "name": "coinixfaucet",
+  "name": "teddygrow",
   "version": "2.2.0",
   "private": true,
-  "description": "CoinixFaucet Telegram Mini App",
+  "description": "TeddyGrow Telegram microtask platform",
   "main": "Backend/server.js",
   "scripts": {
     "start": "node Backend/server.js",
     "migrate:v3": "node scripts/migrate-v3.js",
-    "check": "node scripts/earn-core.test.js && node --check Backend/earn-core.js && node --check Backend/server.js && node --check Frontend/js/icons.js && node --check Frontend/js/app.js && node --check Frontend/js/admin.js && node scripts/smoke-check.js"
+    "check": "node scripts/earn-core.test.js && node --check Backend/earn-core.js && node --check Backend/server.js && node --check Frontend/js/icons.js && node --check Frontend/js/app.js && node --check Frontend/js/admin.js && node scripts/smoke-check.js && node --check Backend/firestore-compat.js"
   },
   "engines": {
     "node": ">=20"
