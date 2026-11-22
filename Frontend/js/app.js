@@ -669,7 +669,9 @@ function shareTG(){
 }
 
 /* WITHDRAW */
+let _withdrawPending=false;
 async function submitWithdraw(){
+  if(_withdrawPending)return;
   if(!selectedMethod){showToast('Yöntem seçin','warn');return;}
   const m=withdrawMethods.find(x=>x.key===selectedMethod);
   const amt=parseFloat($('withdrawAmount').value);
@@ -679,9 +681,11 @@ async function submitWithdraw(){
   if(m.maxWithdraw>0 && amt>m.maxWithdraw){showToast(`En çok $${m.maxWithdraw}`,'warn');return;}
   if(!acc){showToast('Hesap numarası girin','warn');return;}
   if(amt>(currentUser.balance||0)){showToast('Yetersiz bakiye','danger');return;}
-  const uid=String(TGUser.id);
+  const btn=$('submitWithdrawBtn');
+  _withdrawPending=true;if(btn){btn.disabled=true;btn.textContent='Gönderiliyor...';}
   try{await apiRequest('/api/economy',{action:'withdraw',amount:amt,method:m.key,account:acc});showToast('Çekim talebi gönderildi!','success');$('withdrawAmount').value='';$('withdrawAccount').value='';}
   catch(e){showToast('Çekim talebi başarısız: '+e.message,'danger');}
+  finally{_withdrawPending=false;if(btn){btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-paper-plane-tilt"></i> Çekim Talebi Gönder';}}
 }
 
 /* ===== FAUCET + FX ===== */
