@@ -703,6 +703,7 @@ async function handleApi(req, res, url) {
         const sponsorXpAmount = Number(sponsorSettings.sponsorTaskXp || sponsorSettings.taskXp || 20);
         let credited = false;
         const tx = await rtdb.ref('users/' + user.id).transaction(profile => {
+          credited = false; data.reward = 0; data.xp = null; data.multiplier = 1;
           if (!profile || profile.banned) return;
           profile.sponsorDone = profile.sponsorDone || {};
           if (profile.sponsorDone[key]) return profile;
