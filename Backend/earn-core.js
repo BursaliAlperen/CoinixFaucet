@@ -52,7 +52,10 @@ function cleanTaskInput(body, now = Date.now()) {
   if (['channel','group'].includes(type) && verificationMethod !== 'telegram_membership') throw new Error('TELEGRAM_TASK_REQUIRES_MEMBERSHIP_CHECK');
   if (['link','manual'].includes(type) && verificationMethod !== 'manual') throw new Error('MANUAL_TASK_REQUIRES_MANUAL_REVIEW');
   const price = splitTaskPrice(body.grossPrice ?? reward);
-  return { title, description, type, verificationMethod, url, chatId, ...price, startAt, endAt, totalLimit, perUserLimit };
+  const grossBudget = Math.round(price.grossPrice * totalLimit * 10000) / 10000;
+  const workerBudget = Math.round(price.reward * totalLimit * 10000) / 10000;
+  const platformBudget = Math.round(price.platformFee * totalLimit * 10000) / 10000;
+  return { title, description, type, verificationMethod, url, chatId, ...price, grossBudget, workerBudget, platformBudget, startAt, endAt, totalLimit, perUserLimit };
 }
 function isValidReferral(referrerId, inviteeId, alreadyClaimed = false) {
   const ref=String(referrerId||''),invitee=String(inviteeId||'');
