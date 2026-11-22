@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const admin = require('firebase-admin');
-const { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen, cleanTaskInput } = require('./earn-core');
+const { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen, cleanTaskInput, isValidReferral } = require('./earn-core');
 
 const PORT = Number(process.env.PORT || 3000);
 const APP_ORIGIN = (process.env.APP_ORIGIN || '').replace(/\/$/, '');
@@ -242,7 +242,7 @@ async function sendMembershipGate(uid,reason='NOT_MEMBER') {
   await sendTelegramMessage(uid,messages[reason]||messages.NOT_MEMBER,{reply_markup:membershipKeyboard()});
 }
 async function savePendingReferral(uid,code) {
-  code=String(code||'');if(!/^\d{1,20}$/.test(code)||code===String(uid))return;
+  code=String(code||'');if(!isValidReferral(code,uid,false))return;
   await rtdb.ref('pendingReferrals/'+uid).transaction(v=>v||{referrer:code,createdAt:Date.now()});
 }
 async function flyerCall(route, payload) {
@@ -288,7 +288,7 @@ async function expireReferralBonuses(uid) {
 async function bootstrap(user, referralCode) {
   await ensurePayoutMethods();
   let validReferralCode = '';
-  if (referralCode && referralCode !== user.id && /^\d{1,20}$/.test(String(referralCode))) {
+  if (isValidReferral(referralCode,user.id,false)) {
     const referrer = await rtdb.ref('users/' + String(referralCode)).once('value');
     if (referrer.exists() && !referrer.val()?.banned) validReferralCode = String(referralCode);
   }
