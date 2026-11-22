@@ -57,13 +57,13 @@
     root.querySelectorAll?.('i[class*="ph-"]').forEach(paint);
   }
   function paint(el){
-    if(el.dataset.svgReady)return;
     const cls=[...el.classList].find(x=>x.startsWith('ph-')&&!['ph-duotone','ph-bold','ph-fill','ph-light','ph-thin'].includes(x));
     const raw=(cls||'ph-info').replace(/^ph-/,'');
     const key=alias[raw]||'help';
+    if(el.dataset.svgReady){el.querySelector('use')?.setAttribute('href','#icon-'+key);return;}
     el.dataset.svgReady='1';
     el.innerHTML='<svg class="svg-icon" aria-hidden="true" focusable="false"><use href="#icon-'+key+'"></use></svg>';
   }
-  const start=()=>{render(document.body);new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)render(n);}))).observe(document.body,{childList:true,subtree:true});};
+  const start=()=>{render(document.body);new MutationObserver(records=>records.forEach(r=>{if(r.type==='attributes'){paint(r.target);return;}r.addedNodes.forEach(n=>{if(n.nodeType===1)render(n);});})).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
