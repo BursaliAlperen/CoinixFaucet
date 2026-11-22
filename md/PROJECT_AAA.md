@@ -1,99 +1,64 @@
-# CoinixFaucet — AAA project setup
+# CoinixFaucet — AAA implementation record
 
-## Current architecture
+## Product architecture
+- Telegram Bot API webhook and Mini App session verification: Backend/server.js
+- User Mini App: Frontend/index.html, Frontend/js/app.js, Frontend/assets/app.css
+- Admin panel: Frontend/admin.html, Frontend/js/admin.js, Frontend/assets/admin.css
+- Local SVG sprite icon renderer: Frontend/js/icons.js
+- Firebase RTDB: profiles, tasks, claims, referrals, withdrawals, settings and audit events
+- Firestore: append-only transaction history and analytics source
+- Node.js 20+ / Railway deployment
 
-- Telegram Bot API webhook: `Backend/server.js`
-- Telegram Mini App: `Frontend/index.html`, `Frontend/js/app.js`, `Frontend/assets/app.css`
-- Admin Mini App: `Frontend/admin.html`, `Frontend/js/admin.js`
-- Local inline SVG icon system: `Frontend/js/icons.js`
-- Firebase Realtime Database: user profiles, settings, tasks, referrals, notifications, withdrawal queue
-- Firestore: immutable transaction history
-- Railway: Node.js hosting and webhook endpoint
+## Mandatory Telegram channel
+- REQUIRED_CHANNEL_ID and REQUIRED_CHANNEL_URL are required.
+- Bot must be an administrator in the channel to use getChatMember reliably.
+- /start and Mini App sessions are gated; callback button retries membership.
+- Protected API calls recheck membership. Status transitions are stored under channelMembership and channelMembershipEvents.
+- Missing channel settings, missing bot rights and Telegram API errors produce safe messages and admin alerts.
 
-## Reward policy
+## Tasks
+- Admin can create tasks with title, description, type, reward, target URL/chat, start/end time, total cap, per-user cap, verification method and status.
+- Statuses: draft, active, paused, completed.
+- Channel/group tasks use Telegram getChatMember verification.
+- Link/manual tasks require proof and enter the admin review queue.
+- Claim IDs and user completion ledgers prevent duplicate rewards. Manual approvals use a reviewing lock and persist reward recovery data before marking the claim paid.
+- Task participant capacity is reserved transactionally; failed/rejected claims release their slot.
+- Global user API throttling and per-task limits reduce abuse.
 
-- API-verified Piarflow sponsor completion: **$0.002**
-- API-verified FlyerHubs task completion: **$0.002**
-- Monetag valued server postback: **$0.002**
-- API reward is fixed and does not receive the level multiplier.
-- Regular Firebase-admin-created tasks keep their own configured reward. Do not mistake them for provider API tasks.
-- Traffy has a key configured, but no verified public publisher API contract has been integrated. Do not credit users from an unverified callback or guess an endpoint. Add it only after its official API documentation or a working authenticated request/response example is supplied.
+## Referral bonus
+- Each first-time valid referral grants the inviter +0.02x as an additive multiplier bonus, not a cash amount and not a percentage of balance.
+- Default duration: 24 hours from startsAt to endsAt.
+- The bonus is applied as 1 + (level * 0.02) + sum(active referral bonuses).
+- Referral bonus records retain source, invitee, amount, start/end timestamps and status.
+- Expired bonuses are ignored by the multiplier immediately and marked expired when the user session is refreshed.
+- Admin can configure referralMultiplierBonus (0–0.25) and referralBonusDurationHours (1–168).
+- Self-invites and repeated invitee claims are rejected.
 
-## Payout policy
+## Monetization providers
+- Piarflow and FlyerHubs are the existing API-backed integrations. Successful provider verification credits the fixed Coinix amount $0.002 once; this is an in-app reward and does not guarantee provider revenue covers the cost.
+- Traffy appears as a provider and personal tracking link is generated when TRAFFY_LINK_PREFIX is configured. Format: https://t.me/Traffy_robot?startapp=l_<prefix>_<telegram_id>.
+- Traffy API sync is intentionally disabled until its official endpoint, authentication, pagination, event ID and response schema are confirmed. TRAFFY_API_KEY is read only on the server. Do not credit balances from guessed endpoints or unverified callbacks.
+- A generic 300/minute fixed-window limiter, provider error classifier and external-event idempotency primitive are unit-tested for the future Traffy client; no Traffy HTTP calls currently occur.
+- Monetag is not used; its runtime integration has been removed.
 
-- Only the lowercase Firebase method keys `withdrawMethods/ton` and `withdrawMethods/gram` are accepted.
-- The server creates default TON and GRAM method records when a user profile is bootstrapped; an existing inactive method remains inactive.
-- Papara and all other methods are rejected by the server even if an old record remains in Firebase.
-- User balance is accounted in USD. A withdrawal request reserves/debits that USD amount and stores the selected currency plus wallet address.
-- Admin payout is deliberately manual: send the corresponding TON or GRAM token from the operator wallet, then enter the actual coin amount and transaction hash in the admin panel. The app does not send blockchain transactions automatically and must not claim that it does.
-- Rejecting a pending request returns its USD amount to the user once. A refund marker prevents duplicate refunds.
-- GRAM means the token on the TON network. Confirm the intended token contract and payout wallet before enabling real GRAM transfers; do not substitute another token with a similar ticker.
+## Admin and reporting
+- Admin access is restricted to ADMIN_IDS.
+- Admin can pause/start user access, publish Telegram announcements, configure XP/referral settings, manage tasks, review manual proofs and settle TON/GRAM withdrawals.
+- Daily 7/30-day analytics are aggregated from RTDB user records and Firestore transaction records. Filters include provider, task type and Telegram user ID; CSV export is client-generated from the returned real data.
+- Important actions are written to adminAudit. Membership transitions and task review history are retained.
 
-## Required Railway environment variables
+## Payouts
+- Only TON and GRAM are accepted by the server.
+- Papara and unknown methods are rejected.
+- Admin manually sends the transfer, then records actual coin amount and transaction hash. No automatic wallet signer is configured.
+- Rejected withdrawals refund the original USD balance once.
 
-### Telegram and service
-- `BOT_TOKEN` — secret BotFather token
-- `BOT_USERNAME`
-- `ADMIN_IDS` — comma-separated Telegram numeric IDs
-- `BOT_WEBHOOK_SECRET` — secret webhook header token
-- `PUBLIC_BASE_URL`, `WEBAPP_URL`, `APP_ORIGIN` — Railway service origin
-- `PORT=3000`, `NODE_ENV=production`
+## Migrations and checks
+- Run dry-run: npm run migrate:v3
+- Apply additive migration: RUN_MIGRATION=1 npm run migrate:v3
+- Migration adds default task/referral fields without changing balances or deleting old records.
+- Run: npm run check
+- The check command runs reward/task/referral/provider helper tests, Node syntax checks and static smoke checks.
 
-### Firebase
-- `FIREBASE_SERVICE_ACCOUNT` — secret service-account JSON
-- `FIREBASE_DATABASE_URL` — exact Realtime Database URL
-- `FIREBASE_WEB_API_KEY`
-- `FIREBASE_AUTH_DOMAIN`
-- `FIREBASE_PROJECT_ID`
-- `FIREBASE_APP_ID`
-- `FIREBASE_MESSAGING_SENDER_ID`
-- `FIREBASE_STORAGE_BUCKET`
-- `FIREBASE_MEASUREMENT_ID` — optional
-
-All Firebase web values must come from the same Firebase project as the service-account JSON and Realtime Database. The frontend obtains the public web configuration from `/public-config/firebase`; no stale project config is hardcoded into the browser bundle.
-
-### Ad providers
-- `PIARFLOW_API_KEY`
-- `FLYERHUBS_KEY`
-- `TRAFFY_API_KEY` — stored only; integration is pending official API details
-- `MONETAG_ZONE_ID`
-- `MONETAG_POSTBACK_SECRET`
-
-### Other
-- `REWARD_TIMEZONE=Europe/Istanbul`
-- `TELEGRAM_INIT_DATA_MAX_AGE_SECONDS=86400`
-
-Never place secrets in GitHub files, frontend JavaScript, or client-side Firebase settings.
-
-## Firebase security rules
-
-The repository contains:
-- `firebase.database.rules.json`
-- `firestore.rules`
-- `firestore.indexes.json`
-- `firebase.json`
-
-Deploy them to the same Firebase project as the service account. RTDB client access is read-only and limited to the authenticated user's own profile plus public app configuration collections. Firestore transaction reads are restricted to the authenticated user's own transaction records. All balance, reward, referral, withdrawal, and admin writes must pass through the backend.
-
-## Verification
-
-Run:
-
-```bash
-npm run check
-```
-
-Then verify:
-1. `GET /health` returns `firebaseAdminConfigured: true` and `firebaseWebConfigConfigured: true`.
-2. `GET /public-config/firebase` returns the expected project config, without secrets.
-3. Open the Mini App from the Telegram bot and verify session + profile bootstrap.
-4. Complete one provider task and verify exactly $0.002 is credited once.
-5. Submit a TON and a GRAM test withdrawal using valid test wallets.
-6. Mark one request paid with a transaction hash; reject another and confirm the USD balance is refunded once.
-7. Confirm Papara and arbitrary method keys are rejected.
-
-## Known external dependencies
-
-- Firebase project web-app config and exact RTDB URL must be supplied from Firebase Console.
-- Traffy API cannot be safely implemented from an API key alone; its official publisher API docs or an authenticated request/response sample is required.
-- Automatic blockchain payouts require a separately secured operator wallet signer, fee policy, chain/token contract configuration, idempotent payout ledger, and operational approval. The current panel records a manually sent payout and its transaction hash.
+## Required environment
+See md/ENVIRONMENT.md and .env.example. Firebase Admin service account, RTDB URL and Firebase Web App config must all belong to the same project. Set REQUIRED_CHANNEL_ID and REQUIRED_CHANNEL_URL. Generate a fresh Traffy key in the provider dashboard; never reuse a key previously pasted into chat.
