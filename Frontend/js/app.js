@@ -303,7 +303,12 @@ function renderTasks(){
 
 function startTask(id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
-  window.open(t.url,'_blank');
+  const taskUrl=String(t.url||'');
+  if(!/^https:\/\//i.test(taskUrl)){showToast('Görev bağlantısı geçersiz.','danger');return;}
+  const tg=window.Telegram?.WebApp;
+  if(/^https:\/\/t\.me\//i.test(taskUrl)&&tg?.openTelegramLink)tg.openTelegramLink(taskUrl);
+  else if(tg?.openLink)tg.openLink(taskUrl);
+  else window.open(taskUrl,'_blank','noopener,noreferrer');
   const btn=[...document.querySelectorAll('.task-start')].find(el=>el.dataset.id===String(id));
   if(!btn)return;
   let s=10;btn.disabled=true;
