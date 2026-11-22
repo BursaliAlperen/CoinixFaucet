@@ -6,7 +6,7 @@
   "main": "Backend/server.js",
   "scripts": {
     "start": "node Backend/server.js",
-    "check": "node --check Backend/server.js && node --check Frontend/js/icons.js && node --check Frontend/js/app.js && node --check Frontend/js/admin.js && node scripts/smoke-check.js"
+    "check": "node scripts/earn-core.test.js && node --check Backend/earn-core.js && node --check Backend/server.js && node --check Frontend/js/icons.js && node --check Frontend/js/app.js && node --check Frontend/js/admin.js && node scripts/smoke-check.js"
   },
   "engines": {
     "node": ">=20"
