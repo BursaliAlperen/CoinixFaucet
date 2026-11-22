@@ -395,7 +395,7 @@ async function completeFlyerTask(uid, signature, settings) {
   const checked = await flyerCall('/check_task', { signature: String(signature) });
   if (checked.result !== 'complete') return { completed: false, providerStatus: checked.result || 'unknown' };
   const userRef = rtdb.ref('users/' + uid);
-  const reward = money(settings.flyerhubsTaskReward == null ? 0.01 : settings.flyerhubsTaskReward);
+  const reward = money(settings.flyerhubsTaskReward == null ? 0.002 : settings.flyerhubsTaskReward);
   let failure = '', already = false, credited = 0, xp = null, multiplier = 1;
   const tx = await userRef.transaction(user => {
     failure = ''; already = false; credited = 0; xp = null; multiplier = 1;
@@ -403,8 +403,8 @@ async function completeFlyerTask(uid, signature, settings) {
     user.completedTasks = user.completedTasks || {};
     const id = 'fh_' + taskKey;
     if (user.completedTasks[id]) { already = true; return user; }
-    multiplier = rewardMultiplier(user);
-    credited = money(reward * multiplier);
+    multiplier = 1;
+    credited = reward;
     user.balance = money(Number(user.balance || 0) + credited);
     user.totalEarned = money(Number(user.totalEarned || 0) + credited);
     user.completedTasks[id] = Date.now();
@@ -600,8 +600,8 @@ async function handleMonetagPostback(req, res, url) {
     const count = user.lastAdDate === today ? Number(user.todayAds || 0) : 0;
     const limit = Math.max(1, Number(settings.dailyLimit || 10));
     if (count >= limit) { failure = 'DAILY_LIMIT'; return; }
-    const baseReward = money(settings.perAdEarning == null ? 0.005 : settings.perAdEarning);
-    credited = money(baseReward * rewardMultiplier(user));
+    const baseReward = money(settings.perAdEarning == null ? 0.002 : settings.perAdEarning);
+    credited = baseReward;
     user.balance = money(Number(user.balance || 0) + credited);
     user.totalEarned = money(Number(user.totalEarned || 0) + credited);
     user.lastAdDate = today;
@@ -656,7 +656,7 @@ async function handleApi(req, res, url) {
       const data = await flyerCall('/get_tasks', { user_id: Number(user.id), language_code: language, limit: 10 });
       const items = Array.isArray(data.result) ? data.result : [];
       const taskMap = {};
-      const rewardValue = Number((await getSettings()).flyerhubsTaskReward ?? 0.01);
+      const rewardValue = 0.002;
       const tasks = items.map(item => {
         const signature = String(item.signature || '');
         if (!signature) return null;
@@ -718,7 +718,7 @@ async function handleApi(req, res, url) {
         for (let i = 0; i < links[0].length; i++) sponsorHash = ((sponsorHash << 5) + sponsorHash + links[0].charCodeAt(i)) >>> 0;
         const key = 'sp' + sponsorHash.toString(36);
         const sponsorSettings = await getSettings();
-        const reward = money(sponsorSettings.sponsorReward == null ? 0.0025 : sponsorSettings.sponsorReward);
+        const reward = money(sponsorSettings.sponsorReward == null ? 0.002 : sponsorSettings.sponsorReward);
         const sponsorXpAmount = Number(sponsorSettings.sponsorTaskXp || sponsorSettings.taskXp || 20);
         let credited = false;
         const tx = await rtdb.ref('users/' + user.id).transaction(profile => {
@@ -727,8 +727,8 @@ async function handleApi(req, res, url) {
           profile.sponsorDone = profile.sponsorDone || {};
           if (profile.sponsorDone[key]) return profile;
           profile.sponsorDone[key] = Date.now();
-          const multiplier = rewardMultiplier(profile);
-          const finalReward = money(reward * multiplier);
+          const multiplier = 1;
+          const finalReward = reward;
           profile.balance = money(Number(profile.balance || 0) + finalReward);
           profile.totalEarned = money(Number(profile.totalEarned || 0) + finalReward);
           const sponsorXp = applyXp(profile, sponsorXpAmount);
