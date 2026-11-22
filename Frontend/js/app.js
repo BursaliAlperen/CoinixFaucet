@@ -113,7 +113,7 @@ async function init(){
     await firebase.auth().signInWithCustomToken(session.customToken);
     const uid=String(TGUser.id);
     const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
-    appSettings=sSnap.val()||{};
+    appSettings=sSnap.val()||{};if(!appSettings.monetagZoneId&&session.monetagZoneId)appSettings.monetagZoneId=session.monetagZoneId;
     if(appSettings.maintenance){$('maint').style.display='flex';$('loader').style.display='none';return;}
     const uSnap=await withTO(db.ref('users/'+uid).once('value'),12000,null);if(!uSnap)throw new Error('Veritabanı yanıt vermiyor');
 
@@ -485,7 +485,8 @@ function watchAd(){
   const today=getBDDate();
   const todayAds=currentUser.lastAdDate===today?(currentUser.todayAds||0):0;
   const lim=parseInt(appSettings.dailyLimit||10);
-  const zoneId=String(appSettings.monetagZoneId||'11148173');
+  const zoneId=String(appSettings.monetagZoneId||'');
+  if(!zoneId){showToast('Monetag zone ID ayarlanmamış.','warn');return;}
   if(todayAds>=lim){showToast('Günlük limit doldu','warn');return;}
   const btn=$('watchAdBtn');
   btn.disabled=true;btn.innerHTML='<i class="ph-duotone ph-spinner-gap"></i> Reklam yükleniyor...';
