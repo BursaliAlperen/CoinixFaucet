@@ -258,11 +258,11 @@ function renderReferralBonusCountdown(){
   if(!currentUser||!$('tRefBonus'))return;
   const now=Date.now(),bonuses=Object.values(currentUser.referralBonuses||{}).filter(b=>b&&Number(b.startsAt||0)<=now&&Number(b.endsAt||0)>now);
   const total=bonuses.reduce((sum,b)=>sum+Math.max(0,Math.min(.25,Number(b.multiplierBonus||0))),0);
-  $('tRefBonus').textContent='+'+total.toFixed(2)+'x';
+  $('tRefBonus').textContent='+'+total.toFixed(2)+'x';if($('homeRefBonus'))$('homeRefBonus').textContent='+'+total.toFixed(2)+'x aktif çarpan';
   const endsAt=bonuses.reduce((max,b)=>Math.max(max,Number(b.endsAt||0)),0);
-  if(!endsAt){$('tRefCountdown').textContent='Aktif bonus yok';return;}
+  if(!endsAt){$('tRefCountdown').textContent='Aktif bonus yok';if($('homeRefCountdown'))$('homeRefCountdown').textContent='Aktif bonus yok';return;}
   const seconds=Math.max(0,Math.floor((endsAt-now)/1000)),hours=Math.floor(seconds/3600),minutes=Math.floor((seconds%3600)/60),secs=seconds%60;
-  $('tRefCountdown').textContent=hours+'s '+minutes+'d '+secs+'sn';
+  const remaining=hours+'s '+minutes+'d '+secs+'sn';$('tRefCountdown').textContent=remaining;if($('homeRefCountdown'))$('homeRefCountdown').textContent=remaining+' kaldı';
 }
 function renderTeam(){
   const bot=window.COINIX_BOT_USERNAME||appSettings.botUsername||'EarnBDBot';
@@ -479,6 +479,13 @@ function renderTransactions(){
 }
 
 /* ============ TRAFFY PROVIDER ============ */
+function openHelp(){
+  const bot=String(window.COINIX_BOT_USERNAME||'').replace(/^@/,'');
+  if(!bot){showToast('Bot bağlantısı yapılandırılmamış.','warn');return;}
+  const url='https://t.me/'+bot;
+  const tg=window.Telegram?.WebApp;
+  if(tg?.openTelegramLink)tg.openTelegramLink(url);else if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener,noreferrer');
+}
 function watchAd(){
   const link=String(window.COINIX_TRAFFY_LINK||'');
   if(!link){showToast('Traffy bağlantısı için yönetici link ön ekini yapılandırmalı. API üzerinden ödül doğrulaması henüz etkin değil.','warn');return;}
