@@ -256,8 +256,8 @@ function renderTeam(){
     $('tierHint').textContent='En yüksek Platinum seviyesine ulaştınız!';
   }
 
-  db.ref('users').orderByChild('referredBy').equalTo(currentUser.uid).limitToLast(20).once('value',snap=>{
-    const arr=[];snap.forEach(c=>arr.push(c.val()));
+  apiRequest('/api/referrals',{}).then(data=>{
+    const arr=data.users||[];
     if(arr.length===0){
       $('refList').innerHTML='<div class="empty"><i class="ph-duotone ph-users"></i><div class="et">Henüz davet yok</div><div>Bağlantınızı paylaşın</div></div>';
       return;
@@ -337,8 +337,8 @@ function renderLeaderboard(){
   _lbFirstLoad=true;
   clearTimeout(_lbTimer);
   _lbTimer=setTimeout(()=>{_lbTimer=null;},5000);
-  db.ref('users').orderByChild('totalEarned').limitToLast(50).once('value',snap=>{
-    const arr=[];snap.forEach(c=>{const v=c.val();if(!v.banned)arr.push(v);});
+  apiRequest('/api/leaderboard',{}).then(data=>{
+    const arr=data.users||[];
     arr.sort((a,b)=>(b.totalEarned||0)-(a.totalEarned||0));
     const top3=arr.slice(0,3);
     const rest=arr.slice(3);
@@ -578,7 +578,7 @@ async function doSpin(){
   const winIdx=Math.floor(Math.random()*seg);
   const targetRot=(2*Math.PI*5)+(2*Math.PI-(winIdx*(2*Math.PI/seg))-Math.PI/seg);
   const dur=4200;const start=performance.now();
-  function step(t){
+  async function step(t){
     const p=Math.min(1,(t-start)/dur);
     const eased=1-Math.pow(1-p,3);
     drawWheel(eased*targetRot);
