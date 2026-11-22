@@ -504,14 +504,18 @@ async function handleAdminApi(user, url, body, res) {
       const payoutAmount=Number(body.payoutAmount);
       if(txHash.length<20||!Number.isFinite(payoutAmount)||payoutAmount<=0)return send(res,400,{status:'error',code:'TX_HASH_AND_PAYOUT_AMOUNT_REQUIRED'});
       let changed=false;
-      const result=await ref.transaction(w=>{if(!w||w.status!=='pending')return;changed=true;w.status='paid';w.txHash=txHash;w.payoutAmount=payoutAmount;w.paidAt=Date.now();w.paidBy=user.id;return w;});
-      if(!result.committed||!changed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
+      const lock=await ref.transaction(w=>{if(!w||w.status!=='pending')return;changed=true;w.status='paying';w.payoutTxStartedAt=Date.now();w.payoutBy=user.id;return w;});
+      if(!lock.committed||!changed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
+      await ref.update({status:'paid',txHash,payoutAmount,paidAt:Date.now(),paidBy:user.id});
       try{await rtdb.ref('users/'+String(withdrawal.userId)+'/notifications').push({title:'Withdrawal paid',body:'Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(String(withdrawal.userId),'✅ Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.\\nAmount: '+payoutAmount+'\\nTransaction: '+txHash);}catch(error){console.warn('[withdrawal-notification]',error.message);}
       return send(res,200,{status:'ok',withdrawal:{id,status:'paid',txHash,payoutAmount}});
     }
     const uid=String(withdrawal.userId||'');
     const amount=Number(withdrawal.amount||0);
-    if(!/^\\d{1,20}$/.test(uid)||!Number.isFinite(amount)||amount<=0)return send(res,400,{status:'error',code:'INVALID_WITHDRAWAL_RECORD'});
+    if(!/^\d{1,20}$/.test(uid)||!Number.isFinite(amount)||amount<=0)return send(res,400,{status:'error',code:'INVALID_WITHDRAWAL_RECORD'});
+    let locked=false;
+    const lock=await ref.transaction(w=>{if(!w||w.status!=='pending')return;locked=true;w.status='rejecting';w.rejectionStartedAt=Date.now();w.rejectedBy=user.id;return w;});
+    if(!lock.committed||!locked)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
     const userRef=rtdb.ref('users/'+uid);
     let refunded=false;
     const refund=await userRef.transaction(profile=>{
@@ -526,9 +530,8 @@ async function handleAdminApi(user, url, body, res) {
       refunded=true;
       return profile;
     });
-    if(!refund.committed)return send(res,503,{status:'error',code:'WITHDRAWAL_REFUND_FAILED'});
-    const result=await ref.transaction(w=>{if(!w||w.status!=='pending')return;w.status='rejected';w.rejectedAt=Date.now();w.rejectedBy=user.id;w.rejectionReason=String(body.reason||'Rejected by admin').slice(0,200);return w;});
-    if(!result.committed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
+    if(!refund.committed){await ref.update({status:'refund_failed',refundFailedAt:Date.now()});return send(res,503,{status:'error',code:'WITHDRAWAL_REFUND_FAILED'});}
+    await ref.update({status:'rejected',rejectedAt:Date.now(),rejectedBy:user.id,rejectionReason:String(body.reason||'Rejected by admin').slice(0,200)});
     if(refunded)try{await logTransaction(uid,'withdraw_refund',amount,{withdrawalId:id,currency:String(withdrawal.method).toUpperCase()});}catch(error){console.warn('[withdrawal-refund-log]',error.message);}
     try{await rtdb.ref('users/'+uid+'/notifications').push({title:'Withdrawal rejected',body:'Your withdrawal was rejected and the balance was returned.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(uid,'Your withdrawal was rejected. The balance has been returned to your account.');}catch(error){console.warn('[withdrawal-notification]',error.message);}
     return send(res,200,{status:'ok',withdrawal:{id,status:'rejected',refunded:true}});
