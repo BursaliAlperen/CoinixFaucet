@@ -369,15 +369,16 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     credited=0;failure='';
     if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
     profile.completedTaskClaims=profile.completedTaskClaims||{};
+    profile.taskClaimRewards=profile.taskClaimRewards||{};
     profile.taskCompletionCounts=profile.taskCompletionCounts||{};
-    if(profile.completedTaskClaims[actionId]){failure='ALREADY_COMPLETED';return;}
+    if(profile.completedTaskClaims[actionId]){failure='ALREADY_COMPLETED';credited=Number(profile.taskClaimRewards[actionId]||0);return;}
     const count=Number(profile.taskCompletionCounts[taskId]||0);
     if(count>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){failure='TASK_USER_LIMIT';return;}
     const multiplier=rewardMultiplier(profile);credited=money(Number(task.reward||0)*multiplier);
     profile.balance=money(Number(profile.balance||0)+credited);profile.totalEarned=money(Number(profile.totalEarned||0)+credited);
     profile.taskCompletionCounts[taskId]=count+1;
     if(profile.taskCompletionCounts[taskId]>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
-    profile.completedTaskClaims[actionId]=Date.now();applyXp(profile,Number(settings.taskXp||20));return profile;
+    profile.completedTaskClaims[actionId]=Date.now();profile.taskClaimRewards[actionId]=credited;applyXp(profile,Number(settings.taskXp||20));return profile;
   });
   if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});await taskRef.child('totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
   await claimsRef.child(actionId).update({status:'approved',reward:credited,approvedAt:Date.now(),autoVerified:true});
@@ -642,22 +643,23 @@ async function handleAdminApi(user, url, body, res) {
       await rtdb.ref('tasks/'+taskId+'/totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));
       await auditAdmin(user.id,'task_claim_reject',claimId,{taskId,uid});return send(res,200,{status:'ok',claim:{id:claimId,status:'rejected'}});
     }
-    const settings=await getSettings();let credited=0,failure='';
+    const settings=await getSettings();let credited=0,failure='',alreadyProcessed=false;
     const userTx=await rtdb.ref('users/'+uid).transaction(profile=>{
-      credited=0;failure='';if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
-      profile.completedTaskClaims=profile.completedTaskClaims||{};profile.taskCompletionCounts=profile.taskCompletionCounts||{};
-      if(profile.completedTaskClaims[claimId]){failure='ALREADY_COMPLETED';return profile;}
+      credited=0;failure='';alreadyProcessed=false;if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
+      profile.completedTaskClaims=profile.completedTaskClaims||{};profile.taskClaimRewards=profile.taskClaimRewards||{};profile.taskCompletionCounts=profile.taskCompletionCounts||{};
+      if(profile.completedTaskClaims[claimId]){alreadyProcessed=true;credited=Number(profile.taskClaimRewards[claimId]||0);return profile;}
       const taskSnap=lock.snapshot.val()||{},limit=Math.max(1,Math.min(10,Number(taskSnap.perUserLimit||1)));
       const count=Number(profile.taskCompletionCounts[taskId]||0);if(count>=limit){failure='TASK_USER_LIMIT';return;}
       credited=money(Number(taskSnap.reward||0)*rewardMultiplier(profile));profile.balance=money(Number(profile.balance||0)+credited);
       profile.totalEarned=money(Number(profile.totalEarned||0)+credited);profile.taskCompletionCounts[taskId]=count+1;
       if(profile.taskCompletionCounts[taskId]>=limit){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
-      profile.completedTaskClaims[claimId]=Date.now();applyXp(profile,Number(settings.taskXp||20));return profile;
+      profile.completedTaskClaims[claimId]=Date.now();profile.taskClaimRewards[claimId]=credited;applyXp(profile,Number(settings.taskXp||20));return profile;
     });
     if(!userTx.committed||failure){await claimRef.update({status:'pending',reviewError:failure||'CREDIT_FAILED'});return send(res,503,{status:'error',code:failure||'TASK_REVIEW_CREDIT_FAILED'});}
     await claimRef.update({status:'approved',reward:credited,approvedAt:Date.now(),approvedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
-    await logTransaction(uid,'task',credited,{taskId,claimId,taskType:String(lock.snapshot.val()?.type||''),provider:'manual_task'});await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited});
-    return send(res,200,{status:'ok',claim:{id:claimId,status:'approved',reward:credited}});
+    if(!alreadyProcessed)await logTransaction(uid,'task',credited,{taskId,claimId,taskType:String(lock.snapshot.val()?.type||''),provider:'manual_task'});
+    await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited,recovered:alreadyProcessed});
+    return send(res,200,{status:'ok',claim:{id:claimId,status:'approved',reward:credited,recovered:alreadyProcessed}});
   }
   if (url.pathname === '/api/admin/analytics') {
     const dayCount=Math.max(7,Math.min(30,Number(body.days||30)));
