@@ -318,6 +318,35 @@ async function handleApi(req, res, url) {
       const result = await applyEconomyAction(user.id, body);
       return send(res, 200, { status: 'ok', ...result });
     }
+    if (url.pathname === '/api/leaderboard') {
+      const snap = await rtdb.ref('users').orderByChild('totalEarned').limitToLast(50).once('value');
+      const users = [];
+      snap.forEach(child => {
+        const value = child.val() || {};
+        if (!value.banned) users.push({
+          uid: String(value.uid || child.key),
+          name: String(value.name || 'User').slice(0, 80),
+          photoUrl: typeof value.photoUrl === 'string' ? value.photoUrl.slice(0, 500) : '',
+          totalEarned: Number(value.totalEarned || 0)
+        });
+      });
+      users.sort((a,b) => b.totalEarned - a.totalEarned);
+      return send(res, 200, { status: 'ok', users });
+    }
+    if (url.pathname === '/api/referrals') {
+      const snap = await rtdb.ref('users').orderByChild('referredBy').equalTo(user.id).limitToLast(20).once('value');
+      const users = [];
+      snap.forEach(child => {
+        const value = child.val() || {};
+        users.push({
+          uid: String(value.uid || child.key),
+          name: String(value.name || 'User').slice(0, 80),
+          createdAt: Number(value.createdAt || 0)
+        });
+      });
+      users.sort((a,b) => b.createdAt - a.createdAt);
+      return send(res, 200, { status: 'ok', users });
+    }
     if (url.pathname === '/api/sponsors') {
       const max = Math.min(10, Math.max(1, parseInt(body.max_sponsors, 10) || 10));
       const data = await callPiarflow('/sponsors', { user_id: Number(user.id), chat_id: Number(user.id), max_sponsors: max });
