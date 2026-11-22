@@ -38,6 +38,7 @@
         <form id="settingsForm">
           <div class="two"><label>Günlük yoklama XP<input name="dailyCheckinXp" type="number" min="0" max="100000" value="10"></label><label>Davet XP<input name="referralXp" type="number" min="0" max="100000" value="10"></label></div><div class="two"><label>Reklam görevi XP<input name="adWatchXp" type="number" min="0" max="100000" value="10"></label><label>Görev tamamlama XP<input name="taskXp" type="number" min="0" max="100000" value="20"></label></div>
           <div class="two"><label>FlyerHubs task XP<input name="flyerhubsTaskXp" type="number" min="0" max="100000" value="20"></label></div>
+          <div class="two"><label>Davet bonusu (ek çarpan, x)<input name="referralMultiplierBonus" type="number" min="0" max="0.25" step="0.01" value="0.02"></label><label>Davet bonus süresi (saat)<input name="referralBonusDurationHours" type="number" min="1" max="168" value="24"></label></div>
           <div class="notice">API üzerinden doğrulanan her reklam görevi sabit $0.002 ödüllendirilir. Bu tutar seviye çarpanından etkilenmez.</div>
           <button class="secondary" type="submit">Ekonomi ayarlarını kaydet</button>
           <p class="hint">Seviye başına +0.02x eklenir. Davet bonusu buna ek olarak 24 saat +0.02x verir. Ödül hesabı sunucuda yapılır.</p>
@@ -48,6 +49,11 @@
         <div id="withdrawals" class="list"><div class="empty">Loading…</div></div>
         <p class="hint">Yalnızca TON ve GRAM çekimleri kabul edilir. Ödemeyi işaretlemeden önce cüzdanı ve işlem kaydını doğrula.</p>
       </article>
+    </section>
+    <section class="panel bot-control-panel">
+      <div class="panel-head"><div><div class="eyebrow">BOT DURUMU</div><h2>Kullanıcı erişimi</h2></div><span class="pill green" id="botControlStatus">Etkin</span></div>
+      <div class="task-admin-actions"><button type="button" class="primary" id="botStartBtn">Botu başlat</button><button type="button" class="secondary" id="botStopBtn">Botu duraklat</button></div>
+      <p class="hint">Duraklatma, kullanıcı Mini App erişimini kapatır; yönetici paneli ve /botstart komutu açık kalır.</p>
     </section>
     <section class="grid admin-workspace">
       <article class="panel">
