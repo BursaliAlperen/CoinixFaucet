@@ -27,6 +27,9 @@ const task=cleanTaskInput({title:'Join',description:'Join channel',type:'channel
 assert.equal(task.reward,0.0014);
 assert.equal(task.grossPrice,0.002);
 assert.equal(task.platformFee,0.0006);
+assert.equal(task.grossBudget,0.2);
+assert.equal(task.workerBudget,0.14);
+assert.equal(task.platformBudget,0.06);
 assert.throws(()=>cleanTaskInput({title:'x',description:'x',type:'link',verificationMethod:'telegram_membership',url:'https://example.com',reward:1},now));
 console.log('earn-core tests: referral, task, bonus expiry, Traffy limiter and idempotency assertions passed');
 
