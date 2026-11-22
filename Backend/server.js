@@ -225,10 +225,12 @@ async function bootstrap(user, referralCode) {
           u.referralEarned = money(Number(u.referralEarned || 0) + bonus);
           u.balance = money(Number(u.balance || 0) + bonus);
           u.totalEarned = money(Number(u.totalEarned || 0) + bonus);
+          const referralXp = applyXp(u, Number(settings.referralXp || 10));
+          u.lastReferralXpAt = Date.now();
           return u;
         });
         if (refResult.committed) {
-          await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id });
+          await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id, xp: Number(settings.referralXp || 10) });
           await rtdb.ref('users/' + validReferralCode + '/notifications').push({title:'New referral',body:user.name + ' joined using your invitation. Your referral reward was credited.',timestamp:Date.now(),type:'referral'});
           try { await sendTelegramMessage(validReferralCode, '🎉 Yeni referansın katıldı: ' + user.name + '. Bonusun hesabına eklendi.'); }
           catch (error) { console.warn('[referral-notification]', error.message); }
@@ -463,7 +465,7 @@ async function handleAdminApi(user, url, body, res) {
     }
   }
   if (url.pathname === '/api/admin/settings') {
-    const allowed=['flyerhubsTaskReward','flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','perAdEarning','dailyLimit'];
+    const allowed=['flyerhubsTaskReward','flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','referralXp','perAdEarning','dailyLimit'];
     const patch={};
     for(const key of allowed) if(body[key]!==undefined){const value=Number(body[key]);if(!Number.isFinite(value)||value<0||value>100000)return send(res,400,{status:'error',code:'INVALID_SETTING_'+key});patch[key]=value;}
     if(!Object.keys(patch).length)return send(res,400,{status:'error',code:'NO_SETTINGS'});
@@ -640,7 +642,7 @@ async function handleApi(req, res, url) {
         if (!signature) return null;
         const id = crypto.createHash('sha256').update(signature).digest('hex');
         taskMap[id] = { signature, name: String(item.name || item.task || 'FlyerHubs task').slice(0, 100), task: String(item.task || ''), links: Array.isArray(item.links) ? item.links.slice(0, 3) : [], price: item.price };
-        return { id: 'fh_' + id, signature, source: 'flyerhubs', title: taskMap[id].name, type: 'telegram', url: taskMap[id].links[0] || '', reward: rewardValue, active: true };
+        return { id: 'fh_' + id, signature, source: 'flyerhubs', title: taskMap[id].name, type: 'telegram', url: taskMap[id].links[0] || '', reward: rewardValue, active: item.status !== 'complete' && item.status !== 'unavailable' };
       }).filter(Boolean);
       if (Object.keys(taskMap).length) await rtdb.ref('users/' + user.id + '/flyerhubsTasks').update(taskMap);
       return send(res, 200, { status: 'ok', tasks });
