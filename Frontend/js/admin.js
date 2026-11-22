@@ -33,7 +33,7 @@ async function loadOverview(){
         escapeHtml(w.name||w.userId)+' · $'+fmt(w.amount)+' · '+escapeHtml(String(w.method||'').toUpperCase())+
         '</strong><small>'+escapeHtml(w.account||'')+'</small><small>'+
         new Date(w.requestedAt||Date.now()).toLocaleString()+
-        '</small><div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(w.id)+'">Mark paid</button>'+
+        '</small><div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(w.id)+'" data-currency="'+escapeHtml(String(w.method||'').toUpperCase())+'">Mark paid</button>'+
         '<button type="button" class="reject-btn" data-withdraw-action="reject" data-id="'+escapeHtml(w.id)+'">Reject &amp; refund</button></div></div></div>';
     }).join(''):'<div class="empty">No pending TON/GRAM withdrawals.</div>';
     const promotions=d.promotions||[];
