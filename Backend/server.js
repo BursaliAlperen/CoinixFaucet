@@ -695,17 +695,22 @@ async function handleAdminApi(user, url, body, res) {
     const totals=days.reduce((a,d)=>{for(const k of ['newUsers','activeUsers','referrals','taskCompletions','adRecords','rewardUsd','adCreditUsd'])a[k]=(a[k]||0)+d[k];return a;},{});
     return send(res,200,{status:'ok',days,totals,filters:{days:dayCount,provider,taskType,userId:userFilter}});
   }
+  if (url.pathname === '/api/admin/audit') {
+    const snap=await rtdb.ref('adminAudit').orderByChild('timestamp').limitToLast(100).once('value'),items=[];
+    snap.forEach(child=>items.push({id:child.key,...(child.val()||{})}));
+    items.reverse();return send(res,200,{status:'ok',items});
+  }
   if (url.pathname === '/api/admin/overview') {
     const [usersSnap, withdrawalsSnap, promosSnap] = await Promise.all([
       rtdb.ref('users').once('value'), rtdb.ref('withdrawals').orderByChild('status').equalTo('pending').limitToLast(100).once('value'),
       rtdb.ref('promotions').limitToLast(20).once('value')
     ]);
-    let users = 0, totalBalance = 0, totalEarned = 0, level50 = 0;
-    usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); if(Number(v.level||1)>=50)level50++; });
+    let users = 0, totalBalance = 0, totalEarned = 0, level50 = 0, referrals = 0, activeReferralBonuses = 0;
+    usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); referrals+=Number(v.referralCount||0); if(Number(v.level||1)>=50)level50++; activeReferralBonuses+=Object.values(v.referralBonuses||{}).filter(b=>b&&Number(b.endsAt||0)>Date.now()).length; });
     const withdrawals=[]; withdrawalsSnap.forEach(child=>{const w=child.val()||{};if(['ton','gram'].includes(String(w.method||'').toLowerCase()))withdrawals.push({id:child.key,...w});});
     const promotions=[];promosSnap.forEach(child=>promotions.push({id:child.key,...child.val()}));
     promotions.reverse();
-    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level50,pendingWithdrawals:withdrawals.length},withdrawals,promotions,settings:await getSettings()});
+    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level50,referrals,activeReferralBonuses,pendingWithdrawals:withdrawals.length},withdrawals,promotions,settings:await getSettings()});
   }
   if (url.pathname === '/api/admin/promo') {
     if (!ANNOUNCEMENT_CHANNEL_ID) return send(res, 503, {status:'error',code:'ANNOUNCEMENT_CHANNEL_NOT_CONFIGURED'});
