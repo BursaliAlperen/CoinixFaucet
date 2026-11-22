@@ -23,16 +23,33 @@ async function loadOverview(){
     $('statMax').textContent=fmt(d.stats.level50);
     $('pendingCount').textContent=fmt(d.stats.pendingWithdrawals)+' PENDING';
     const settings=d.settings||{};
-    for(const [key,value] of Object.entries(settings)){const field=$('settingsForm').elements.namedItem(key);if(field&&value!==undefined)field.value=value;}
-    $('withdrawals').innerHTML=d.withdrawals.length?d.withdrawals.map(w=>'<div class="list-item withdrawal-item"><div><strong>'+escapeHtml(w.name||w.userId)+' · 
-    $('promotions').innerHTML=d.promotions.length?d.promotions.map(p=>'<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>').join(''):'<div class="empty">No promotions yet.</div>';
+    for(const [key,value] of Object.entries(settings)){
+      const field=$('settingsForm').elements.namedItem(key);
+      if(field&&value!==undefined)field.value=value;
+    }
+    const withdrawals=d.withdrawals||[];
+    $('withdrawals').innerHTML=withdrawals.length?withdrawals.map(w=>{
+      return '<div class="list-item withdrawal-item"><div><strong>'+
+        escapeHtml(w.name||w.userId)+' · $'+fmt(w.amount)+' · '+escapeHtml(String(w.method||'').toUpperCase())+
+        '</strong><small>'+escapeHtml(w.account||'')+'</small><small>'+
+        new Date(w.requestedAt||Date.now()).toLocaleString()+
+        '</small><div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(w.id)+'">Mark paid</button>'+
+        '<button type="button" class="reject-btn" data-withdraw-action="reject" data-id="'+escapeHtml(w.id)+'">Reject &amp; refund</button></div></div></div>';
+    }).join(''):'<div class="empty">No pending TON/GRAM withdrawals.</div>';
+    const promotions=d.promotions||[];
+    $('promotions').innerHTML=promotions.length?promotions.map(p=>
+      '<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+
+      escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>'
+    ).join(''):'<div class="empty">No promotions yet.</div>';
     showNotice('Dashboard data refreshed.');
   }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
 }
 $('promoForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');btn.disabled=true;
-  try{const d=await api('/api/admin/promo',Object.fromEntries(new FormData(form).entries()));showNotice('Promotion published to Telegram channel.');form.reset();await loadOverview();}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
+  try{
+    await api('/api/admin/promo',Object.fromEntries(new FormData(form).entries()));
+    showNotice('Promotion published to Telegram channel.');form.reset();await loadOverview();
+  }catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
 });
 $('settingsForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
@@ -57,24 +74,6 @@ $('withdrawals').addEventListener('click',async e=>{
     try{await api('/api/admin/withdrawal',{id,action:'reject',reason:'Rejected by admin'});showNotice('Withdrawal rejected and balance refunded.');await loadOverview();}
     catch(err){showNotice(err.message,true);btn.disabled=false;}
   }
-});
-$('refreshBtn').addEventListener('click',loadOverview);
-loadOverview();
-+fmt(w.amount)+' · '+escapeHtml(String(w.method||'').toUpperCase())+'</strong><small>'+escapeHtml(w.account||'')+'</small><small>'+new Date(w.requestedAt||Date.now()).toLocaleString()+'</small><div class="withdraw-actions"><button type="button" class="pay-btn" data-withdraw-action="pay" data-id="'+escapeHtml(w.id)+'">Mark paid</button><button type="button" class="reject-btn" data-withdraw-action="reject" data-id="'+escapeHtml(w.id)+'">Reject & refund</button></div></div></div>').join(''):'<div class="empty">No pending withdrawals.</div>';
-    $('promotions').innerHTML=d.promotions.length?d.promotions.map(p=>'<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>').join(''):'<div class="empty">No promotions yet.</div>';
-    showNotice('Dashboard data refreshed.');
-  }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
-}
-$('promoForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');btn.disabled=true;
-  try{const d=await api('/api/admin/promo',Object.fromEntries(new FormData(form).entries()));showNotice('Promotion published to Telegram channel.');form.reset();await loadOverview();}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
-});
-$('settingsForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
-  const values=Object.fromEntries([...new FormData(form).entries()].map(([k,v])=>[k,Number(v)]));btn.disabled=true;
-  try{await api('/api/admin/settings',values);showNotice('Economy and XP settings saved.');}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
 });
 $('refreshBtn').addEventListener('click',loadOverview);
 loadOverview();
