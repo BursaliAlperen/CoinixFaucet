@@ -10,7 +10,7 @@ Authenticated application endpoints use POST JSON and a fresh Telegram Mini App 
 - Rewards are calculated server-side and written through Firebase Admin transactions.
 - Check-in gives 10 XP by default.
 - Standard tasks give 20 XP by default.
-- Rewards use the server-side multiplier `1 + (level × 0.02)`, capped at 3.00× at Level 100.
+- Rewards use the server-side multiplier `1 + (level × 0.02)`, capped at 2.00× at Level 50.
 
 ## Tasks and ads
 - POST /api/flyerhubs/tasks — fetches up to 10 user tasks from FlyerHubs.
