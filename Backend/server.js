@@ -334,7 +334,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     const used=Object.values(claims).filter(c=>c&&['pending','approved','verified','reviewing'].includes(c.status)).length;
     if(used>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){perUserLimit=true;return;}
     claims[actionId]={taskId,userId:uid,actionId,title:String(task.title||'').slice(0,100),reward:Number(task.reward||0),
-      proof:String(proof||'').slice(0,500),verificationMethod:method,status:automatic?'verified':'pending',createdAt:Date.now()};
+      proof:String(proof||'').slice(0,500),verificationMethod:method,perUserLimit:Math.max(1,Math.min(10,Number(task.perUserLimit||1))),status:automatic?'verified':'pending',createdAt:Date.now()};
     created=true;return claims;
   });
   if(!claimTx.committed||!created){
@@ -616,7 +616,7 @@ async function handleAdminApi(user, url, body, res) {
       credited=0;failure='';if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
       profile.completedTaskClaims=profile.completedTaskClaims||{};profile.taskCompletionCounts=profile.taskCompletionCounts||{};
       if(profile.completedTaskClaims[claimId]){failure='ALREADY_COMPLETED';return profile;}
-      const taskSnap=lock.snapshot.val()||{},limit=Math.max(1,Math.min(10,Number((taskSnap.task||{}).perUserLimit||1)));
+      const taskSnap=lock.snapshot.val()||{},limit=Math.max(1,Math.min(10,Number(taskSnap.perUserLimit||1)));
       const count=Number(profile.taskCompletionCounts[taskId]||0);if(count>=limit){failure='TASK_USER_LIMIT';return;}
       credited=money(Number(taskSnap.reward||0)*rewardMultiplier(profile));profile.balance=money(Number(profile.balance||0)+credited);
       profile.totalEarned=money(Number(profile.totalEarned||0)+credited);profile.taskCompletionCounts[taskId]=count+1;
@@ -842,6 +842,11 @@ async function handleApi(req, res, url) {
   const user = verifyTelegramInitData(body.initData);
   if (!user) return send(res, 401, { status: 'error', message: 'Telegram session invalid or expired' });
   if (limited(user.id)) return send(res, 429, { status: 'error', message: 'Rate limit exceeded' });
+  if (url.pathname === '/api/channel/check') {
+    const membership=await checkRequiredChannel(user.id);
+    if(!membership.ok)return send(res,403,{status:'error',code:membership.reason,channelUrl:REQUIRED_CHANNEL_URL});
+    return send(res,200,{status:'ok',membership:true});
+  }
   if (!initFirebase()) return send(res, 503, { status: 'error', message: 'Firebase Admin is not configured' });
   try {
     if (url.pathname === '/api/channel/check') {
