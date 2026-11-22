@@ -14,3 +14,13 @@ form{display:grid;gap:12px}label{display:grid;gap:6px;font-size:11px;font-weight
 
 .admin-workspace{margin-top:14px}.task-admin-item{align-items:flex-start;gap:12px}.task-admin-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.task-admin-actions button{font-size:11px;padding:7px 9px;border-radius:9px}.analytics-panel{margin-top:16px}.analytics-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.analytics-tools select,.analytics-tools input{border:1px solid #e0e7f0;background:#fff;border-radius:10px;padding:9px 10px;font:inherit;font-size:12px;max-width:180px}.analytics-stats{grid-template-columns:repeat(3,minmax(0,1fr));margin:16px 0}.analytics-chart{height:150px;display:flex;align-items:flex-end;gap:4px;padding:12px 4px 0;border-bottom:1px solid #e5ebf3;overflow:hidden}.chart-col{height:100%;min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px}.chart-bar{width:70%;min-height:2px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#36a3ff,#2864d8)}.chart-col small{font-size:9px;color:#8b98aa;white-space:nowrap;transform:rotate(-35deg);transform-origin:top center}.table-wrap{width:100%;overflow-x:auto;margin-top:16px}.daily-table{width:100%;border-collapse:collapse;min-width:650px;font-size:12px}.daily-table th,.daily-table td{padding:10px;border-bottom:1px solid #edf1f6;text-align:right;white-space:nowrap}.daily-table th:first-child,.daily-table td:first-child{text-align:left}.daily-table th{color:#718096;font-weight:800}.pill.green{background:#e6f8ef;color:#16834b}
 @media(max-width:760px){.analytics-tools{display:grid;grid-template-columns:1fr 1fr}.analytics-tools input{max-width:none;min-width:0}.analytics-tools button{width:100%}.analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.task-admin-actions{justify-content:flex-start}.chart-col small{font-size:8px}}
+
+/* TeddyGrow admin design */
+:root{--tg-blue:#b77bc3;--tg-bg:#fff8f3;--tg-text:#493c4d;--tg-accent:#69b99b;--tg-border:#f3e5ed}
+body{background:var(--tg-bg);color:var(--tg-text);font-family:'Nunito',sans-serif}
+h1,h2,h3,.sidebar-brand,.page-title,.section-title,button{font-family:'Fredoka','Nunito',sans-serif}
+.sidebar,.topbar,.panel,.stat-card,.table-wrap{border-color:#f2e5ed}
+.sidebar-brand{color:#a36eae;font-weight:700}
+button.primary,.btn-primary{background:linear-gradient(135deg,#eaa9c8,#ad8bd5);border-radius:14px;box-shadow:0 6px 16px #b380c233}
+input,select,textarea{border-radius:13px}
+@media(max-width:760px){.sidebar{background:#fff8f3}}
