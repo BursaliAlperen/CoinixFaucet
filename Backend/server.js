@@ -215,9 +215,18 @@ async function checkRequiredChannel(uid) {
   if (!REQUIRED_CHANNEL_ID || !REQUIRED_CHANNEL_URL) return {ok:false,reason:'CHANNEL_NOT_CONFIGURED'};
   try {
     const member=await telegramCall('getChatMember',{chat_id:REQUIRED_CHANNEL_ID,user_id:Number(uid)});
-    const joined=isTelegramMember(member);
+    const joined=isTelegramMember(member),status=String(member?.status||'');
     console.info('[channel-membership]',joined?'member':'not_member');
-    return {ok:joined,reason:joined?'MEMBER':'NOT_MEMBER',status:String(member?.status||'')};
+    if(firebaseReady){
+      const recordRef=rtdb.ref('channelMembership/'+String(uid));
+      let changed=false,previous='';
+      await recordRef.transaction(current=>{
+        previous=String(current?.status||'');changed=previous!==status;
+        return {status,joined,checkedAt:Date.now()};
+      });
+      if(changed&&previous)await rtdb.ref('channelMembershipEvents').push({userId:String(uid),from:previous,to:status,joined,timestamp:Date.now()});
+    }
+    return {ok:joined,reason:joined?'MEMBER':'NOT_MEMBER',status};
   } catch(error) {
     const raw=String(error.message||'');
     const reason=/not enough rights|administrator/i.test(raw)?'BOT_NOT_ADMIN':/chat not found|channel_invalid/i.test(raw)?'CHANNEL_NOT_FOUND':'TELEGRAM_API_UNAVAILABLE';
@@ -872,6 +881,10 @@ async function handleApi(req, res, url) {
   if (!isAdmin(user.id)) {
     const control=await rtdb.ref('botControl/enabled').once('value');
     if(control.exists()&&control.val()===false)return send(res,503,{status:'error',code:'BOT_PAUSED',message:'Bot geçici olarak duraklatıldı.'});
+    if(url.pathname!=='/api/channel/check'&&url.pathname!=='/api/session'){
+      const membership=await checkRequiredChannel(user.id);
+      if(!membership.ok)return send(res,403,{status:'error',code:membership.reason,channelUrl:REQUIRED_CHANNEL_URL});
+    }
   }
   try {
     if (url.pathname === '/api/channel/check') {
