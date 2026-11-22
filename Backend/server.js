@@ -947,7 +947,7 @@ async function handleApi(req, res, url) {
       return send(res,200,{status:'ok',membership:true});
     }
     if (url.pathname === '/api/live') {
-      const requested=String(body.path||'').replace(/^\\/+|\\/+$/g,'');
+      const requested=String(body.path||'').split('/').filter(Boolean).join('/');
       const ownUser='users/'+user.id;
       const allowed=['settings','tasks','notifications','withdrawMethods',ownUser,ownUser+'/notifications','withdrawals'];
       if(!allowed.includes(requested))return send(res,403,{status:'error',code:'LIVE_PATH_FORBIDDEN'});
