@@ -16,7 +16,7 @@ const PIARFLOW_API_KEY = process.env.PIARFLOW_API_KEY || '';
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 const ADMIN_IDS = new Set(String(process.env.ADMIN_IDS || '').split(',').map(v => v.trim()).filter(v => /^[0-9]+$/.test(v)));
 const ANNOUNCEMENT_CHANNEL_ID = process.env.ANNOUNCEMENT_CHANNEL_ID || '';
-const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || '';
+const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || (BOT_TOKEN ? crypto.createHash('sha256').update(BOT_TOKEN+'|teddygrow-webhook').digest('hex') : '');
 const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || RAILWAY_ORIGIN || APP_ORIGIN).replace(/\/$/, '');
 const WEBAPP_URL = String(process.env.WEBAPP_URL || PUBLIC_BASE_URL).replace(/\/$/, '');
 const BOT_USERNAME = process.env.BOT_USERNAME || 'TeddyGrow_Bot';
@@ -806,7 +806,7 @@ async function handleTelegramWebhook(req, res) {
   const callback=update.callback_query;
   if(callback?.from?.id){
     const uid=String(callback.from.id);
-    if(!initFirebase()){await sendTelegramMessage(uid,'Coinix şu anda veritabanı yapılandırmasını bekliyor. Lütfen biraz sonra tekrar dene.');return send(res,200,{ok:true});}
+    if(!initFirebase()){await sendTelegramMessage(uid,'TeddyGrow şu anda veritabanı yapılandırmasını bekliyor. Lütfen biraz sonra tekrar dene.');return send(res,200,{ok:true});}
     if(callback.data==='check_required_channel'){
       const membership=await checkRequiredChannel(uid);
       try{await telegramCall('answerCallbackQuery',{callback_query_id:callback.id,text:membership.ok?'Üyelik doğrulandı.':'Henüz doğrulanamadı.',show_alert:!membership.ok});}catch{}
@@ -815,9 +815,9 @@ async function handleTelegramWebhook(req, res) {
         const profile={id:uid,name:[callback.from.first_name,callback.from.last_name].filter(Boolean).join(' ')||'User',username:String(callback.from.username||''),photoUrl:'',languageCode:String(callback.from.language_code||'tr')};
         await bootstrap(profile,pending.val()?.referrer||'');await rtdb.ref('pendingReferrals/'+uid).remove();
         const appUrl=WEBAPP_URL||PUBLIC_BASE_URL;
-        await sendTelegramMessage(uid,'Üyeliğin doğrulandı. Coinix’e hoş geldin!',{reply_markup:{inline_keyboard:[[{text:'Coinix’i aç',web_app:{url:appUrl}}]]}});
+        await sendTelegramMessage(uid,'Üyeliğin doğrulandı. TeddyGrow’e hoş geldin!',{reply_markup:{inline_keyboard:[[{text:'TeddyGrow’i aç',web_app:{url:appUrl}}]]}});
       }else{
-        if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('Coinix kanal kontrolü başarısız: '+membership.reason+'. REQUIRED_CHANNEL_ID / REQUIRED_CHANNEL_URL ve bot yönetici yetkisini kontrol edin.');
+        if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('TeddyGrow kanal kontrolü başarısız: '+membership.reason+'. REQUIRED_CHANNEL_ID / REQUIRED_CHANNEL_URL ve bot yönetici yetkisini kontrol edin.');
         await sendMembershipGate(uid,membership.reason);
       }
     }
@@ -848,39 +848,44 @@ async function handleTelegramWebhook(req, res) {
       const membership=await checkRequiredChannel(uid);
       if(!membership.ok){
         await sendMembershipGate(uid,membership.reason);
-        if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('Coinix zorunlu kanal kontrolü başarısız: '+membership.reason+'. Kanal ayarını ve bot yönetici yetkisini kontrol edin.');
+        if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('TeddyGrow zorunlu kanal kontrolü başarısız: '+membership.reason+'. Kanal ayarını ve bot yönetici yetkisini kontrol edin.');
         return send(res,200,{ok:true});
       }
       await bootstrap(profile,referral);await rtdb.ref('pendingReferrals/'+uid).remove();
       const url=WEBAPP_URL||PUBLIC_BASE_URL;
-      const keyboard=url?{inline_keyboard:[[{text:'🚀 Coinix’i aç',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
-      await sendTelegramMessage(uid,'Coinix’e hoş geldin!\n\nGörevleri tamamla, arkadaşlarını davet et ve kazancını TON veya GRAM olarak çek.',keyboard?{reply_markup:keyboard}:{});
+      const keyboard=url?{inline_keyboard:[[{text:'🚀 TeddyGrow’i aç',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
+      await sendTelegramMessage(uid,'TeddyGrow’e hoş geldin!\n\nGörevleri tamamla, arkadaşlarını davet et ve kazancını TON veya GRAM olarak çek.',keyboard?{reply_markup:keyboard}:{});
     }else if(command==='/help'){
-      await sendTelegramMessage(uid,'Coinix komutları:\n/start — Uygulamayı aç\n/help — Yardım\n/level — Seviye ve XP\n/referrals — Davet bağlantın ve bonusun\n/admin — Yönetim paneli (yalnızca yönetici)');
+      await sendTelegramMessage(uid,'TeddyGrow komutları:\n/start — Uygulamayı aç\n/help — Yardım\n/level — Seviye ve XP\n/referrals — Davet bağlantın ve bonusun\n/admin — Yönetim paneli (yalnızca yönetici)');
+    }else if(['/tasks','/campaign','/wallet'].includes(command)){
+      const view=command.slice(1),appUrl=WEBAPP_URL||PUBLIC_BASE_URL;
+      const labels={tasks:'🧸 Görevleri keşfet',campaign:'📣 Kampanya oluştur',wallet:'💗 Cüzdanımı aç'};
+      if(!appUrl)await sendTelegramMessage(uid,'TeddyGrow uygulama adresi henüz yapılandırılmadı.');
+      else await sendTelegramMessage(uid,'✨ <b>TeddyGrow</b>\\n'+labels[view]+' için uygulamayı aç.',{parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:labels[view],web_app:{url:appUrl+'?startapp='+view}}]]}});
     }else if(command==='/level'||command==='/referrals'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
       const membership=await checkRequiredChannel(uid);
       if(!membership.ok){await sendMembershipGate(uid,membership.reason);return send(res,200,{ok:true});}
       if(command==='/level'){
       const snap=await rtdb.ref('users/'+uid).once('value');
-      if(!snap.exists())await sendTelegramMessage(uid,'Önce /start komutuyla Coinix profilini oluştur.');
+      if(!snap.exists())await sendTelegramMessage(uid,'Önce /start komutuyla TeddyGrow profilini oluştur.');
       else{
         const v=snap.val()||{},level=Math.max(1,Math.min(50,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
-        await sendTelegramMessage(uid,'🏅 <b>Coinix Seviyen</b>\nSeviye: <b>'+level+'/50</b>\nXP: <b>'+(level>=50?'MAKS':xp+' / '+next)+'</b>\nKazanç çarpanı: <b>'+rewardMultiplier(v).toFixed(2)+'x</b>',{parse_mode:'HTML'});
+        await sendTelegramMessage(uid,'🏅 <b>TeddyGrow Seviyen</b>\nSeviye: <b>'+level+'/50</b>\nXP: <b>'+(level>=50?'MAKS':xp+' / '+next)+'</b>\nKazanç çarpanı: <b>'+rewardMultiplier(v).toFixed(2)+'x</b>',{parse_mode:'HTML'});
       }
       }else if(command==='/referrals'){
       const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
-      const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Davet bağlantını kopyalamak için Coinix Davet sekmesini aç.';
+      const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Davet bağlantını kopyalamak için TeddyGrow Davet sekmesini aç.';
       const bonus=activeReferralBonusTotal(v);await sendTelegramMessage(uid,'👥 <b>Davetlerin</b>\nDavet sayısı: <b>'+Number(v.referralCount||0)+'</b>\nAktif ek çarpan: <b>+'+bonus.toFixed(2)+'x</b>\nBonus süresi: <b>24 saat</b>\n\n'+escapeHtml(link),{parse_mode:'HTML'});
       }
     }else if(command==='/admin'){
       if(!isAdmin(uid))await sendTelegramMessage(uid,'Yönetim panelini kullanma yetkin yok.');
       else{
         const url=(WEBAPP_URL||PUBLIC_BASE_URL)+'/admin';
-        await sendTelegramMessage(uid,'🔐 Coinix Yönetim Paneli',{reply_markup:{inline_keyboard:[[{text:'Yönetim panelini aç',web_app:{url}}]]}});
+        await sendTelegramMessage(uid,'🔐 TeddyGrow Yönetim Paneli',{reply_markup:{inline_keyboard:[[{text:'Yönetim panelini aç',web_app:{url}}]]}});
       }
     }
-  }catch(error){console.error('[telegram-webhook]',error.message);if(error.message==='FIREBASE_NOT_CONFIGURED')try{await sendTelegramMessage(uid,'Coinix veritabanı bağlantısı henüz yapılandırılmadı. Lütfen daha sonra tekrar dene.');}catch{}}
+  }catch(error){console.error('[telegram-webhook]',error.message);if(error.message==='FIREBASE_NOT_CONFIGURED')try{await sendTelegramMessage(uid,'TeddyGrow veritabanı bağlantısı henüz yapılandırılmadı. Lütfen daha sonra tekrar dene.');}catch{}}
   return send(res,200,{ok:true});
 }
 async function configureTelegramWebhook() {
@@ -888,10 +893,10 @@ async function configureTelegramWebhook() {
   try{
     await telegramCall('setWebhook',{url:PUBLIC_BASE_URL+'/telegram/webhook',secret_token:BOT_WEBHOOK_SECRET,allowed_updates:['message','callback_query'],drop_pending_updates:false});
     await telegramCall('setMyCommands',{commands:[
-      {command:'start',description:'Coinix’i aç'},
+      {command:'start',description:'Open TeddyGrow'},\n      {command:'tasks',description:'Browse microtasks'},\n      {command:'campaign',description:'Create a channel campaign'},\n      {command:'wallet',description:'View wallet and payouts'},
       {command:'botstart',description:'Botu etkinleştir (yönetici)'},
       {command:'botstop',description:'Botu duraklat (yönetici)'},
-      {command:'help',description:'Show help'},
+      {command:'help',description:'Help and instructions'},
       {command:'level',description:'Your level and XP'},
       {command:'referrals',description:'Your referral link and stats'},
       {command:'admin',description:'Open admin panel'}
@@ -1103,4 +1108,4 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
   return send(res, 405, { error: 'Method not allowed' });
 });
-server.listen(PORT, '0.0.0.0', () => { console.log('CoinixFaucet listening on ' + PORT); configureTelegramWebhook(); });
+server.listen(PORT, '0.0.0.0', () => { console.log('TeddyGrowFaucet listening on ' + PORT); configureTelegramWebhook(); });
