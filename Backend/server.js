@@ -30,7 +30,7 @@ const API_AD_REWARD_USD = 0.002;
 const MAX_BODY = 24 * 1024;
 const rate = new Map();
 let firebaseReady = false;
-let rtdb = null; // Firestore-backed compatibility adapter; no Realtime Database dependency.
+let store = null; // Firestore-backed compatibility adapter; no Realtime Database dependency.
 let firestore = null;
 
 function initFirebase() {
@@ -47,7 +47,7 @@ function initFirebase() {
       credential: admin.credential.cert(serviceAccount)
     });
     firestore = admin.firestore();
-    rtdb = new FirestoreCompat(firestore);
+    store = new FirestoreCompat(firestore);
     firebaseReady = true;
     return true;
   } catch (error) {
@@ -195,7 +195,7 @@ function applyXp(user, amount) {
   return { level: user.level, xp: user.xp, xpToNext: user.xpToNext, gained: gain };
 }
 async function auditAdmin(actorId, action, targetId, details = {}) {
-  return rtdb.ref('adminAudit').push({actorId:String(actorId),action:String(action).slice(0,80),targetId:String(targetId||'').slice(0,120),details,timestamp:Date.now()}).catch(()=>console.warn('[admin-audit] write_failed'));
+  return store.ref('adminAudit').push({actorId:String(actorId),action:String(action).slice(0,80),targetId:String(targetId||'').slice(0,120),details,timestamp:Date.now()}).catch(()=>console.warn('[admin-audit] write_failed'));
 }
 async function notifyAdmins(message) {
   for (const adminId of ADMIN_IDS) { try { await sendTelegramMessage(adminId,message); } catch { console.warn('[admin-notify] delivery_failed'); } }
@@ -207,13 +207,13 @@ async function checkRequiredChannel(uid) {
     const joined=isTelegramMember(member),status=String(member?.status||'');
     console.info('[channel-membership]',joined?'member':'not_member');
     if(firebaseReady){
-      const recordRef=rtdb.ref('channelMembership/'+String(uid));
+      const recordRef=store.ref('channelMembership/'+String(uid));
       let changed=false,previous='';
       await recordRef.transaction(current=>{
         previous=String(current?.status||'');changed=previous!==status;
         return {status,joined,checkedAt:Date.now()};
       });
-      if(changed)await rtdb.ref('channelMembershipEvents').push({userId:String(uid),from:previous,to:status,joined,timestamp:Date.now()});
+      if(changed)await store.ref('channelMembershipEvents').push({userId:String(uid),from:previous,to:status,joined,timestamp:Date.now()});
     }
     return {ok:joined,reason:joined?'MEMBER':'NOT_MEMBER',status};
   } catch(error) {
@@ -232,7 +232,7 @@ async function sendMembershipGate(uid,reason='NOT_MEMBER') {
 }
 async function savePendingReferral(uid,code) {
   code=String(code||'');if(!isValidReferral(code,uid,false))return;
-  await rtdb.ref('pendingReferrals/'+uid).transaction(v=>v||{referrer:code,createdAt:Date.now()});
+  await store.ref('pendingReferrals/'+uid).transaction(v=>v||{referrer:code,createdAt:Date.now()});
 }
 async function flyerCall(route, payload) {
   if (!FLYERHUBS_KEY) throw new Error('FLYERHUBS_NOT_CONFIGURED');
@@ -267,7 +267,7 @@ async function logTransaction(uid, type, amount, extra) {
   });
 }
 async function getSettings() {
-  const snap = await rtdb.ref('settings').once('value');
+  const snap = await store.ref('settings').once('value');
   return snap.val() || {};
 }
 async function ensurePayoutMethods() {
@@ -276,12 +276,12 @@ async function ensurePayoutMethods() {
     gram:{name:'GRAM',active:true,minWithdraw:0.05,maxWithdraw:0,accountLabel:'GRAM wallet address (TON network)',accountPlaceholder:'EQ... or UQ...'}
   };
   for(const [key,value] of Object.entries(defaults)){
-    await rtdb.ref('withdrawMethods/'+key).transaction(current=>current||value);
+    await store.ref('withdrawMethods/'+key).transaction(current=>current||value);
   }
 }
 async function expireReferralBonuses(uid) {
   const now=Date.now();let expired=0;
-  const tx=await rtdb.ref('users/'+String(uid)+'/referralBonuses').transaction(bonuses=>{
+  const tx=await store.ref('users/'+String(uid)+'/referralBonuses').transaction(bonuses=>{
     if(!bonuses||typeof bonuses!=='object')return bonuses;
     for(const [key,bonus] of Object.entries(bonuses)){
       if(bonus&&bonus.status==='active'&&Number(bonus.endsAt||0)<=now){bonus.status='expired';bonus.expiredAt=now;expired++;}
@@ -294,10 +294,10 @@ async function bootstrap(user, referralCode) {
   await ensurePayoutMethods();
   let validReferralCode = '';
   if (isValidReferral(referralCode,user.id,false)) {
-    const referrer = await rtdb.ref('users/' + String(referralCode)).once('value');
+    const referrer = await store.ref('users/' + String(referralCode)).once('value');
     if (referrer.exists() && !referrer.val()?.banned) validReferralCode = String(referralCode);
   }
-  const userRef = rtdb.ref('users/' + user.id);
+  const userRef = store.ref('users/' + user.id);
   let created = false;
   const result = await userRef.transaction(current => {
     if (current) { created = false; return current; }
@@ -314,14 +314,14 @@ async function bootstrap(user, referralCode) {
   });
   if (!result.committed || !result.snapshot.exists()) throw new Error('USER_BOOTSTRAP_FAILED');
   if (created && validReferralCode) {
-    const marker=rtdb.ref('referralClaims/'+user.id);let claimedNow=false;
+    const marker=store.ref('referralClaims/'+user.id);let claimedNow=false;
     const claim=await marker.transaction(v=>{if(v)return v;claimedNow=true;return {referrer:validReferralCode,at:Date.now(),status:'claimed'};});
     if(claim.committed&&claimedNow&&claim.snapshot.val()?.referrer===validReferralCode){
       const settings=await getSettings();
       const multiplierBonus=Math.max(0,Math.min(0.25,Number(settings.referralMultiplierBonus??0.02)));
       const durationMs=Math.max(1,Math.min(168,Number(settings.referralBonusDurationHours??24)))*3600000;
       const startsAt=Date.now(),endsAt=startsAt+durationMs;let granted=false;
-      const refResult=await rtdb.ref('users/'+validReferralCode).transaction(u=>{
+      const refResult=await store.ref('users/'+validReferralCode).transaction(u=>{
         granted=false;if(!u||u.banned)return;
         u.referralBonuses=u.referralBonuses||{};if(u.referralBonuses[user.id])return u;
         u.referralCount=Number(u.referralCount||0)+1;
@@ -331,7 +331,7 @@ async function bootstrap(user, referralCode) {
       if(refResult.committed&&granted){
         await marker.update({status:'bonus_granted',startsAt,endsAt,multiplierBonus});
         await logTransaction(validReferralCode,'referral_bonus',0,{referredUserId:user.id,multiplierBonus,startsAt,endsAt});
-        await rtdb.ref('users/'+validReferralCode+'/notifications').push({title:'Yeni davet bonusu',body:'Kazanç çarpanına +'+multiplierBonus.toFixed(2)+'x 24 saat boyunca eklendi.',timestamp:Date.now(),type:'referral'});
+        await store.ref('users/'+validReferralCode+'/notifications').push({title:'Yeni davet bonusu',body:'Kazanç çarpanına +'+multiplierBonus.toFixed(2)+'x 24 saat boyunca eklendi.',timestamp:Date.now(),type:'referral'});
         try{await sendTelegramMessage(validReferralCode,'🎉 Yeni davetin katıldı! Kazanç çarpanına +'+multiplierBonus.toFixed(2)+'x 24 saat boyunca eklendi.');}catch{console.warn('[referral-notification] delivery_failed');}
       }
     }
@@ -352,7 +352,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
   const automatic=method==='telegram_membership';
   if(automatic&&!(await verifyTelegramTask(uid,task)))throw new Error('TASK_VERIFICATION_FAILED');
   if(!automatic&&String(proof||'').trim().length<8)throw new Error('TASK_PROOF_REQUIRED');
-  const taskRef=rtdb.ref('tasks/'+taskId);let reserved=false;
+  const taskRef=store.ref('tasks/'+taskId);let reserved=false;
   const slot=await taskRef.transaction(current=>{
     if(!isTaskOpen(current))return;
     const next=Number(current.totalParticipants||0)+1;
@@ -362,7 +362,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     reserved=true;return current;
   });
   if(!slot.committed||!reserved)throw new Error('TASK_LIMIT_REACHED');
-  const claimsRef=rtdb.ref('taskClaims/'+taskId+'/'+uid);let duplicate=false,perUserLimit=false,created=false;
+  const claimsRef=store.ref('taskClaims/'+taskId+'/'+uid);let duplicate=false,perUserLimit=false,created=false;
   const claimTx=await claimsRef.transaction(current=>{
     const claims=current||{};
     if(claims[actionId]){duplicate=true;return claims;}
@@ -375,12 +375,12 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
   if(!claimTx.committed||!created){
     if(!duplicate)await releaseTaskSlot(taskRef);
     if(perUserLimit)throw new Error('TASK_USER_LIMIT');
-    if(duplicate){const u=await rtdb.ref('users/'+uid).once('value');return {user:u.val(),pending:!automatic,duplicate:true};}
+    if(duplicate){const u=await store.ref('users/'+uid).once('value');return {user:u.val(),pending:!automatic,duplicate:true};}
     throw new Error('TASK_CLAIM_FAILED');
   }
-  if(!automatic){const u=await rtdb.ref('users/'+uid).once('value');return {user:u.val(),pending:true,taskClaim:{id:actionId,status:'pending'}};}
+  if(!automatic){const u=await store.ref('users/'+uid).once('value');return {user:u.val(),pending:true,taskClaim:{id:actionId,status:'pending'}};}
   const settings=await getSettings();let credited=0,failure='';
-  const userTx=await rtdb.ref('users/'+uid).transaction(profile=>{
+  const userTx=await store.ref('users/'+uid).transaction(profile=>{
     credited=0;failure='';
     if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
     profile.completedTaskClaims=profile.completedTaskClaims||{};
@@ -404,13 +404,13 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
 async function applyEconomyAction(uid, body) {
   const action = String(body.action || '');
   const actionId = String(body.actionId || randomId()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0, 80);
-  const userRef = rtdb.ref('users/' + uid);
+  const userRef = store.ref('users/' + uid);
   const settings = await getSettings();
   const taskId = String(body.taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
-  const taskSnapshot = action === 'task' && taskId ? await rtdb.ref('tasks/' + taskId).once('value') : null;
+  const taskSnapshot = action === 'task' && taskId ? await store.ref('tasks/' + taskId).once('value') : null;
   const taskRecord = taskSnapshot && taskSnapshot.exists() ? taskSnapshot.val() : null;
   const methodKey = String(body.method || '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase().slice(0, 80);
-  const methodSnapshot = action === 'withdraw' && ['ton','gram'].includes(methodKey) ? await rtdb.ref('withdrawMethods/' + methodKey).once('value') : null;
+  const methodSnapshot = action === 'withdraw' && ['ton','gram'].includes(methodKey) ? await store.ref('withdrawMethods/' + methodKey).once('value') : null;
   const methodRecord = methodSnapshot && methodSnapshot.exists() ? methodSnapshot.val() : null;
   if (action === 'task') { if (!taskRecord) throw new Error('TASK_UNAVAILABLE'); return submitTaskClaim(uid,taskId,taskRecord,actionId,body.proof||''); }
   let credited = 0;
@@ -503,7 +503,7 @@ async function applyEconomyAction(uid, body) {
   if (alreadyProcessed) return { user: updatedUser, duplicate: true };
   if (action === 'withdraw') {
     try {
-      await rtdb.ref('withdrawals').push({
+      await store.ref('withdrawals').push({
         userId: uid, name: updatedUser.name || 'User', amount: extra.amount,
         method: extra.method, methodName: extra.methodName, account: extra.account,
         status: 'pending', requestedAt: Date.now()
@@ -527,13 +527,13 @@ async function applyEconomyAction(uid, body) {
 }
 async function completeFlyerTask(uid, signature, settings) {
   const taskKey = crypto.createHash('sha256').update(String(signature)).digest('hex');
-  const taskRef = rtdb.ref('users/' + uid + '/flyerhubsTasks/' + taskKey);
+  const taskRef = store.ref('users/' + uid + '/flyerhubsTasks/' + taskKey);
   const taskSnap = await taskRef.once('value');
   if (!taskSnap.exists()) throw new Error('FLYERHUBS_TASK_NOT_FOUND');
   const task = taskSnap.val() || {};
   const checked = await flyerCall('/check_task', { signature: String(signature) });
   if (checked.result !== 'complete') return { completed: false, providerStatus: checked.result || 'unknown' };
-  const userRef = rtdb.ref('users/' + uid);
+  const userRef = store.ref('users/' + uid);
   const reward = API_AD_REWARD_USD;
   let failure = '', already = false, credited = 0, xp = null, multiplier = 1;
   const tx = await userRef.transaction(user => {
@@ -612,11 +612,11 @@ async function handleAdminApi(user, url, body, res) {
   if (!isAdmin(user.id)) return send(res, 403, { status:'error', code:'ADMIN_REQUIRED' });
   if (url.pathname === '/api/admin/bot-control') {
     if(body.action==='status'){
-      const snap=await rtdb.ref('botControl/enabled').once('value');
+      const snap=await store.ref('botControl/enabled').once('value');
       return send(res,200,{status:'ok',enabled:!snap.exists()||snap.val()!==false});
     }
     const enabled=body.enabled===true;
-    await rtdb.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:user.id});
+    await store.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:user.id});
     await auditAdmin(user.id,enabled?'bot_start':'bot_stop','botControl',{enabled});
     return send(res,200,{status:'ok',enabled});
   }
@@ -630,7 +630,7 @@ async function handleAdminApi(user, url, body, res) {
   if (url.pathname === '/api/admin/tasks') {
     const action=String(body.action||'list');
     if(action==='list'){
-      const snap=await rtdb.ref('tasks').once('value'),items=[];
+      const snap=await store.ref('tasks').once('value'),items=[];
       snap.forEach(child=>items.push({id:child.key,...(child.val()||{})}));
       items.sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
       return send(res,200,{status:'ok',tasks:items});
@@ -639,7 +639,7 @@ async function handleAdminApi(user, url, body, res) {
       const id=String(body.id||'').trim().slice(0,120);let existing={};
       if(action==='update'){
         if(!id)return send(res,400,{status:'error',code:'TASK_ID_REQUIRED'});
-        const old=await rtdb.ref('tasks/'+id).once('value');if(!old.exists())return send(res,404,{status:'error',code:'TASK_NOT_FOUND'});existing=old.val()||{};
+        const old=await store.ref('tasks/'+id).once('value');if(!old.exists())return send(res,404,{status:'error',code:'TASK_NOT_FOUND'});existing=old.val()||{};
       }
       let fields;try{fields=cleanTaskInput({...existing,...body});}catch(error){return send(res,400,{status:'error',code:error.message});}
       const status=String(body.status||existing.status||'active');
@@ -647,7 +647,7 @@ async function handleAdminApi(user, url, body, res) {
       if(status==='active'&&['channel','group'].includes(fields.type)&&!(await verifyBotAdminInChat(fields.chatId,fields.url)))return send(res,400,{status:'error',code:'BOT_ADMIN_REQUIRED',message:'Kampanyayı yayınlamak için TeddyGrow botunu hedef kanal/gruba yönetici olarak eklemelisin.'});
       const record={...existing,...fields,status,active:status==='active',totalParticipants:Number(existing.totalParticipants||0),
         createdAt:Number(existing.createdAt||Date.now()),updatedAt:Date.now(),createdBy:existing.createdBy||user.id,updatedBy:user.id};
-      const ref=action==='create'?rtdb.ref('tasks').push():rtdb.ref('tasks/'+id);
+      const ref=action==='create'?store.ref('tasks').push():store.ref('tasks/'+id);
       await ref.set(record);await auditAdmin(user.id,'task_'+action,ref.key,{status,type:record.type,reward:record.reward});
       return send(res,200,{status:'ok',task:{id:ref.key,...record}});
     }
@@ -655,7 +655,7 @@ async function handleAdminApi(user, url, body, res) {
       const id=String(body.id||'').trim(),status=String(body.status||'');
       if(!id||!['draft','active','paused','completed'].includes(status))return send(res,400,{status:'error',code:'INVALID_TASK_STATUS'});
       let changed=false;
-      const tx=await rtdb.ref('tasks/'+id).transaction(t=>{if(!t)return;t.status=status;t.active=status==='active';t.updatedAt=Date.now();t.updatedBy=user.id;changed=true;return t;});
+      const tx=await store.ref('tasks/'+id).transaction(t=>{if(!t)return;t.status=status;t.active=status==='active';t.updatedAt=Date.now();t.updatedBy=user.id;changed=true;return t;});
       if(!tx.committed||!changed)return send(res,404,{status:'error',code:'TASK_NOT_FOUND'});
       await auditAdmin(user.id,'task_status',id,{status});
       return send(res,200,{status:'ok',task:{id,...tx.snapshot.val()}});
@@ -663,7 +663,7 @@ async function handleAdminApi(user, url, body, res) {
     return send(res,400,{status:'error',code:'INVALID_TASK_ACTION'});
   }
   if (url.pathname === '/api/admin/task-claims') {
-    const snap=await rtdb.ref('taskClaims').once('value'),items=[];
+    const snap=await store.ref('taskClaims').once('value'),items=[];
     snap.forEach(taskNode=>taskNode.forEach(userNode=>userNode.forEach(claimNode=>{const c=claimNode.val()||{};if(c.status==='pending')items.push({id:claimNode.key,...c});})));
     items.sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0));
     return send(res,200,{status:'ok',claims:items.slice(0,200)});
@@ -671,12 +671,12 @@ async function handleAdminApi(user, url, body, res) {
   if (url.pathname === '/api/admin/task-review') {
     const taskId=String(body.taskId||''),uid=String(body.userId||''),claimId=String(body.claimId||''),decision=String(body.decision||'');
     if(!taskId||!/^\d{1,20}$/.test(uid)||!claimId||!['approve','reject'].includes(decision))return send(res,400,{status:'error',code:'INVALID_TASK_REVIEW'});
-    const claimRef=rtdb.ref('taskClaims/'+taskId+'/'+uid+'/'+claimId);let locked=false;
+    const claimRef=store.ref('taskClaims/'+taskId+'/'+uid+'/'+claimId);let locked=false;
     const lock=await claimRef.transaction(c=>{if(!c||c.status!=='pending')return;c.status='reviewing';c.reviewedBy=user.id;c.reviewStartedAt=Date.now();locked=true;return c;});
     if(!lock.committed||!locked)return send(res,409,{status:'error',code:'CLAIM_ALREADY_REVIEWED'});
     if(decision==='reject'){
       await claimRef.update({status:'rejected',rejectedAt:Date.now(),reviewedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
-      await rtdb.ref('tasks/'+taskId).transaction(task=>{
+      await store.ref('tasks/'+taskId).transaction(task=>{
         if(!task)return;task.totalParticipants=Math.max(0,Number(task.totalParticipants||0)-1);
         if(task.status==='completed'&&task.completionReason==='limit_reached'&&(!Number(task.totalLimit||0)||task.totalParticipants<Number(task.totalLimit))){task.status='active';task.active=true;delete task.completionReason;}
         return task;
@@ -684,7 +684,7 @@ async function handleAdminApi(user, url, body, res) {
       await auditAdmin(user.id,'task_claim_reject',claimId,{taskId,uid});return send(res,200,{status:'ok',claim:{id:claimId,status:'rejected'}});
     }
     const settings=await getSettings();let credited=0,failure='',alreadyProcessed=false;
-    const userTx=await rtdb.ref('users/'+uid).transaction(profile=>{
+    const userTx=await store.ref('users/'+uid).transaction(profile=>{
       credited=0;failure='';alreadyProcessed=false;if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
       profile.completedTaskClaims=profile.completedTaskClaims||{};profile.taskClaimRewards=profile.taskClaimRewards||{};profile.taskCompletionCounts=profile.taskCompletionCounts||{};
       if(profile.completedTaskClaims[claimId]){alreadyProcessed=true;credited=Number(profile.taskClaimRewards[claimId]||0);return profile;}
@@ -705,7 +705,7 @@ async function handleAdminApi(user, url, body, res) {
   if (url.pathname === '/api/admin/analytics') {
     const dayCount=Math.max(7,Math.min(30,Number(body.days||30)));
     const provider=String(body.provider||'all'),taskType=String(body.taskType||'all'),userFilter=String(body.userId||'').trim();
-    const [usersSnap,txSnap]=await Promise.all([rtdb.ref('users').once('value'),firestore.collection('transactions').orderBy('timestamp','desc').limit(4000).get()]);
+    const [usersSnap,txSnap]=await Promise.all([store.ref('users').once('value'),firestore.collection('transactions').orderBy('timestamp','desc').limit(4000).get()]);
     const days=Array.from({length:dayCount},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(dayCount-1-i));return {key:dayKeyFor(d.getTime()),newUsers:0,activeUsers:0,referrals:0,taskCompletions:0,adRecords:0,rewardUsd:0,adCreditUsd:0};});
     const byDay=new Map(days.map(x=>[x.key,x]));
     if(!userFilter)usersSnap.forEach(child=>{const u=child.val()||{};const created=byDay.get(dayKeyFor(Number(u.createdAt||0)));if(created)created.newUsers++;const active=byDay.get(dayKeyFor(Number(u.lastActiveAt||0)));if(active)active.activeUsers++;});
@@ -723,14 +723,14 @@ async function handleAdminApi(user, url, body, res) {
     return send(res,200,{status:'ok',days,totals,filters:{days:dayCount,provider,taskType,userId:userFilter}});
   }
   if (url.pathname === '/api/admin/audit') {
-    const snap=await rtdb.ref('adminAudit').orderByChild('timestamp').limitToLast(100).once('value'),items=[];
+    const snap=await store.ref('adminAudit').orderByChild('timestamp').limitToLast(100).once('value'),items=[];
     snap.forEach(child=>items.push({id:child.key,...(child.val()||{})}));
     items.reverse();return send(res,200,{status:'ok',items});
   }
   if (url.pathname === '/api/admin/overview') {
     const [usersSnap, withdrawalsSnap, promosSnap] = await Promise.all([
-      rtdb.ref('users').once('value'), rtdb.ref('withdrawals').orderByChild('status').equalTo('pending').limitToLast(100).once('value'),
-      rtdb.ref('promotions').limitToLast(20).once('value')
+      store.ref('users').once('value'), store.ref('withdrawals').orderByChild('status').equalTo('pending').limitToLast(100).once('value'),
+      store.ref('promotions').limitToLast(20).once('value')
     ]);
     let users = 0, totalBalance = 0, totalEarned = 0, level50 = 0, referrals = 0, activeReferralBonuses = 0;
     usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); referrals+=Number(v.referralCount||0); if(Number(v.level||1)>=50)level50++; activeReferralBonuses+=Object.values(v.referralBonuses||{}).filter(b=>b&&Number(b.endsAt||0)>Date.now()).length; });
@@ -747,7 +747,7 @@ async function handleAdminApi(user, url, body, res) {
     const buttonUrl=String(body.buttonUrl||'').trim();
     if(!title||!message) return send(res,400,{status:'error',code:'PROMO_FIELDS_REQUIRED'});
     if(buttonUrl&&!/^https:\/\//i.test(buttonUrl))return send(res,400,{status:'error',code:'INVALID_PROMO_URL'});
-    const ref=rtdb.ref('promotions').push();
+    const ref=store.ref('promotions').push();
     const promo={title,message,buttonText,buttonUrl,status:'publishing',createdAt:Date.now(),createdBy:user.id};
     await ref.set(promo);
     const text='📢 <b>'+escapeHtml(title)+'</b>\n\n'+escapeHtml(message);
@@ -756,7 +756,7 @@ async function handleAdminApi(user, url, body, res) {
     try{
       const sent=await sendTelegramMessage(ANNOUNCEMENT_CHANNEL_ID,text,extra);
       await ref.update({status:'published',channelMessageId:sent.message_id,publishedAt:Date.now()});
-      await rtdb.ref('notifications').push({title:'Promotion: '+title,body:message,timestamp:Date.now(),showBanner:true,type:'promotion',promotionId:ref.key});
+      await store.ref('notifications').push({title:'Promotion: '+title,body:message,timestamp:Date.now(),showBanner:true,type:'promotion',promotionId:ref.key});
       return send(res,200,{status:'ok',promotion:{id:ref.key,...promo,status:'published',channelMessageId:sent.message_id}});
     }catch(error){
       await ref.update({status:'publish_failed',publishError:String(error.message||'Telegram send failed').slice(0,200)});
@@ -767,7 +767,7 @@ async function handleAdminApi(user, url, body, res) {
     const id=String(body.id||'').trim().slice(0,120);
     const action=String(body.action||'');
     if(!id||!['pay','reject'].includes(action))return send(res,400,{status:'error',code:'INVALID_WITHDRAWAL_ACTION'});
-    const ref=rtdb.ref('withdrawals/'+id);
+    const ref=store.ref('withdrawals/'+id);
     const snap=await ref.once('value');
     if(!snap.exists())return send(res,404,{status:'error',code:'WITHDRAWAL_NOT_FOUND'});
     const withdrawal=snap.val()||{};
@@ -782,7 +782,7 @@ async function handleAdminApi(user, url, body, res) {
       if(!lock.committed||!changed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
       await ref.update({status:'paid',txHash,payoutAmount,paidAt:Date.now(),paidBy:user.id});
       await auditAdmin(user.id,'withdrawal_paid',id,{userId:withdrawal.userId,method:withdrawal.method,payoutAmount,txHash});
-      try{await rtdb.ref('users/'+String(withdrawal.userId)+'/notifications').push({title:'Withdrawal paid',body:'Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(String(withdrawal.userId),'✅ Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.\nAmount: '+payoutAmount+'\nTransaction: '+txHash);}catch(error){console.warn('[withdrawal-notification]',error.message);}
+      try{await store.ref('users/'+String(withdrawal.userId)+'/notifications').push({title:'Withdrawal paid',body:'Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(String(withdrawal.userId),'✅ Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.\nAmount: '+payoutAmount+'\nTransaction: '+txHash);}catch(error){console.warn('[withdrawal-notification]',error.message);}
       return send(res,200,{status:'ok',withdrawal:{id,status:'paid',txHash,payoutAmount}});
     }
     const uid=String(withdrawal.userId||'');
@@ -791,7 +791,7 @@ async function handleAdminApi(user, url, body, res) {
     let locked=false;
     const lock=await ref.transaction(w=>{if(!w||w.status!=='pending')return;locked=true;w.status='rejecting';w.rejectionStartedAt=Date.now();w.rejectedBy=user.id;return w;});
     if(!lock.committed||!locked)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
-    const userRef=rtdb.ref('users/'+uid);
+    const userRef=store.ref('users/'+uid);
     let refunded=false;
     const refund=await userRef.transaction(profile=>{
       if(!profile||profile.banned)return;
@@ -809,7 +809,7 @@ async function handleAdminApi(user, url, body, res) {
     await ref.update({status:'rejected',rejectedAt:Date.now(),rejectedBy:user.id,rejectionReason:String(body.reason||'Rejected by admin').slice(0,200)});
     await auditAdmin(user.id,'withdrawal_reject',id,{userId:uid,amount});
     if(refunded)try{await logTransaction(uid,'withdraw_refund',amount,{withdrawalId:id,currency:String(withdrawal.method).toUpperCase()});}catch(error){console.warn('[withdrawal-refund-log]',error.message);}
-    try{await rtdb.ref('users/'+uid+'/notifications').push({title:'Withdrawal rejected',body:'Your withdrawal was rejected and the balance was returned.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(uid,'Your withdrawal was rejected. The balance has been returned to your account.');}catch(error){console.warn('[withdrawal-notification]',error.message);}
+    try{await store.ref('users/'+uid+'/notifications').push({title:'Withdrawal rejected',body:'Your withdrawal was rejected and the balance was returned.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(uid,'Your withdrawal was rejected. The balance has been returned to your account.');}catch(error){console.warn('[withdrawal-notification]',error.message);}
     return send(res,200,{status:'ok',withdrawal:{id,status:'rejected',refunded:true}});
   }
   if (url.pathname === '/api/admin/settings') {
@@ -821,7 +821,7 @@ async function handleAdminApi(user, url, body, res) {
       patch[key]=value;
     }
     if(!Object.keys(patch).length)return send(res,400,{status:'error',code:'NO_SETTINGS'});
-    await rtdb.ref('settings').update(patch);
+    await store.ref('settings').update(patch);
     return send(res,200,{status:'ok',settings:patch});
   }
   return send(res,404,{status:'error',code:'NOT_FOUND'});
@@ -841,9 +841,9 @@ async function handleTelegramWebhook(req, res) {
       const membership=await checkRequiredChannel(uid);
       try{await telegramCall('answerCallbackQuery',{callback_query_id:callback.id,text:membership.ok?'Üyelik doğrulandı.':'Henüz doğrulanamadı.',show_alert:!membership.ok});}catch{}
       if(membership.ok){
-        const pending=await rtdb.ref('pendingReferrals/'+uid).once('value');
+        const pending=await store.ref('pendingReferrals/'+uid).once('value');
         const profile={id:uid,name:[callback.from.first_name,callback.from.last_name].filter(Boolean).join(' ')||'User',username:String(callback.from.username||''),photoUrl:'',languageCode:String(callback.from.language_code||'tr')};
-        await bootstrap(profile,pending.val()?.referrer||'');await rtdb.ref('pendingReferrals/'+uid).remove();
+        await bootstrap(profile,pending.val()?.referrer||'');await store.ref('pendingReferrals/'+uid).remove();
         const appUrl=WEBAPP_URL||PUBLIC_BASE_URL;
         await sendTelegramMessage(uid,'Üyeliğin doğrulandı. TeddyGrow’e hoş geldin!',{reply_markup:{inline_keyboard:[[{text:'TeddyGrow’i aç',web_app:{url:appUrl}}]]}});
       }else{
@@ -865,12 +865,12 @@ async function handleTelegramWebhook(req, res) {
     if(command==='/botstop'||command==='/botstart'){
       if(!isAdmin(uid)){await sendTelegramMessage(uid,'Bu komut yalnızca yöneticiler içindir.');return send(res,200,{ok:true});}
       const enabled=command==='/botstart';
-      await rtdb.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:uid});
+      await store.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:uid});
       await auditAdmin(uid,enabled?'bot_start':'bot_stop','botControl',{enabled});
       await sendTelegramMessage(uid,enabled?'Bot yeniden etkinleştirildi.':'Bot kullanıcı işlemlerine kapatıldı.');
     }else if(command==='/start'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
-      const control=await rtdb.ref('botControl/enabled').once('value');
+      const control=await store.ref('botControl/enabled').once('value');
       if(control.exists()&&control.val()===false){await sendTelegramMessage(uid,'Bot şu anda bakımda. Lütfen daha sonra tekrar dene.');return send(res,200,{ok:true});}
       const payload=text.split(/\s+/)[1]||'';
       const referral=payload.startsWith('ref_')?payload.slice(4).replace(/\D/g,'').slice(0,20):payload.replace(/\D/g,'').slice(0,20);
@@ -881,7 +881,7 @@ async function handleTelegramWebhook(req, res) {
         if(['CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND'].includes(membership.reason))await notifyAdmins('TeddyGrow zorunlu kanal kontrolü başarısız: '+membership.reason+'. Kanal ayarını ve bot yönetici yetkisini kontrol edin.');
         return send(res,200,{ok:true});
       }
-      await bootstrap(profile,referral);await rtdb.ref('pendingReferrals/'+uid).remove();
+      await bootstrap(profile,referral);await store.ref('pendingReferrals/'+uid).remove();
       const url=WEBAPP_URL||PUBLIC_BASE_URL;
       const keyboard=url?{inline_keyboard:[[{text:'🚀 TeddyGrow’i aç',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
       await sendTelegramMessage(uid,'TeddyGrow’e hoş geldin!\n\nGörevleri tamamla, arkadaşlarını davet et ve kazancını TON veya GRAM olarak çek.',keyboard?{reply_markup:keyboard}:{});
@@ -897,14 +897,14 @@ async function handleTelegramWebhook(req, res) {
       const membership=await checkRequiredChannel(uid);
       if(!membership.ok){await sendMembershipGate(uid,membership.reason);return send(res,200,{ok:true});}
       if(command==='/level'){
-      const snap=await rtdb.ref('users/'+uid).once('value');
+      const snap=await store.ref('users/'+uid).once('value');
       if(!snap.exists())await sendTelegramMessage(uid,'Önce /start komutuyla TeddyGrow profilini oluştur.');
       else{
         const v=snap.val()||{},level=Math.max(1,Math.min(50,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
         await sendTelegramMessage(uid,'🏅 <b>TeddyGrow Seviyen</b>\nSeviye: <b>'+level+'/50</b>\nXP: <b>'+(level>=50?'MAKS':xp+' / '+next)+'</b>\nKazanç çarpanı: <b>'+rewardMultiplier(v).toFixed(2)+'x</b>',{parse_mode:'HTML'});
       }
       }else if(command==='/referrals'){
-      const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
+      const snap=await store.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
       const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Davet bağlantını kopyalamak için TeddyGrow Davet sekmesini aç.';
       const bonus=activeReferralBonusTotal(v);await sendTelegramMessage(uid,'👥 <b>Davetlerin</b>\nDavet sayısı: <b>'+Number(v.referralCount||0)+'</b>\nAktif ek çarpan: <b>+'+bonus.toFixed(2)+'x</b>\nBonus süresi: <b>24 saat</b>\n\n'+escapeHtml(link),{parse_mode:'HTML'});
       }
@@ -953,7 +953,7 @@ async function handleApi(req, res, url) {
   }
   if (!initFirebase()) return send(res, 503, { status: 'error', message: 'Firebase Admin is not configured' });
   if (!isAdmin(user.id)) {
-    const control=await rtdb.ref('botControl/enabled').once('value');
+    const control=await store.ref('botControl/enabled').once('value');
     if(control.exists()&&control.val()===false)return send(res,503,{status:'error',code:'BOT_PAUSED',message:'Bot geçici olarak duraklatıldı.'});
     if(url.pathname!=='/api/channel/check'&&url.pathname!=='/api/session'){
       const membership=await checkRequiredChannel(user.id);
@@ -971,7 +971,7 @@ async function handleApi(req, res, url) {
       const ownUser='users/'+user.id;
       const allowed=['settings','tasks','notifications','withdrawMethods',ownUser,ownUser+'/notifications','withdrawals'];
       if(!allowed.includes(requested))return send(res,403,{status:'error',code:'LIVE_PATH_FORBIDDEN'});
-      const snap=await rtdb.ref(requested).once('value');
+      const snap=await store.ref(requested).once('value');
       let value=snap.val();
       if(requested==='withdrawals'&&value)value=Object.fromEntries(Object.entries(value).filter(([,item])=>String(item?.userId||'')===user.id));
       return send(res,200,{status:'ok',value});
@@ -987,14 +987,14 @@ async function handleApi(req, res, url) {
       const referralCode = String(body.referralCode || '').replace(/\D/g, '').slice(0, 20);
       await bootstrap(user, referralCode);
       await expireReferralBonuses(user.id);
-      await rtdb.ref('users/'+user.id+'/lastActiveAt').set(Date.now());
-      const profileSnap=await rtdb.ref('users/'+user.id).once('value'),profile=profileSnap.val()||{};
+      await store.ref('users/'+user.id+'/lastActiveAt').set(Date.now());
+      const profileSnap=await store.ref('users/'+user.id).once('value'),profile=profileSnap.val()||{};
       if (profile.banned) return send(res, 403, { status: 'error', message: 'Account unavailable' });
       const customToken = await admin.auth().createCustomToken(user.id);
       return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME, referralBonusMultiplier: Number((await getSettings()).referralMultiplierBonus ?? 0.02), referralBonusDurationHours: Number((await getSettings()).referralBonusDurationHours ?? 24), traffyLink: TRAFFY_LINK_PREFIX ? 'https://t.me/Traffy_robot?startapp=l_'+TRAFFY_LINK_PREFIX+'_'+user.id : '' });
     }
     if (url.pathname === '/api/tasks/claims') {
-      const snap=await rtdb.ref('taskClaims').once('value'),claims=[];
+      const snap=await store.ref('taskClaims').once('value'),claims=[];
       snap.forEach(taskNode=>{const own=taskNode.child(user.id);own.forEach(claimNode=>{const v=claimNode.val()||{};if(['pending','approved','rejected'].includes(v.status))claims.push({taskId:taskNode.key,id:claimNode.key,...v});});});
       return send(res,200,{status:'ok',claims:claims.slice(-100)});
     }
@@ -1019,7 +1019,7 @@ async function handleApi(req, res, url) {
         taskMap[id] = { signature, name: String(item.name || item.task || 'FlyerHubs task').slice(0, 100), task: String(item.task || ''), links: Array.isArray(item.links) ? item.links.slice(0, 3) : [], price: item.price };
         return { id: 'fh_' + id, signature, source: 'flyerhubs', title: taskMap[id].name, type: 'telegram', url: taskMap[id].links[0] || '', reward: rewardValue, active: item.status !== 'complete' && item.status !== 'unavailable' };
       }).filter(Boolean);
-      if (Object.keys(taskMap).length) await rtdb.ref('users/' + user.id + '/flyerhubsTasks').update(taskMap);
+      if (Object.keys(taskMap).length) await store.ref('users/' + user.id + '/flyerhubsTasks').update(taskMap);
       return send(res, 200, { status: 'ok', tasks });
     }
     if (url.pathname === '/api/flyerhubs/check') {
@@ -1030,7 +1030,7 @@ async function handleApi(req, res, url) {
       return send(res, 200, { status: 'ok', ...result });
     }
     if (url.pathname === '/api/leaderboard') {
-      const snap = await rtdb.ref('users').orderByChild('totalEarned').limitToLast(50).once('value');
+      const snap = await store.ref('users').orderByChild('totalEarned').limitToLast(50).once('value');
       const users = [];
       snap.forEach(child => {
         const value = child.val() || {};
@@ -1045,7 +1045,7 @@ async function handleApi(req, res, url) {
       return send(res, 200, { status: 'ok', users });
     }
     if (url.pathname === '/api/referrals') {
-      const snap = await rtdb.ref('users').orderByChild('referredBy').equalTo(user.id).limitToLast(20).once('value');
+      const snap = await store.ref('users').orderByChild('referredBy').equalTo(user.id).limitToLast(20).once('value');
       const users = [];
       snap.forEach(child => {
         const value = child.val() || {};
@@ -1076,7 +1076,7 @@ async function handleApi(req, res, url) {
         const reward = API_AD_REWARD_USD;
         const sponsorXpAmount = Number(sponsorSettings.sponsorTaskXp || sponsorSettings.taskXp || 20);
         let credited = false;
-        const tx = await rtdb.ref('users/' + user.id).transaction(profile => {
+        const tx = await store.ref('users/' + user.id).transaction(profile => {
           credited = false; data.reward = 0; data.xp = null; data.multiplier = 1;
           if (!profile || profile.banned) return;
           profile.sponsorDone = profile.sponsorDone || {};
