@@ -1,12 +1,12 @@
 {
   "name": "coinixfaucet",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "description": "CoinixFaucet Telegram Mini App",
   "main": "Backend/server.js",
   "scripts": {
     "start": "node Backend/server.js",
-    "check": "node --check Backend/server.js && node --check Frontend/js/app.js"
+    "check": "node --check Backend/server.js && node --check Frontend/js/app.js && node --check Frontend/js/admin.js"
   },
   "engines": {
     "node": ">=20"
