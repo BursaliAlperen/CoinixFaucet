@@ -547,7 +547,9 @@ async function configureTelegramWebhook() {
     await telegramCall('setWebhook',{url:PUBLIC_BASE_URL+'/telegram/webhook',secret_token:BOT_WEBHOOK_SECRET,allowed_updates:['message','callback_query'],drop_pending_updates:false});
     await telegramCall('setMyCommands',{commands:[
       {command:'start',description:'Open Coinix Faucet'},
-      {command:'help',description:'Show help'},\n      {command:'level',description:'Your level and XP'},\n      {command:'referrals',description:'Your referral link and stats'},
+      {command:'help',description:'Show help'},
+      {command:'level',description:'Your level and XP'},
+      {command:'referrals',description:'Your referral link and stats'},
       {command:'admin',description:'Open admin panel'},
       {command:'botmessages',description:'Admin bot message tools'},
       {command:'yeni',description:'Latest referrals (admin)'}
