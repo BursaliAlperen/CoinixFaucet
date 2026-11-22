@@ -856,12 +856,12 @@ async function handleTelegramWebhook(req, res) {
       const keyboard=url?{inline_keyboard:[[{text:'🚀 TeddyGrow’i aç',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
       await sendTelegramMessage(uid,'TeddyGrow’e hoş geldin!\n\nGörevleri tamamla, arkadaşlarını davet et ve kazancını TON veya GRAM olarak çek.',keyboard?{reply_markup:keyboard}:{});
     }else if(command==='/help'){
-      await sendTelegramMessage(uid,'TeddyGrow komutları:\n/start — Uygulamayı aç\n/help — Yardım\n/level — Seviye ve XP\n/referrals — Davet bağlantın ve bonusun\n/admin — Yönetim paneli (yalnızca yönetici)');
+      await sendTelegramMessage(uid,'🧸 <b>TeddyGrow komutları</b>\n/start — Uygulamayı aç\n/tasks — Mikro görevleri keşfet\n/campaign — Kanal kampanyası oluştur\n/wallet — Cüzdan ve çekimler\n/level — Seviye ve XP\n/referrals — Davet bağlantın ve istatistiklerin\n/admin — Yönetim paneli (yönetici)',{parse_mode:'HTML'});
     }else if(['/tasks','/campaign','/wallet'].includes(command)){
       const view=command.slice(1),appUrl=WEBAPP_URL||PUBLIC_BASE_URL;
       const labels={tasks:'🧸 Görevleri keşfet',campaign:'📣 Kampanya oluştur',wallet:'💗 Cüzdanımı aç'};
       if(!appUrl)await sendTelegramMessage(uid,'TeddyGrow uygulama adresi henüz yapılandırılmadı.');
-      else await sendTelegramMessage(uid,'✨ <b>TeddyGrow</b>\\n'+labels[view]+' için uygulamayı aç.',{parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:labels[view],web_app:{url:appUrl+'?startapp='+view}}]]}});
+      else await sendTelegramMessage(uid,'✨ <b>TeddyGrow</b>\n'+labels[view]+' için uygulamayı aç.',{parse_mode:'HTML',reply_markup:{inline_keyboard:[[{text:labels[view],web_app:{url:appUrl+'?startapp='+view}}]]}});
     }else if(command==='/level'||command==='/referrals'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
       const membership=await checkRequiredChannel(uid);
