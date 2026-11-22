@@ -21,15 +21,16 @@ let _dailyCardDone = false; // guard: run distributeDailyCard only once per sess
 
 /* ============ UTILS ============ */
 const $=id=>document.getElementById(id);
+function getRewardMultiplier(level){const n=Math.max(1,Math.min(100,Number(level)||1));return Math.round((1+n*0.02)*100)/100;}
 function hap(t){try{window.Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}catch(e){}}
 function setAmt(f){const b=parseFloat(currentUser?.balance||0);$('withdrawAmount').value=(Math.floor(b*f*100)/100).toFixed(2);hap();}
 function renderExtras(){
-  $('perAdEarn2').textContent=(parseFloat(appSettings.perAdEarning||0.005)*(Number(currentUser.level||1)>=100?2:1)).toFixed(4);$('spRw2').textContent=parseFloat(appSettings.sponsorReward||0.0025).toFixed(4);
+  $('perAdEarn2').textContent=(parseFloat(appSettings.perAdEarning||0.005)*getRewardMultiplier(currentUser.level)).toFixed(4);$('spRw2').textContent=parseFloat(appSettings.sponsorReward||0.0025).toFixed(4);
   const level=Math.max(1,Math.min(100,Number(currentUser.level||1))),xp=Math.max(0,Number(currentUser.xp||0)),xpNext=Number(currentUser.xpToNext||0);
   if($('xpLevel'))$('xpLevel').textContent=level;
   if($('xpText'))$('xpText').textContent=level>=100?'MAX LEVEL':xp+' / '+xpNext+' XP';
   if($('xpFill'))$('xpFill').style.width=(level>=100?100:Math.min(100,xpNext?xp/xpNext*100:0))+'%';
-  if($('xpBonus'))$('xpBonus').textContent=level>=100?'2× Ads + Tasks':'Level 100: 2× Ads + Tasks';
+  if($('xpBonus'))$('xpBonus').textContent='Reward multiplier: '+getRewardMultiplier(level).toFixed(2)+'×';
   const e=parseFloat(currentUser.totalEarned||0),v=appSettings;
   const st=[['Bronze',0],['Silver',v.vipSilver||10],['Gold',v.vipGold||50],['Platinum',v.vipPlatinum||200]];
   let i=st.findIndex((x,k)=>k===st.length-1||e<st[k+1][1]);const c=st[i],n=st[i+1];
@@ -215,7 +216,7 @@ function renderAll(){
   badge.querySelector('i').style.color=vip.color;
   $('vipLabel').textContent=vip.label;
 
-  $('perAdEarn').textContent=(parseFloat(appSettings.perAdEarning||0.005)*(Number(currentUser.level||1)>=100?2:1)).toFixed(4);
+  $('perAdEarn').textContent=(parseFloat(appSettings.perAdEarning||0.005)*getRewardMultiplier(currentUser.level)).toFixed(4);
   renderAdSection();
   renderStreak();
   renderTeam();
@@ -307,7 +308,7 @@ function renderTasks(){
       <div class="icon"><i class="ph-duotone ph-${ico}"></i></div>
       <div class="info">
         <div class="t">${escapeHtml(t.title)}</div>
-        <div class="m"><i class="ph-duotone ph-currency-dollar"></i>+${(parseFloat(t.reward||0)*(Number(currentUser?.level||1)>=100?2:1)).toFixed(2)} &nbsp;<i class="ph-duotone ph-clock"></i> 10 sn</div>
+        <div class="m"><i class="ph-duotone ph-currency-dollar"></i>+${(parseFloat(t.reward||0)*getRewardMultiplier(currentUser?.level)).toFixed(2)} &nbsp;<i class="ph-duotone ph-clock"></i> 10 sn</div>
       </div>
       ${isDone
         ?'<button class="act done" disabled><i class="ph-duotone ph-check-circle"></i> Tamam</button>'
@@ -744,7 +745,7 @@ async function loadSponsors(force){
 }
 function renderSponsors(){
   const box=$('sponsorList');if(!box)return;
-  const done=currentUser?.sponsorDone||{},rw=parseFloat(appSettings.sponsorReward||0.0025)*(Number(currentUser?.level||1)>=100?2:1);
+  const done=currentUser?.sponsorDone||{},rw=parseFloat(appSettings.sponsorReward||0.0025)*getRewardMultiplier(currentUser?.level);
   $('segSp').textContent=sponsors.filter(x=>!done[hashLink(x.link)]).length;
   if(!sponsors.length){box.innerHTML='<div class="empty" style="padding:16px"><i class="ph-duotone ph-megaphone"></i><div class="et">Şu an sponsorlu görev yok</div></div>';return;}
   box.innerHTML=sponsors.map((s,i)=>`<div class="card sp-card"><div class="task-row">
