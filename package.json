@@ -1,12 +1,17 @@
 {
   "name": "coinixfaucet",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
-  "description": "CoinixFaucet backend and Telegram Mini App frontend",
+  "description": "CoinixFaucet Telegram Mini App",
   "main": "Backend/server.js",
   "scripts": {
     "start": "node Backend/server.js",
     "check": "node --check Backend/server.js"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  }
 }
