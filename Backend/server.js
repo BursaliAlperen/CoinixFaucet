@@ -130,7 +130,7 @@ async function bootstrap(user, referralCode) {
   const userRef = rtdb.ref('users/' + user.id);
   let created = false;
   const result = await userRef.transaction(current => {
-    if (current) return current;
+    if (current) { created = false; return current; }
     created = true;
     return {
       uid: user.id, name: user.name, username: user.username, photoUrl: user.photoUrl,
@@ -144,8 +144,13 @@ async function bootstrap(user, referralCode) {
   if (!result.committed || !result.snapshot.exists()) throw new Error('USER_BOOTSTRAP_FAILED');
   if (created && referralCode && referralCode !== user.id) {
     const referralMarker = rtdb.ref('referralClaims/' + user.id);
-    const claim = await referralMarker.transaction(v => v || { referrer: String(referralCode), at: Date.now() });
-    if (claim.committed && claim.snapshot.val() && claim.snapshot.val().referrer === String(referralCode)) {
+    let claimedNow = false;
+    const claim = await referralMarker.transaction(v => {
+      if (v) { claimedNow = false; return v; }
+      claimedNow = true;
+      return { referrer: String(referralCode), at: Date.now() };
+    });
+    if (claim.committed && claimedNow && claim.snapshot.val() && claim.snapshot.val().referrer === String(referralCode)) {
       const settings = await getSettings();
       const bonus = money(settings.referralBonus == null ? 0.1 : settings.referralBonus);
       if (bonus > 0) {
@@ -169,6 +174,12 @@ async function applyEconomyAction(uid, body) {
   const actionId = String(body.actionId || randomId()).slice(0, 80);
   const userRef = rtdb.ref('users/' + uid);
   const settings = await getSettings();
+  const taskId = String(body.taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
+  const taskSnapshot = action === 'task' && taskId ? await rtdb.ref('tasks/' + taskId).once('value') : null;
+  const taskRecord = taskSnapshot && taskSnapshot.exists() ? taskSnapshot.val() : null;
+  const methodKey = String(body.method || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
+  const methodSnapshot = action === 'withdraw' && methodKey ? await rtdb.ref('withdrawMethods/' + methodKey).once('value') : null;
+  const methodRecord = methodSnapshot && methodSnapshot.exists() ? methodSnapshot.val() : null;
   let credited = 0;
   let logType = action;
   let extra = {};
@@ -186,8 +197,7 @@ async function applyEconomyAction(uid, body) {
       user.lastCardDate = today;
       extra = { cards: count };
     } else if (action === 'task') {
-      const taskId = String(body.taskId || '').slice(0, 100);
-      const task = body.task;
+      const task = taskRecord;
       if (!taskId || !task || task.active === false) { failure = 'TASK_UNAVAILABLE'; return; }
       user.completedTasks = user.completedTasks || {};
       if (user.completedTasks[taskId]) { failure = 'ALREADY_COMPLETED'; return; }
@@ -230,9 +240,8 @@ async function applyEconomyAction(uid, body) {
       extra = { cards: count };
     } else if (action === 'withdraw') {
       const amount = money(body.amount);
-      const methodKey = String(body.method || '').slice(0, 80);
       const account = String(body.account || '').trim().slice(0, 300);
-      const method = body.methodConfig;
+      const method = methodRecord;
       if (!methodKey || !account || !method || method.active === false) { failure = 'INVALID_WITHDRAW_METHOD'; return; }
       if (amount < Number(method.minWithdraw || 5) || (Number(method.maxWithdraw || 0) > 0 && amount > Number(method.maxWithdraw)) || amount > balance) {
         failure = amount > balance ? 'INSUFFICIENT_BALANCE' : 'WITHDRAW_LIMIT';
@@ -270,7 +279,10 @@ async function applyEconomyAction(uid, body) {
       throw new Error('WITHDRAW_SAVE_FAILED');
     }
   }
-  if (action !== 'daily_card') await logTransaction(uid, logType, credited, extra);
+  if (action !== 'daily_card') {
+    try { await logTransaction(uid, logType, credited, extra); }
+    catch (error) { console.error('[transaction-log]', error.message); }
+  }
   return { user: updatedUser, reward: action === 'spin' ? credited : undefined, extra };
 }
 async function callPiarflow(route, payload) {
