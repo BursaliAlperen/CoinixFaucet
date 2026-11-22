@@ -57,23 +57,41 @@ $('settingsForm').addEventListener('submit',async e=>{
   try{await api('/api/admin/settings',values);showNotice('Economy and XP settings saved.');}
   catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
 });
-$('withdrawals').addEventListener('click',async e=>{
+function openWithdrawalModal(id,action,currency){
+  $('withdrawActionId').value=id;
+  $('withdrawAction').value=action;
+  $('withdrawModalTitle').textContent=action==='pay'?'Complete '+currency+' payout':'Reject withdrawal';
+  $('withdrawModalSummary').textContent=action==='pay'?'Enter the actual amount sent and the confirmed blockchain transaction hash.':'The original USD balance will be returned to the user.';
+  $('payoutFields').hidden=action!=='pay';
+  $('rejectFields').hidden=action!=='reject';
+  $('confirmWithdrawAction').textContent=action==='pay'?'Mark as paid':'Reject & refund';
+  $('withdrawModal').hidden=false;
+}
+function closeWithdrawalModal(){$('withdrawModal').hidden=true;}
+$('withdrawals').addEventListener('click',e=>{
   const btn=e.target.closest('[data-withdraw-action]');if(!btn)return;
-  const id=btn.dataset.id,action=btn.dataset.withdrawAction;
+  openWithdrawalModal(btn.dataset.id,btn.dataset.withdrawAction,btn.dataset.currency||'TON');
+});
+$('closeWithdrawModal').addEventListener('click',closeWithdrawalModal);
+$('cancelWithdrawModal').addEventListener('click',closeWithdrawalModal);
+$('withdrawModal').addEventListener('click',e=>{if(e.target.id==='withdrawModal')closeWithdrawalModal();});
+$('withdrawActionForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const id=$('withdrawActionId').value,action=$('withdrawAction').value,btn=$('confirmWithdrawAction');
+  const payload={id,action};
   if(action==='pay'){
-    const payoutAmount=Number(window.prompt('Paid TON/GRAM amount (coin units):',''));
-    if(!Number.isFinite(payoutAmount)||payoutAmount<=0)return;
-    const txHash=String(window.prompt('TON transaction hash:','')||'').trim();
-    if(txHash.length<20){showNotice('A valid transaction hash is required.',true);return;}
-    btn.disabled=true;
-    try{await api('/api/admin/withdrawal',{id,action:'pay',payoutAmount,txHash});showNotice('Withdrawal marked paid.');await loadOverview();}
-    catch(err){showNotice(err.message,true);btn.disabled=false;}
-  }else if(action==='reject'){
-    if(!window.confirm('Reject this withdrawal and refund the USD balance?'))return;
-    btn.disabled=true;
-    try{await api('/api/admin/withdrawal',{id,action:'reject',reason:'Rejected by admin'});showNotice('Withdrawal rejected and balance refunded.');await loadOverview();}
-    catch(err){showNotice(err.message,true);btn.disabled=false;}
-  }
+    payload.payoutAmount=Number($('payoutAmount').value);
+    payload.txHash=$('payoutTxHash').value.trim();
+    if(!Number.isFinite(payload.payoutAmount)||payload.payoutAmount<=0){showNotice('Enter a valid coin amount.',true);return;}
+    if(payload.txHash.length<20){showNotice('A valid transaction hash is required.',true);return;}
+  }else{payload.reason=$('payoutRejectReason').value.trim()||'Rejected by admin';}
+  btn.disabled=true;
+  try{
+    await api('/api/admin/withdrawal',payload);
+    showNotice(action==='pay'?'Withdrawal marked paid.':'Withdrawal rejected and USD balance refunded.');
+    closeWithdrawalModal();$('withdrawActionForm').reset();await loadOverview();
+  }catch(err){showNotice(err.message,true);}
+  finally{btn.disabled=false;}
 });
 $('refreshBtn').addEventListener('click',loadOverview);
 loadOverview();
