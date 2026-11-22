@@ -379,7 +379,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     if(profile.taskCompletionCounts[taskId]>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
     profile.completedTaskClaims[actionId]=Date.now();applyXp(profile,Number(settings.taskXp||20));return profile;
   });
-  if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
+  if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});await taskRef.child('totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
   await claimsRef.child(actionId).update({status:'approved',reward:credited,approvedAt:Date.now(),autoVerified:true});
   await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),taskType:String(task.type||''),claimId:actionId,provider:'coinix_task'});
   return {user:userTx.snapshot.val(),reward:credited,pending:false,taskClaim:{id:actionId,status:'approved'}};
@@ -639,6 +639,7 @@ async function handleAdminApi(user, url, body, res) {
     if(!lock.committed||!locked)return send(res,409,{status:'error',code:'CLAIM_ALREADY_REVIEWED'});
     if(decision==='reject'){
       await claimRef.update({status:'rejected',rejectedAt:Date.now(),reviewedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
+      await rtdb.ref('tasks/'+taskId+'/totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));
       await auditAdmin(user.id,'task_claim_reject',claimId,{taskId,uid});return send(res,200,{status:'ok',claim:{id:claimId,status:'rejected'}});
     }
     const settings=await getSettings();let credited=0,failure='';
