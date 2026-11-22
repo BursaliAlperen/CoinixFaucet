@@ -38,7 +38,7 @@
         <form id="settingsForm">
           <div class="two"><label>Daily check-in XP<input name="dailyCheckinXp" type="number" min="0" max="100000" value="10"></label><label>Referral XP<input name="referralXp" type="number" min="0" max="100000" value="10"></label></div><div class="two"><label>Ad watch XP<input name="adWatchXp" type="number" min="0" max="100000" value="10"></label><label>Task completion XP<input name="taskXp" type="number" min="0" max="100000" value="20"></label></div>
           <div class="two"><label>FlyerHubs task XP<input name="flyerhubsTaskXp" type="number" min="0" max="100000" value="20"></label></div>
-          <div class="two"><label>FlyerHubs task reward<input name="flyerhubsTaskReward" type="number" min="0" step="0.0001" value="0.01"></label><label>Ad reward<input name="perAdEarning" type="number" min="0" step="0.0001" value="0.005"></label></div>
+          <div class="notice">API üzerinden doğrulanan her reklam görevi sabit $0.002 ödüllendirilir. Bu tutar seviye çarpanından etkilenmez.</div>
           <button class="secondary" type="submit">Save economy settings</button>
           <p class="hint">Each level adds 0.02×. Level 1 starts at 1.02× and Level 50 reaches 2.00×. XP and rewards are calculated on the server.</p>
         </form>
@@ -46,7 +46,7 @@
       <article class="panel">
         <div class="panel-head"><div><div class="eyebrow">OPERATIONS</div><h2>Pending withdrawals</h2></div><span class="pill amber" id="pendingCount">0 PENDING</span></div>
         <div id="withdrawals" class="list"><div class="empty">Loading…</div></div>
-        <p class="hint">This queue is read-only until a real payout and approval workflow is configured.</p>
+        <p class="hint">Only TON and GRAM withdrawals are accepted. Verify the wallet and transaction before marking a request paid.</p>
       </article>
     </section>
     <section class="panel promo-history"><div class="panel-head"><div><div class="eyebrow">CAMPAIGN LOG</div><h2>Recent promotions</h2></div></div><div id="promotions" class="list"><div class="empty">Loading…</div></div></section>
