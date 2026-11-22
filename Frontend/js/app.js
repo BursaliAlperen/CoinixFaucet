@@ -703,7 +703,7 @@ async function boot(){
   await init();
   clearTimeout(wd);
 }
-function failScreen(m){const l=$('loader');l.style.display='flex';l.innerHTML=`<div style="padding:30px;text-align:center"><div style="font-size:44px">🧸</div><h2 style="margin:10px 0">Bir dakika!</h2><p style="opacity:.85;margin-bottom:16px">${m}</p><button onclick="location.reload()" style="background:#fff;color:#9862ad;padding:12px 22px;border-radius:12px;font-weight:800">Yenile</button></div>;}
+function failScreen(m){const l=$('loader');l.style.display='flex';l.innerHTML=`<div style="padding:30px;text-align:center"><div style="font-size:44px">🧸</div><h2 style="margin:10px 0">Bir dakika!</h2><p style="opacity:.85;margin-bottom:16px">${escapeHtml(m)}</p><button onclick="location.reload()" style="background:#fff;color:#9862ad;padding:12px 22px;border-radius:12px;font-weight:800">Yenile</button></div>`;}
 /* ===== SPONSORLU GÖREVLER (PiarFlow) — API anahtarı sunucuda (proxy) durur ===== */
 const SPONSOR_API_URL='/api'; // veya Firebase: settings/sponsorApiUrl
 let sponsors=[],_spT=0;
