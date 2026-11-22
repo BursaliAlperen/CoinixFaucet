@@ -57,6 +57,7 @@
     root.querySelectorAll?.('i[class*="ph-"]').forEach(paint);
   }
   function paint(el){
+    if(!el.matches?.('i[class*="ph-"]'))return;
     const cls=[...el.classList].find(x=>x.startsWith('ph-')&&!['ph-duotone','ph-bold','ph-fill','ph-light','ph-thin'].includes(x));
     const raw=(cls||'ph-info').replace(/^ph-/,'');
     const key=alias[raw]||'help';
