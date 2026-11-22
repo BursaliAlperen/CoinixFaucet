@@ -1,16 +1,7 @@
 
 /* ============ FIREBASE CONFIG ============ */
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAB9vbJ1w4eZAg92IFMVJ-rYoj_GAawS7A",
-  authDomain: "earnbd-6e3f7.firebaseapp.com",
-  databaseURL: "https://earnbd-6e3f7-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "earnbd-6e3f7",
-  storageBucket: "earnbd-6e3f7.firebasestorage.app",
-  messagingSenderId: "130086600683",
-  appId: "1:130086600683:web:e5e5d038f98f8e4335a3ae",
-  measurementId: "G-371LS9CM8N"
-};
+let firebaseConfig = null;
 let db,fs;
 
 /* ============ STATE ============ */
@@ -728,6 +719,12 @@ async function boot(){
   const wd=setTimeout(()=>{if($('loader').style.display!=='none')failScreen('Sunucuya ulaşılamıyor. İnternet/VPN ve Firebase kurallarını kontrol edin.')},20000);
   await withTO(loadScript('https://telegram.org/js/telegram-web-app.js').catch(()=>{}),3500);
   if(!(await withTO(loadFirebase(),12000,false))){clearTimeout(wd);failScreen('Firebase yüklenemedi. İnternet/VPN bağlantınızı kontrol edin.');return;}
+  try{
+    const configResponse=await fetch('/public-config/firebase',{cache:'no-store'});
+    const configData=await configResponse.json().catch(()=>({}));
+    if(!configResponse.ok)throw new Error(configData.code||'FIREBASE_WEB_CONFIG_MISSING');
+    firebaseConfig=configData;
+  }catch(error){clearTimeout(wd);failScreen('Firebase web yapılandırması eksik: '+escapeHtml(error.message));return;}
   firebase.initializeApp(firebaseConfig);db=firebase.database();fs=firebase.firestore();init();
 }
 
