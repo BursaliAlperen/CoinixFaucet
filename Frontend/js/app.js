@@ -7,7 +7,7 @@ class LiveRef{constructor(path,filters={}){this.path=path;this.filters=filters;t
 
 /* ============ STATE ============ */
 let TGUser = null, currentUser = null, appSettings = {}, withdrawMethods = [], selectedMethod = null;
-let tasks = [], flyerTasks = [], notifications = [], globalNotifications = [], userNotifications = [], unreadCount = 0, currentTaskFilter='all', currentTxFilter='all';
+let tasks = [], flyerTasks = [], skippedTaskIds = new Set(), notifications = [], globalNotifications = [], userNotifications = [], unreadCount = 0, currentTaskFilter='all', currentTxFilter='all';
 let transactionsCache = [];
 let _dailyCardDone = false; // guard: run distributeDailyCard only once per session
 
@@ -311,7 +311,7 @@ function renderTasks(){
     const available=t.source==='flyerhubs'?t.active!==false:
       t.active!==false&&['telegram','channel','group','link','manual'].includes(type)&&
       (!Number(t.startAt||0)||Number(t.startAt)<=now)&&(!Number(t.endAt||0)||Number(t.endAt)>=now);
-    return available&&(filter==='all'||type===filter);
+    return available&&!skippedTaskIds.has(String(t.id))&&(filter==='all'||type===filter);
   });
   if(!filtered.length){
     $('taskList').innerHTML='<div class="empty"><i class="ph-duotone ph-list-checks"></i><div class="et">Şu anda aktif görev yok</div></div>';
@@ -328,7 +328,7 @@ function renderTasks(){
     const status=isDone?'Tamamlandı':isPending?'İncelemede':(['link','manual'].includes(type)?'Kanıt gerekli':'Üyelik doğrulaması');
     const action=isDone?'<button class="act done" disabled>Tamamlandı</button>':
       isPending?'<button class="act done" disabled>İncelemede</button>':
-      '<button class="act task-start" data-id="'+escapeHtml(t.id)+'">Başla</button>';
+      '<div class="task-actions"><button class="act task-start" data-id="'+escapeHtml(t.id)+'">Başla</button><button class="act task-skip" data-skip-id="'+escapeHtml(t.id)+'">Atla</button></div>';
     return '<div class="card" style="margin-top:8px"><div class="task-row">'+
       '<div class="icon"><i class="ph-duotone ph-'+icon+'"></i></div>'+
       '<div class="info"><div class="t">'+escapeHtml(t.title||'Görev')+'</div>'+
@@ -337,6 +337,7 @@ function renderTasks(){
   });
   $('taskList').innerHTML='<div class="stagger">'+cards.join('')+'</div>';
 }
+document.addEventListener('click',e=>{const skip=e.target.closest('.task-skip');if(!skip)return;skippedTaskIds.add(String(skip.dataset.skipId));renderTasks();showToast('Görev atlandı. İstediğinde yeniden açabilirsin.','info');});
 function startTask(id){
   const t=[...tasks,...flyerTasks].find(x=>x.id===id);if(!t)return;
   const taskUrl=String(t.url||'');
