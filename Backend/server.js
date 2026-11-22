@@ -333,6 +333,14 @@ async function bootstrap(user, referralCode) {
   }
   return result.snapshot.val();
 }
+async function releaseTaskSlot(taskRef) {
+  await taskRef.transaction(task=>{
+    if(!task)return;
+    task.totalParticipants=Math.max(0,Number(task.totalParticipants||0)-1);
+    if(task.status==='completed'&&task.completionReason==='limit_reached'&&(!Number(task.totalLimit||0)||task.totalParticipants<Number(task.totalLimit))){task.status='active';task.active=true;delete task.completionReason;}
+    return task;
+  });
+}
 async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
   if (!isTaskOpen(task)) throw new Error('TASK_UNAVAILABLE');
   const method=String(task.verificationMethod||( ['channel','group','telegram'].includes(String(task.type))?'telegram_membership':'manual'));
@@ -360,7 +368,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     created=true;return claims;
   });
   if(!claimTx.committed||!created){
-    if(!duplicate)await taskRef.child('totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));
+    if(!duplicate)await releaseTaskSlot(taskRef);
     if(perUserLimit)throw new Error('TASK_USER_LIMIT');
     if(duplicate){const u=await rtdb.ref('users/'+uid).once('value');return {user:u.val(),pending:!automatic,duplicate:true};}
     throw new Error('TASK_CLAIM_FAILED');
