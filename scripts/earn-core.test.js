@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const {activeReferralBonusTotal,rewardMultiplier,isTelegramMember,isTaskOpen,cleanTaskInput}=require('../Backend/earn-core');
+const {activeReferralBonusTotal,rewardMultiplier,isTelegramMember,isTaskOpen,cleanTaskInput,isValidReferral,FixedWindowLimiter,isNewExternalEvent,isTraffyApiReady,classifyProviderError}=require('../Backend/earn-core');
 const now=Date.now();
 const u={level:10,referralBonuses:{
   live:{startsAt:now-1000,endsAt:now+10000,multiplierBonus:0.02},
@@ -21,4 +21,22 @@ assert.equal(isTaskOpen({status:'active',totalLimit:1,totalParticipants:1},now),
 const task=cleanTaskInput({title:'Join',description:'Join channel',type:'channel',verificationMethod:'telegram_membership',url:'https://t.me/examplechannel',chatId:'@examplechannel',reward:0.002,startAt:new Date(now).toISOString(),totalLimit:100,perUserLimit:1},now);
 assert.equal(task.reward,0.002);
 assert.throws(()=>cleanTaskInput({title:'x',description:'x',type:'link',verificationMethod:'telegram_membership',url:'https://example.com',reward:1},now));
-console.log('earn-core tests: 13 assertions passed');
+console.log('earn-core tests: referral, task, bonus expiry, Traffy limiter and idempotency assertions passed');
+
+assert.equal(isValidReferral('123456','654321',false),true);
+assert.equal(isValidReferral('123456','123456',false),false);
+assert.equal(isValidReferral('abc','654321',false),false);
+assert.equal(isValidReferral('123456','654321',true),false);
+const limiter=new FixedWindowLimiter(300,60000);
+for(let i=0;i<300;i++)assert.equal(limiter.take(1000),true);
+assert.equal(limiter.take(1000),false);
+assert.equal(limiter.take(61000),true);
+assert.equal(isNewExternalEvent('evt_1',{}),true);
+assert.equal(isNewExternalEvent('evt_1',{evt_1:true}),false);
+assert.equal(isNewExternalEvent('',{}),false);
+assert.equal(isTraffyApiReady('secret',false),false);
+assert.equal(isTraffyApiReady('secret',true),true);
+assert.equal(isTraffyApiReady('',true),false);
+assert.equal(classifyProviderError(429),'RATE_LIMITED');
+assert.equal(classifyProviderError(503),'TEMPORARY_UPSTREAM_ERROR');
+assert.equal(classifyProviderError(401),'PROVIDER_REJECTED');
