@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Coinix Admin</title>
+<title>Coinix Yönetim Paneli</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/admin.css">
@@ -13,44 +13,107 @@
 <div class="shell">
   <header class="top"><a href="/" class="brand">COINIX <span>CONTROL</span></a><div class="top-right"><span id="adminStatus" class="status">AUTHENTICATING</span><button id="refreshBtn" class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></svg></button></div></header>
   <main>
-    <section class="hero"><div><div class="eyebrow">CONTROL CENTER / V2</div><h1>Admin Dashboard</h1><p>Economy, promotions and platform health.</p></div><div class="hero-mark">C</div></section>
+    <section class="hero"><div><div class="eyebrow">YÖNETİM MERKEZİ / AAA</div><h1>Yönetim Paneli</h1><p>Görevler, davetler, reklam sağlayıcıları ve günlük performans.</p></div><div class="hero-mark">C</div></section>
     <div id="notice" class="notice" hidden></div>
     <section class="stats" id="stats">
-      <article class="stat"><span>Total users</span><strong id="statUsers">—</strong><small>Registered accounts</small></article>
-      <article class="stat"><span>Total balance</span><strong id="statBalance">—</strong><small>Outstanding user balance</small></article>
-      <article class="stat"><span>Total earned</span><strong id="statEarned">—</strong><small>Lifetime credited rewards</small></article>
-      <article class="stat"><span>Level 50</span><strong id="statMax">—</strong><small>Max-level players</small></article>
+      <article class="stat"><span>Toplam kullanıcı</span><strong id="statUsers">—</strong><small>Kayıtlı hesaplar</small></article>
+      <article class="stat"><span>Toplam bakiye</span><strong id="statBalance">—</strong><small>Kullanıcıların mevcut bakiyesi</small></article>
+      <article class="stat"><span>Toplam kazanç</span><strong id="statEarned">—</strong><small>Dağıtılan toplam ödül</small></article>
+      <article class="stat"><span>50. seviye</span><strong id="statMax">—</strong><small>Maksimum seviyedeki kullanıcılar</small></article>
     </section>
     <section class="grid">
       <article class="panel">
-        <div class="panel-head"><div><div class="eyebrow">CHANNEL AUTOMATION</div><h2>Create promotion</h2></div><span class="pill">AUTO PUBLISH</span></div>
+        <div class="panel-head"><div><div class="eyebrow">KANAL YÖNETİMİ</div><h2>Duyuru oluştur</h2></div><span class="pill">OTOMATİK YAYIN</span></div>
         <form id="promoForm">
-          <label>Promotion title<input name="title" maxlength="80" required placeholder="Campaign headline"></label>
-          <label>Message<textarea name="message" maxlength="1800" required rows="4" placeholder="Write the promotion details..."></textarea></label>
-          <div class="two"><label>Button text<input name="buttonText" maxlength="32" placeholder="Open offer"></label><label>Button URL<input name="buttonUrl" type="url" placeholder="https://..."></label></div>
-          <button class="primary" type="submit">Publish promotion to channel <span>↗</span></button>
-          <p class="hint">Saving a promotion automatically posts it to the configured Telegram announcement channel.</p>
+          <label>Duyuru başlığı<input name="title" maxlength="80" required placeholder="Duyuru başlığı"></label>
+          <label>Mesaj<textarea name="message" maxlength="1800" required rows="4" placeholder="Duyuru metnini yaz..."></textarea></label>
+          <div class="two"><label>Buton metni<input name="buttonText" maxlength="32" placeholder="Teklifi aç"></label><label>Buton bağlantısı<input name="buttonUrl" type="url" placeholder="https://..."></label></div>
+          <button class="primary" type="submit">Kanala duyuruyu gönder <span>↗</span></button>
+          <p class="hint">Duyuru kaydedildiğinde ayarlı Telegram kanalında yayımlanır.</p>
         </form>
       </article>
       
       <article class="panel">
-        <div class="panel-head"><div><div class="eyebrow">PROGRESSION CONTROL</div><h2>Economy & XP</h2></div><span class="pill purple">LEVEL 1—50</span></div>
+        <div class="panel-head"><div><div class="eyebrow">EKONOMİ AYARLARI</div><h2>Ekonomi ve XP</h2></div><span class="pill purple">LEVEL 1—50</span></div>
         <form id="settingsForm">
-          <div class="two"><label>Daily check-in XP<input name="dailyCheckinXp" type="number" min="0" max="100000" value="10"></label><label>Referral XP<input name="referralXp" type="number" min="0" max="100000" value="10"></label></div><div class="two"><label>Ad watch XP<input name="adWatchXp" type="number" min="0" max="100000" value="10"></label><label>Task completion XP<input name="taskXp" type="number" min="0" max="100000" value="20"></label></div>
+          <div class="two"><label>Günlük yoklama XP<input name="dailyCheckinXp" type="number" min="0" max="100000" value="10"></label><label>Davet XP<input name="referralXp" type="number" min="0" max="100000" value="10"></label></div><div class="two"><label>Reklam görevi XP<input name="adWatchXp" type="number" min="0" max="100000" value="10"></label><label>Görev tamamlama XP<input name="taskXp" type="number" min="0" max="100000" value="20"></label></div>
           <div class="two"><label>FlyerHubs task XP<input name="flyerhubsTaskXp" type="number" min="0" max="100000" value="20"></label></div>
           <div class="notice">API üzerinden doğrulanan her reklam görevi sabit $0.002 ödüllendirilir. Bu tutar seviye çarpanından etkilenmez.</div>
-          <button class="secondary" type="submit">Save economy settings</button>
-          <p class="hint">Each level adds 0.02×. Level 1 starts at 1.02× and Level 50 reaches 2.00×. XP and rewards are calculated on the server.</p>
+          <button class="secondary" type="submit">Ekonomi ayarlarını kaydet</button>
+          <p class="hint">Seviye başına +0.02x eklenir. Davet bonusu buna ek olarak 24 saat +0.02x verir. Ödül hesabı sunucuda yapılır.</p>
         </form>
       </article>
       <article class="panel">
-        <div class="panel-head"><div><div class="eyebrow">OPERATIONS</div><h2>Pending withdrawals</h2></div><span class="pill amber" id="pendingCount">0 PENDING</span></div>
+        <div class="panel-head"><div><div class="eyebrow">ÖDEME İŞLEMLERİ</div><h2>Bekleyen çekimler</h2></div><span class="pill amber" id="pendingCount">0 PENDING</span></div>
         <div id="withdrawals" class="list"><div class="empty">Loading…</div></div>
-        <p class="hint">Only TON and GRAM withdrawals are accepted. Verify the wallet and transaction before marking a request paid.</p>
+        <p class="hint">Yalnızca TON ve GRAM çekimleri kabul edilir. Ödemeyi işaretlemeden önce cüzdanı ve işlem kaydını doğrula.</p>
       </article>
     </section>
-    <section class="panel promo-history"><div class="panel-head"><div><div class="eyebrow">CAMPAIGN LOG</div><h2>Recent promotions</h2></div></div><div id="promotions" class="list"><div class="empty">Loading…</div></div></section>
-    <footer>COINIX FAUCET · ADMIN CONTROL · SECURE TELEGRAM SESSION</footer>
+    <section class="grid admin-workspace">
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">GÖREV YÖNETİMİ</div><h2>Telegram görevi oluştur</h2></div><span class="pill purple">TASKS</span></div>
+        <form id="taskForm">
+          <label>Görev başlığı<input name="title" maxlength="100" required placeholder="Kanalımıza katıl"></label>
+          <label>Açıklama<textarea name="description" maxlength="1000" rows="2" required placeholder="Görev koşullarını açıkla"></textarea></label>
+          <div class="two">
+            <label>Görev türü<select name="type"><option value="channel">Kanal üyeliği</option><option value="group">Grup üyeliği</option><option value="link">Bağlantı / kanıt</option><option value="manual">Manuel inceleme</option></select></label>
+            <label>Doğrulama<select name="verificationMethod"><option value="telegram_membership">Telegram üyeliği</option><option value="manual">Yönetici incelemesi</option></select></label>
+          </div>
+          <label>Hedef bağlantı<input name="url" type="url" required placeholder="https://t.me/kanal"></label>
+          <label>Kanal / grup kimliği (örn. @kanal veya -100... )<input name="chatId" maxlength="120" placeholder="@kanal"></label>
+          <div class="two">
+            <label>Ödül (USD)<input name="reward" type="number" min="0.0001" step="0.0001" required value="0.002"></label>
+            <label>Toplam katılım sınırı<input name="totalLimit" type="number" min="0" max="10000000" value="0"></label>
+          </div>
+          <div class="two">
+            <label>Kullanıcı başına katılım<input name="perUserLimit" type="number" min="1" max="10" value="1"></label>
+            <label>Durum<select name="status"><option value="draft">Taslak</option><option value="active">Aktif</option><option value="paused">Duraklatılmış</option></select></label>
+          </div>
+          <div class="two">
+            <label>Başlangıç<input name="startAt" type="datetime-local"></label>
+            <label>Bitiş<input name="endAt" type="datetime-local"></label>
+          </div>
+          <button class="primary" type="submit">Görevi kaydet</button>
+        </form>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">YAYINDAKİ GÖREVLER</div><h2>Görev listesi</h2></div><button class="secondary" id="refreshTasksBtn" type="button">Yenile</button></div>
+        <div id="taskAdminList" class="list"><div class="empty">Görevler yükleniyor…</div></div>
+      </article>
+    </section>
+    <section class="grid admin-workspace">
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">KANIT İNCELEME</div><h2>Manuel onay kuyruğu</h2></div><span class="pill amber" id="claimCount">0 BEKLİYOR</span></div>
+        <div id="taskClaims" class="list"><div class="empty">İnceleme kuyruğu yükleniyor…</div></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><div><div class="eyebrow">REKLAM SAĞLAYICILARI</div><h2>Monetizasyon durumu</h2></div><span class="pill">API</span></div>
+        <div id="providerStatus" class="list"><div class="empty">Sağlayıcılar kontrol ediliyor…</div></div>
+        <p class="hint">Traffy seçeneği hazırlandı. Resmî API sözleşmesi doğrulanmadan API isteği veya ödül kredisi etkinleştirilmez. Piarflow ve FlyerHubs mevcut entegrasyonlardır.</p>
+      </article>
+    </section>
+    <section class="panel analytics-panel">
+      <div class="panel-head"><div><div class="eyebrow">GERÇEK VERİ ANALİZİ</div><h2>Günlük istatistikler</h2></div><div class="analytics-tools">
+        <select id="analyticsDays"><option value="7">Son 7 gün</option><option value="30" selected>Son 30 gün</option></select>
+        <select id="analyticsProvider"><option value="all">Tüm sağlayıcılar</option><option value="piarflow">Piarflow</option><option value="flyerhubs">FlyerHubs</option><option value="traffy">Traffy</option></select>
+        <select id="analyticsTaskType"><option value="all">Tüm görev türleri</option><option value="channel">Kanal</option><option value="group">Grup</option><option value="link">Bağlantı</option><option value="manual">Manuel</option></select>
+        <input id="analyticsUserId" inputmode="numeric" placeholder="Telegram kullanıcı ID">
+        <button type="button" class="secondary" id="analyticsApply">Uygula</button>
+        <button type="button" class="secondary" id="analyticsCsv">CSV dışa aktar</button>
+      </div></div>
+      <div class="stats analytics-stats">
+        <article class="stat"><span>Yeni kullanıcı</span><strong id="aNewUsers">0</strong></article>
+        <article class="stat"><span>Aktif kullanıcı</span><strong id="aActiveUsers">0</strong></article>
+        <article class="stat"><span>Davet</span><strong id="aReferrals">0</strong></article>
+        <article class="stat"><span>Görev tamamlaması</span><strong id="aTasks">0</strong></article>
+        <article class="stat"><span>Reklam kayıtları</span><strong id="aAds">0</strong></article>
+        <article class="stat"><span>Dağıtılan ödül</span><strong id="aRewards">$0</strong></article>
+      </div>
+      <div id="analyticsChart" class="analytics-chart"></div>
+      <div class="table-wrap"><table class="daily-table"><thead><tr><th>Gün</th><th>Yeni</th><th>Aktif</th><th>Davet</th><th>Görev</th><th>Reklam</th><th>Ödül</th></tr></thead><tbody id="analyticsRows"><tr><td colspan="7">Veri bekleniyor…</td></tr></tbody></table></div>
+    </section>
+    <section class="panel promo-history"><div class="panel-head"><div><div class="eyebrow">DUYURU GEÇMİŞİ</div><h2>Son duyurular</h2></div></div><div id="promotions" class="list"><div class="empty">Loading…</div></div></section>
+    <footer>COINIX FAUCET · YÖNETİM PANELİ · GÜVENLİ TELEGRAM OTURUMU</footer>
   </main>
 </div>
   <div class="modal" id="withdrawModal" hidden>
