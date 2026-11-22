@@ -44,7 +44,9 @@ function send(res, status, data) {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
     'x-content-type-options': 'nosniff',
-    'referrer-policy': 'no-referrer'
+    'referrer-policy': 'no-referrer',
+    'x-frame-options': 'DENY',
+    'permissions-policy': 'camera=(), microphone=(), geolocation=()'
   });
   res.end(JSON.stringify(data));
 }
@@ -95,7 +97,8 @@ function verifyTelegramInitData(initData) {
 }
 function allowedOrigin(req) {
   if (!APP_ORIGIN) return !req.headers.origin;
-  return !req.headers.origin || req.headers.origin === APP_ORIGIN;
+  // When configured, browser API requests must carry the exact app origin.
+  return req.headers.origin === APP_ORIGIN;
 }
 function limited(key) {
   const now = Date.now();
@@ -127,6 +130,11 @@ async function getSettings() {
   return snap.val() || {};
 }
 async function bootstrap(user, referralCode) {
+  let validReferralCode = '';
+  if (referralCode && referralCode !== user.id && /^\\d{1,20}$/.test(String(referralCode))) {
+    const referrer = await rtdb.ref('users/' + String(referralCode)).once('value');
+    if (referrer.exists() && !referrer.val()?.banned) validReferralCode = String(referralCode);
+  }
   const userRef = rtdb.ref('users/' + user.id);
   let created = false;
   const result = await userRef.transaction(current => {
@@ -135,26 +143,26 @@ async function bootstrap(user, referralCode) {
     return {
       uid: user.id, name: user.name, username: user.username, photoUrl: user.photoUrl,
       balance: 0, totalEarned: 0, totalWithdrawn: 0, referralEarned: 0, referralCount: 0,
-      referredBy: referralCode && referralCode !== user.id ? String(referralCode).slice(0, 32) : null,
+      referredBy: validReferralCode || null,
       todayAds: 0, lastAdDate: '', checkInStreak: 0, lastCheckIn: '',
       lastCardDate: '', spinCards: 0, completedTasks: {}, sponsorDone: {}, banned: false,
       createdAt: Date.now(), processedActions: {}
     };
   });
   if (!result.committed || !result.snapshot.exists()) throw new Error('USER_BOOTSTRAP_FAILED');
-  if (created && referralCode && referralCode !== user.id) {
+  if (created && validReferralCode) {
     const referralMarker = rtdb.ref('referralClaims/' + user.id);
     let claimedNow = false;
     const claim = await referralMarker.transaction(v => {
       if (v) { claimedNow = false; return v; }
       claimedNow = true;
-      return { referrer: String(referralCode), at: Date.now() };
+      return { referrer: validReferralCode, at: Date.now() };
     });
-    if (claim.committed && claimedNow && claim.snapshot.val() && claim.snapshot.val().referrer === String(referralCode)) {
+    if (claim.committed && claimedNow && claim.snapshot.val() && claim.snapshot.val().referrer === validReferralCode) {
       const settings = await getSettings();
       const bonus = money(settings.referralBonus == null ? 0.1 : settings.referralBonus);
       if (bonus > 0) {
-        const ref = rtdb.ref('users/' + String(referralCode));
+        const ref = rtdb.ref('users/' + validReferralCode);
         const refResult = await ref.transaction(u => {
           if (!u || u.banned) return;
           u.referralCount = Number(u.referralCount || 0) + 1;
@@ -163,7 +171,7 @@ async function bootstrap(user, referralCode) {
           u.totalEarned = money(Number(u.totalEarned || 0) + bonus);
           return u;
         });
-        if (refResult.committed) await logTransaction(String(referralCode), 'referral', bonus, { referredUserId: user.id });
+        if (refResult.committed) await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id });
       }
     }
   }
