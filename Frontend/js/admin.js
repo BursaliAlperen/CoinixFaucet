@@ -20,7 +20,7 @@ async function loadOverview(){
     $('statUsers').textContent=fmt(d.stats.users);
     $('statBalance').textContent='$'+fmt(d.stats.totalBalance);
     $('statEarned').textContent='$'+fmt(d.stats.totalEarned);
-    $('statMax').textContent=fmt(d.stats.level100);
+    $('statMax').textContent=fmt(d.stats.level50);
     $('pendingCount').textContent=fmt(d.stats.pendingWithdrawals)+' PENDING';
     const settings=d.settings||{};
     for(const [key,value] of Object.entries(settings)){const field=$('settingsForm').elements.namedItem(key);if(field&&value!==undefined)field.value=value;}
