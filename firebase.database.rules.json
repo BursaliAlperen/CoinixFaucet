@@ -1,0 +1,15 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": { ".read": "auth != null && auth.uid === $uid", ".write": false }
+    },
+    "tasks": { ".read": "auth != null", ".write": false },
+    "settings": { ".read": "auth != null", ".write": false },
+    "withdrawMethods": { ".read": "auth != null", ".write": false },
+    "notifications": { ".read": "auth != null", ".write": false },
+    "withdrawals": { ".read": "auth != null && query.orderByChild === 'userId' && query.equalTo === auth.uid", ".write": false },
+    "referralClaims": { ".read": false, ".write": false }
+  }
+}
