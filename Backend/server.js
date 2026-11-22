@@ -705,14 +705,20 @@ async function handleApi(req, res, url) {
           profile.sponsorDone = profile.sponsorDone || {};
           if (profile.sponsorDone[key]) return profile;
           profile.sponsorDone[key] = Date.now();
-          profile.balance = money(Number(profile.balance || 0) + reward);
-          profile.totalEarned = money(Number(profile.totalEarned || 0) + reward);
+          const multiplier = rewardMultiplier(profile);
+          const finalReward = money(reward * multiplier);
+          profile.balance = money(Number(profile.balance || 0) + finalReward);
+          profile.totalEarned = money(Number(profile.totalEarned || 0) + finalReward);
+          const sponsorXp = applyXp(profile, Number((await getSettings()).sponsorTaskXp || (await getSettings()).taskXp || 20));
+          data.xp = sponsorXp;
+          data.multiplier = multiplier;
+          data.reward = finalReward;
           credited = true;
           return profile;
         });
-        if (tx.committed && credited) await logTransaction(user.id, 'sponsor', reward, { sponsorHash: key });
+        if (tx.committed && credited) await logTransaction(user.id, 'sponsor', Number(data.reward || reward), { sponsorHash: key, xp: data.xp, multiplier: data.multiplier });
         data.rewarded = Boolean(tx.committed && credited);
-        data.reward = data.rewarded ? reward : 0;
+        data.reward = data.rewarded ? Number(data.reward || reward) : 0;
       }
       return send(res, 200, data);
     }
