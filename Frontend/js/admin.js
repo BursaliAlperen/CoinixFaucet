@@ -83,7 +83,7 @@ function exportAnalyticsCsv(){
   const csv=[columns.join(','),...rows.map(row=>columns.map(key=>'"'+String(row[key]??'').replace(/"/g,'""')+'"').join(','))].join(String.fromCharCode(10));
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob),anchor=document.createElement('a');
-  anchor.href=url;anchor.download='coinix-gunluk-istatistik.csv';anchor.click();URL.revokeObjectURL(url);
+  anchor.href=url;anchor.download='teddygrow-daily-statistics.csv';anchor.click();URL.revokeObjectURL(url);
 }
 async function loadAudit(){
   const data=await api('/api/admin/audit'),items=data.items||[];
