@@ -231,8 +231,8 @@ async function bootstrap(user, referralCode) {
         });
         if (refResult.committed) {
           await logTransaction(validReferralCode, 'referral', bonus, { referredUserId: user.id, xp: Number(settings.referralXp || 10) });
-          await rtdb.ref('users/' + validReferralCode + '/notifications').push({title:'New referral',body:user.name + ' joined using your invitation. Your referral reward was credited.',timestamp:Date.now(),type:'referral'});
-          try { await sendTelegramMessage(validReferralCode, '🎉 Yeni referansın katıldı: ' + user.name + '. Bonusun hesabına eklendi.'); }
+          await rtdb.ref('users/' + validReferralCode + '/notifications').push({title:'New referral',body:user.name + ' joined using your invitation. Your reward and ' + Number(settings.referralXp || 10) + ' XP were credited.',timestamp:Date.now(),type:'referral'});
+          try { await sendTelegramMessage(validReferralCode, '🎉 Yeni referansın katıldı: ' + user.name + '. Bonusun ve ' + Number(settings.referralXp || 10) + ' XP hesabına eklendi.'); }
           catch (error) { console.warn('[referral-notification]', error.message); }
         }
       }
