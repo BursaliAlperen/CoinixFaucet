@@ -556,6 +556,25 @@ async function completeFlyerTask(uid, signature, settings) {
   await taskRef.remove();
   return { completed: true, duplicate: false, reward: credited, xp, multiplier };
 }
+async function verifyBotAdminInChat(chatId, url = '') {
+  if (!BOT_TOKEN) return false;
+  let target = String(chatId || '').trim();
+  if (!target) {
+    const match = String(url || '').match(/^https:\/\/t\.me\/([A-Za-z0-9_]{5,})(?:[/?#]|$)/i);
+    if (match) target = '@' + match[1];
+  }
+  if (!target) return false;
+  try {
+    const meResponse = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/getMe', { signal: AbortSignal.timeout(8000) });
+    const meData = await meResponse.json().catch(() => ({}));
+    if (!meResponse.ok || !meData.ok || !meData.result?.id) return false;
+    const memberUrl = 'https://api.telegram.org/bot' + BOT_TOKEN + '/getChatMember?chat_id=' +
+      encodeURIComponent(target) + '&user_id=' + encodeURIComponent(String(meData.result.id));
+    const memberResponse = await fetch(memberUrl, { signal: AbortSignal.timeout(8000) });
+    const memberData = await memberResponse.json().catch(() => ({}));
+    return Boolean(memberResponse.ok && memberData.ok && ['creator','administrator'].includes(memberData.result?.status));
+  } catch { return false; }
+}
 async function verifyTelegramTask(uid, task) {
   if (!BOT_TOKEN || !task || task.active === false) return false;
   const type = String(task.type || '').toLowerCase();
@@ -625,6 +644,7 @@ async function handleAdminApi(user, url, body, res) {
       let fields;try{fields=cleanTaskInput({...existing,...body});}catch(error){return send(res,400,{status:'error',code:error.message});}
       const status=String(body.status||existing.status||'active');
       if(!['draft','active','paused','completed'].includes(status))return send(res,400,{status:'error',code:'INVALID_TASK_STATUS'});
+      if(status==='active'&&['channel','group'].includes(fields.type)&&!(await verifyBotAdminInChat(fields.chatId,fields.url)))return send(res,400,{status:'error',code:'BOT_ADMIN_REQUIRED',message:'Kampanyayı yayınlamak için TeddyGrow botunu hedef kanal/gruba yönetici olarak eklemelisin.'});
       const record={...existing,...fields,status,active:status==='active',totalParticipants:Number(existing.totalParticipants||0),
         createdAt:Number(existing.createdAt||Date.now()),updatedAt:Date.now(),createdBy:existing.createdBy||user.id,updatedBy:user.id};
       const ref=action==='create'?rtdb.ref('tasks').push():rtdb.ref('tasks/'+id);
