@@ -26,7 +26,7 @@ const required = [
 ];
 for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle), 'Missing: '+label);
 assert.ok(!backend.includes("command==='/botmessages'")&&!backend.includes("command==='/yeni'"),'Removed Telegram commands must stay removed');
-assert.ok(!backend.includes("/api/admin/botmessages")&&!adminHtml.includes('messageForm')&&!adminJs.includes('messageForm'),'Removed bot-message feature must stay removed');
+assert.ok(!backend.includes("/api/admin/botmessages")&&!adminHtml.includes('messageForm')&&!admin.includes('messageForm'),'Removed bot-message feature must stay removed');
 assert.ok(backend.includes("return Math.round((1 + level * 0.02) * 100) / 100;"),'Server level multiplier formula missing');
 assert.ok(backend.includes("Number(settings.dailyCheckinXp || 10)"),'Daily check-in XP default missing');
 assert.ok(backend.includes("Number(settings.adWatchXp || 10)"),'Verified ad XP default missing');
