@@ -555,6 +555,10 @@ async function callPiarflow(route, payload) {
 async function handleAdminApi(user, url, body, res) {
   if (!isAdmin(user.id)) return send(res, 403, { status:'error', code:'ADMIN_REQUIRED' });
   if (url.pathname === '/api/admin/bot-control') {
+    if(body.action==='status'){
+      const snap=await rtdb.ref('botControl/enabled').once('value');
+      return send(res,200,{status:'ok',enabled:!snap.exists()||snap.val()!==false});
+    }
     const enabled=body.enabled===true;
     await rtdb.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:user.id});
     await auditAdmin(user.id,enabled?'bot_start':'bot_stop','botControl',{enabled});
@@ -740,7 +744,11 @@ async function handleAdminApi(user, url, body, res) {
   if (url.pathname === '/api/admin/settings') {
     const allowed=['flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','referralXp','dailyLimit','referralMultiplierBonus','referralBonusDurationHours'];
     const patch={};
-    for(const key of allowed) if(body[key]!==undefined){const value=Number(body[key]);if(!Number.isFinite(value)||value<0||value>100000)return send(res,400,{status:'error',code:'INVALID_SETTING_'+key});patch[key]=value;}
+    for(const key of allowed) if(body[key]!==undefined){
+      const value=Number(body[key]),max=key==='referralMultiplierBonus'?0.25:key==='referralBonusDurationHours'?168:100000,min=key==='referralBonusDurationHours'?1:0;
+      if(!Number.isFinite(value)||value<min||value>max)return send(res,400,{status:'error',code:'INVALID_SETTING_'+key});
+      patch[key]=value;
+    }
     if(!Object.keys(patch).length)return send(res,400,{status:'error',code:'NO_SETTINGS'});
     await rtdb.ref('settings').update(patch);
     return send(res,200,{status:'ok',settings:patch});
