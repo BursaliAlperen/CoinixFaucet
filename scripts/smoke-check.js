@@ -28,6 +28,8 @@ for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.
 assert.ok(!backend.includes("command==='/botmessages'")&&!backend.includes("command==='/yeni'"),'Removed Telegram commands must stay removed');
 assert.ok(!backend.includes("/api/admin/botmessages")&&!adminHtml.includes('messageForm')&&!admin.includes('messageForm'),'Removed bot-message feature must stay removed');
 assert.ok(backend.includes("return Math.round((1 + level * 0.02) * 100) / 100;"),'Server level multiplier formula missing');
+assert.ok(backend.includes('Math.min(50, Number(user.level || 1))') && backend.includes('user.level < 50'),'Server level cap must be 50');
+assert.ok(app.includes('Math.min(50,Number(level)||1)'),'Frontend level multiplier must cap at 50');
 assert.ok(backend.includes("Number(settings.dailyCheckinXp || 10)"),'Daily check-in XP default missing');
 assert.ok(backend.includes("Number(settings.adWatchXp || 10)"),'Verified ad XP default missing');
 assert.ok(backend.includes("Number(settings.taskXp || 20)"),'Task XP default missing');
