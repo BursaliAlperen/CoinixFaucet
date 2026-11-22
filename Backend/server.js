@@ -98,7 +98,8 @@ function verifyTelegramInitData(initData) {
       id: String(user.id),
       name: String(user.first_name || 'User').slice(0, 80),
       username: String(user.username || '').slice(0, 64),
-      photoUrl: typeof user.photo_url === 'string' ? user.photo_url.slice(0, 500) : ''
+      photoUrl: typeof user.photo_url === 'string' ? user.photo_url.slice(0, 500) : '',
+      languageCode: String(user.language_code || 'en').slice(0, 8)
     };
   } catch { return null; }
 }
@@ -449,7 +450,8 @@ async function handleApi(req, res, url) {
       const data = await flyerCall('/get_tasks', { user_id: Number(user.id), language_code: language, limit: 10 });
       const items = Array.isArray(data.result) ? data.result : [];
       const taskMap = {};
-      const rewardValue = Number((await getSettings()).flyerhubsTaskReward ?? 0.01);\n      const tasks = items.map(item => {
+      const rewardValue = Number((await getSettings()).flyerhubsTaskReward ?? 0.01);
+      const tasks = items.map(item => {
         const signature = String(item.signature || '');
         if (!signature) return null;
         const id = crypto.createHash('sha256').update(signature).digest('hex');
