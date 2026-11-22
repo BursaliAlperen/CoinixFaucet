@@ -108,6 +108,7 @@ async function init(){
     if(!refBy && window.Telegram?.WebApp?.initDataUnsafe?.start_param){refBy=window.Telegram.WebApp.initDataUnsafe.start_param;}
     const session=await apiRequest('/api/session',{referralCode:refBy||''});
     window.COINIX_ADMIN = session.isAdmin === true;
+    window.COINIX_BOT_USERNAME = session.botUsername || '';
     const adminButton=$('adminOpenBtn');if(adminButton&&window.COINIX_ADMIN)adminButton.style.display='inline-flex';
     await firebase.auth().signInWithCustomToken(session.customToken);
     const uid=String(TGUser.id);
@@ -256,7 +257,7 @@ function renderStreak(){
 }
 
 function renderTeam(){
-  const bot=appSettings.botUsername||'EarnBDBot';
+  const bot=window.COINIX_BOT_USERNAME||appSettings.botUsername||'EarnBDBot';
   const link=`https://t.me/${bot}?start=ref_${currentUser.uid}`;
   $('refLink').value=link;
   $('tRefCount').textContent=currentUser.referralCount||0;
