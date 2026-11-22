@@ -184,10 +184,12 @@ async function applyEconomyAction(uid, body) {
   let logType = action;
   let extra = {};
   let failure = '';
+  let alreadyProcessed = false;
   const tx = await userRef.transaction(user => {
+    credited = 0; extra = {}; failure = ''; alreadyProcessed = false;
     if (!user || user.banned) { failure = 'ACCOUNT_UNAVAILABLE'; return; }
     user.processedActions = user.processedActions || {};
-    if (user.processedActions[actionId]) return user;
+    if (user.processedActions[actionId]) { alreadyProcessed = true; return user; }
     const balance = Number(user.balance || 0);
     if (action === 'daily_card') {
       const today = dayKey();
@@ -262,6 +264,7 @@ async function applyEconomyAction(uid, body) {
   });
   if (!tx.committed || failure) throw new Error(failure || 'ACTION_REJECTED');
   const updatedUser = tx.snapshot.val();
+  if (alreadyProcessed) return { user: updatedUser, duplicate: true };
   if (action === 'withdraw') {
     try {
       await rtdb.ref('withdrawals').push({
@@ -274,6 +277,7 @@ async function applyEconomyAction(uid, body) {
         if (!user) return user;
         user.balance = money(Number(user.balance || 0) + extra.amount);
         user.totalWithdrawn = Math.max(0, Number(user.totalWithdrawn || 0) - extra.amount);
+        if (user.processedActions) delete user.processedActions[actionId];
         return user;
       });
       throw new Error('WITHDRAW_SAVE_FAILED');
