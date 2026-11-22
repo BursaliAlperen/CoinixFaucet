@@ -8,7 +8,7 @@ const { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen
 const { FirestoreCompat } = require('./firestore-compat');
 
 const PORT = Number(process.env.PORT || 3000);
-const APP_ORIGIN = (process.env.APP_ORIGIN || '').replace(/\/$/, '');
+const RAILWAY_ORIGIN = process.env.RAILWAY_PUBLIC_DOMAIN ? 'https://' + process.env.RAILWAY_PUBLIC_DOMAIN : '';\nconst APP_ORIGIN = String(process.env.APP_ORIGIN || RAILWAY_ORIGIN).replace(/\/$/, '');
 const FRONTEND_DIR = path.resolve(__dirname, '../Frontend');
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const PIARFLOW_API_KEY = process.env.PIARFLOW_API_KEY || '';
@@ -17,9 +17,9 @@ const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 const ADMIN_IDS = new Set(String(process.env.ADMIN_IDS || '').split(',').map(v => v.trim()).filter(v => /^[0-9]+$/.test(v)));
 const ANNOUNCEMENT_CHANNEL_ID = process.env.ANNOUNCEMENT_CHANNEL_ID || '';
 const BOT_WEBHOOK_SECRET = process.env.BOT_WEBHOOK_SECRET || '';
-const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
-const WEBAPP_URL = String(process.env.WEBAPP_URL || '').replace(/\/$/, '');
-const BOT_USERNAME = process.env.BOT_USERNAME || '';
+const PUBLIC_BASE_URL = String(process.env.PUBLIC_BASE_URL || RAILWAY_ORIGIN || APP_ORIGIN).replace(/\/$/, '');
+const WEBAPP_URL = String(process.env.WEBAPP_URL || PUBLIC_BASE_URL).replace(/\/$/, '');
+const BOT_USERNAME = process.env.BOT_USERNAME || 'TeddyGrow_Bot';
 const FLYERHUBS_KEY = process.env.FLYERHUBS_KEY || '';
 const REQUIRED_CHANNEL_ID = process.env.REQUIRED_CHANNEL_ID || '';
 const REQUIRED_CHANNEL_URL = process.env.REQUIRED_CHANNEL_URL || '';
@@ -927,6 +927,21 @@ async function handleApi(req, res, url) {
       const membership=await checkRequiredChannel(user.id);
       if(!membership.ok)return send(res,403,{status:'error',code:membership.reason,channelUrl:REQUIRED_CHANNEL_URL});
       return send(res,200,{status:'ok',membership:true});
+    }
+    if (url.pathname === '/api/live') {
+      const requested=String(body.path||'').replace(/^\\/+|\\/+$/g,'');
+      const ownUser='users/'+user.id;
+      const allowed=['settings','tasks','notifications','withdrawMethods',ownUser,ownUser+'/notifications','withdrawals'];
+      if(!allowed.includes(requested))return send(res,403,{status:'error',code:'LIVE_PATH_FORBIDDEN'});
+      const snap=await rtdb.ref(requested).once('value');
+      let value=snap.val();
+      if(requested==='withdrawals'&&value)value=Object.fromEntries(Object.entries(value).filter(([,item])=>String(item?.userId||'')===user.id));
+      return send(res,200,{status:'ok',value});
+    }
+    if (url.pathname === '/api/transactions') {
+      const snap=await firestore.collection('transactions').where('userId','==',user.id).orderBy('timestamp','desc').limit(50).get();
+      const items=snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+      return send(res,200,{status:'ok',items});
     }
     if (url.pathname === '/api/session') {
       const membership=await checkRequiredChannel(user.id);
