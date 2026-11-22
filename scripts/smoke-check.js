@@ -31,6 +31,8 @@ const required = [
 ];
 for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle)||icons.includes(needle), 'Missing: '+label);
 assert.ok(!backend.toLowerCase().includes('papara'),'Papara must not be accepted by the backend');
+assert.ok(!html.toLowerCase().includes('w2e ads')&&!app.toLowerCase().includes('w2e ads'),'W2E Ads must be removed from the product');
+assert.ok(!html.toLowerCase().includes('ad balance')&&!app.toLowerCase().includes('ad balance'),'Ad Balance must not appear in the user interface');
 assert.ok(!backend.toLowerCase().includes('monetag')&&!app.toLowerCase().includes('monetag'),'Monetag must be fully removed from runtime code');
 assert.ok(!backend.includes("command==='/botmessages'")&&!backend.includes("command==='/yeni'"),'Removed Telegram commands must stay removed');
 assert.ok(!backend.includes("/api/admin/botmessages")&&!adminHtml.includes('messageForm')&&!admin.includes('messageForm'),'Removed bot-message feature must stay removed');
@@ -38,7 +40,7 @@ assert.ok(fs.readFileSync('Backend/earn-core.js','utf8').includes('1 + level * 0
 assert.ok(fs.readFileSync('Backend/earn-core.js','utf8').includes('Math.min(1, 50, Number(user?.level) || 1)')===false && fs.readFileSync('Backend/earn-core.js','utf8').includes('Math.min(50, Number(user?.level) || 1)'),'Server level cap must be 50');
 assert.ok(app.includes('Math.min(50,Number(user.level)||1)'),'Frontend level multiplier must cap at 50');
 assert.ok(backend.includes("Number(settings.dailyCheckinXp || 10)"),'Daily check-in XP default missing');
-assert.ok(backend.includes("Number(settings.adWatchXp || 10)"),'Verified ad XP default missing');
+assert.ok(backend.includes('API_AD_REWARD_USD = 0.002'),'Fixed provider API reward missing');
 assert.ok(backend.includes("Number(settings.taskXp || 20)"),'Task XP default missing');
 assert.ok(fs.existsSync('md/AD_NETWORKS.md'),'Ad network research doc missing');
 assert.ok(!fs.existsSync('md/MONETAG.md'),'Retired Monetag docs must be removed');
