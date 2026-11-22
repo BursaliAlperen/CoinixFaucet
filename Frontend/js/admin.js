@@ -41,8 +41,8 @@ function moneyLabel(value){return '
       '<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+
       escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>'
     ).join(''):'<div class="empty">No promotions yet.</div>';
-    await Promise.all([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl()]);
-    showNotice('Panel verileri güncellendi.');
+    const panels=await Promise.allSettled([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl()]);
+    if(panels.some(x=>x.status==='rejected'))showNotice('Bazı paneller yüklenemedi. Yenile düğmesini kullan.',true);else showNotice('Panel verileri güncellendi.');
   }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
 }
 $('promoForm').addEventListener('submit',async e=>{
