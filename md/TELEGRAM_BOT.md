@@ -1,23 +1,23 @@
-# Telegram bot commands and referrals
+# Telegram bot ve üyelik kapısı
 
-The backend registers these commands with Telegram when BOT_TOKEN, BOT_WEBHOOK_SECRET and PUBLIC_BASE_URL are configured.
+## Komutlar
+- /start — kanal üyeliğini kontrol eder; katılmayan kullanıcıya kanal ve tekrar kontrol düğmesi sunar.
+- /help — yardım.
+- /level — seviye, XP ve kazanç çarpanı.
+- /referrals — kişisel davet bağlantısı ve davet istatistikleri.
+- /admin — yalnızca ADMIN_IDS için yönetim paneli bağlantısı.
+- /botstart /botstop — yalnızca yöneticiler için kullanıcı erişimini açar/kapatır.
 
-- /start — welcome message and Mini App launch button; accepts referral payloads such as `/start ref_123456789`.
-- /help — command help.
-- /level — current level, XP progress and reward multiplier.
-- /referrals — referral count, earned amount and personal invite link.
-- /admin — admin-only launch button for the admin dashboard.
+## Zorunlu kanal
+1. Railway'de REQUIRED_CHANNEL_ID ve REQUIRED_CHANNEL_URL tanımla.
+2. Botu kanala yönetici olarak ekle.
+3. /start ve Mini App /api/session öncesinde üyelik sunucuda kontrol edilir.
+4. Katılmayan kullanıcı görev ve kazanç API'lerine erişemez. Buton tekrar kontrol yapar.
+5. Telegram API yetki/kanal hataları güvenli şekilde loglanır ve yöneticilere bildirilir.
 
-## Referral flow
-1. The app shares `https://t.me/BOT_USERNAME?start=ref_TELEGRAM_ID`.
-2. Telegram delivers the payload to /start.
-3. A new account is created once; self-referrals and invalid referrers are rejected.
-4. The referrer receives a Firebase in-app notification and a Telegram DM (if they have opened the bot).
-5. Referral reward is credited once.
-
-## Setup
-- Configure the bot's Mini App URL in BotFather.
-- Set WEBAPP_URL and PUBLIC_BASE_URL to the final Render HTTPS URL.
-- Set BOT_WEBHOOK_SECRET to a long random value.
-- Ensure the bot can message users only after they have started it.
-- Set ADMIN_IDS to the exact numeric Telegram IDs of administrators.
+## Davet ve bonus
+1. Bağlantı biçimi: https://t.me/BOT_USERNAME?start=ref_TELEGRAM_ID.
+2. İlk kez katılan yeni kullanıcı için referral ilişkisi referralClaims altında bir kez kaydedilir.
+3. Davet eden kullanıcıya varsayılan olarak +0.02x ek çarpan tanımlanır; bu yüzde değil, mevcut çarpana eklenen 0.02 çarpan puanıdır.
+4. Bonus varsayılan 24 saat aktiftir; startsAt, endsAt, source ve durum saklanır. Süresi geçen bonus kazanç formülünden otomatik çıkar.
+5. Admin ayarları referralMultiplierBonus (0–0.25) ve referralBonusDurationHours (1–168) değerlerini yönetir.
