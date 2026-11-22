@@ -622,7 +622,7 @@ async function handleApi(req, res, url) {
       const profile = await bootstrap(user, referralCode);
       if (profile.banned) return send(res, 403, { status: 'error', message: 'Account unavailable' });
       const customToken = await admin.auth().createCustomToken(user.id);
-      return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME });
+      return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME, monetagZoneId: process.env.MONETAG_ZONE_ID || '' });
     }
     if (url.pathname === '/api/economy') {
       const result = await applyEconomyAction(user.id, body);
