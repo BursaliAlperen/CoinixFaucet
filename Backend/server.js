@@ -506,7 +506,21 @@ async function handleTelegramWebhook(req, res) {
       const keyboard=url?{inline_keyboard:[[{text:'🚀 Open Coinix Faucet',web_app:{url:url+(referral?'?startapp=ref_'+referral:'')}}]]}:undefined;
       await sendTelegramMessage(uid,'Welcome to Coinix Faucet!\n\nEarn rewards, complete tasks and invite friends.' ,keyboard?{reply_markup:keyboard}:{});
     }else if(command==='/help'){
-      await sendTelegramMessage(uid,'Coinix Faucet commands:\n/start — Open the app\n/help — Help\n/botmessages — Admin message tools (admins only)\n/yeni — Latest referrals (admins only)\n/admin — Admin dashboard (admins only)');
+      await sendTelegramMessage(uid,'Coinix Faucet commands:\\n/start — Open the app\\n/help — Help\\n/level — Your level and XP\\n/referrals — Your referral link and stats\\n/botmessages — Admin bot message tools\\n/yeni — Latest referrals (admins only)\\n/admin — Admin dashboard (admins only)');
+    }else if(command==='/level'){
+      if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
+      const snap=await rtdb.ref('users/'+uid).once('value');
+      if(!snap.exists())await sendTelegramMessage(uid,'Open /start first to create your Coinix profile.');
+      else{
+        const v=snap.val()||{},level=Math.max(1,Math.min(100,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
+        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/100</b>\\nXP: <b>'+(level>=100?'MAX':xp+' / '+next)+'</b>\\n'+(level>=100?'You unlocked 2× verified ad and task rewards.':'Complete verified ads, tasks and daily check-ins to earn XP.'),{parse_mode:'HTML'});
+      }
+    }else if(command==='/referrals'){
+      if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
+      const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
+      const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Open the Referrals tab in Coinix to copy your invite link.';
+      await sendTelegramMessage(uid,'👥 <b>Your referrals</b>\\nInvited: <b>'+Number(v.referralCount||0)+'</b>\\nEarned: <b>'+Number(v.referralEarned||0).toFixed(4)+'</b>\\n\\n'+escapeHtml(link),{parse_mode:'HTML'});
+    }
     }else if(command==='/admin'){
       if(!isAdmin(uid))await sendTelegramMessage(uid,'You are not authorized to use the admin panel.');
       else{
@@ -534,7 +548,7 @@ async function configureTelegramWebhook() {
     await telegramCall('setWebhook',{url:PUBLIC_BASE_URL+'/telegram/webhook',secret_token:BOT_WEBHOOK_SECRET,allowed_updates:['message','callback_query'],drop_pending_updates:false});
     await telegramCall('setMyCommands',{commands:[
       {command:'start',description:'Open Coinix Faucet'},
-      {command:'help',description:'Show help'},
+      {command:'help',description:'Show help'},\n      {command:'level',description:'Your level and XP'},\n      {command:'referrals',description:'Your referral link and stats'},
       {command:'admin',description:'Open admin panel'},
       {command:'botmessages',description:'Admin bot message tools'},
       {command:'yeni',description:'Latest referrals (admin)'}
