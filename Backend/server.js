@@ -436,7 +436,7 @@ async function handleAdminApi(user, url, body, res) {
     const withdrawals=[]; withdrawalsSnap.forEach(child=>withdrawals.push({id:child.key,...child.val()}));
     const promotions=[];promosSnap.forEach(child=>promotions.push({id:child.key,...child.val()}));
     promotions.reverse();
-    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level100,pendingWithdrawals:withdrawals.length},withdrawals,promotions});
+    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level100,pendingWithdrawals:withdrawals.length},withdrawals,promotions,settings:await getSettings()});
   }
   if (url.pathname === '/api/admin/promo') {
     if (!ANNOUNCEMENT_CHANNEL_ID) return send(res, 503, {status:'error',code:'ANNOUNCEMENT_CHANNEL_NOT_CONFIGURED'});
@@ -640,7 +640,7 @@ async function handleApi(req, res, url) {
         if (!signature) return null;
         const id = crypto.createHash('sha256').update(signature).digest('hex');
         taskMap[id] = { signature, name: String(item.name || item.task || 'FlyerHubs task').slice(0, 100), task: String(item.task || ''), links: Array.isArray(item.links) ? item.links.slice(0, 3) : [], price: item.price };
-        return { id, source: 'flyerhubs', title: taskMap[id].name, type: 'telegram', url: taskMap[id].links[0] || '', reward: rewardValue, active: true };
+        return { id: 'fh_' + id, signature, source: 'flyerhubs', title: taskMap[id].name, type: 'telegram', url: taskMap[id].links[0] || '', reward: rewardValue, active: true };
       }).filter(Boolean);
       if (Object.keys(taskMap).length) await rtdb.ref('users/' + user.id + '/flyerhubsTasks').update(taskMap);
       return send(res, 200, { status: 'ok', tasks });
