@@ -25,7 +25,13 @@ function isTaskOpen(task, now = Date.now()) {
   return true;
 }
 function splitTaskPrice(amount) {
-  const grossPrice = Math.round(Number(amount) * 10000) / 10000;\n  if (!Number.isFinite(grossPrice) || grossPrice <= 0) throw new Error('INVALID_TASK_REWARD');\n  const reward = Math.round(grossPrice * 0.70 * 10000) / 10000;\n  const platformFee = Math.round((grossPrice - reward) * 10000) / 10000;\n  return { grossPrice, reward, platformFee };\n}\nfunction cleanTaskInput(body, now = Date.now()) {
+  const grossPrice = Math.round(Number(amount) * 10000) / 10000;
+  if (!Number.isFinite(grossPrice) || grossPrice <= 0) throw new Error('INVALID_TASK_REWARD');
+  const reward = Math.round(grossPrice * 0.70 * 10000) / 10000;
+  const platformFee = Math.round((grossPrice - reward) * 10000) / 10000;
+  return { grossPrice, reward, platformFee };
+}
+function cleanTaskInput(body, now = Date.now()) {
   const title = String(body.title || '').trim().slice(0, 100);
   const description = String(body.description || '').trim().slice(0, 1000);
   const type = String(body.type || '').toLowerCase();
