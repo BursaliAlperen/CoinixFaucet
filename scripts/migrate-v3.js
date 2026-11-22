@@ -22,6 +22,7 @@ async function main(){
     if(!value.referralBonuses)patch.referralBonuses={};
     if(!value.taskCompletionCounts)patch.taskCompletionCounts={};
     if(!value.completedTaskClaims)patch.completedTaskClaims={};
+    if(!value.taskClaimRewards)patch.taskClaimRewards={};
     if(!value.processedActions)patch.processedActions={};
     if(Object.keys(patch).length){users++;userUpdates['users/'+child.key]=patch;}
   });
