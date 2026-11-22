@@ -9,6 +9,11 @@ Node.js 20+ backend and mobile-first Telegram Mini App frontend.
 - `Frontend/js/app.js` — client UI and Firebase read subscriptions.
 - `firebase.database.rules.json` / `firestore.rules` — deny-by-default client security rules.
 - `firestore.indexes.json` — query indexes for leaderboard, referrals, and transaction history.
+- `API.md` — authenticated backend endpoint reference.
+- `SECURITY.md` — security model and known limitations.
+- `ENVIRONMENT.md` — Render/Firebase environment setup.
+- `RELEASE_CHECKLIST.md` — pre-deployment validation list.
+- `.github/workflows/ci.yml` — automatic syntax/config checks.
 
 ## Render settings
 - Runtime: Node
