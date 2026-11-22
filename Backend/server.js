@@ -382,7 +382,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     profile.taskClaimRewards=profile.taskClaimRewards||{};
     profile.taskCompletionCounts=profile.taskCompletionCounts||{};
     if(profile.completedTaskClaims[actionId]){failure='ALREADY_COMPLETED';credited=Number(profile.taskClaimRewards[actionId]||0);return;}
-    const count=Number(profile.taskCompletionCounts[taskId]||0);
+    const count=Number(profile.taskCompletionCounts[taskId]||(profile.completedTasks&&profile.completedTasks[taskId]?1:0));
     if(count>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){failure='TASK_USER_LIMIT';return;}
     const multiplier=rewardMultiplier(profile);credited=money(Number(task.reward||0)*multiplier);
     profile.balance=money(Number(profile.balance||0)+credited);profile.totalEarned=money(Number(profile.totalEarned||0)+credited);
@@ -663,7 +663,7 @@ async function handleAdminApi(user, url, body, res) {
       profile.completedTaskClaims=profile.completedTaskClaims||{};profile.taskClaimRewards=profile.taskClaimRewards||{};profile.taskCompletionCounts=profile.taskCompletionCounts||{};
       if(profile.completedTaskClaims[claimId]){alreadyProcessed=true;credited=Number(profile.taskClaimRewards[claimId]||0);return profile;}
       const taskSnap=lock.snapshot.val()||{},limit=Math.max(1,Math.min(10,Number(taskSnap.perUserLimit||1)));
-      const count=Number(profile.taskCompletionCounts[taskId]||0);if(count>=limit){failure='TASK_USER_LIMIT';return;}
+      const count=Number(profile.taskCompletionCounts[taskId]||(profile.completedTasks&&profile.completedTasks[taskId]?1:0));if(count>=limit){failure='TASK_USER_LIMIT';return;}
       credited=money(Number(taskSnap.reward||0)*rewardMultiplier(profile));profile.balance=money(Number(profile.balance||0)+credited);
       profile.totalEarned=money(Number(profile.totalEarned||0)+credited);profile.taskCompletionCounts[taskId]=count+1;
       if(profile.taskCompletionCounts[taskId]>=limit){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
