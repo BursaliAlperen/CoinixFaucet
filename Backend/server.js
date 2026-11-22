@@ -889,7 +889,8 @@ async function configureTelegramWebhook() {
     await telegramCall('setMyCommands',{commands:[
       {command:'start',description:'Open TeddyGrow'},
       {command:'tasks',description:'Browse microtasks'},
-      {command:'campaign',description:'Create a channel campaign'},\n      {command:'wallet',description:'View wallet and payouts'},
+      {command:'campaign',description:'Create a channel campaign'},
+      {command:'wallet',description:'View wallet and payouts'},
       {command:'botstart',description:'Botu etkinleştir (yönetici)'},
       {command:'botstop',description:'Botu duraklat (yönetici)'},
       {command:'help',description:'Help and instructions'},
