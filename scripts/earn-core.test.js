@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const {activeReferralBonusTotal,rewardMultiplier,isTelegramMember,isTaskOpen,cleanTaskInput,isValidReferral,FixedWindowLimiter,isNewExternalEvent,isTraffyApiReady,classifyProviderError}=require('../Backend/earn-core');
-const now=Date.now();
+const now=Date.now();\nconst {splitTaskPrice}=require('../Backend/earn-core');\nconst split=splitTaskPrice(10);\nassert.equal(split.reward,7);\nassert.equal(split.platformFee,3);\nassert.equal(split.grossPrice,10);
 const u={level:10,referralBonuses:{
   live:{startsAt:now-1000,endsAt:now+10000,multiplierBonus:0.02},
   expired:{startsAt:now-20000,endsAt:now-10000,multiplierBonus:0.02},
@@ -19,7 +19,7 @@ assert.equal(isTaskOpen({status:'active',startAt:now-1,endAt:now+1000,totalLimit
 assert.equal(isTaskOpen({status:'paused'},now),false);
 assert.equal(isTaskOpen({status:'active',totalLimit:1,totalParticipants:1},now),false);
 const task=cleanTaskInput({title:'Join',description:'Join channel',type:'channel',verificationMethod:'telegram_membership',url:'https://t.me/examplechannel',chatId:'@examplechannel',reward:0.002,startAt:new Date(now).toISOString(),totalLimit:100,perUserLimit:1},now);
-assert.equal(task.reward,0.002);
+assert.equal(task.reward,0.0014);\nassert.equal(task.grossPrice,0.002);\nassert.equal(task.platformFee,0.0006);
 assert.throws(()=>cleanTaskInput({title:'x',description:'x',type:'link',verificationMethod:'telegram_membership',url:'https://example.com',reward:1},now));
 console.log('earn-core tests: referral, task, bonus expiry, Traffy limiter and idempotency assertions passed');
 
