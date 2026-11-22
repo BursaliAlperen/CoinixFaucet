@@ -7,6 +7,7 @@ All project documentation lives in this folder.
 - [Environment variables](ENVIRONMENT.md)
 - [Telegram bot commands and referrals](TELEGRAM_BOT.md)
 - [FlyerHubs task integration](FLYERHUBS.md)
+- [Other Telegram ad networks](AD_NETWORKS.md)
 - [Monetag verified ads](MONETAG.md)
 - [Level and XP economy](LEVELS.md)
 - [Release checklist](RELEASE_CHECKLIST.md)
