@@ -68,14 +68,14 @@
             <label>Doğrulama<select name="verificationMethod"><option value="telegram_membership">Telegram üyeliği</option><option value="manual">Yönetici incelemesi</option></select></label>
           </div>
           <label>Hedef bağlantı<input name="url" type="url" required placeholder="https://t.me/kanal"></label>
-          <label>Kanal / grup kimliği (örn. @kanal veya -100... )<input name="chatId" maxlength="120" placeholder="@kanal"></label>
+          <label>Kanal / grup kimliği (örn. @kanal veya -100... )<input name="chatId" maxlength="120" placeholder="@kanal"></label>\n          <p class="hint">🧸 Kanal/grup kampanyasında TeddyGrow botunu hedef sohbete yönetici ekle. Bot yönetici değilse kampanya doğrulanamaz ve yayınlanmaz. Katılmak istemediğin kampanyayı atlayabilirsin.</p>
           <div class="two">
             <label>Brüt görev fiyatı (USD) · %70 tamamlayana / %30 platforma<input name="reward" type="number" min="0.0001" step="0.0001" required value="0.002"></label>
-            <label>Toplam katılım sınırı<input name="totalLimit" type="number" min="0" max="10000000" value="0"></label>
+            <label>Toplam katılım sınırı<input name="totalLimit" type="number" min="1" max="10000000" value="100"></label>
           </div>
           <div class="two">
             <label>Kullanıcı başına katılım<input name="perUserLimit" type="number" min="1" max="10" value="1"></label>
-            <label>Durum<select name="status"><option value="draft">Taslak</option><option value="active">Aktif</option><option value="paused">Duraklatılmış</option></select></label>
+            <label>Durum<select name="status"><option value="active" selected>Aktif · tek tıkla yayınla</option><option value="draft">Taslak</option><option value="paused">Duraklatılmış</option></select></label>
           </div>
           <div class="two">
             <label>Başlangıç<input name="startAt" type="datetime-local"></label>
