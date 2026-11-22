@@ -342,7 +342,7 @@ async function completeTask(id){
       const result=await apiRequest('/api/flyerhubs/check',{signature:t.signature});
       if(!result.completed){showToast('FlyerHubs görevi henüz tamamlanmadı: '+result.providerStatus,'warn');return;}
       showToast(result.duplicate?'Bu görev zaten ödüllendirildi.':'FlyerHubs görevi doğrulandı! +'+(result.xp?.gained||0)+' XP','success');
-    }else{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi. +'+(arguments[0]?.xp?.gained||0)+' XP','success');}
+    }else{const result=await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi. +'+(result.extra?.xp?.gained||0)+' XP','success');}
   }
   catch(e){const message=e.message==='ALREADY_COMPLETED'?'Bu görev zaten tamamlandı.':e.message==='TASK_VERIFICATION_FAILED'?'Üyelik doğrulanamadı. Botun kanalda olduğundan emin olun.':'Görev ödülü verilemedi: '+e.message;showToast(message,'danger');}
 }
