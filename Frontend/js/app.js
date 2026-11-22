@@ -116,7 +116,7 @@ async function init(){
     if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#fff8f3');tg.setBackgroundColor('#fff8f3');}catch(e){}TGUser=tg.initDataUnsafe?.user;}
     if(!TGUser)throw new Error('Bu uygulama Telegram Mini App üzerinden açılmalıdır.');
     const params=new URLSearchParams(window.location.search);
-    let refBy=params.get('ref');
+    const launchView=String(tg?.initDataUnsafe?.start_param||'');\n    let refBy=params.get('ref');
     if(!refBy && window.Telegram?.WebApp?.initDataUnsafe?.start_param){refBy=window.Telegram.WebApp.initDataUnsafe.start_param;}
     const session=await apiRequest('/api/session',{referralCode:refBy||''});
     window.TEDDY_ADMIN = session.isAdmin === true;
