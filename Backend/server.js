@@ -45,6 +45,11 @@ function initFirebase() {
       ? FIREBASE_SERVICE_ACCOUNT
       : Buffer.from(FIREBASE_SERVICE_ACCOUNT, 'base64').toString('utf8');
     const serviceAccount = JSON.parse(raw);
+    const serviceProject = String(serviceAccount.project_id || '');
+    if (!serviceProject) throw new Error('FIREBASE_SERVICE_ACCOUNT_PROJECT_MISSING');
+    if (FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.projectId !== serviceProject) throw new Error('FIREBASE_PROJECT_MISMATCH');
+    const databaseHost = new URL(FIREBASE_DATABASE_URL).hostname.toLowerCase();
+    if (!databaseHost.includes(serviceProject.toLowerCase())) throw new Error('FIREBASE_DATABASE_PROJECT_MISMATCH');
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       databaseURL: FIREBASE_DATABASE_URL
