@@ -868,7 +868,7 @@ async function handleTelegramWebhook(req, res) {
       }
       }else if(command==='/referrals'){
       const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
-      const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Open the Referrals tab in Coinix to copy your invite link.';
+      const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Davet bağlantını kopyalamak için Coinix Davet sekmesini aç.';
       const bonus=activeReferralBonusTotal(v);await sendTelegramMessage(uid,'👥 <b>Davetlerin</b>\nDavet sayısı: <b>'+Number(v.referralCount||0)+'</b>\nAktif ek çarpan: <b>+'+bonus.toFixed(2)+'x</b>\nBonus süresi: <b>24 saat</b>\n\n'+escapeHtml(link),{parse_mode:'HTML'});
       }
     }else if(command==='/admin'){
