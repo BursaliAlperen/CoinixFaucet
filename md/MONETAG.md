@@ -16,4 +16,4 @@ Configure the postback in Monetag SSP using this pattern (replace the host and m
 
 `https://YOUR-COINIX-DOMAIN/postback/monetag?secret=YOUR_SECRET&ymid={ymid}&event_type={event_type}&reward_event_type={reward_event_type}&zone_id={zone_id}&sub_zone_id={sub_zone_id}&request_var={request_var}&telegram_id={telegram_id}&estimated_price={estimated_price}`
 
-Set MONETAG_POSTBACK_SECRET in Render and configure the same secret in Monetag. Use the exact zone ID in Frontend settings (monetagZoneId). Daily ad limits are checked on the server. Default ad XP is 10; level 100 receives 2x the configured per-ad reward.
+Set MONETAG_POSTBACK_SECRET in Render and configure the same secret in Monetag. Use the exact zone ID in Frontend settings (monetagZoneId). Daily ad limits are checked on the server. Default ad XP is 10; each level adds 0.02× to the configured per-ad reward, up to 3.00× at Level 100.
