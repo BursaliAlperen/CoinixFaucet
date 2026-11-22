@@ -22,10 +22,10 @@ const required = [
   ['Traffy provider status', 'awaiting_official_api_contract'],
   ['Traffy personal tracking link', 'TRAFFY_LINK_PREFIX'],
   ['Daily analytics endpoint', '/api/admin/analytics'],
-  ['CSV export UI', 'coinix-gunluk-istatistik.csv'],
+  ['CSV export UI', 'teddygrow-daily-statistics.csv'],
   ['Bot start/stop admin controls', '/api/admin/bot-control'],
   ['TON and GRAM payout whitelist', "['ton','gram'].includes(methodKey)"],
-  ['Firebase web config endpoint', '/public-config/firebase'],
+  ['Firestore-only authenticated data API', '/api/live'],\n  ['Firestore compatibility store', 'new FirestoreCompat(firestore)'],\n  ['70/30 task budget fields', 'platformBudget'],\n  ['Telegram microtask commands', "command==='/campaign'"],
   ['Inline SVG icon system', 'ton:'],
   ['Istanbul reward timezone', 'Europe/Istanbul']
 ];
@@ -46,4 +46,4 @@ assert.ok(fs.existsSync('md/AD_NETWORKS.md'),'Ad network research doc missing');
 assert.ok(!fs.existsSync('md/MONETAG.md'),'Retired Monetag docs must be removed');
 assert.ok(fs.existsSync('md/FLYERHUBS.md'),'FlyerHubs docs missing');
 assert.ok(!fs.existsSync('README.md')&&!fs.existsSync('API.md'),'Root markdown docs should live in /md');
-console.log('Coinix smoke checks passed: '+required.length+' feature checks + removed-feature and docs/layout checks.');
+console.log('TeddyGrow smoke checks passed: '+required.length+' feature checks + removed-feature and docs/layout checks.');
