@@ -6,6 +6,7 @@ const app = fs.readFileSync('Frontend/js/app.js','utf8');
 const admin = fs.readFileSync('Frontend/js/admin.js','utf8');
 const html = fs.readFileSync('Frontend/index.html','utf8');
 const adminHtml = fs.readFileSync('Frontend/admin.html','utf8');
+const icons = fs.readFileSync('Frontend/js/icons.js','utf8');
 const required = [
   ['Telegram /start handler', "command==='/start'"],
   ['Telegram /level handler', "command==='/level'"],
@@ -22,13 +23,13 @@ const required = [
   ['Fixed API task reward', 'const API_TASK_REWARD_USD=0.002'],
   ['TON and GRAM payout whitelist', "['ton','gram'].includes(methodKey)"],
   ['Admin withdrawal settlement', '/api/admin/withdrawal'],
-  ['Inline SVG icon system', 'icon-ton'],
+  ['Inline SVG icon system', 'ton:'],
   ['Firebase web config endpoint', '/public-config/firebase'],
   ['Istanbul reward timezone', "Europe/Istanbul"],
   ['Server admin shortcut', 'adminOpenBtn'],
   ['Admin dashboard actions', "api('/api/admin/promo'"]
 ];
-for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle), 'Missing: '+label);
+for (const [label, needle] of required) assert.ok(backend.includes(needle)||app.includes(needle)||admin.includes(needle)||html.includes(needle)||adminHtml.includes(needle)||icons.includes(needle), 'Missing: '+label);
 assert.ok(!backend.includes("command==='/botmessages'")&&!backend.includes("command==='/yeni'"),'Removed Telegram commands must stay removed');
 assert.ok(!backend.includes("/api/admin/botmessages")&&!adminHtml.includes('messageForm')&&!admin.includes('messageForm'),'Removed bot-message feature must stay removed');
 assert.ok(backend.includes("return Math.round((1 + level * 0.02) * 100) / 100;"),'Server level multiplier formula missing');
