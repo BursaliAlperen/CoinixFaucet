@@ -20,7 +20,7 @@ function moneyLabel(value){return '
     $('statUsers').textContent=fmt(d.stats.users);
     $('statBalance').textContent='$'+fmt(d.stats.totalBalance);
     $('statEarned').textContent='$'+fmt(d.stats.totalEarned);
-    $('statMax').textContent=fmt(d.stats.level50);
+    $('statMax').textContent=fmt(d.stats.level50);$('statReferrals').textContent=fmt(d.stats.referrals);$('statActiveBonuses').textContent=fmt(d.stats.activeReferralBonuses);
     $('pendingCount').textContent=fmt(d.stats.pendingWithdrawals)+' PENDING';
     const settings=d.settings||{};
     for(const [key,value] of Object.entries(settings)){
@@ -41,7 +41,7 @@ function moneyLabel(value){return '
       '<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+
       escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>'
     ).join(''):'<div class="empty">No promotions yet.</div>';
-    const panels=await Promise.allSettled([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl()]);
+    const panels=await Promise.allSettled([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl(),loadAudit()]);
     if(panels.some(x=>x.status==='rejected'))showNotice('Bazı paneller yüklenemedi. Yenile düğmesini kullan.',true);else showNotice('Panel verileri güncellendi.');
   }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
 }
@@ -107,12 +107,17 @@ $('taskClaims').addEventListener('click',async e=>{const b=e.target.closest('[da
 $('refreshTasksBtn').addEventListener('click',async()=>{try{await Promise.all([loadTasks(),loadClaims()]);}catch(e){showNotice(e.message,true);}});
 $('analyticsApply').addEventListener('click',()=>loadAnalytics().catch(e=>showNotice(e.message,true)));
 $('analyticsCsv').addEventListener('click',exportAnalyticsCsv);
+$('refreshAuditBtn').addEventListener('click',()=>loadAudit().catch(e=>showNotice(e.message,true)));
 $('botStartBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:true});await loadBotControl();showNotice('Bot etkinleştirildi.');}catch(e){showNotice(e.message,true);}});
 $('botStopBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:false});await loadBotControl();showNotice('Bot duraklatıldı.');}catch(e){showNotice(e.message,true);}});
 
 $('refreshBtn').addEventListener('click',loadOverview);
 loadOverview();
 +fmt(value);}
+async function loadAudit(){
+  const d=await api('/api/admin/audit'),items=d.items||[];
+  $('auditList').innerHTML=items.length?items.map(x=>'<div class="list-item"><div><strong>'+escapeHtml(x.action)+'</strong><small>Yönetici: '+escapeHtml(x.actorId)+' · Hedef: '+escapeHtml(x.targetId||'—')+'</small></div><small>'+new Date(x.timestamp||Date.now()).toLocaleString('tr-TR')+'</small></div>').join(''):'<div class="empty">Henüz yönetici işlemi yok.</div>';
+}
 async function loadBotControl(){
   const d=await api('/api/admin/bot-control',{action:'status'}),enabled=d.enabled===true;
   $('botControlStatus').textContent=enabled?'Etkin':'Duraklatıldı';
