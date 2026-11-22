@@ -159,6 +159,10 @@ function limited(key) {
 function dayKey() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: process.env.REWARD_TIMEZONE || 'Europe/Istanbul' }).format(new Date());
 }
+function dayKeyFor(timestamp) {
+  if (!Number(timestamp) || !Number.isFinite(Number(timestamp))) return '';
+  return new Intl.DateTimeFormat('en-CA',{timeZone:process.env.REWARD_TIMEZONE||'Europe/Istanbul'}).format(new Date(Number(timestamp)));
+}
 function money(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0 || n > 100000000) throw new Error('INVALID_AMOUNT');
@@ -309,9 +313,60 @@ async function bootstrap(user, referralCode) {
   }
   return result.snapshot.val();
 }
+async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
+  if (!isTaskOpen(task)) throw new Error('TASK_UNAVAILABLE');
+  const method=String(task.verificationMethod||( ['channel','group','telegram'].includes(String(task.type))?'telegram_membership':'manual'));
+  const automatic=method==='telegram_membership';
+  if(automatic&&!(await verifyTelegramTask(uid,task)))throw new Error('TASK_VERIFICATION_FAILED');
+  if(!automatic&&String(proof||'').trim().length<8)throw new Error('TASK_PROOF_REQUIRED');
+  const taskRef=rtdb.ref('tasks/'+taskId);let reserved=false;
+  const slot=await taskRef.transaction(current=>{
+    if(!isTaskOpen(current))return;
+    const next=Number(current.totalParticipants||0)+1;
+    if(Number(current.totalLimit||0)>0&&next>Number(current.totalLimit))return;
+    current.totalParticipants=next;reserved=true;return current;
+  });
+  if(!slot.committed||!reserved)throw new Error('TASK_LIMIT_REACHED');
+  const claimsRef=rtdb.ref('taskClaims/'+taskId+'/'+uid);let duplicate=false,perUserLimit=false,created=false;
+  const claimTx=await claimsRef.transaction(current=>{
+    const claims=current||{};
+    if(claims[actionId]){duplicate=true;return claims;}
+    const used=Object.values(claims).filter(c=>c&&['pending','approved','verified','reviewing'].includes(c.status)).length;
+    if(used>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){perUserLimit=true;return;}
+    claims[actionId]={taskId,userId:uid,actionId,title:String(task.title||'').slice(0,100),reward:Number(task.reward||0),
+      proof:String(proof||'').slice(0,500),verificationMethod:method,status:automatic?'verified':'pending',createdAt:Date.now()};
+    created=true;return claims;
+  });
+  if(!claimTx.committed||!created){
+    if(!duplicate)await taskRef.child('totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));
+    if(perUserLimit)throw new Error('TASK_USER_LIMIT');
+    if(duplicate){const u=await rtdb.ref('users/'+uid).once('value');return {user:u.val(),pending:!automatic,duplicate:true};}
+    throw new Error('TASK_CLAIM_FAILED');
+  }
+  if(!automatic){const u=await rtdb.ref('users/'+uid).once('value');return {user:u.val(),pending:true,taskClaim:{id:actionId,status:'pending'}};}
+  const settings=await getSettings();let credited=0,failure='';
+  const userTx=await rtdb.ref('users/'+uid).transaction(profile=>{
+    credited=0;failure='';
+    if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
+    profile.completedTaskClaims=profile.completedTaskClaims||{};
+    profile.taskCompletionCounts=profile.taskCompletionCounts||{};
+    if(profile.completedTaskClaims[actionId]){failure='ALREADY_COMPLETED';return;}
+    const count=Number(profile.taskCompletionCounts[taskId]||0);
+    if(count>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){failure='TASK_USER_LIMIT';return;}
+    const multiplier=rewardMultiplier(profile);credited=money(Number(task.reward||0)*multiplier);
+    profile.balance=money(Number(profile.balance||0)+credited);profile.totalEarned=money(Number(profile.totalEarned||0)+credited);
+    profile.taskCompletionCounts[taskId]=count+1;
+    if(profile.taskCompletionCounts[taskId]>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
+    profile.completedTaskClaims[actionId]=Date.now();applyXp(profile,Number(settings.taskXp||20));return profile;
+  });
+  if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
+  await claimsRef.child(actionId).update({status:'approved',reward:credited,approvedAt:Date.now(),autoVerified:true});
+  await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),claimId:actionId,provider:'coinix_task'});
+  return {user:userTx.snapshot.val(),reward:credited,pending:false,taskClaim:{id:actionId,status:'approved'}};
+}
 async function applyEconomyAction(uid, body) {
   const action = String(body.action || '');
-  const actionId = String(body.actionId || randomId()).slice(0, 80);
+  const actionId = String(body.actionId || randomId()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0, 80);
   const userRef = rtdb.ref('users/' + uid);
   const settings = await getSettings();
   const taskId = String(body.taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 100);
@@ -320,7 +375,7 @@ async function applyEconomyAction(uid, body) {
   const methodKey = String(body.method || '').replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase().slice(0, 80);
   const methodSnapshot = action === 'withdraw' && ['ton','gram'].includes(methodKey) ? await rtdb.ref('withdrawMethods/' + methodKey).once('value') : null;
   const methodRecord = methodSnapshot && methodSnapshot.exists() ? methodSnapshot.val() : null;
-  if (action === 'task' && !(await verifyTelegramTask(uid, taskRecord))) throw new Error('TASK_VERIFICATION_FAILED');
+  if (action === 'task') { if (!taskRecord) throw new Error('TASK_UNAVAILABLE'); return submitTaskClaim(uid,taskId,taskRecord,actionId,body.proof||''); }
   let credited = 0;
   let logType = action;
   let extra = {};
@@ -499,6 +554,93 @@ async function callPiarflow(route, payload) {
 }
 async function handleAdminApi(user, url, body, res) {
   if (!isAdmin(user.id)) return send(res, 403, { status:'error', code:'ADMIN_REQUIRED' });
+  if (url.pathname === '/api/admin/providers') {
+    return send(res,200,{status:'ok',providers:{
+      piarflow:{configured:Boolean(PIARFLOW_API_KEY),status:PIARFLOW_API_KEY?'configured':'missing_key'},
+      flyerhubs:{configured:Boolean(FLYERHUBS_KEY),status:FLYERHUBS_KEY?'configured':'missing_key'},
+      traffy:{configured:Boolean(process.env.TRAFFY_API_KEY),status:'awaiting_official_api_contract',endpointEnabled:false,linkPrefixConfigured:Boolean(TRAFFY_LINK_PREFIX)}
+    }});
+  }
+  if (url.pathname === '/api/admin/tasks') {
+    const action=String(body.action||'list');
+    if(action==='list'){
+      const snap=await rtdb.ref('tasks').once('value'),items=[];
+      snap.forEach(child=>items.push({id:child.key,...(child.val()||{})}));
+      items.sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0));
+      return send(res,200,{status:'ok',tasks:items});
+    }
+    if(action==='create'||action==='update'){
+      const id=String(body.id||'').trim().slice(0,120);let existing={};
+      if(action==='update'){
+        if(!id)return send(res,400,{status:'error',code:'TASK_ID_REQUIRED'});
+        const old=await rtdb.ref('tasks/'+id).once('value');if(!old.exists())return send(res,404,{status:'error',code:'TASK_NOT_FOUND'});existing=old.val()||{};
+      }
+      let fields;try{fields=cleanTaskInput({...existing,...body});}catch(error){return send(res,400,{status:'error',code:error.message});}
+      const status=String(body.status||existing.status||(action==='create'?'draft':'active'));
+      if(!['draft','active','paused','completed'].includes(status))return send(res,400,{status:'error',code:'INVALID_TASK_STATUS'});
+      const record={...existing,...fields,status,active:status==='active',totalParticipants:Number(existing.totalParticipants||0),
+        createdAt:Number(existing.createdAt||Date.now()),updatedAt:Date.now(),createdBy:existing.createdBy||user.id,updatedBy:user.id};
+      const ref=action==='create'?rtdb.ref('tasks').push():rtdb.ref('tasks/'+id);
+      await ref.set(record);await auditAdmin(user.id,'task_'+action,ref.key,{status,type:record.type,reward:record.reward});
+      return send(res,200,{status:'ok',task:{id:ref.key,...record}});
+    }
+    if(action==='status'){
+      const id=String(body.id||'').trim(),status=String(body.status||'');
+      if(!id||!['draft','active','paused','completed'].includes(status))return send(res,400,{status:'error',code:'INVALID_TASK_STATUS'});
+      let changed=false;
+      const tx=await rtdb.ref('tasks/'+id).transaction(t=>{if(!t)return;t.status=status;t.active=status==='active';t.updatedAt=Date.now();t.updatedBy=user.id;changed=true;return t;});
+      if(!tx.committed||!changed)return send(res,404,{status:'error',code:'TASK_NOT_FOUND'});
+      await auditAdmin(user.id,'task_status',id,{status});
+      return send(res,200,{status:'ok',task:{id,...tx.snapshot.val()}});
+    }
+    return send(res,400,{status:'error',code:'INVALID_TASK_ACTION'});
+  }
+  if (url.pathname === '/api/admin/task-claims') {
+    const snap=await rtdb.ref('taskClaims').once('value'),items=[];
+    snap.forEach(taskNode=>taskNode.forEach(userNode=>userNode.forEach(claimNode=>{const c=claimNode.val()||{};if(c.status==='pending')items.push({id:claimNode.key,...c});})));
+    items.sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0));
+    return send(res,200,{status:'ok',claims:items.slice(0,200)});
+  }
+  if (url.pathname === '/api/admin/task-review') {
+    const taskId=String(body.taskId||''),uid=String(body.userId||''),claimId=String(body.claimId||''),decision=String(body.decision||'');
+    if(!taskId||!/^\\d{1,20}$/.test(uid)||!claimId||!['approve','reject'].includes(decision))return send(res,400,{status:'error',code:'INVALID_TASK_REVIEW'});
+    const claimRef=rtdb.ref('taskClaims/'+taskId+'/'+uid+'/'+claimId);let locked=false;
+    const lock=await claimRef.transaction(c=>{if(!c||c.status!=='pending')return;c.status='reviewing';c.reviewedBy=user.id;c.reviewStartedAt=Date.now();locked=true;return c;});
+    if(!lock.committed||!locked)return send(res,409,{status:'error',code:'CLAIM_ALREADY_REVIEWED'});
+    if(decision==='reject'){
+      await claimRef.update({status:'rejected',rejectedAt:Date.now(),reviewedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
+      await auditAdmin(user.id,'task_claim_reject',claimId,{taskId,uid});return send(res,200,{status:'ok',claim:{id:claimId,status:'rejected'}});
+    }
+    const settings=await getSettings();let credited=0,failure='';
+    const userTx=await rtdb.ref('users/'+uid).transaction(profile=>{
+      credited=0;failure='';if(!profile||profile.banned){failure='ACCOUNT_UNAVAILABLE';return;}
+      profile.completedTaskClaims=profile.completedTaskClaims||{};profile.taskCompletionCounts=profile.taskCompletionCounts||{};
+      if(profile.completedTaskClaims[claimId]){failure='ALREADY_COMPLETED';return profile;}
+      const taskSnap=lock.snapshot.val()||{},limit=Math.max(1,Math.min(10,Number((taskSnap.task||{}).perUserLimit||1)));
+      const count=Number(profile.taskCompletionCounts[taskId]||0);if(count>=limit){failure='TASK_USER_LIMIT';return;}
+      credited=money(Number(taskSnap.reward||0)*rewardMultiplier(profile));profile.balance=money(Number(profile.balance||0)+credited);
+      profile.totalEarned=money(Number(profile.totalEarned||0)+credited);profile.taskCompletionCounts[taskId]=count+1;
+      if(profile.taskCompletionCounts[taskId]>=limit){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
+      profile.completedTaskClaims[claimId]=Date.now();applyXp(profile,Number(settings.taskXp||20));return profile;
+    });
+    if(!userTx.committed||failure){await claimRef.update({status:'pending',reviewError:failure||'CREDIT_FAILED'});return send(res,503,{status:'error',code:failure||'TASK_REVIEW_CREDIT_FAILED'});}
+    await claimRef.update({status:'approved',reward:credited,approvedAt:Date.now(),approvedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
+    await logTransaction(uid,'task',credited,{taskId,claimId,provider:'manual_task'});await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited});
+    return send(res,200,{status:'ok',claim:{id:claimId,status:'approved',reward:credited}});
+  }
+  if (url.pathname === '/api/admin/analytics') {
+    const [usersSnap,txSnap]=await Promise.all([rtdb.ref('users').once('value'),firestore.collection('transactions').orderBy('timestamp','desc').limit(4000).get()]);
+    const days=Array.from({length:30},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(29-i));return {key:dayKeyFor(d.getTime()),newUsers:0,activeUsers:0,referrals:0,taskCompletions:0,adRecords:0,rewardUsd:0,adCreditUsd:0};});
+    const byDay=new Map(days.map(x=>[x.key,x]));
+    usersSnap.forEach(child=>{const u=child.val()||{};const created=byDay.get(dayKeyFor(Number(u.createdAt||0)));if(created)created.newUsers++;const active=byDay.get(dayKeyFor(Number(u.lastActiveAt||0)));if(active)active.activeUsers++;});
+    txSnap.forEach(doc=>{const v=doc.data()||{},stamp=v.timestamp?.toDate?v.timestamp.toDate().getTime():Number(v.timestamp||0),day=byDay.get(dayKeyFor(stamp));if(!day)return;
+      if(v.type==='referral_bonus')day.referrals++;if(v.type==='task')day.taskCompletions++;
+      if(['ad','sponsor','flyerhubs_task','traffy'].includes(v.type)){day.adRecords++;day.adCreditUsd+=Number(v.amount||0);}
+      if(Number(v.amount||0)>0)day.rewardUsd+=Number(v.amount||0);
+    });
+    const totals=days.reduce((a,d)=>{for(const k of ['newUsers','activeUsers','referrals','taskCompletions','adRecords','rewardUsd','adCreditUsd'])a[k]=(a[k]||0)+d[k];return a;},{});
+    return send(res,200,{status:'ok',days,totals});
+  }
   if (url.pathname === '/api/admin/overview') {
     const [usersSnap, withdrawalsSnap, promosSnap] = await Promise.all([
       rtdb.ref('users').once('value'), rtdb.ref('withdrawals').orderByChild('status').equalTo('pending').limitToLast(100).once('value'),
@@ -820,7 +962,7 @@ async function handleApi(req, res, url) {
     }
     return send(res, 404, { status: 'error', message: 'Not found' });
   } catch (error) {
-    const known = new Set(['ACCOUNT_UNAVAILABLE','ALREADY_CLAIMED','ALREADY_COMPLETED','NO_SPIN_CARDS','SPIN_NOT_CONFIGURED','INVALID_CARD_PACK','INSUFFICIENT_BALANCE','WITHDRAW_LIMIT','INVALID_WITHDRAW_METHOD','WITHDRAW_SAVE_FAILED','TASK_UNAVAILABLE','TASK_VERIFICATION_FAILED','FLYERHUBS_TASK_NOT_FOUND','FLYERHUBS_REWARD_FAILED','FLYERHUBS_UPSTREAM_ERROR','FLYERHUBS_NOT_CONFIGURED','ACTION_NOT_ALLOWED','INVALID_AMOUNT']);
+    const known = new Set(['ACCOUNT_UNAVAILABLE','ALREADY_CLAIMED','ALREADY_COMPLETED','NO_SPIN_CARDS','SPIN_NOT_CONFIGURED','INVALID_CARD_PACK','INSUFFICIENT_BALANCE','WITHDRAW_LIMIT','INVALID_WITHDRAW_METHOD','WITHDRAW_SAVE_FAILED','TASK_UNAVAILABLE','TASK_VERIFICATION_FAILED','TASK_LIMIT_REACHED','TASK_USER_LIMIT','TASK_PROOF_REQUIRED','TASK_CLAIM_FAILED','TASK_REWARD_FAILED','FLYERHUBS_TASK_NOT_FOUND','FLYERHUBS_REWARD_FAILED','FLYERHUBS_UPSTREAM_ERROR','FLYERHUBS_NOT_CONFIGURED','ACTION_NOT_ALLOWED','INVALID_AMOUNT']);
     const status = known.has(error.message) ? 400 : error.message === 'SPONSOR_API_NOT_CONFIGURED' ? 503 : 502;
     return send(res, status, { status: 'error', code: error.message, message: known.has(error.message) ? error.message : 'Request could not be completed' });
   }
