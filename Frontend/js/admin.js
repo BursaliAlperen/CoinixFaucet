@@ -34,11 +34,6 @@ $('promoForm').addEventListener('submit',async e=>{
   try{const d=await api('/api/admin/promo',Object.fromEntries(new FormData(form).entries()));showNotice('Promotion published to Telegram channel.');form.reset();await loadOverview();}
   catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
 });
-$('messageForm').addEventListener('submit',async e=>{
-  e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');btn.disabled=true;
-  try{await api('/api/admin/botmessages',Object.fromEntries(new FormData(form).entries()));showNotice('Telegram message sent.');form.reset();}
-  catch(err){showNotice(err.message,true);}finally{btn.disabled=false;}
-});
 $('settingsForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
   const values=Object.fromEntries([...new FormData(form).entries()].map(([k,v])=>[k,Number(v)]));btn.disabled=true;
