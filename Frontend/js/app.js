@@ -781,11 +781,6 @@ function goTask(v){switchTab('tasks');setTaskView(v);}
 window.addEventListener('offline',()=>showToast('İnternet bağlantısı yok','danger'));
 window.addEventListener('online',()=>showToast('Bağlantı geri geldi','success'));
 boot();
-+reward.toFixed(3)+'</div><div class="m">'+status+'</div></div>'+
-      (isDone?'<button class="act done" disabled>Tamam</button>':isPending?'<button class="act done" disabled>İncelemede</button>':'<button class="act task-start" data-id="'+escapeHtml(t.id)+'">Başla</button>')+
-      '</div></div>';
-  }).join('')+'</div>';
-}
 
 function startTask(id){
   const t=[...tasks,...flyerTasks].find(x=>x.id===id);if(!t)return;
