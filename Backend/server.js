@@ -145,26 +145,26 @@ async function sendTelegramMessage(chatId, text, extra = {}) {
   return telegramCall('sendMessage', {chat_id: chatId, text, ...extra});
 }
 function xpForNextLevel(level) {
-  const n = Math.max(1, Math.min(99, Number(level) || 1));
+  const n = Math.max(1, Math.min(49, Number(level) || 1));
   return Math.floor(50 + n * 10 + n * n * 0.5);
 }
 function applyXp(user, amount) {
   const gain = Math.max(0, Math.floor(Number(amount) || 0));
   user.xp = Math.max(0, Number(user.xp || 0)) + gain;
-  user.level = Math.max(1, Math.min(100, Number(user.level || 1)));
+  user.level = Math.max(1, Math.min(50, Number(user.level || 1)));
   let required = xpForNextLevel(user.level);
-  while (user.level < 100 && user.xp >= required) {
+  while (user.level < 50 && user.xp >= required) {
     user.xp -= required;
     user.level += 1;
     required = xpForNextLevel(user.level);
   }
-  if (user.level >= 100) { user.level = 100; user.xp = Math.min(user.xp, required - 1); }
-  user.xpToNext = user.level >= 100 ? 0 : required;
+  if (user.level >= 50) { user.level = 50; user.xp = Math.min(user.xp, required - 1); }
+  user.xpToNext = user.level >= 50 ? 0 : required;
   user.xpUpdatedAt = Date.now();
   return { level: user.level, xp: user.xp, xpToNext: user.xpToNext, gained: gain };
 }
 function rewardMultiplier(user) {
-  const level = Math.max(1, Math.min(100, Number(user?.level) || 1));
+  const level = Math.max(1, Math.min(50, Number(user?.level) || 1));
   return Math.round((1 + level * 0.02) * 100) / 100;
 }
 async function flyerCall(route, payload) {
@@ -438,12 +438,12 @@ async function handleAdminApi(user, url, body, res) {
       rtdb.ref('users').once('value'), rtdb.ref('withdrawals').orderByChild('status').equalTo('pending').limitToLast(100).once('value'),
       rtdb.ref('promotions').limitToLast(20).once('value')
     ]);
-    let users = 0, totalBalance = 0, totalEarned = 0, level100 = 0;
-    usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); if(Number(v.level||1)>=100)level100++; });
+    let users = 0, totalBalance = 0, totalEarned = 0, level50 = 0;
+    usersSnap.forEach(child => { const v=child.val()||{}; users++; totalBalance+=Number(v.balance||0); totalEarned+=Number(v.totalEarned||0); if(Number(v.level||1)>=50)level50++; });
     const withdrawals=[]; withdrawalsSnap.forEach(child=>withdrawals.push({id:child.key,...child.val()}));
     const promotions=[];promosSnap.forEach(child=>promotions.push({id:child.key,...child.val()}));
     promotions.reverse();
-    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level100,pendingWithdrawals:withdrawals.length},withdrawals,promotions,settings:await getSettings()});
+    return send(res,200,{status:'ok',stats:{users,totalBalance,totalEarned,level50,pendingWithdrawals:withdrawals.length},withdrawals,promotions,settings:await getSettings()});
   }
   if (url.pathname === '/api/admin/promo') {
     if (!ANNOUNCEMENT_CHANNEL_ID) return send(res, 503, {status:'error',code:'ANNOUNCEMENT_CHANNEL_NOT_CONFIGURED'});
@@ -510,8 +510,8 @@ async function handleTelegramWebhook(req, res) {
       const snap=await rtdb.ref('users/'+uid).once('value');
       if(!snap.exists())await sendTelegramMessage(uid,'Open /start first to create your Coinix profile.');
       else{
-        const v=snap.val()||{},level=Math.max(1,Math.min(100,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
-        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/100</b>\\nXP: <b>'+(level>=100?'MAX':xp+' / '+next)+'</b>\\nReward multiplier: <b>'+rewardMultiplier(v).toFixed(2)+'×</b>',{parse_mode:'HTML'});
+        const v=snap.val()||{},level=Math.max(1,Math.min(50,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
+        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/50</b>\\nXP: <b>'+(level>=50?'MAX':xp+' / '+next)+'</b>\\nReward multiplier: <b>'+rewardMultiplier(v).toFixed(2)+'×</b>',{parse_mode:'HTML'});
       }
     }else if(command==='/referrals'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
