@@ -77,6 +77,15 @@ function countUp(el,to,dur=900){
   }
   requestAnimationFrame(step);
 }
+async function apiRequest(path,payload={}) {
+  const initData=window.Telegram?.WebApp?.initData||'';
+  if(!initData)throw new Error('Telegram oturumu doğrulanamadı');
+  const actionId=window.crypto?.randomUUID?.()||('a'+Date.now()+Math.random().toString(16).slice(2));
+  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,initData,actionId})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||data.status==='error')throw new Error(data.code||data.message||('HTTP '+response.status));
+  return data;
+}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 /* ============ INIT ============ */
@@ -84,42 +93,17 @@ async function init(){
   try{
     const tg=window.Telegram?.WebApp;
     if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#ffffff');tg.setBackgroundColor('#F0F4F8');}catch(e){}TGUser=tg.initDataUnsafe?.user;}
-    if(!TGUser){
-      // Demo mode — stable ID stored in sessionStorage so it doesn't change on re-render
-      let demoId=sessionStorage.getItem('_demoId');
-      if(!demoId){demoId=String(Math.floor(1000000+Math.random()*8999999));sessionStorage.setItem('_demoId',demoId);}
-      TGUser={id:demoId,first_name:'Demo User',username:'demo'};
-    }
-
-    const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
-    appSettings=sSnap.val()||{};
-    if(appSettings.maintenance){$('maint').style.display='flex';$('loader').style.display='none';return;}
-
+    if(!TGUser)throw new Error('Bu uygulama Telegram Mini App üzerinden açılmalıdır.');
     const params=new URLSearchParams(window.location.search);
     let refBy=params.get('ref');
     if(!refBy && window.Telegram?.WebApp?.initDataUnsafe?.start_param){refBy=window.Telegram.WebApp.initDataUnsafe.start_param;}
-
+    const session=await apiRequest('/api/session',{referralCode:refBy||''});
+    await firebase.auth().signInWithCustomToken(session.customToken);
     const uid=String(TGUser.id);
+    const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
+    appSettings=sSnap.val()||{};
+    if(appSettings.maintenance){$('maint').style.display='flex';$('loader').style.display='none';return;}
     const uSnap=await withTO(db.ref('users/'+uid).once('value'),12000,null);if(!uSnap)throw new Error('Veritabanı yanıt vermiyor');
-    if(!uSnap.exists()){
-      const newUser={
-        uid, name:TGUser.first_name||'User', username:TGUser.username||'',
-        photoUrl:TGUser.photo_url||'',
-        balance:0,totalEarned:0,totalWithdrawn:0,referralEarned:0,referralCount:0,
-        referredBy:refBy&&refBy!==uid?refBy:null,
-        todayAds:0,lastAdDate:'',checkInStreak:0,lastCheckIn:'',
-        lastCardDate:'',spinCards:0,completedTasks:{},banned:false,
-        createdAt:Date.now()
-      };
-      await db.ref('users/'+uid).set(newUser);
-      if(refBy && refBy!==uid){
-        const refBonus=parseFloat(appSettings.referralBonus||0.1);
-        await db.ref('users/'+refBy).transaction(u=>{
-          if(u){u.referralCount=(u.referralCount||0)+1;u.referralEarned=parseFloat(((u.referralEarned||0)+refBonus).toFixed(4));u.balance=parseFloat(((u.balance||0)+refBonus).toFixed(4));u.totalEarned=parseFloat(((u.totalEarned||0)+refBonus).toFixed(4));}
-          return u;
-        });
-      }
-    }
 
     db.ref('users/'+uid).on('value',snap=>{
       currentUser=snap.val();if(!currentUser)return;
@@ -166,10 +150,8 @@ async function init(){
 async function distributeDailyCard(){
   const today=getBDDate();
   if(!currentUser || currentUser.lastCardDate===today)return;
-  await db.ref('users/'+String(TGUser.id)).update({
-    spinCards:(currentUser.spinCards||0)+parseInt(appSettings.dailyFreeCards||1),
-    lastCardDate:today
-  });
+  try{await apiRequest('/api/economy',{action:'daily_card'});}
+  catch(e){if(e.message!=='ALREADY_CLAIMED')console.warn('Daily card:',e.message);}
 }
 
 /* ============ VIP / TIER ============ */
@@ -331,17 +313,8 @@ async function completeTask(id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   const uid=String(TGUser.id);
   const r=parseFloat(t.reward||0);
-  await db.ref('users/'+uid).transaction(u=>{
-    if(!u)return u;
-    u.completedTasks=u.completedTasks||{};
-    if(u.completedTasks[id])return;
-    u.completedTasks[id]=Date.now();
-    u.balance=parseFloat(((u.balance||0)+r).toFixed(4));
-    u.totalEarned=parseFloat(((u.totalEarned||0)+r).toFixed(4));
-    return u;
-  });
-  fs.collection('transactions').add({userId:uid,type:'task',amount:r,taskTitle:t.title,timestamp:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-  showToast(`+$${r.toFixed(2)} görev tamamlandı!`,'success');
+  try{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi.','success');}
+  catch(e){showToast(e.message==='ALREADY_COMPLETED'?'Bu görev zaten tamamlandı.':'Görev ödülü verilemedi: '+e.message,'danger');}
 }
 
 document.addEventListener('click',e=>{
@@ -526,25 +499,8 @@ function watchAd(){
 
 async function creditAdEarning(){
   clearTimeout(window._adTimer);
-  const uid=String(TGUser.id);
-  const earn=parseFloat(appSettings.perAdEarning||0.005);
-  const today=getBDDate();
-  const lim=parseInt(appSettings.dailyLimit||10);
-  let credited=false;
-  await db.ref('users/'+uid).transaction(u=>{
-    if(!u)return u;
-    const n=u.lastAdDate===today?(u.todayAds||0):0;
-    if(n>=lim)return u;
-    u.todayAds=n+1;u.lastAdDate=today;
-    u.balance=parseFloat(((u.balance||0)+earn).toFixed(4));
-    u.totalEarned=parseFloat(((u.totalEarned||0)+earn).toFixed(4));
-    credited=true;
-    return u;
-  });
-  if(credited){
-    fs.collection('transactions').add({userId:uid,type:'ad',amount:earn,adNetwork:'monetag',timestamp:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-    showToast(`+$${earn.toFixed(4)} reklam bonusu!`,'success');
-  }
+  // Client-side ad SDK callbacks are not trusted as proof of a valid impression.
+  showToast('Reklam ödülü, sağlayıcı imzalı sunucu doğrulaması eklenene kadar kapalı.','warn');
   renderAdSection();
   const btn=$('watchAdBtn');
   if(btn){btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';}
@@ -577,17 +533,8 @@ async function doCheckin(){
   const rewards=(appSettings.checkinRewards||[0.01,0.02,0.03,0.05,0.08,0.12,0.2]);
   const r=parseFloat(rewards[newStreak-1]||0.01);
   const uid=String(TGUser.id);
-  await db.ref('users/'+uid).transaction(u=>{
-    if(!u)return u;
-    u.lastCheckIn=today;u.checkInStreak=newStreak;
-    u.balance=parseFloat(((u.balance||0)+r).toFixed(4));
-    u.totalEarned=parseFloat(((u.totalEarned||0)+r).toFixed(4));
-    return u;
-  });
-  fs.collection('transactions').add({userId:uid,type:'checkin',amount:r,day:newStreak,timestamp:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-  if(newStreak===7){fireConfetti();showToast(`7 gün tamamlandı! +$${r.toFixed(2)} bonus!`,'success');}
-  else showToast(`+$${r.toFixed(2)} yoklama bonusu! Gün ${newStreak}`,'success');
-  closeModal('checkinModal');
+  try{const result=await apiRequest('/api/economy',{action:'checkin'});const streak=Number(result.extra?.day||0);if(streak===7)fireConfetti();showToast('Yoklama ödülü işlendi. Seri: '+streak,'success');closeModal('checkinModal');}
+  catch(e){showToast(e.message==='ALREADY_CLAIMED'?'Bugün zaten yoklama yaptınız.':'Yoklama başarısız: '+e.message,'danger');}
 }
 
 /* SPIN */
@@ -637,23 +584,13 @@ async function doSpin(){
     drawWheel(eased*targetRot);
     if(p<1){requestAnimationFrame(step);}
     else{
-      const prize=parseFloat(rewards[winIdx]);
-      const uid=String(TGUser.id);
-      db.ref('users/'+uid).transaction(u=>{
-        if(!u)return u;
-        if((u.spinCards||0)<1)return;
-        u.spinCards=u.spinCards-1;
-        u.balance=parseFloat(((u.balance||0)+prize).toFixed(4));
-        u.totalEarned=parseFloat(((u.totalEarned||0)+prize).toFixed(4));
-        return u;
-      }).then(()=>{
-        fs.collection('transactions').add({userId:uid,type:'spin',amount:prize,timestamp:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-        fireConfetti();
-        showToast(`Kazandınız: $${prize.toFixed(2)}!`,'success');
-        btn.disabled=false;
-        btn.innerHTML='<i class="ph-duotone ph-arrow-clockwise"></i> Çevir';
-        $('spinCardCount').textContent=Math.max(0,(currentUser.spinCards||0)-1);
-      });
+      try{
+        const result=await apiRequest('/api/economy',{action:'spin'});
+        const prize=Number(result.reward||0);
+        fireConfetti();showToast('Kazandınız: $'+prize.toFixed(4),'success');
+      }catch(e){showToast(e.message==='NO_SPIN_CARDS'?'Çark biletiniz yok.':'Çark işlemi başarısız: '+e.message,'danger');}
+      finally{btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-arrow-clockwise"></i> Çevir';}
+
     }
   }
   requestAnimationFrame(step);
@@ -678,15 +615,8 @@ function openMarket(){
 }
 async function buyCards(q,p){
   if((currentUser.balance||0)<p){showToast('Yetersiz bakiye','danger');return;}
-  const uid=String(TGUser.id);
-  await db.ref('users/'+uid).transaction(u=>{
-    if(!u||(u.balance||0)<p)return;
-    u.balance=parseFloat(((u.balance||0)-p).toFixed(4));
-    u.spinCards=(u.spinCards||0)+q;
-    return u;
-  });
-  fs.collection('transactions').add({userId:uid,type:'purchase',amount:p,cards:q,timestamp:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-  showToast(`${q} bilet başarıyla satın alındı!`,'success');
+  try{await apiRequest('/api/economy',{action:'buy_cards',count:q});showToast(q+' bilet başarıyla satın alındı!','success');}
+  catch(e){showToast(e.message==='INSUFFICIENT_BALANCE'?'Yetersiz bakiye':'Satın alma başarısız: '+e.message,'danger');}
 }
 
 /* NOTIFICATIONS */
@@ -740,13 +670,8 @@ async function submitWithdraw(){
   if(!acc){showToast('Hesap numarası girin','warn');return;}
   if(amt>(currentUser.balance||0)){showToast('Yetersiz bakiye','danger');return;}
   const uid=String(TGUser.id);
-  await db.ref('users/'+uid).transaction(u=>{if(!u||(u.balance||0)<amt)return;u.balance=parseFloat(((u.balance||0)-amt).toFixed(4));return u;});
-  await db.ref('withdrawals').push({
-    userId:uid,name:currentUser.name,amount:amt,method:m.key,methodName:m.name,account:acc,
-    status:'pending',requestedAt:Date.now()
-  });
-  showToast('Çekim talebi gönderildi!','success');
-  $('withdrawAmount').value='';$('withdrawAccount').value='';
+  try{await apiRequest('/api/economy',{action:'withdraw',amount:amt,method:m.key,account:acc});showToast('Çekim talebi gönderildi!','success');$('withdrawAmount').value='';$('withdrawAccount').value='';}
+  catch(e){showToast('Çekim talebi başarısız: '+e.message,'danger');}
 }
 
 /* ===== FAUCET + FX ===== */
@@ -827,14 +752,7 @@ async function checkSponsor(i){
   b.disabled=false;b.textContent='Kontrol';
 }
 async function creditSponsor(link){
-  const uid=String(TGUser.id),k=hashLink(link),r=parseFloat(appSettings.sponsorReward||0.0025);
-  const res=await db.ref('users/'+uid).transaction(u=>{
-    if(!u)return u;u.sponsorDone=u.sponsorDone||{};if(u.sponsorDone[k])return;u.sponsorDone[k]=Date.now();
-    u.balance=parseFloat(((u.balance||0)+r).toFixed(4));u.totalEarned=parseFloat(((u.totalEarned||0)+r).toFixed(4));return u;});
-  if(res.committed&&res.snapshot.val()?.sponsorDone?.[k]){
-    fs.collection('transactions').add({userId:uid,type:'sponsor',amount:r,timestamp:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-    fireConfetti();hap('heavy');showToast(`+$${r.toFixed(4)} sponsor görevi tamamlandı!`,'success');
-  }
+  fireConfetti();hap('heavy');showToast('Sponsor görevi doğrulandı ve ödül sunucuda işlendi.','success');
 }
 
 let _tv='sponsor';
