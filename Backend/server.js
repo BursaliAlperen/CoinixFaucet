@@ -360,7 +360,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     if(claims[actionId]){duplicate=true;return claims;}
     const used=Object.values(claims).filter(c=>c&&['pending','approved','verified','reviewing'].includes(c.status)).length;
     if(used>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){perUserLimit=true;return;}
-    claims[actionId]={taskId,userId:uid,actionId,title:String(task.title||'').slice(0,100),type:String(task.type||''),reward:Number(task.reward||0),
+    claims[actionId]={taskId,userId:uid,actionId,title:String(task.title||'').slice(0,100),type:String(task.type||''),reward:Number(task.reward||0),grossPrice:Number(task.grossPrice||task.reward||0),platformFee:Number(task.platformFee||0),
       proof:String(proof||'').slice(0,500),verificationMethod:method,perUserLimit:Math.max(1,Math.min(10,Number(task.perUserLimit||1))),status:automatic?'verified':'pending',createdAt:Date.now()};
     created=true;return claims;
   });
@@ -381,7 +381,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     if(profile.completedTaskClaims[actionId]){failure='ALREADY_COMPLETED';credited=Number(profile.taskClaimRewards[actionId]||0);return;}
     const count=Number(profile.taskCompletionCounts[taskId]||(profile.completedTasks&&profile.completedTasks[taskId]?1:0));
     if(count>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){failure='TASK_USER_LIMIT';return;}
-    const multiplier=rewardMultiplier(profile);credited=money(Number(task.reward||0)*multiplier);
+    const multiplier=rewardMultiplier(profile);credited=money(Number(task.reward||0));
     profile.balance=money(Number(profile.balance||0)+credited);profile.totalEarned=money(Number(profile.totalEarned||0)+credited);
     profile.taskCompletionCounts[taskId]=count+1;
     if(profile.taskCompletionCounts[taskId]>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
@@ -389,7 +389,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
   });
   if(!userTx.committed||failure){await claimsRef.child(actionId).update({status:'failed',failure,updatedAt:Date.now()});await taskRef.child('totalParticipants').transaction(n=>Math.max(0,Number(n||0)-1));if(failure==='ALREADY_COMPLETED'||failure==='TASK_USER_LIMIT')throw new Error(failure);throw new Error(failure||'TASK_REWARD_FAILED');}
   await claimsRef.child(actionId).update({status:'approved',reward:credited,approvedAt:Date.now(),autoVerified:true});
-  await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),taskType:String(task.type||''),claimId:actionId,provider:'coinix_task'});
+  await logTransaction(uid,'task',credited,{taskId,taskTitle:String(task.title||'').slice(0,100),taskType:String(task.type||''),claimId:actionId,provider:'teddygrow_task'});\n  if(Number(task.platformFee||0)>0){const feeId=crypto.createHash('sha256').update(taskId+'|'+uid+'|'+actionId).digest('hex');await firestore.collection('platformFees').doc(feeId).set({taskId,userId:uid,claimId:actionId,grossPrice:Number(task.grossPrice||0),workerReward:credited,platformFee:Number(task.platformFee||0),createdAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});}
   return {user:userTx.snapshot.val(),reward:credited,pending:false,taskClaim:{id:actionId,status:'approved'}};
 }
 async function applyEconomyAction(uid, body) {
@@ -661,13 +661,13 @@ async function handleAdminApi(user, url, body, res) {
       if(profile.completedTaskClaims[claimId]){alreadyProcessed=true;credited=Number(profile.taskClaimRewards[claimId]||0);return profile;}
       const taskSnap=lock.snapshot.val()||{},limit=Math.max(1,Math.min(10,Number(taskSnap.perUserLimit||1)));
       const count=Number(profile.taskCompletionCounts[taskId]||(profile.completedTasks&&profile.completedTasks[taskId]?1:0));if(count>=limit){failure='TASK_USER_LIMIT';return;}
-      credited=money(Number(taskSnap.reward||0)*rewardMultiplier(profile));profile.balance=money(Number(profile.balance||0)+credited);
+      credited=money(Number(taskSnap.reward||0));profile.balance=money(Number(profile.balance||0)+credited);
       profile.totalEarned=money(Number(profile.totalEarned||0)+credited);profile.taskCompletionCounts[taskId]=count+1;
       if(profile.taskCompletionCounts[taskId]>=limit){profile.completedTasks=profile.completedTasks||{};profile.completedTasks[taskId]=Date.now();}
       profile.completedTaskClaims[claimId]=Date.now();profile.taskClaimRewards[claimId]=credited;applyXp(profile,Number(settings.taskXp||20));return profile;
     });
     if(!userTx.committed||failure){await claimRef.update({status:'pending',reviewError:failure||'CREDIT_FAILED'});return send(res,503,{status:'error',code:failure||'TASK_REVIEW_CREDIT_FAILED'});}
-    await claimRef.update({status:'approved',reward:credited,approvedAt:Date.now(),approvedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});
+    await claimRef.update({status:'approved',reward:credited,approvedAt:Date.now(),approvedBy:user.id,reviewNote:String(body.note||'').slice(0,300)});\n    if(Number(lock.snapshot.val()?.platformFee||0)>0){const taskData=lock.snapshot.val()||{},feeId=crypto.createHash('sha256').update(taskId+'|'+uid+'|'+claimId).digest('hex');await firestore.collection('platformFees').doc(feeId).set({taskId,userId:uid,claimId,grossPrice:Number(taskData.grossPrice||0),workerReward:credited,platformFee:Number(taskData.platformFee||0),createdAt:admin.firestore.FieldValue.serverTimestamp()},{merge:true});}
     if(!alreadyProcessed)await logTransaction(uid,'task',credited,{taskId,claimId,taskType:String(lock.snapshot.val()?.type||''),provider:'manual_task'});
     await auditAdmin(user.id,'task_claim_approve',claimId,{taskId,uid,credited,recovered:alreadyProcessed});
     return send(res,200,{status:'ok',claim:{id:claimId,status:'approved',reward:credited,recovered:alreadyProcessed}});
