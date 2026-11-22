@@ -850,6 +850,7 @@ const server = http.createServer(async (req, res) => {
     const required=['apiKey','authDomain','databaseURL','projectId','appId'];
     const missing=required.filter(key=>!FIREBASE_PUBLIC_CONFIG[key]);
     if(missing.length)return send(res,503,{status:'error',code:'FIREBASE_WEB_CONFIG_MISSING',missing});
+    if(!initFirebase())return send(res,503,{status:'error',code:'FIREBASE_ADMIN_NOT_READY'});
     return send(res,200,FIREBASE_PUBLIC_CONFIG);
   }
   if (req.method === 'GET' && url.pathname === '/health') {
