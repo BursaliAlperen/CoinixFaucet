@@ -119,9 +119,9 @@ async function init(){
     let refBy=params.get('ref');
     if(!refBy && window.Telegram?.WebApp?.initDataUnsafe?.start_param){refBy=window.Telegram.WebApp.initDataUnsafe.start_param;}
     const session=await apiRequest('/api/session',{referralCode:refBy||''});
-    window.COINIX_ADMIN = session.isAdmin === true;
-    window.COINIX_BOT_USERNAME = session.botUsername || '';window.COINIX_TRAFFY_LINK=session.traffyLink||'';
-    const adminButton=$('adminOpenBtn');if(adminButton&&window.COINIX_ADMIN)adminButton.style.display='inline-flex';
+    window.TEDDY_ADMIN = session.isAdmin === true;
+    window.TEDDY_BOT_USERNAME = session.botUsername || '';window.TEDDY_TRAFFY_LINK=session.traffyLink||'';
+    const adminButton=$('adminOpenBtn');if(adminButton&&window.TEDDY_ADMIN)adminButton.style.display='inline-flex';
     db={ref:path=>new LiveRef(path)};
     const uid=String(TGUser.id);
     window.setInterval(renderReferralBonusCountdown,1000);
@@ -263,7 +263,7 @@ function renderReferralBonusCountdown(){
   const remaining=hours+'s '+minutes+'d '+secs+'sn';$('tRefCountdown').textContent=remaining;if($('homeRefCountdown'))$('homeRefCountdown').textContent=remaining+' kaldı';
 }
 function renderTeam(){
-  const bot=window.COINIX_BOT_USERNAME||appSettings.botUsername||'EarnBDBot';
+  const bot=window.TEDDY_BOT_USERNAME||appSettings.botUsername||'EarnBDBot';
   const link=`https://t.me/${bot}?start=ref_${currentUser.uid}`;
   $('refLink').value=link;
   $('tRefCount').textContent=currentUser.referralCount||0;
@@ -492,14 +492,14 @@ function renderTransactions(){
 
 /* ============ TRAFFY PROVIDER ============ */
 function openHelp(){
-  const bot=String(window.COINIX_BOT_USERNAME||'').replace(/^@/,'');
+  const bot=String(window.TEDDY_BOT_USERNAME||'').replace(/^@/,'');
   if(!bot){showToast('Bot bağlantısı yapılandırılmamış.','warn');return;}
   const url='https://t.me/'+bot;
   const tg=window.Telegram?.WebApp;
   if(tg?.openTelegramLink)tg.openTelegramLink(url);else if(tg?.openLink)tg.openLink(url);else window.open(url,'_blank','noopener,noreferrer');
 }
 function watchAd(){
-  const link=String(window.COINIX_TRAFFY_LINK||'');
+  const link=String(window.TEDDY_TRAFFY_LINK||'');
   if(!link){showToast('Traffy bağlantısı için yönetici link ön ekini yapılandırmalı. API üzerinden ödül doğrulaması henüz etkin değil.','warn');return;}
   const tg=window.Telegram?.WebApp;
   if(tg?.openTelegramLink)tg.openTelegramLink(link);else if(tg?.openLink)tg.openLink(link);else window.open(link,'_blank','noopener,noreferrer');
@@ -654,7 +654,7 @@ function copyRef(){
 }
 function shareTG(){
   const link=$('refLink').value;
-  const txt="Coinix FAUCET'e katıl ve her gün kazan!";
+  const txt="TeddyGrow FAUCET'e katıl ve her gün kazan!";
   if(window.Telegram?.WebApp?.openTelegramLink){
     window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(txt)}`);
   }else{
