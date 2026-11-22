@@ -53,6 +53,22 @@
     <footer>COINIX FAUCET · ADMIN CONTROL · SECURE TELEGRAM SESSION</footer>
   </main>
 </div>
+  <div class="modal" id="withdrawModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="withdrawModalTitle">
+      <div class="modal-head"><div><div class="eyebrow">CRYPTO PAYOUT</div><h2 id="withdrawModalTitle">Settle withdrawal</h2></div><button type="button" class="modal-close" id="closeWithdrawModal" aria-label="Close">×</button></div>
+      <form id="withdrawActionForm">
+        <input type="hidden" id="withdrawActionId">
+        <input type="hidden" id="withdrawAction">
+        <div class="modal-summary" id="withdrawModalSummary"></div>
+        <div id="payoutFields">
+          <label>Actual payout amount (TON / GRAM)<input id="payoutAmount" type="number" min="0" step="0.000000001" placeholder="0.00"></label>
+          <label>Blockchain transaction hash<input id="payoutTxHash" type="text" maxlength="160" placeholder="Paste transaction hash" autocomplete="off"></label>
+        </div>
+        <div id="rejectFields" hidden><label>Reason (optional)<textarea id="payoutRejectReason" rows="3" maxlength="200" placeholder="Reason for rejection"></textarea></label></div>
+        <div class="modal-actions"><button type="button" class="secondary" id="cancelWithdrawModal">Cancel</button><button type="submit" class="primary" id="confirmWithdrawAction">Confirm</button></div>
+      </form>
+    </div>
+  </div>
 <script src="/js/admin.js" defer></script>
 </body>
 </html>
