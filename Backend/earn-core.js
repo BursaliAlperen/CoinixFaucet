@@ -46,4 +46,32 @@ function cleanTaskInput(body, now = Date.now()) {
   if (['link','manual'].includes(type) && verificationMethod !== 'manual') throw new Error('MANUAL_TASK_REQUIRES_MANUAL_REVIEW');
   return { title, description, type, verificationMethod, url, chatId, reward, startAt, endAt, totalLimit, perUserLimit };
 }
-module.exports = { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen, cleanTaskInput };
+function isValidReferral(referrerId, inviteeId, alreadyClaimed = false) {
+  const ref=String(referrerId||''),invitee=String(inviteeId||'');
+  return !alreadyClaimed && /^\\d{1,20}$/.test(ref) && /^\\d{1,20}$/.test(invitee) && ref!==invitee;
+}
+class FixedWindowLimiter {
+  constructor(limit=300,windowMs=60000){this.limit=limit;this.windowMs=windowMs;this.startedAt=0;this.count=0;}
+  take(now=Date.now()){
+    if(!this.startedAt||now-this.startedAt>=this.windowMs){this.startedAt=now;this.count=0;}
+    if(this.count>=this.limit)return false;
+    this.count++;return true;
+  }
+}
+function isNewExternalEvent(eventId,knownIds={}) {
+  const id=String(eventId||'').trim();
+  return Boolean(id)&&!Object.prototype.hasOwnProperty.call(knownIds,id);
+}
+function isTraffyApiReady(apiKey,contractVerified=false) {
+  return Boolean(String(apiKey||'').trim())&&contractVerified===true;
+}
+function classifyProviderError(status) {
+  const code=Number(status);
+  if(code===429)return 'RATE_LIMITED';
+  if(code>=500)return 'TEMPORARY_UPSTREAM_ERROR';
+  if(code>=400)return 'PROVIDER_REJECTED';
+  if(!code)return 'INVALID_PROVIDER_RESPONSE';
+  return 'PROVIDER_ERROR';
+}
+module.exports = { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen, cleanTaskInput,
+  isValidReferral, FixedWindowLimiter, isNewExternalEvent, isTraffyApiReady, classifyProviderError };
