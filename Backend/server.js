@@ -278,12 +278,13 @@ async function applyEconomyAction(uid, body) {
       if (!taskId || !task || task.active === false) { failure = 'TASK_UNAVAILABLE'; return; }
       user.completedTasks = user.completedTasks || {};
       if (user.completedTasks[taskId]) { failure = 'ALREADY_COMPLETED'; return; }
-      credited = money(Number(task.reward || 0) * rewardMultiplier(user));
+      const multiplier = rewardMultiplier(user);
+      credited = money(Number(task.reward || 0) * multiplier);
       user.completedTasks[taskId] = Date.now();
       user.balance = money(balance + credited);
       user.totalEarned = money(Number(user.totalEarned || 0) + credited);
       const xpResult = applyXp(user, Number(settings.taskXp || 20));
-      extra = { taskId, taskTitle: String(task.title || '').slice(0, 120), xp: xpResult, multiplier: rewardMultiplier(user) };
+      extra = { taskId, taskTitle: String(task.title || '').slice(0, 120), xp: xpResult, multiplier };
     } else if (action === 'checkin') {
       const today = dayKey();
       if (user.lastCheckIn === today) { failure = 'ALREADY_CLAIMED'; return; }
@@ -376,14 +377,15 @@ async function completeFlyerTask(uid, signature, settings) {
   if (checked.result !== 'complete') return { completed: false, providerStatus: checked.result || 'unknown' };
   const userRef = rtdb.ref('users/' + uid);
   const reward = money(settings.flyerhubsTaskReward == null ? 0.01 : settings.flyerhubsTaskReward);
-  let failure = '', already = false, credited = 0, xp = null;
+  let failure = '', already = false, credited = 0, xp = null, multiplier = 1;
   const tx = await userRef.transaction(user => {
-    failure = ''; already = false; credited = 0; xp = null;
+    failure = ''; already = false; credited = 0; xp = null; multiplier = 1;
     if (!user || user.banned) { failure = 'ACCOUNT_UNAVAILABLE'; return; }
     user.completedTasks = user.completedTasks || {};
     const id = 'fh_' + taskKey;
     if (user.completedTasks[id]) { already = true; return user; }
-    credited = money(reward * rewardMultiplier(user));
+    multiplier = rewardMultiplier(user);
+    credited = money(reward * multiplier);
     user.balance = money(Number(user.balance || 0) + credited);
     user.totalEarned = money(Number(user.totalEarned || 0) + credited);
     user.completedTasks[id] = Date.now();
@@ -394,7 +396,7 @@ async function completeFlyerTask(uid, signature, settings) {
   if (already) return { completed: true, duplicate: true, reward: 0, xp: null };
   await logTransaction(uid, 'flyerhubs_task', credited, { signatureHash: taskKey, taskName: String(task.name || task.task || 'FlyerHubs task').slice(0, 100), xp });
   await taskRef.remove();
-  return { completed: true, duplicate: false, reward: credited, xp, multiplier: rewardMultiplier(tx.snapshot.val()) };
+  return { completed: true, duplicate: false, reward: credited, xp, multiplier };
 }
 async function verifyTelegramTask(uid, task) {
   if (!BOT_TOKEN || !task || task.active === false) return false;
