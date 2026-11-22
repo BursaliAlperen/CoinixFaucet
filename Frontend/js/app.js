@@ -749,7 +749,10 @@ async function checkSponsor(i){
   try{
     const d=await spApi('/sponsors/check',{user_id:Number(TGUser.id),links:[s.link]});
     const st=(d.sponsors||[]).find(x=>x.link===s.link)?.status;
-    if(st==='subscribed')await creditSponsor(s.link);
+    if(st==='subscribed'){
+      if(d.rewarded)await creditSponsor(s.link);
+      else showToast('Bu sponsor görevinin ödülü daha önce işlendi.','warn');
+    }
     else if(st==='not_counted')showToast('Görev sayıldı ama ödül verilmedi','warn');
     else showToast('Görev henüz tamamlanmamış','warn');
   }catch(e){showToast(e.message,'danger');}
