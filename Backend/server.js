@@ -284,7 +284,7 @@ async function applyEconomyAction(uid, body) {
     } else if (action === 'checkin') {
       const today = dayKey();
       if (user.lastCheckIn === today) { failure = 'ALREADY_CLAIMED'; return; }
-      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', { timeZone: process.env.REWARD_TIMEZONE || 'Asia/Dhaka' });
+      const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA', { timeZone: process.env.REWARD_TIMEZONE || 'Europe/Istanbul' });
       const streak = user.lastCheckIn === yesterday ? Math.min(7, Number(user.checkInStreak || 0) + 1) : 1;
       const rewards = Array.isArray(settings.checkinRewards) ? settings.checkinRewards : [0.01,0.02,0.03,0.05,0.08,0.12,0.2];
       credited = money(rewards[streak - 1] || 0.01);
