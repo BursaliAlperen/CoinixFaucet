@@ -12,17 +12,22 @@ let _dailyCardDone = false; // guard: run distributeDailyCard only once per sess
 
 /* ============ UTILS ============ */
 const $=id=>document.getElementById(id);
-function getRewardMultiplier(level){const n=Math.max(1,Math.min(50,Number(level)||1));return Math.round((1+n*0.02)*100)/100;}
+function getRewardMultiplier(userOrLevel){
+  const user=typeof userOrLevel==='object'&&userOrLevel?userOrLevel:(currentUser||{level:userOrLevel});
+  const level=Math.max(1,Math.min(50,Number(user.level)||1)),now=Date.now();
+  const bonuses=Object.values(user.referralBonuses||{}).reduce((sum,b)=>sum+(b&&Number(b.startsAt||0)<=now&&Number(b.endsAt||0)>now?Math.max(0,Math.min(.25,Number(b.multiplierBonus||0))):0),0);
+  return Math.round((1+level*.02+bonuses)*10000)/10000;
+}
 const API_TASK_REWARD_USD=0.002;
 function hap(t){try{window.Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}catch(e){}}
 function setAmt(f){const b=parseFloat(currentUser?.balance||0);$('withdrawAmount').value=(Math.floor(b*f*10000)/10000).toFixed(4);hap();}
 function renderExtras(){
-  $('perAdEarn2').textContent=API_TASK_REWARD_USD.toFixed(3);$('spRw2').textContent=API_TASK_REWARD_USD.toFixed(3);
+  if($('perAdEarn2'))$('perAdEarn2').textContent='API bekleniyor';if($('spRw2'))$('spRw2').textContent=API_TASK_REWARD_USD.toFixed(3);
   const level=Math.max(1,Math.min(50,Number(currentUser.level||1))),xp=Math.max(0,Number(currentUser.xp||0)),xpNext=Number(currentUser.xpToNext||0);
   if($('xpLevel'))$('xpLevel').textContent=level;
   if($('xpText'))$('xpText').textContent=level>=50?'MAX LEVEL':xp+' / '+xpNext+' XP';
   if($('xpFill'))$('xpFill').style.width=(level>=50?100:Math.min(100,xpNext?xp/xpNext*100:0))+'%';
-  if($('xpBonus'))$('xpBonus').textContent='Reward multiplier: '+getRewardMultiplier(level).toFixed(2)+'×';
+  if($('xpBonus'))$('xpBonus').textContent='Reward multiplier: '+getRewardMultiplier(currentUser).toFixed(2)+'×';
   const e=parseFloat(currentUser.totalEarned||0),v=appSettings;
   const st=[['Bronze',0],['Silver',v.vipSilver||10],['Gold',v.vipGold||50],['Platinum',v.vipPlatinum||200]];
   let i=st.findIndex((x,k)=>k===st.length-1||e<st[k+1][1]);const c=st[i],n=st[i+1];
@@ -85,7 +90,7 @@ async function apiRequest(path,payload={}) {
   const actionId=window.crypto?.randomUUID?.()||('a'+Date.now()+Math.random().toString(16).slice(2));
   const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,initData,actionId})});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok||data.status==='error')throw new Error(data.code||data.message||('HTTP '+response.status));
+  if(!response.ok||data.status==='error'){const error=new Error(data.code||data.message||('HTTP '+response.status));error.code=data.code||'';error.channelUrl=data.channelUrl||'';throw error;}
   return data;
 }
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -101,12 +106,12 @@ async function init(){
     if(!refBy && window.Telegram?.WebApp?.initDataUnsafe?.start_param){refBy=window.Telegram.WebApp.initDataUnsafe.start_param;}
     const session=await apiRequest('/api/session',{referralCode:refBy||''});
     window.COINIX_ADMIN = session.isAdmin === true;
-    window.COINIX_BOT_USERNAME = session.botUsername || '';
+    window.COINIX_BOT_USERNAME = session.botUsername || '';window.COINIX_TRAFFY_LINK=session.traffyLink||'';
     const adminButton=$('adminOpenBtn');if(adminButton&&window.COINIX_ADMIN)adminButton.style.display='inline-flex';
     await firebase.auth().signInWithCustomToken(session.customToken);
     const uid=String(TGUser.id);
     const sSnap=await withTO(db.ref('settings').once('value'),8000,{val:()=>({})});
-    appSettings=sSnap.val()||{};if(!appSettings.monetagZoneId&&session.monetagZoneId)appSettings.monetagZoneId=session.monetagZoneId;
+    appSettings=sSnap.val()||{};
     if(appSettings.maintenance){$('maint').style.display='flex';$('loader').style.display='none';return;}
     const uSnap=await withTO(db.ref('users/'+uid).once('value'),12000,null);if(!uSnap)throw new Error('Veritabanı yanıt vermiyor');
 
@@ -154,8 +159,10 @@ async function init(){
 
     $('loader').style.display='none';
   }catch(e){
-    console.error(e);
-    failScreen('Başlatma başarısız: '+escapeHtml(e.message||e));
+    if(['NOT_MEMBER','CHANNEL_NOT_CONFIGURED','BOT_NOT_ADMIN','CHANNEL_NOT_FOUND','TELEGRAM_API_UNAVAILABLE'].includes(e.code)){
+      showChannelGate(e);return;
+    }
+    console.error(e);failScreen('Başlatma başarısız: '+escapeHtml(e.message||e));
   }
 }
 
@@ -448,74 +455,13 @@ function renderTransactions(){
   }).join('');
 }
 
-/* ============ ADS (Monetag) ============ */
-/* ============ ADS (Monetag — Earn.html pattern) ============ */
-let _sdkLoaded=false,_sdkLoading=false,_sdkCallbacks=[];
-let _autoAdInterval=null;
-
-function loadMonetagSDK(zoneId, cb){
-  if(_sdkLoaded){cb();return;}
-  _sdkCallbacks.push(cb);
-  if(_sdkLoading)return;
-  _sdkLoading=true;
-  // Remove any previous SDK script to avoid duplicate
-  const prev=document.querySelector('script[data-zone="'+zoneId+'"]');
-  if(prev)prev.remove();
-  const s=document.createElement('script');
-  s.src='//libtl.com/sdk.js';
-  s.setAttribute('data-zone', String(zoneId));
-  s.setAttribute('data-sdk','show_'+zoneId);
-  s.setAttribute('data-cfasync','false');
-  s.async=true;
-  s.onload=()=>{
-    _sdkLoaded=true;_sdkLoading=false;
-    _sdkCallbacks.forEach(fn=>fn());
-    _sdkCallbacks=[];
-  };
-  s.onerror=()=>{
-    console.warn('Monetag SDK load failed');
-    _sdkLoading=false;
-    _sdkCallbacks.forEach(()=>showToast('Reklam sağlayıcısına bağlanılamadı.','danger'));
-    _sdkCallbacks=[];
-    const btn=$('watchAdBtn');if(btn){btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';}
-  };
-  document.head.appendChild(s);
-}
-
+/* ============ TRAFFY PROVIDER ============ */
 function watchAd(){
-  const today=getBDDate();
-  const todayAds=currentUser.lastAdDate===today?(currentUser.todayAds||0):0;
-  const lim=parseInt(appSettings.dailyLimit||10);
-  const zoneId=String(appSettings.monetagZoneId||'');
-  if(!zoneId){showToast('Monetag zone ID ayarlanmamış.','warn');return;}
-  if(todayAds>=lim){showToast('Günlük limit doldu','warn');return;}
-  const btn=$('watchAdBtn');
-  btn.disabled=true;btn.innerHTML='<i class="ph-duotone ph-spinner-gap"></i> Reklam yükleniyor...';
-  loadMonetagSDK(zoneId,()=>{
-    const showFn=window['show_'+zoneId];
-    if(typeof showFn!=='function'){
-      showToast('Reklam şu anda hazır değil.','warn');
-      btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';return;
-    }
-    const ymid=String(TGUser.id)+'_'+(window.crypto?.randomUUID?.()||Date.now()+'_'+Math.random().toString(16).slice(2));
-    try{
-      const result=showFn({ymid});
-      if(!result||typeof result.then!=='function'){
-        showToast('Reklam başlatıldı. Ödül yalnızca sağlayıcı onayından sonra eklenir.','info');
-        btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';return;
-      }
-      result.then(()=>showToast('İzlenme alındı. Ödül sağlayıcı onayı bekliyor.','info'))
-        .catch(err=>{console.warn('Monetag ad not verified:',err);showToast('Reklam tamamlanamadı veya doğrulanmadı.','warn');})
-        .finally(()=>{btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';});
-    }catch(error){
-      console.warn('Monetag show error:',error);
-      showToast('Reklam başlatılamadı.','danger');
-      btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-play-circle"></i> Reklam İzle';
-    }
-  });
-}
-async function creditAdEarning(){
-  showToast('Ödül, Monetag sunucu bildirimi geldiğinde otomatik eklenecek.','info');
+  const link=String(window.COINIX_TRAFFY_LINK||'');
+  if(!link){showToast('Traffy bağlantısı için yönetici link ön ekini yapılandırmalı. API üzerinden ödül doğrulaması henüz etkin değil.','warn');return;}
+  const tg=window.Telegram?.WebApp;
+  if(tg?.openTelegramLink)tg.openTelegramLink(link);else if(tg?.openLink)tg.openLink(link);else window.open(link,'_blank','noopener,noreferrer');
+  showToast('Traffy bağlantısı açıldı. Ödül, resmi API doğrulaması etkinleştirilmeden bakiyeye eklenmez.','info');
 }
 /* ============ TABS ============ */
 function switchTab(name){
