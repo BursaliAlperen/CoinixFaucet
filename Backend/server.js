@@ -520,7 +520,6 @@ async function handleTelegramWebhook(req, res) {
       const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
       const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Open the Referrals tab in Coinix to copy your invite link.';
       await sendTelegramMessage(uid,'👥 <b>Your referrals</b>\\nInvited: <b>'+Number(v.referralCount||0)+'</b>\\nEarned: <b>'+Number(v.referralEarned||0).toFixed(4)+'</b>\\n\\n'+escapeHtml(link),{parse_mode:'HTML'});
-    }
     }else if(command==='/admin'){
       if(!isAdmin(uid))await sendTelegramMessage(uid,'You are not authorized to use the admin panel.');
       else{
