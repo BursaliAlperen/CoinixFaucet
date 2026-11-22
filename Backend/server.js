@@ -698,7 +698,9 @@ async function handleApi(req, res, url) {
         let sponsorHash = 5381;
         for (let i = 0; i < links[0].length; i++) sponsorHash = ((sponsorHash << 5) + sponsorHash + links[0].charCodeAt(i)) >>> 0;
         const key = 'sp' + sponsorHash.toString(36);
-        const reward = money((await getSettings()).sponsorReward == null ? 0.0025 : (await getSettings()).sponsorReward);
+        const sponsorSettings = await getSettings();
+        const reward = money(sponsorSettings.sponsorReward == null ? 0.0025 : sponsorSettings.sponsorReward);
+        const sponsorXpAmount = Number(sponsorSettings.sponsorTaskXp || sponsorSettings.taskXp || 20);
         let credited = false;
         const tx = await rtdb.ref('users/' + user.id).transaction(profile => {
           if (!profile || profile.banned) return;
@@ -709,7 +711,7 @@ async function handleApi(req, res, url) {
           const finalReward = money(reward * multiplier);
           profile.balance = money(Number(profile.balance || 0) + finalReward);
           profile.totalEarned = money(Number(profile.totalEarned || 0) + finalReward);
-          const sponsorXp = applyXp(profile, Number((await getSettings()).sponsorTaskXp || (await getSettings()).taskXp || 20));
+          const sponsorXp = applyXp(profile, sponsorXpAmount);
           data.xp = sponsorXp;
           data.multiplier = multiplier;
           data.reward = finalReward;
