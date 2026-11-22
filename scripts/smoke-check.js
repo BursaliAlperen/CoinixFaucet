@@ -29,7 +29,7 @@ const required = [
   ['Firestore-only authenticated data API', '/api/live'],
   ['Firestore compatibility store', 'new FirestoreCompat(firestore)'],
   ['70/30 task budget fields', 'platformBudget'],
-  ['Telegram microtask commands', "command==='/campaign'"],
+  ['Telegram microtask commands', "{command:'campaign'"],
   ['Inline SVG icon system', 'ton:'],
   ['Istanbul reward timezone', 'Europe/Istanbul']
 ];
