@@ -870,7 +870,8 @@ async function handleTelegramWebhook(req, res) {
       const snap=await rtdb.ref('users/'+uid).once('value'),v=snap.val()||{},bot=BOT_USERNAME.replace(/^@/,'');
       const link=bot?'https://t.me/'+bot+'?start=ref_'+uid:'Open the Referrals tab in Coinix to copy your invite link.';
       const bonus=activeReferralBonusTotal(v);await sendTelegramMessage(uid,'👥 <b>Davetlerin</b>\nDavet sayısı: <b>'+Number(v.referralCount||0)+'</b>\nAktif ek çarpan: <b>+'+bonus.toFixed(2)+'x</b>\nBonus süresi: <b>24 saat</b>\n\n'+escapeHtml(link),{parse_mode:'HTML'});
-      }\n    }else if(command==='/admin'){
+      }
+    }else if(command==='/admin'){
       if(!isAdmin(uid))await sendTelegramMessage(uid,'Yönetim panelini kullanma yetkin yok.');
       else{
         const url=(WEBAPP_URL||PUBLIC_BASE_URL)+'/admin';
