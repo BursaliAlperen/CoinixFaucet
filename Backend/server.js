@@ -509,7 +509,7 @@ async function handleTelegramWebhook(req, res) {
       if(!snap.exists())await sendTelegramMessage(uid,'Open /start first to create your Coinix profile.');
       else{
         const v=snap.val()||{},level=Math.max(1,Math.min(100,Number(v.level||1))),xp=Number(v.xp||0),next=Number(v.xpToNext||0);
-        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/100</b>\\nXP: <b>'+(level>=100?'MAX':xp+' / '+next)+'</b>\\n'+(level>=100?'Your reward multiplier is '+rewardMultiplier(v).toFixed(2)+'× for eligible rewards.':'Complete verified ads, tasks and daily check-ins to earn XP.'),{parse_mode:'HTML'});
+        await sendTelegramMessage(uid,'🏅 <b>Coinix Level</b>\\nLevel: <b>'+level+'/100</b>\\nXP: <b>'+(level>=100?'MAX':xp+' / '+next)+'</b>\\nReward multiplier: <b>'+rewardMultiplier(v).toFixed(2)+'×</b>',{parse_mode:'HTML'});
       }
     }else if(command==='/referrals'){
       if(!initFirebase())throw new Error('FIREBASE_NOT_CONFIGURED');
