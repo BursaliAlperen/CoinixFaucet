@@ -274,6 +274,17 @@ async function ensurePayoutMethods() {
     await rtdb.ref('withdrawMethods/'+key).transaction(current=>current||value);
   }
 }
+async function expireReferralBonuses(uid) {
+  const now=Date.now();let expired=0;
+  const tx=await rtdb.ref('users/'+String(uid)+'/referralBonuses').transaction(bonuses=>{
+    if(!bonuses||typeof bonuses!=='object')return bonuses;
+    for(const [key,bonus] of Object.entries(bonuses)){
+      if(bonus&&bonus.status==='active'&&Number(bonus.endsAt||0)<=now){bonus.status='expired';bonus.expiredAt=now;expired++;}
+    }
+    return bonuses;
+  });
+  if(tx.committed&&expired)console.info('[referral-bonus] expired',expired);
+}
 async function bootstrap(user, referralCode) {
   await ensurePayoutMethods();
   let validReferralCode = '';
@@ -896,8 +907,10 @@ async function handleApi(req, res, url) {
       const membership=await checkRequiredChannel(user.id);
       if(!membership.ok)return send(res,403,{status:'error',code:membership.reason,channelUrl:REQUIRED_CHANNEL_URL});
       const referralCode = String(body.referralCode || '').replace(/\D/g, '').slice(0, 20);
-      const profile = await bootstrap(user, referralCode);
+      await bootstrap(user, referralCode);
+      await expireReferralBonuses(user.id);
       await rtdb.ref('users/'+user.id+'/lastActiveAt').set(Date.now());
+      const profileSnap=await rtdb.ref('users/'+user.id).once('value'),profile=profileSnap.val()||{};
       if (profile.banned) return send(res, 403, { status: 'error', message: 'Account unavailable' });
       const customToken = await admin.auth().createCustomToken(user.id);
       return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME, referralBonusMultiplier: Number((await getSettings()).referralMultiplierBonus ?? 0.02), referralBonusDurationHours: Number((await getSettings()).referralBonusDurationHours ?? 24), traffyLink: TRAFFY_LINK_PREFIX ? 'https://t.me/Traffy_robot?startapp=l_'+TRAFFY_LINK_PREFIX+'_'+user.id : '' });
