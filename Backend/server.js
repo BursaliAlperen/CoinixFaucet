@@ -242,7 +242,7 @@ async function sendMembershipGate(uid,reason='NOT_MEMBER') {
   await sendTelegramMessage(uid,messages[reason]||messages.NOT_MEMBER,{reply_markup:membershipKeyboard()});
 }
 async function savePendingReferral(uid,code) {
-  code=String(code||'');if(!/^\\d{1,20}$/.test(code)||code===String(uid))return;
+  code=String(code||'');if(!/^\d{1,20}$/.test(code)||code===String(uid))return;
   await rtdb.ref('pendingReferrals/'+uid).transaction(v=>v||{referrer:code,createdAt:Date.now()});
 }
 async function flyerCall(route, payload) {
@@ -634,7 +634,7 @@ async function handleAdminApi(user, url, body, res) {
   }
   if (url.pathname === '/api/admin/task-review') {
     const taskId=String(body.taskId||''),uid=String(body.userId||''),claimId=String(body.claimId||''),decision=String(body.decision||'');
-    if(!taskId||!/^\\d{1,20}$/.test(uid)||!claimId||!['approve','reject'].includes(decision))return send(res,400,{status:'error',code:'INVALID_TASK_REVIEW'});
+    if(!taskId||!/^\d{1,20}$/.test(uid)||!claimId||!['approve','reject'].includes(decision))return send(res,400,{status:'error',code:'INVALID_TASK_REVIEW'});
     const claimRef=rtdb.ref('taskClaims/'+taskId+'/'+uid+'/'+claimId);let locked=false;
     const lock=await claimRef.transaction(c=>{if(!c||c.status!=='pending')return;c.status='reviewing';c.reviewedBy=user.id;c.reviewStartedAt=Date.now();locked=true;return c;});
     if(!lock.committed||!locked)return send(res,409,{status:'error',code:'CLAIM_ALREADY_REVIEWED'});
