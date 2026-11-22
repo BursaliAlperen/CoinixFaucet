@@ -180,6 +180,7 @@ async function applyEconomyAction(uid, body) {
   const methodKey = String(body.method || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80);
   const methodSnapshot = action === 'withdraw' && methodKey ? await rtdb.ref('withdrawMethods/' + methodKey).once('value') : null;
   const methodRecord = methodSnapshot && methodSnapshot.exists() ? methodSnapshot.val() : null;
+  if (action === 'task' && !(await verifyTelegramTask(uid, taskRecord))) throw new Error('TASK_VERIFICATION_FAILED');
   let credited = 0;
   let logType = action;
   let extra = {};
@@ -288,6 +289,28 @@ async function applyEconomyAction(uid, body) {
     catch (error) { console.error('[transaction-log]', error.message); }
   }
   return { user: updatedUser, reward: action === 'spin' ? credited : undefined, extra };
+}
+async function verifyTelegramTask(uid, task) {
+  if (!BOT_TOKEN || !task || task.active === false) return false;
+  const type = String(task.type || '').toLowerCase();
+  if (!['telegram','channel','group'].includes(type)) return false;
+  let chatId = task.chatId || task.chat_id || '';
+  if (!chatId) {
+    const link = String(task.url || task.link || '');
+    const match = link.match(/^https:\/\/t\.me\/([A-Za-z0-9_]{5,})(?:[/?#]|$)/i);
+    if (match) chatId = '@' + match[1];
+  }
+  if (!chatId) return false;
+  const endpoint = 'https://api.telegram.org/bot' + BOT_TOKEN + '/getChatMember?chat_id=' +
+    encodeURIComponent(String(chatId)) + '&user_id=' + encodeURIComponent(String(uid));
+  try {
+    const response = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok || !data.result) return false;
+    const member = data.result;
+    return ['creator','administrator','member'].includes(member.status) ||
+      (member.status === 'restricted' && member.is_member === true);
+  } catch { return false; }
 }
 async function callPiarflow(route, payload) {
   if (!PIARFLOW_API_KEY) throw new Error('SPONSOR_API_NOT_CONFIGURED');
