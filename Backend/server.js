@@ -75,22 +75,38 @@ function readBody(req) {
   });
 }
 function verifyTelegramInitData(initData) {
-  if (!BOT_TOKEN || typeof initData !== 'string' || !initData || initData.length > 8192) return null;
+  if (!BOT_TOKEN || typeof initData !== 'string' || !initData || initData.length > 8192) {
+    console.warn('[auth] Telegram initData missing or malformed');
+    return null;
+  }
   const params = new URLSearchParams(initData);
   const hash = params.get('hash');
   const authDate = Number(params.get('auth_date'));
   const userRaw = params.get('user');
-  if (!hash || !/^[a-f0-9]{64}$/i.test(hash) || !Number.isFinite(authDate) || !userRaw) return null;
+  if (!hash || !/^[a-f0-9]{64}$/i.test(hash) || !Number.isSafeInteger(authDate) || authDate <= 0 || !userRaw) {
+    console.warn('[auth] Telegram initData required fields missing');
+    return null;
+  }
   const now = Math.floor(Date.now() / 1000);
-  if (authDate > now + 30 || now - authDate > 300) return null;
+  // Telegram can reopen a cached Mini App using its original signed initData.
+  // Keep strict signature validation while allowing a 24-hour signed session.
+  const configuredAge = Number(process.env.TELEGRAM_INIT_DATA_MAX_AGE_SECONDS || 86400);
+  const maxAge = Number.isFinite(configuredAge) ? Math.max(300, Math.min(86400, configuredAge)) : 86400;
+  if (authDate > now + 30 || now - authDate > maxAge) {
+    console.warn('[auth] Telegram initData expired; ageSeconds=' + (now - authDate));
+    return null;
+  }
   params.delete('hash');
   params.delete('signature');
-  const check = [...params.entries()].sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => key + '=' + value).join('\n');
+  const check = [...params.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
+    .map(([key, value]) => key + '=' + value).join('\\n');
   const secret = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
   const expected = crypto.createHmac('sha256', secret).update(check).digest();
   const supplied = Buffer.from(hash, 'hex');
-  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) return null;
+  if (supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) {
+    console.warn('[auth] Telegram initData signature mismatch');
+    return null;
+  }
   try {
     const user = JSON.parse(userRaw);
     if (!Number.isSafeInteger(user.id) || user.id <= 0) return null;
@@ -101,7 +117,10 @@ function verifyTelegramInitData(initData) {
       photoUrl: typeof user.photo_url === 'string' ? user.photo_url.slice(0, 500) : '',
       languageCode: String(user.language_code || 'en').slice(0, 8)
     };
-  } catch { return null; }
+  } catch {
+    console.warn('[auth] Telegram initData user JSON invalid');
+    return null;
+  }
 }
 function allowedOrigin(req) {
   if (!APP_ORIGIN) return !req.headers.origin;
