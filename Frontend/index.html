@@ -35,6 +35,9 @@
       <div class="name" id="hName">User</div>
       <div class="uid">ID: <span id="hUid">--</span></div>
     </div>
+    <button class="hbtn" id="adminOpenBtn" onclick="window.location.href='/admin'" style="display:none;margin-left:6px" aria-label="Admin">
+      <i class="ph-duotone ph-shield-star"></i>
+    </button>
     <button class="hbtn" onclick="openNotifications()">
       <i class="ph-duotone ph-bell"></i>
       <span class="dot" id="notifDot" style="display:none"></span>
@@ -62,6 +65,15 @@
         <i class="ph-duotone ph-television"></i>
         <span>Bugünkü reklam: <span class="num" id="todayAds">0</span>/<span class="num" id="dailyLimit">10</span></span>
       </div>
+    </div>
+
+    <div class="xp-card stagger">
+      <div class="xp-top">
+        <div><span class="xp-kicker">COINIX LEVEL</span><div class="xp-level">Level <strong id="xpLevel">1</strong> <span id="xpBonus">Level 100: 2× Ads + Tasks</span></div></div>
+        <div class="xp-value" id="xpText">0 / 60 XP</div>
+      </div>
+      <div class="xp-track"><i id="xpFill" style="width:0%"></i></div>
+      <div class="xp-foot"><span>100 levels · Earn XP from check-ins, ads and tasks</span><b>LVL 100 = 2×</b></div>
     </div>
 
     <div class="qa-grid stagger">
