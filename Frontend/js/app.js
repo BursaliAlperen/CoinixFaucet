@@ -42,7 +42,11 @@ function showToast(msg,type='info'){
   t.className='toast '+(type||'info');
   const icMap={success:'check-circle',warn:'warning',danger:'x-circle',info:'info'};
   const ic=icMap[type]||'info';
-  t.innerHTML=`<i class="ph-duotone ph-${ic}"></i><span>${msg}</span>`;
+  const icon=document.createElement('i');
+  icon.className='ph-duotone ph-'+ic;
+  const label=document.createElement('span');
+  label.textContent=String(msg??'');
+  t.append(icon,label);
   $('toastWrap').appendChild(t);try{window.Telegram.WebApp.HapticFeedback.notificationOccurred(type==='success'?'success':type==='danger'?'error':'warning')}catch(e){}
   setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-20px)';t.style.transition='all .3s';setTimeout(()=>t.remove(),300);},3000);
 }
@@ -314,7 +318,7 @@ async function completeTask(id){
   const uid=String(TGUser.id);
   const r=parseFloat(t.reward||0);
   try{await apiRequest('/api/economy',{action:'task',taskId:id});showToast('Görev tamamlandı ve ödül sunucuda işlendi.','success');}
-  catch(e){showToast(e.message==='ALREADY_COMPLETED'?'Bu görev zaten tamamlandı.':'Görev ödülü verilemedi: '+e.message,'danger');}
+  catch(e){const message=e.message==='ALREADY_COMPLETED'?'Bu görev zaten tamamlandı.':e.message==='TASK_VERIFICATION_FAILED'?'Üyelik doğrulanamadı. Botun kanalda olduğundan emin olun.':'Görev ödülü verilemedi: '+e.message;showToast(message,'danger');}
 }
 
 document.addEventListener('click',e=>{
