@@ -554,6 +554,12 @@ async function callPiarflow(route, payload) {
 }
 async function handleAdminApi(user, url, body, res) {
   if (!isAdmin(user.id)) return send(res, 403, { status:'error', code:'ADMIN_REQUIRED' });
+  if (url.pathname === '/api/admin/bot-control') {
+    const enabled=body.enabled===true;
+    await rtdb.ref('botControl').update({enabled,updatedAt:Date.now(),updatedBy:user.id});
+    await auditAdmin(user.id,enabled?'bot_start':'bot_stop','botControl',{enabled});
+    return send(res,200,{status:'ok',enabled});
+  }
   if (url.pathname === '/api/admin/providers') {
     return send(res,200,{status:'ok',providers:{
       piarflow:{configured:Boolean(PIARFLOW_API_KEY),status:PIARFLOW_API_KEY?'configured':'missing_key'},
@@ -701,7 +707,7 @@ async function handleAdminApi(user, url, body, res) {
       let changed=false;
       const lock=await ref.transaction(w=>{if(!w||w.status!=='pending')return;changed=true;w.status='paying';w.payoutTxStartedAt=Date.now();w.payoutBy=user.id;return w;});
       if(!lock.committed||!changed)return send(res,409,{status:'error',code:'WITHDRAWAL_ALREADY_PROCESSED'});
-      await ref.update({status:'paid',txHash,payoutAmount,paidAt:Date.now(),paidBy:user.id});
+      await ref.update({status:'paid',txHash,payoutAmount,paidAt:Date.now(),paidBy:user.id});\n      await auditAdmin(user.id,'withdrawal_paid',id,{userId:withdrawal.userId,method:withdrawal.method,payoutAmount,txHash});
       try{await rtdb.ref('users/'+String(withdrawal.userId)+'/notifications').push({title:'Withdrawal paid',body:'Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(String(withdrawal.userId),'✅ Your '+String(withdrawal.method).toUpperCase()+' withdrawal has been paid.\\nAmount: '+payoutAmount+'\\nTransaction: '+txHash);}catch(error){console.warn('[withdrawal-notification]',error.message);}
       return send(res,200,{status:'ok',withdrawal:{id,status:'paid',txHash,payoutAmount}});
     }
@@ -726,7 +732,7 @@ async function handleAdminApi(user, url, body, res) {
       return profile;
     });
     if(!refund.committed){await ref.update({status:'refund_failed',refundFailedAt:Date.now()});return send(res,503,{status:'error',code:'WITHDRAWAL_REFUND_FAILED'});}
-    await ref.update({status:'rejected',rejectedAt:Date.now(),rejectedBy:user.id,rejectionReason:String(body.reason||'Rejected by admin').slice(0,200)});
+    await ref.update({status:'rejected',rejectedAt:Date.now(),rejectedBy:user.id,rejectionReason:String(body.reason||'Rejected by admin').slice(0,200)});\n    await auditAdmin(user.id,'withdrawal_reject',id,{userId:uid,amount});
     if(refunded)try{await logTransaction(uid,'withdraw_refund',amount,{withdrawalId:id,currency:String(withdrawal.method).toUpperCase()});}catch(error){console.warn('[withdrawal-refund-log]',error.message);}
     try{await rtdb.ref('users/'+uid+'/notifications').push({title:'Withdrawal rejected',body:'Your withdrawal was rejected and the balance was returned.',timestamp:Date.now(),type:'withdrawal'});await sendTelegramMessage(uid,'Your withdrawal was rejected. The balance has been returned to your account.');}catch(error){console.warn('[withdrawal-notification]',error.message);}
     return send(res,200,{status:'ok',withdrawal:{id,status:'rejected',refunded:true}});
@@ -855,6 +861,10 @@ async function handleApi(req, res, url) {
     return send(res,200,{status:'ok',membership:true});
   }
   if (!initFirebase()) return send(res, 503, { status: 'error', message: 'Firebase Admin is not configured' });
+  if (!isAdmin(user.id)) {
+    const control=await rtdb.ref('botControl/enabled').once('value');
+    if(control.exists()&&control.val()===false)return send(res,503,{status:'error',code:'BOT_PAUSED',message:'Bot geçici olarak duraklatıldı.'});
+  }
   try {
     if (url.pathname === '/api/channel/check') {
       const membership=await checkRequiredChannel(user.id);
@@ -870,6 +880,11 @@ async function handleApi(req, res, url) {
       if (profile.banned) return send(res, 403, { status: 'error', message: 'Account unavailable' });
       const customToken = await admin.auth().createCustomToken(user.id);
       return send(res, 200, { status: 'ok', user: profile, customToken, isAdmin: isAdmin(user.id), botUsername: BOT_USERNAME, referralBonusMultiplier: Number((await getSettings()).referralMultiplierBonus ?? 0.02), referralBonusDurationHours: Number((await getSettings()).referralBonusDurationHours ?? 24), traffyLink: TRAFFY_LINK_PREFIX ? 'https://t.me/Traffy_robot?startapp=l_'+TRAFFY_LINK_PREFIX+'_'+user.id : '' });
+    }
+    if (url.pathname === '/api/tasks/claims') {
+      const snap=await rtdb.ref('taskClaims').once('value'),claims=[];
+      snap.forEach(taskNode=>{const own=taskNode.child(user.id);own.forEach(claimNode=>{const v=claimNode.val()||{};if(['pending','approved','rejected'].includes(v.status))claims.push({taskId:taskNode.key,id:claimNode.key,...v});});});
+      return send(res,200,{status:'ok',claims:claims.slice(-100)});
     }
     if (url.pathname === '/api/economy') {
       const result = await applyEconomyAction(user.id, body);
