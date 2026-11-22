@@ -888,7 +888,8 @@ async function configureTelegramWebhook() {
     await telegramCall('setWebhook',{url:PUBLIC_BASE_URL+'/telegram/webhook',secret_token:BOT_WEBHOOK_SECRET,allowed_updates:['message','callback_query'],drop_pending_updates:false});
     await telegramCall('setMyCommands',{commands:[
       {command:'start',description:'Open TeddyGrow'},
-      {command:'tasks',description:'Browse microtasks'},\n      {command:'campaign',description:'Create a channel campaign'},\n      {command:'wallet',description:'View wallet and payouts'},
+      {command:'tasks',description:'Browse microtasks'},
+      {command:'campaign',description:'Create a channel campaign'},\n      {command:'wallet',description:'View wallet and payouts'},
       {command:'botstart',description:'Botu etkinleştir (yönetici)'},
       {command:'botstop',description:'Botu duraklat (yönetici)'},
       {command:'help',description:'Help and instructions'},
