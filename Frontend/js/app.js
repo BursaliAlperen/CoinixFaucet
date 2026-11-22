@@ -22,10 +22,11 @@ let _dailyCardDone = false; // guard: run distributeDailyCard only once per sess
 /* ============ UTILS ============ */
 const $=id=>document.getElementById(id);
 function getRewardMultiplier(level){const n=Math.max(1,Math.min(50,Number(level)||1));return Math.round((1+n*0.02)*100)/100;}
+const API_TASK_REWARD_USD=0.002;
 function hap(t){try{window.Telegram.WebApp.HapticFeedback.impactOccurred(t||'light')}catch(e){}}
-function setAmt(f){const b=parseFloat(currentUser?.balance||0);$('withdrawAmount').value=(Math.floor(b*f*100)/100).toFixed(2);hap();}
+function setAmt(f){const b=parseFloat(currentUser?.balance||0);$('withdrawAmount').value=(Math.floor(b*f*10000)/10000).toFixed(4);hap();}
 function renderExtras(){
-  $('perAdEarn2').textContent=(parseFloat(appSettings.perAdEarning||0.005)*getRewardMultiplier(currentUser.level)).toFixed(4);$('spRw2').textContent=(parseFloat(appSettings.sponsorReward||0.0025)*getRewardMultiplier(currentUser.level)).toFixed(4);
+  $('perAdEarn2').textContent=API_TASK_REWARD_USD.toFixed(3);$('spRw2').textContent=API_TASK_REWARD_USD.toFixed(3);
   const level=Math.max(1,Math.min(50,Number(currentUser.level||1))),xp=Math.max(0,Number(currentUser.xp||0)),xpNext=Number(currentUser.xpToNext||0);
   if($('xpLevel'))$('xpLevel').textContent=level;
   if($('xpText'))$('xpText').textContent=level>=50?'MAX LEVEL':xp+' / '+xpNext+' XP';
@@ -216,7 +217,7 @@ function renderAll(){
   badge.querySelector('i').style.color=vip.color;
   $('vipLabel').textContent=vip.label;
 
-  $('perAdEarn').textContent=(parseFloat(appSettings.perAdEarning||0.005)*getRewardMultiplier(currentUser.level)).toFixed(4);
+  $('perAdEarn').textContent=API_TASK_REWARD_USD.toFixed(3);
   renderAdSection();
   renderStreak();
   renderTeam();
@@ -308,7 +309,7 @@ function renderTasks(){
       <div class="icon"><i class="ph-duotone ph-${ico}"></i></div>
       <div class="info">
         <div class="t">${escapeHtml(t.title)}</div>
-        <div class="m"><i class="ph-duotone ph-currency-dollar"></i>+${(parseFloat(t.reward||0)*getRewardMultiplier(currentUser?.level)).toFixed(2)} &nbsp;<i class="ph-duotone ph-clock"></i> 10 sn</div>
+        <div class="m"><i class="ph-duotone ph-currency-dollar"></i>+${(t.source==='flyerhubs'?API_TASK_REWARD_USD:Number(t.reward||0)).toFixed(3)} &nbsp;<i class="ph-duotone ph-clock"></i> 10 sn</div>
       </div>
       ${isDone
         ?'<button class="act done" disabled><i class="ph-duotone ph-check-circle"></i> Tamam</button>'
@@ -338,7 +339,7 @@ function startTask(id){
 async function completeTask(id){
   const t=[...tasks,...flyerTasks].find(x=>x.id===id);if(!t)return;
   const uid=String(TGUser.id);
-  const r=parseFloat(t.reward||0);
+  const r=t.source==='flyerhubs'?API_TASK_REWARD_USD:parseFloat(t.reward||0);
   try{
     if(t.source==='flyerhubs'){
       const result=await apiRequest('/api/flyerhubs/check',{signature:t.signature});
@@ -400,17 +401,25 @@ function renderWalletTab(){
 }
 
 function renderMethods(){
-  if(withdrawMethods.length===0){
-    $('methodGrid').innerHTML='<div class="empty" style="grid-column:1/-1;padding:14px">Yöntem yok</div>';
+  const allowed=withdrawMethods.filter(m=>{
+    const key=String(m.key||'').toLowerCase();
+    const name=String(m.name||'').toLowerCase();
+    return ['ton','gram'].includes(key)||/^(ton|gram)( network| token)?$/.test(name);
+  });
+  withdrawMethods=allowed;
+  if(!allowed.length){
+    $('methodGrid').innerHTML='<div class="empty" style="grid-column:1/-1;padding:14px">TON / GRAM çekim yöntemi Firebase withdrawMethods bölümünde etkinleştirilmelidir.</div>';
+    selectedMethod=null;
     return;
   }
-  $('methodGrid').innerHTML=withdrawMethods.map(m=>`
-    <div class="method-card" data-method="${escapeHtml(m.key)}" data-label="${escapeHtml(m.accountLabel||'Hesap')}" data-placeholder="${escapeHtml(m.accountPlaceholder||'')}" data-min="${m.minWithdraw||5}" onclick="selectMethod(this)">
-      <div class="ico">${m.iconUrl?`<img src="${m.iconUrl}" style="width:28px;height:28px;border-radius:6px">`:
-        `<i class="ph-duotone ph-credit-card"></i>`
-      }</div>
-      <div>${escapeHtml(m.name)}</div>
-    </div>`).join('');
+  $('methodGrid').innerHTML=allowed.map(m=>{
+    const key=String(m.key||'').toLowerCase();
+    const coin=key==='gram'||String(m.name||'').toLowerCase().startsWith('gram')?'GRAM':'TON';
+    return `<button type="button" class="method-card" data-method="${escapeHtml(key)}" data-label="${coin} cüzdan adresi" data-placeholder="${coin} wallet address" data-min="${Number(m.minWithdraw||0.05)}" onclick="selectMethod(this)">
+      <span class="ico"><svg class="svg-icon" aria-hidden="true"><use href="#icon-${coin.toLowerCase()}"></use></svg></span>
+      <span>${coin}</span>
+    </button>`;
+  }).join('');
   $('methodGrid').querySelector('.method-card')?.click();
 }
 
@@ -682,15 +691,16 @@ async function submitWithdraw(){
   const amt=parseFloat($('withdrawAmount').value);
   const acc=$('withdrawAccount').value.trim();
   if(!amt||amt<=0){showToast('Geçerli bir tutar girin','warn');return;}
-  if(amt<(m.minWithdraw||5)){showToast(`En az $${m.minWithdraw}`,'warn');return;}
+  if(!['ton','gram'].includes(String(m.key||'').toLowerCase())){showToast('Yalnızca TON veya GRAM çekimi desteklenir.','danger');return;}
+  if(amt<(m.minWithdraw||0.05)){showToast(`Minimum çekim: ${m.minWithdraw||0.05}`,'warn');return;}
   if(m.maxWithdraw>0 && amt>m.maxWithdraw){showToast(`En çok $${m.maxWithdraw}`,'warn');return;}
-  if(!acc){showToast('Hesap numarası girin','warn');return;}
+  if(!/^(EQ|UQ)[A-Za-z0-9_-]{46}$/.test(acc)&&!/^0:[a-fA-F0-9]{64}$/.test(acc)){showToast('Geçerli bir TON/GRAM cüzdan adresi girin.','warn');return;}
   if(amt>(currentUser.balance||0)){showToast('Yetersiz bakiye','danger');return;}
   const btn=$('submitWithdrawBtn');
   _withdrawPending=true;if(btn){btn.disabled=true;btn.textContent='Gönderiliyor...';}
   try{await apiRequest('/api/economy',{action:'withdraw',amount:amt,method:m.key,account:acc});showToast('Çekim talebi gönderildi!','success');$('withdrawAmount').value='';$('withdrawAccount').value='';}
   catch(e){showToast('Çekim talebi başarısız: '+e.message,'danger');}
-  finally{_withdrawPending=false;if(btn){btn.disabled=false;btn.innerHTML='<i class="ph-duotone ph-paper-plane-tilt"></i> Çekim Talebi Gönder';}}
+  finally{_withdrawPending=false;if(btn){btn.disabled=false;btn.textContent='Çekim Talebi Gönder';}}
 }
 
 /* ===== FAUCET + FX ===== */
@@ -745,7 +755,7 @@ async function loadSponsors(force){
 }
 function renderSponsors(){
   const box=$('sponsorList');if(!box)return;
-  const done=currentUser?.sponsorDone||{},rw=parseFloat(appSettings.sponsorReward||0.0025)*getRewardMultiplier(currentUser?.level);
+  const done=currentUser?.sponsorDone||{},rw=API_TASK_REWARD_USD;
   $('segSp').textContent=sponsors.filter(x=>!done[hashLink(x.link)]).length;
   if(!sponsors.length){box.innerHTML='<div class="empty" style="padding:16px"><i class="ph-duotone ph-megaphone"></i><div class="et">Şu an sponsorlu görev yok</div></div>';return;}
   box.innerHTML=sponsors.map((s,i)=>`<div class="card sp-card"><div class="task-row">
