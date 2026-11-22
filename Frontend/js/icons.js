@@ -34,6 +34,13 @@
     help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4.3 1.7c-1.1 1-1.8 1.3-1.8 2.8M12 17h.01"/>',
     telegram:'<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13m0 0 4 3"/>',
     ton:'<path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10m-4-13 4 7 4-7"/>',
+    teddy:'<circle cx="12" cy="13" r="8"/><circle cx="5" cy="5" r="3"/><circle cx="19" cy="5" r="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M10 16q2 2 4 0"/>',
+    heart:'<path d="M20.8 8.8c0 5.2-8.8 11-8.8 11S3.2 14 3.2 8.8A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8z"/>',
+    sparkle:'<path d="m12 2 2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/>',
+    rocket:'<path d="M5 14c-2 0-3 2-3 5 3 0 5-1 5-3"/><path d="M9 15 6 12c2-5 6-8 14-9-1 8-4 12-9 14l-2-2z"/><circle cx="15" cy="8" r="2"/>',
+    target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    paw:'<ellipse cx="12" cy="16" rx="6" ry="5"/><circle cx="5" cy="8" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="20" cy="8" r="2"/>',
+    channel:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h7M7 17h4"/>',
     gram:'<path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M8 8h8l-4 9z"/>'
   };
   const alias={
@@ -46,7 +53,7 @@
     'receipt':'receipt','shopping-bag':'bag','shopping-cart':'cart','storefront':'store','sun':'sun',
     'telegram-logo':'telegram','television':'play','warning':'warning','wrench':'wrench','question':'help',
     'plugs':'link','prohibit':'close','spinner-gap':'clock','circles-three-plus':'diamond','medal':'trophy',
-    'ton':'ton','gram':'gram'
+    'ton':'ton','gram':'gram','teddy-bear':'teddy','bear':'teddy','heart':'heart','sparkle':'sparkle','sparkles':'sparkle','rocket':'rocket','target':'target','paw-print':'paw','paw':'paw','broadcast':'channel','channel':'channel'
   };
   const sprite=document.createElementNS('http://www.w3.org/2000/svg','svg');
   sprite.setAttribute('aria-hidden','true');sprite.style.cssText='position:absolute;width:0;height:0;overflow:hidden';
