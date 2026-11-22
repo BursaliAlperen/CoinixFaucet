@@ -21,6 +21,16 @@ const BOT_USERNAME = process.env.BOT_USERNAME || '';
 const FLYERHUBS_KEY = process.env.FLYERHUBS_KEY || '';
 const MONETAG_POSTBACK_SECRET = process.env.MONETAG_POSTBACK_SECRET || '';
 const API_AD_REWARD_USD = 0.002;
+const FIREBASE_PUBLIC_CONFIG = {
+  apiKey: process.env.FIREBASE_WEB_API_KEY || '',
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
+  databaseURL: FIREBASE_DATABASE_URL,
+  projectId: process.env.FIREBASE_PROJECT_ID || '',
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: process.env.FIREBASE_APP_ID || '',
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID || ''
+};
 const MAX_BODY = 24 * 1024;
 const rate = new Map();
 let firebaseReady = false;
@@ -831,8 +841,14 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (req.method === 'POST' && url.pathname === '/telegram/webhook') return handleTelegramWebhook(req,res);
   if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url).catch(error => { console.error('[monetag-postback]',error.message); return send(res,503,{error:'POSTBACK_RETRY'}); });
+  if (req.method === 'GET' && url.pathname === '/public-config/firebase') {
+    const required=['apiKey','authDomain','databaseURL','projectId','appId'];
+    const missing=required.filter(key=>!FIREBASE_PUBLIC_CONFIG[key]);
+    if(missing.length)return send(res,503,{status:'error',code:'FIREBASE_WEB_CONFIG_MISSING',missing});
+    return send(res,200,FIREBASE_PUBLIC_CONFIG);
+  }
   if (req.method === 'GET' && url.pathname === '/health') {
-    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), firebaseDatabaseUrlConfigured: Boolean(FIREBASE_DATABASE_URL), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyKeyConfigured: Boolean(process.env.TRAFFY_API_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
+    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), firebaseDatabaseUrlConfigured: Boolean(FIREBASE_DATABASE_URL), firebaseWebConfigConfigured: Boolean(FIREBASE_PUBLIC_CONFIG.apiKey && FIREBASE_PUBLIC_CONFIG.authDomain && FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.appId), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyKeyConfigured: Boolean(process.env.TRAFFY_API_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
   }
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
