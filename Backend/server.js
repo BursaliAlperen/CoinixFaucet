@@ -119,7 +119,7 @@ function limited(key) {
   return recent.length > 30;
 }
 function dayKey() {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: process.env.REWARD_TIMEZONE || 'Asia/Dhaka' }).format(new Date());
+  return new Intl.DateTimeFormat('en-CA', { timeZone: process.env.REWARD_TIMEZONE || 'Europe/Istanbul' }).format(new Date());
 }
 function money(value) {
   const n = Number(value);
@@ -552,7 +552,7 @@ async function handleMonetagPostback(req, res, url) {
   if (url.searchParams.get('event_type') !== 'impression' || url.searchParams.get('reward_event_type') !== 'valued') return send(res, 200, { ok: true, ignored: true });
   const uid = String(url.searchParams.get('telegram_id') || '');
   const ymid = String(url.searchParams.get('ymid') || '');
-  if (!/^\\d{1,20}$/.test(uid) || !ymid || ymid.length > 160 || !ymid.startsWith(uid + '_')) return send(res, 400, { error: 'INVALID_EVENT' });
+  if (!/^\d{1,20}$/.test(uid) || !ymid || ymid.length > 160 || !ymid.startsWith(uid + '_')) return send(res, 400, { error: 'INVALID_EVENT' });
   const eventId = crypto.createHash('sha256').update(ymid).digest('hex');
   if (!initFirebase()) return send(res, 503, { error: 'FIREBASE_NOT_READY' });
   const userRef = rtdb.ref('users/' + uid);
