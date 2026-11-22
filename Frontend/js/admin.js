@@ -41,7 +41,7 @@ function moneyLabel(value){return '
       '<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+
       escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>'
     ).join(''):'<div class="empty">No promotions yet.</div>';
-    await Promise.all([loadTasks(),loadClaims(),loadProviders(),loadAnalytics()]);
+    await Promise.all([loadTasks(),loadClaims(),loadProviders(),loadAnalytics(),loadBotControl()]);
     showNotice('Panel verileri güncellendi.');
   }catch(e){$('adminStatus').textContent='ACCESS DENIED';showNotice(e.message,true);}
 }
@@ -107,9 +107,17 @@ $('taskClaims').addEventListener('click',async e=>{const b=e.target.closest('[da
 $('refreshTasksBtn').addEventListener('click',async()=>{try{await Promise.all([loadTasks(),loadClaims()]);}catch(e){showNotice(e.message,true);}});
 $('analyticsApply').addEventListener('click',()=>loadAnalytics().catch(e=>showNotice(e.message,true)));
 $('analyticsCsv').addEventListener('click',exportAnalyticsCsv);
+$('botStartBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:true});await loadBotControl();showNotice('Bot etkinleştirildi.');}catch(e){showNotice(e.message,true);}});
+$('botStopBtn').addEventListener('click',async()=>{try{await api('/api/admin/bot-control',{enabled:false});await loadBotControl();showNotice('Bot duraklatıldı.');}catch(e){showNotice(e.message,true);}});
+
 $('refreshBtn').addEventListener('click',loadOverview);
 loadOverview();
 +fmt(value);}
+async function loadBotControl(){
+  const d=await api('/api/admin/bot-control',{action:'status'}),enabled=d.enabled===true;
+  $('botControlStatus').textContent=enabled?'Etkin':'Duraklatıldı';
+  $('botControlStatus').className='pill '+(enabled?'green':'amber');
+}
 async function loadTasks(){
   const d=await api('/api/admin/tasks',{action:'list'}),items=d.tasks||[];
   $('taskAdminList').innerHTML=items.length?items.map(t=>{
