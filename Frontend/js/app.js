@@ -1189,6 +1189,9 @@ boot();
   }catch(e){
     const labels={ALREADY_COMPLETED:'Bu görev zaten tamamlandı.',TASK_VERIFICATION_FAILED:'Telegram üyeliği doğrulanamadı.',TASK_LIMIT_REACHED:'Görevin katılım sınırı doldu.',TASK_USER_LIMIT:'Bu görev için katılım hakkın doldu.',TASK_PROOF_REQUIRED:'İnceleme için kanıt gerekli.'};
     showToast(labels[e.message]||'Görev işlemi tamamlanamadı. Lütfen tekrar dene.','danger');
+  }finally{
+    const button=[...document.querySelectorAll('.task-start')].find(el=>el.dataset.id===String(id));
+    if(button)button.disabled=false;
   }
 }
 
