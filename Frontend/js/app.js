@@ -368,8 +368,22 @@ async function completeTask(id){
         if(proof.length<8){showToast('İnceleme için kanıt gerekli.','warn');return;}
       }
       const result=await apiRequest('/api/economy',{action:'task',taskId:id,proof});
-      if(result.pending){window._pendingTaskClaims=window._pendingTaskClaims||{};window._pendingTaskClaims[id]=true;showToast('Kanıtın yönetici incelemesine gönderildi. Onaydan sonra ödül verilecek.','success');}
-      else showToast('Görev doğrulandı. Ödül bakiyene eklendi. +
+      if(result.pending){
+        window._pendingTaskClaims=window._pendingTaskClaims||{};window._pendingTaskClaims[id]=true;
+        showToast('Kanıtın yönetici incelemesine gönderildi. Onaydan sonra ödül verilecek.','success');
+      }else{
+        showToast('Görev doğrulandı. Ödül bakiyene eklendi. +$'+Number(result.reward||0).toFixed(4),'success');
+      }
+    }
+    renderTasks();
+  }catch(e){
+    const labels={ALREADY_COMPLETED:'Bu görev zaten tamamlandı.',TASK_VERIFICATION_FAILED:'Telegram üyeliği doğrulanamadı.',TASK_LIMIT_REACHED:'Görevin katılım sınırı doldu.',TASK_USER_LIMIT:'Bu görev için katılım hakkın doldu.',TASK_PROOF_REQUIRED:'İnceleme için kanıt gerekli.'};
+    showToast(labels[e.message]||'Görev işlemi tamamlanamadı. Lütfen tekrar dene.','danger');
+  }finally{
+    const button=[...document.querySelectorAll('.task-start')].find(el=>el.dataset.id===String(id));
+    if(button)button.disabled=false;
+  }
+}
 
 document.addEventListener('click',e=>{
   const taskButton=e.target.closest('.task-start');
