@@ -72,17 +72,17 @@
       <div class="amount num">$<span id="balance">0.0000</span></div>
       <div class="bal-sub">
         <i class="ph-duotone ph-television"></i>
-        <span>Bugünkü Traffy bağlantısı: <span class="num" id="todayAds">0</span>/<span class="num" id="dailyLimit">10</span></span>
+        <span>Traffy sağlayıcı durumu: API doğrulaması bekleniyor</span>
       </div>
     </div>
 
     <div class="xp-card stagger">
       <div class="xp-top">
-        <div><span class="xp-kicker">COINIX LEVEL</span><div class="xp-level">Level <strong id="xpLevel">1</strong> <span id="xpBonus">Level 50: 2× Ads + Tasks</span></div></div>
+        <div><span class="xp-kicker">COINIX SEVİYESİ</span><div class="xp-level">Seviye <strong id="xpLevel">1</strong> <span id="xpBonus">Kazanç çarpanı: 1.02x</span></div></div>
         <div class="xp-value" id="xpText">0 / 60 XP</div>
       </div>
       <div class="xp-track"><i id="xpFill" style="width:0%"></i></div>
-      <div class="xp-foot"><span>50 levels · Earn XP from check-ins, ads and tasks</span><b>LVL 50 = 2×</b></div>
+      <div class="xp-foot"><span>50 seviye · Yoklama ve görevlerden XP kazan</span><b>50. SEVİYE = 2x</b></div>
     </div>
 
     <div class="qa-grid stagger">
@@ -230,20 +230,14 @@
       <div class="ad-head">
         <div class="ad-ic"><i class="ph-duotone ph-play-circle"></i></div>
         <div class="ad-info">
-          <div class="title">Reklam İzle</div>
-          <div class="desc">Reklam başına +$<span class="num" id="perAdEarn">0.00</span> kazanın</div>
+          <div class="title">Traffy bağlantısını aç</div>
+          <div class="desc">Traffy yönlendirmesi · API ödül doğrulaması beklemede</div>
         </div>
       </div>
       <button class="btn-big" id="watchAdBtn" onclick="watchAd()">
-        <i class="ph-duotone ph-play-circle"></i> Reklam İzle
+        <i class="ph-duotone ph-arrow-up-right"></i> Traffy bağlantısını aç
       </button>
-      <div class="progress-wrap">
-        <div class="progress-lbl">
-          <span>Bugünkü ilerleme</span>
-          <span class="num" id="adsProgressTxt">0/10</span>
-        </div>
-        <div class="progress-bar"><div class="fill" id="adsProgressFill" style="width:0%"></div></div>
-      </div>
+      <div class="provider-note">Ödül, Traffy’nin resmî sunucu API doğrulaması tamamlanmadan bakiyeye eklenmez.</div>
     </div></div>
     <div class="tview" id="view-sponsor">
       <div class="sec-title" style="margin-top:0"><i class="ph-duotone ph-megaphone"></i> Sponsorlu Görevler<button class="pill" style="margin-left:auto" onclick="loadSponsors(true)"><i class="ph-duotone ph-arrow-clockwise"></i> Yenile</button></div>
