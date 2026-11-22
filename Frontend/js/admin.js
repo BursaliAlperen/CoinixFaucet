@@ -22,6 +22,8 @@ async function loadOverview(){
     $('statEarned').textContent='$'+fmt(d.stats.totalEarned);
     $('statMax').textContent=fmt(d.stats.level100);
     $('pendingCount').textContent=fmt(d.stats.pendingWithdrawals)+' PENDING';
+    const settings=d.settings||{};
+    for(const [key,value] of Object.entries(settings)){const field=$('settingsForm').elements.namedItem(key);if(field&&value!==undefined)field.value=value;}
     $('withdrawals').innerHTML=d.withdrawals.length?d.withdrawals.map(w=>'<div class="list-item"><div><strong>'+escapeHtml(w.name||w.userId)+' · $'+fmt(w.amount)+'</strong><small>'+escapeHtml(w.methodName||w.method)+' · '+escapeHtml(w.account||'')+'</small></div><small>'+new Date(w.requestedAt||Date.now()).toLocaleString()+'</small></div>').join(''):'<div class="empty">No pending withdrawals.</div>';
     $('promotions').innerHTML=d.promotions.length?d.promotions.map(p=>'<div class="list-item"><div><strong>'+escapeHtml(p.title)+'</strong><small>'+escapeHtml(p.message)+'</small></div><small>'+escapeHtml(p.status||'draft')+'</small></div>').join(''):'<div class="empty">No promotions yet.</div>';
     showNotice('Dashboard data refreshed.');
