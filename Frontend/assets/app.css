@@ -368,3 +368,16 @@ body::before{content:'';position:fixed;inset:-20%;z-index:0;pointer-events:none;
 .earn-opt i{font-size:28px;color:var(--tg-blue)}.earn-opt small{font:700 11px Poppins,sans-serif;color:#FFC107}
 .earn-opt.sp{border-color:rgba(255,193,7,.4)}.earn-opt.sp i{color:#FFC107}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+
+/* Coinix level progression */
+.xp-card{background:linear-gradient(135deg,#142a4b 0%,#1d4d86 60%,#2aabee 100%);color:#fff;border-radius:18px;padding:16px;margin:12px 0 16px;box-shadow:0 8px 24px rgba(20,60,120,.18)}
+.xp-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.xp-kicker{font-size:10px;font-weight:900;letter-spacing:1.4px;opacity:.72}
+.xp-level{font-size:19px;font-weight:900;margin-top:3px}
+.xp-level strong{font-size:24px}
+.xp-level span{display:inline-block;font-size:10px;background:rgba(255,255,255,.15);padding:4px 7px;border-radius:20px;margin-left:5px;vertical-align:middle}
+.xp-value{font-size:11px;font-weight:800;white-space:nowrap}
+.xp-track{height:9px;background:rgba(255,255,255,.2);border-radius:20px;overflow:hidden;margin:13px 0 9px}
+.xp-track i{display:block;height:100%;background:linear-gradient(90deg,#a7f3d0,#fef08a);border-radius:20px;transition:width .35s ease}
+.xp-foot{display:flex;justify-content:space-between;gap:8px;font-size:10px;opacity:.8}
+.xp-foot b{white-space:nowrap}
