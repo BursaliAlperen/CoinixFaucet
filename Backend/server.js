@@ -271,11 +271,12 @@ async function applyEconomyAction(uid, body) {
       if (!taskId || !task || task.active === false) { failure = 'TASK_UNAVAILABLE'; return; }
       user.completedTasks = user.completedTasks || {};
       if (user.completedTasks[taskId]) { failure = 'ALREADY_COMPLETED'; return; }
-      credited = money(task.reward || 0);
+      credited = money(Number(task.reward || 0) * rewardMultiplier(user));
       user.completedTasks[taskId] = Date.now();
       user.balance = money(balance + credited);
       user.totalEarned = money(Number(user.totalEarned || 0) + credited);
-      extra = { taskId, taskTitle: String(task.title || '').slice(0, 120) };
+      const xpResult = applyXp(user, Number(settings.taskXp || 20));
+      extra = { taskId, taskTitle: String(task.title || '').slice(0, 120), xp: xpResult, multiplier: rewardMultiplier(user) };
     } else if (action === 'checkin') {
       const today = dayKey();
       if (user.lastCheckIn === today) { failure = 'ALREADY_CLAIMED'; return; }
@@ -287,7 +288,8 @@ async function applyEconomyAction(uid, body) {
       user.checkInStreak = streak;
       user.balance = money(balance + credited);
       user.totalEarned = money(Number(user.totalEarned || 0) + credited);
-      extra = { day: streak };
+      const xpResult = applyXp(user, Number(settings.dailyCheckinXp || 10));
+      extra = { day: streak, xp: xpResult };
     } else if (action === 'spin') {
       if (Number(user.spinCards || 0) < 1) { failure = 'NO_SPIN_CARDS'; return; }
       const rewards = Array.isArray(settings.spinRewards) ? settings.spinRewards : [0.01,0.05,0.02,0.1,0.01,0.5,0.03,1];
