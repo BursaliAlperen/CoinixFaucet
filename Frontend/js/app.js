@@ -241,18 +241,6 @@ function renderAll(){
   if(sponsors.length)renderSponsors();
 }
 
-function renderAdSection(){
-  const today=getBDDate();
-  const ta=currentUser.lastAdDate===today?(currentUser.todayAds||0):0;
-  const lim=parseInt(appSettings.dailyLimit||10);
-  $('adsProgressTxt').textContent=`${ta}/${lim}`;$('segAds').textContent=`${ta}/${lim}`;
-  $('adsProgressFill').style.width=Math.min(100,(ta/lim)*100)+'%';
-  const btn=$('watchAdBtn');
-  if(ta>=lim){
-    btn.disabled=true;
-    btn.innerHTML='<i class="ph-duotone ph-check-circle"></i> Günlük limit doldu';
-  }
-}
 
 function renderStreak(){
   const today=getBDDate();
