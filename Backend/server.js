@@ -45,7 +45,6 @@ function send(res, status, data) {
     'cache-control': 'no-store',
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'no-referrer',
-    'x-frame-options': 'DENY',
     'permissions-policy': 'camera=(), microphone=(), geolocation=()'
   });
   res.end(JSON.stringify(data));
