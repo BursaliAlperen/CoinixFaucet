@@ -743,7 +743,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/telegram/webhook') return handleTelegramWebhook(req,res);
   if (req.method === 'GET' && url.pathname === '/postback/monetag') return handleMonetagPostback(req, res, url);
   if (req.method === 'GET' && url.pathname === '/health') {
-    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY) });
+    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), telegramConfigured: Boolean(BOT_TOKEN), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), monetagPostbackConfigured: Boolean(MONETAG_POSTBACK_SECRET), adminConfigured: ADMIN_IDS.size > 0 });
   }
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
