@@ -295,7 +295,7 @@ function renderTasks(){
       </div>
       ${isDone
         ?'<button class="act done" disabled><i class="ph-duotone ph-check-circle"></i> Tamam</button>'
-        :`<button class="act" data-id="${t.id}" onclick="startTask('${t.id}')"><i class="ph-duotone ph-arrow-right"></i> Başla</button>`
+        :`<button class="act task-start" data-id="${escapeHtml(t.id)}"><i class="ph-duotone ph-arrow-right"></i> Başla</button>`
       }
     </div></div>`;
   }).join('')}</div>`;
@@ -304,7 +304,7 @@ function renderTasks(){
 function startTask(id){
   const t=tasks.find(x=>x.id===id);if(!t)return;
   window.open(t.url,'_blank');
-  const btn=document.querySelector(`[data-id="${id}"]`);
+  const btn=[...document.querySelectorAll('.task-start')].find(el=>el.dataset.id===String(id));
   if(!btn)return;
   let s=10;btn.disabled=true;
   const iv=setInterval(()=>{
@@ -322,6 +322,8 @@ async function completeTask(id){
 }
 
 document.addEventListener('click',e=>{
+  const taskButton=e.target.closest('.task-start');
+  if(taskButton&&!taskButton.disabled)startTask(taskButton.dataset.id);
   if(e.target.closest('#taskFilters .pill')){
     const el=e.target.closest('.pill');
     document.querySelectorAll('#taskFilters .pill').forEach(p=>p.classList.remove('active'));
@@ -375,7 +377,7 @@ function renderMethods(){
     return;
   }
   $('methodGrid').innerHTML=withdrawMethods.map(m=>`
-    <div class="method-card" data-method="${m.key}" data-label="${escapeHtml(m.accountLabel||'Hesap')}" data-placeholder="${escapeHtml(m.accountPlaceholder||'')}" data-min="${m.minWithdraw||5}" onclick="selectMethod(this)">
+    <div class="method-card" data-method="${escapeHtml(m.key)}" data-label="${escapeHtml(m.accountLabel||'Hesap')}" data-placeholder="${escapeHtml(m.accountPlaceholder||'')}" data-min="${m.minWithdraw||5}" onclick="selectMethod(this)">
       <div class="ico">${m.iconUrl?`<img src="${m.iconUrl}" style="width:28px;height:28px;border-radius:6px">`:
         `<i class="ph-duotone ph-credit-card"></i>`
       }</div>
