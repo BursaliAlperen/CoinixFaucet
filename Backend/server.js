@@ -333,7 +333,7 @@ async function submitTaskClaim(uid, taskId, task, actionId, proof = '') {
     if(claims[actionId]){duplicate=true;return claims;}
     const used=Object.values(claims).filter(c=>c&&['pending','approved','verified','reviewing'].includes(c.status)).length;
     if(used>=Math.max(1,Math.min(10,Number(task.perUserLimit||1)))){perUserLimit=true;return;}
-    claims[actionId]={taskId,userId:uid,actionId,title:String(task.title||'').slice(0,100),reward:Number(task.reward||0),
+    claims[actionId]={taskId,userId:uid,actionId,title:String(task.title||'').slice(0,100),type:String(task.type||''),reward:Number(task.reward||0),
       proof:String(proof||'').slice(0,500),verificationMethod:method,perUserLimit:Math.max(1,Math.min(10,Number(task.perUserLimit||1))),status:automatic?'verified':'pending',createdAt:Date.now()};
     created=true;return claims;
   });
@@ -732,7 +732,7 @@ async function handleAdminApi(user, url, body, res) {
     return send(res,200,{status:'ok',withdrawal:{id,status:'rejected',refunded:true}});
   }
   if (url.pathname === '/api/admin/settings') {
-    const allowed=['flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','referralXp','dailyLimit'];
+    const allowed=['flyerhubsTaskXp','taskXp','dailyCheckinXp','adWatchXp','referralXp','dailyLimit','referralMultiplierBonus','referralBonusDurationHours'];
     const patch={};
     for(const key of allowed) if(body[key]!==undefined){const value=Number(body[key]);if(!Number.isFinite(value)||value<0||value>100000)return send(res,400,{status:'error',code:'INVALID_SETTING_'+key});patch[key]=value;}
     if(!Object.keys(patch).length)return send(res,400,{status:'error',code:'NO_SETTINGS'});
