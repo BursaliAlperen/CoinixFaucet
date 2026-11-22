@@ -5,13 +5,14 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const admin = require('firebase-admin');
 const { activeReferralBonusTotal, rewardMultiplier, isTelegramMember, isTaskOpen, cleanTaskInput, isValidReferral } = require('./earn-core');
+const { FirestoreCompat } = require('./firestore-compat');
 
 const PORT = Number(process.env.PORT || 3000);
 const APP_ORIGIN = (process.env.APP_ORIGIN || '').replace(/\/$/, '');
 const FRONTEND_DIR = path.resolve(__dirname, '../Frontend');
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
 const PIARFLOW_API_KEY = process.env.PIARFLOW_API_KEY || '';
-const FIREBASE_DATABASE_URL = process.env.FIREBASE_DATABASE_URL || '';
+
 const FIREBASE_SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT || '';
 const ADMIN_IDS = new Set(String(process.env.ADMIN_IDS || '').split(',').map(v => v.trim()).filter(v => /^[0-9]+$/.test(v)));
 const ANNOUNCEMENT_CHANNEL_ID = process.env.ANNOUNCEMENT_CHANNEL_ID || '';
@@ -27,7 +28,6 @@ const API_AD_REWARD_USD = 0.002;
 const FIREBASE_PUBLIC_CONFIG = {
   apiKey: process.env.FIREBASE_WEB_API_KEY || '',
   authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
-  databaseURL: FIREBASE_DATABASE_URL,
   projectId: process.env.FIREBASE_PROJECT_ID || '',
   storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
   messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
@@ -37,12 +37,12 @@ const FIREBASE_PUBLIC_CONFIG = {
 const MAX_BODY = 24 * 1024;
 const rate = new Map();
 let firebaseReady = false;
-let rtdb = null;
+let rtdb = null; // Firestore-backed compatibility adapter; no Realtime Database dependency.
 let firestore = null;
 
 function initFirebase() {
   if (firebaseReady) return true;
-  if (!FIREBASE_SERVICE_ACCOUNT || !FIREBASE_DATABASE_URL) return false;
+  if (!FIREBASE_SERVICE_ACCOUNT) return false;
   try {
     const raw = FIREBASE_SERVICE_ACCOUNT.trim().startsWith('{')
       ? FIREBASE_SERVICE_ACCOUNT
@@ -51,14 +51,11 @@ function initFirebase() {
     const serviceProject = String(serviceAccount.project_id || '');
     if (!serviceProject) throw new Error('FIREBASE_SERVICE_ACCOUNT_PROJECT_MISSING');
     if (FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.projectId !== serviceProject) throw new Error('FIREBASE_PROJECT_MISMATCH');
-    const databaseHost = new URL(FIREBASE_DATABASE_URL).hostname.toLowerCase();
-    if (!databaseHost.includes(serviceProject.toLowerCase())) throw new Error('FIREBASE_DATABASE_PROJECT_MISMATCH');
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: FIREBASE_DATABASE_URL
+      credential: admin.credential.cert(serviceAccount)
     });
-    rtdb = admin.database();
     firestore = admin.firestore();
+    rtdb = new FirestoreCompat(firestore);
     firebaseReady = true;
     return true;
   } catch (error) {
@@ -1085,7 +1082,7 @@ const server = http.createServer(async (req, res) => {
     return send(res,200,FIREBASE_PUBLIC_CONFIG);
   }
   if (req.method === 'GET' && url.pathname === '/health') {
-    return send(res, 200, { ok: true, service: 'coinixfaucet', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), firebaseDatabaseUrlConfigured: Boolean(FIREBASE_DATABASE_URL), firebaseWebConfigConfigured: Boolean(FIREBASE_PUBLIC_CONFIG.apiKey && FIREBASE_PUBLIC_CONFIG.authDomain && FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.appId), telegramConfigured: Boolean(BOT_TOKEN), requiredChannelConfigured: Boolean(REQUIRED_CHANNEL_ID && REQUIRED_CHANNEL_URL), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyConfigured: Boolean(process.env.TRAFFY_API_KEY), traffyApiEnabled: false, adminConfigured: ADMIN_IDS.size > 0 });
+    return send(res, 200, { ok: true, service: 'teddygrow', firebaseAdminConfigured: initFirebase(), firebaseServiceAccountConfigured: Boolean(FIREBASE_SERVICE_ACCOUNT), database: 'firestore', firebaseWebConfigConfigured: Boolean(FIREBASE_PUBLIC_CONFIG.apiKey && FIREBASE_PUBLIC_CONFIG.authDomain && FIREBASE_PUBLIC_CONFIG.projectId && FIREBASE_PUBLIC_CONFIG.appId), telegramConfigured: Boolean(BOT_TOKEN), requiredChannelConfigured: Boolean(REQUIRED_CHANNEL_ID && REQUIRED_CHANNEL_URL), sponsorConfigured: Boolean(PIARFLOW_API_KEY), flyerhubsConfigured: Boolean(FLYERHUBS_KEY), traffyConfigured: Boolean(process.env.TRAFFY_API_KEY), traffyApiEnabled: false, adminConfigured: ADMIN_IDS.size > 0 });
   }
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url);
   if (req.method === 'GET' || req.method === 'HEAD') return serveFrontend(req, res, url);
